@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  /* Tech & education: cyan primary, dark nav, light background */
+  --color-primary: #0891b2;
+  --color-primary-600: #0e7490;
+  --color-primary-700: #155e75;
+  --color-bingo-dark: #0f172a;
+  --color-bingo-surface: #f0f9ff;
+  --color-edu-warm: #f8fafc;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-bingo-surface);
+    color: #334155;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(8, 145, 178, 0.08), transparent),
+      radial-gradient(circle at 80% 80%, rgba(8, 145, 178, 0.04), transparent),
+      linear-gradient(rgba(8, 145, 178, 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(8, 145, 178, 0.015) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    background-position: 0 0, 0 0, 0 0, 0 0;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-600) 100%);
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    box-shadow: 0 2px 8px rgba(8, 145, 178, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.4);
+  }
+  .card {
+    border-radius: 1rem;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(8, 145, 178, 0.06);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .card:hover {
+    box-shadow: 0 8px 24px rgba(8, 145, 178, 0.08), 0 0 0 1px rgba(8, 145, 178, 0.1);
+    border-color: rgba(8, 145, 178, 0.15);
+  }
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-bingo-dark);
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+    position: relative;
+    padding-left: 0.75rem;
+    border-left: 3px solid var(--color-primary);
+  }
+  /* Tech section: light background + left border accent */
+  .section-tech {
+    position: relative;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+}
