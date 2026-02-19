@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { allNavGroups, mainNav } from '../config/nav'
+import { mainNavGroups, authNav, mainNav } from '../config/nav'
 
 export default function Layout({ children }) {
   const loc = useLocation()
@@ -9,23 +9,21 @@ export default function Layout({ children }) {
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 bg-bingo-dark text-white shadow-lg border-b border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
-          <div className="flex items-center gap-4 lg:gap-6 min-h-14 flex-nowrap">
+          <div className="flex items-center gap-2 lg:gap-4 min-h-14">
             <Link to="/" className="shrink-0 flex items-center gap-2">
               <img src="/logo.png" alt="Bingo AI Academy" className="h-8 sm:h-9 w-auto" />
               <span className="font-bold text-white text-lg sm:text-xl tracking-tight">BingoAcademy</span>
             </Link>
-            <nav className="hidden lg:flex flex-1 items-center justify-evenly gap-2 min-w-0 flex-nowrap">
-              {allNavGroups.map((group, gi) => (
+            <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 min-w-0 overflow-x-auto">
+              {mainNavGroups.map((group, gi) => (
                 <React.Fragment key={gi}>
-                  {gi > 0 && (
-                    <span className="w-0.5 h-5 bg-cyan-400/80 shrink-0 rounded-full" aria-hidden />
-                  )}
-                  <div className="flex items-center justify-center gap-1 shrink-0 py-1">
+                  {gi > 0 && <span className="w-0.5 h-5 bg-cyan-400/80 shrink-0 rounded-full" aria-hidden />}
+                  <div className="flex items-center gap-1 shrink-0">
                     {group.map(({ path, label }) => (
                       <Link
                         key={path}
                         to={path}
-                        className={`px-2 py-2 rounded-lg text-sm whitespace-nowrap shrink-0 transition-colors ${
+                        className={`px-2 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
                           loc.pathname === path ? 'bg-cyan-500 text-white' : 'text-slate-300 hover:text-white hover:bg-white/10'
                         }`}
                       >
@@ -36,6 +34,19 @@ export default function Layout({ children }) {
                 </React.Fragment>
               ))}
             </nav>
+            <div className="hidden lg:flex items-center gap-1 shrink-0">
+              {authNav.map(({ path, label }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
+                    loc.pathname === path ? 'bg-cyan-500 text-white' : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
           {/* Mobile nav */}
           <div className="lg:hidden pb-3 flex flex-wrap gap-1">
@@ -45,6 +56,7 @@ export default function Layout({ children }) {
             <Link to="/mall" className="px-2 py-1 text-xs rounded bg-white/10">AI Mall</Link>
             <Link to="/profile" className="px-2 py-1 text-xs rounded bg-primary">Profile</Link>
             <Link to="/login" className="px-2 py-1 text-xs rounded bg-white/10">Login</Link>
+            <Link to="/register" className="px-2 py-1 text-xs rounded bg-white/10">Register</Link>
           </div>
         </div>
       </header>
