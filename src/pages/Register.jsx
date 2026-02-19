@@ -1,24 +1,16 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-const ROLES = [
-  { value: 'student', label: 'Student/Parent' },
-  { value: 'teacher', label: 'Teacher/Institution' },
-  { value: 'enterprise', label: 'Enterprise' },
-]
-
 export default function Register() {
   const navigate = useNavigate()
-  const [role, setRole] = useState('student')
-  const [phone, setPhone] = useState('')
-  const [code, setCode] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [agree, setAgree] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // TODO: Call registration API, send verification code, include role
-    if (phone && password && agree) {
+    // TODO: Call registration API with email and password
+    if (email && password && agree) {
       navigate('/login')
     }
   }
@@ -26,54 +18,19 @@ export default function Register() {
   return (
     <div className="max-w-md mx-auto px-4 py-12">
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Register</h1>
-      <p className="text-slate-600 mb-8">Register for newcomer benefits, courses, events, and referral commissions</p>
-
-      <div className="mb-4">
-        <span className="block text-sm font-medium text-slate-700 mb-2">Register as</span>
-        <div className="flex flex-wrap gap-2">
-          {ROLES.map((r) => (
-            <button
-              key={r.value}
-              type="button"
-              onClick={() => setRole(r.value)}
-              className={`px-4 py-2 rounded-lg text-sm border transition ${
-                role === r.value
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-slate-300 text-slate-600 hover:border-primary/50'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <p className="text-slate-600 mb-8">Register with your email for newcomer benefits, courses, events, and referral commissions</p>
 
       <form onSubmit={handleSubmit} className="card p-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
           <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Enter phone number"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
             className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary"
             required
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Verification Code</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter code"
-              className="flex-1 rounded-lg border border-slate-300 px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-            <button type="button" className="shrink-0 px-4 py-2 rounded-lg border border-primary text-primary text-sm whitespace-nowrap">
-              Get Code
-            </button>
-          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Set Password</label>
