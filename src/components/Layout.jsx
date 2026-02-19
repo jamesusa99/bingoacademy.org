@@ -12,7 +12,7 @@ export default function Layout({ children }) {
           <div className="flex items-center gap-2 lg:gap-4 min-h-14">
             <Link to="/" className="shrink-0 flex items-center gap-2">
               <img src="/logo.png" alt="Bingo AI Academy" className="h-8 sm:h-9 w-auto" />
-              <span className="font-bold text-white text-lg sm:text-xl tracking-tight">BingoAcademy</span>
+              <span className="font-bold text-white text-sm sm:text-base tracking-tight">BingoAcademy</span>
             </Link>
             <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 min-w-0 overflow-x-auto">
               {mainNavGroups.map((group, gi) => (
