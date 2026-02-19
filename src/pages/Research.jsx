@@ -20,7 +20,7 @@ const TRAINING_PROJECTS = [
 export default function Research() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-bingo-dark mb-2">Science & Research</h1>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-2">Science Camp</h1>
       <p className="text-slate-600 mb-8">Camp Program, research projects, application, and admissions outcomes</p>
 
       {/* Camp Program */}
