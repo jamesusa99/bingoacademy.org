@@ -2,10 +2,10 @@ import { useState } from 'react'
 
 // Avatar paths: place mentor photos in public/mentors/ or use full URLs from bingoacademy.org
 const certifiedMentors = [
-  { name: 'Jianwen Chen', title: 'Professor', photo: '/mentors/jianwen-chen.jpg' },
-  { name: 'Wang Wenzhi', title: 'Ph.D', photo: '/mentors/wang-wenzhi.jpg' },
-  { name: 'Feng Xu', title: 'Ph.D', photo: '/mentors/feng-xu.jpg' },
-  { name: 'Shuang Wang', title: 'Ph.D', photo: '/mentors/shuang-wang.jpg' },
+  { name: 'Jianwen Chen', title: 'Professor', photo: '/mentors/jianwen-chen.jpg', intro: '' },
+  { name: 'Wang Wenyi', title: 'Ph.D', photo: '/mentors/wenyi-wang.jpg', intro: '' },
+  { name: 'Feng Xu', title: 'Ph.D', photo: '/mentors/feng-xu.jpg', intro: '' },
+  { name: 'Shuang Wang', title: 'Ph.D', photo: '/mentors/shuang-wang.jpg', intro: '' },
 ]
 
 const items = [
@@ -61,6 +61,22 @@ export default function Community() {
               </li>
             ))}
           </ul>
+
+          <h3 className="text-sm font-semibold text-slate-500 mt-10 mb-4">Mentor Introductions</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            {certifiedMentors.map((m, i) => (
+              <div key={i} className="card p-6 flex gap-4">
+                <MentorAvatar src={m.photo} name={m.name} />
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="font-semibold text-bingo-dark">{m.name}</div>
+                  <div className="text-sm text-primary font-medium">{m.title}</div>
+                  <p className="text-sm text-slate-600 mt-2">
+                    {m.intro || 'Introduction to be added.'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
