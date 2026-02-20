@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { mainNavGroups, authNav, mainNav } from '../config/nav'
+import ChatWidget from './ChatWidget'
 
 export default function Layout({ children }) {
   const loc = useLocation()
@@ -89,6 +90,7 @@ export default function Layout({ children }) {
           Expert Team · Licensed Competitions · Authentic Products
         </div>
       </footer>
+      <ChatWidget />
     </div>
   )
 }
