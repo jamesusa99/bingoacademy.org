@@ -52,24 +52,13 @@ export default function Community() {
         <div className="card p-6 border-primary/20">
           <p className="text-slate-600 mb-6">Leading AI education mentors and outstanding students; experience sharing, Q&A, collaboration.</p>
           <h3 className="text-sm font-semibold text-slate-500 mb-4">Certified Mentors</h3>
-          <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-            {certifiedMentors.map((m, i) => (
-              <li key={i} className="flex flex-col items-center text-center">
-                <MentorAvatar src={m.photo} name={m.name} />
-                <span className="text-xs text-primary font-medium mt-2">{m.title}</span>
-                <span className="font-medium text-bingo-dark mt-1">{m.name}</span>
-              </li>
-            ))}
-          </ul>
-
-          <h3 className="text-sm font-semibold text-slate-500 mt-10 mb-4">Mentor Introductions</h3>
           <div className="grid md:grid-cols-2 gap-6">
             {certifiedMentors.map((m, i) => (
-              <div key={i} className="card p-6 flex gap-4">
+              <div key={i} className="card p-5 flex gap-4">
                 <MentorAvatar src={m.photo} name={m.name} />
                 <div className="flex-1 min-w-0 text-left">
                   <div className="font-semibold text-bingo-dark">{m.name}</div>
-                  <div className="text-sm text-primary font-medium">{m.title}</div>
+                  <div className="text-xs text-primary font-medium">{m.title}</div>
                   <p className="text-sm text-slate-600 mt-2">
                     {m.intro || 'Introduction to be added.'}
                   </p>
