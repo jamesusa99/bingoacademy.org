@@ -2,10 +2,30 @@ import { useState } from 'react'
 
 // Avatar paths: place mentor photos in public/mentors/ or use full URLs from bingoacademy.org
 const certifiedMentors = [
-  { name: 'Jianwen Chen', title: 'Professor', photo: '/mentors/jianwen-chen.jpg', intro: '' },
-  { name: 'Wang Wenyi', title: 'Ph.D', photo: '/mentors/wenyi-wang.jpg', intro: '' },
-  { name: 'Feng Xu', title: 'Ph.D', photo: '/mentors/feng-xu.jpg', intro: '' },
-  { name: 'Shuang Wang', title: 'Ph.D', photo: '/mentors/shuang-wang.jpg', intro: '' },
+  {
+    name: 'James Chen',
+    title: 'Professor',
+    photo: '/mentors/jianwen-chen.jpg',
+    intro: 'Over 20 years of research in video processing and AI algorithms; multimodal feature fusion for affective computing; deep content synthesis and driving algorithms. Professor and doctoral supervisor at University of Electronic Science and Technology of China (UESTC); Director of the Visual Intelligence Research Center at UESTC.',
+  },
+  {
+    name: 'Wenyi Wang',
+    title: 'Ph.D',
+    photo: '/mentors/wenyi-wang.jpg',
+    intro: 'AI expert and Associate Professor at UESTC. Research spans data mining, artificial intelligence, and algorithm optimization. Holds an M.Sc. and Ph.D. in Electrical Engineering and Computer Science from the University of Ottawa, Canada.',
+  },
+  {
+    name: 'Michell Xu',
+    title: 'Ph.D',
+    photo: '/mentors/feng-xu.jpg',
+    intro: 'AI Scientist and Researcher at the Beijing Academy of Artificial Intelligence; recognized as a Beijing High-Level Overseas Talent. Former researcher at Samsung Research America and Thomson Research. Postdoctoral fellow at the University of Pennsylvania; Ph.D. in Electronic Engineering from Tsinghua University.',
+  },
+  {
+    name: 'Shuang Wang',
+    title: 'Ph.D',
+    photo: '/mentors/shuang-wang.jpg',
+    intro: 'AI Scientist and co-founder of Lava Education and ScholarOne LLC (USA). Led AI deployments in education and healthcare; holds a US patent in AI sensor networks (licensed with royalties). Specializes in large language models, multimodal intelligence, and deep learning systems; mentors students in international competitions and research. Ph.D. in Electrical Engineering and Computer Science from the University of Missouri.',
+  },
 ]
 
 const items = [
