@@ -62,6 +62,216 @@ const PARTNERS = [
   { name: 'Maker Education Institute', region: 'Sichuan · Chengdu', type: 'Maker Space' },
 ]
 
+// ─── Forum: seed threads (BBS-style) ───────────────────────────────
+const FORUM_STORAGE_KEY = 'bingo-forum-threads'
+const SAMPLE_THREADS = [
+  { id: 't1', title: 'Best age to start AI education?', content: 'Hi everyone! I have a 7-year-old and wondering when is the ideal time to introduce AI concepts. Would love to hear from parents who started early.', author: 'Parent_Mia', avatar: '👩', category: 'Discussion', createdAt: Date.now() - 86400000 * 2, replies: [
+    { id: 'r1', content: 'We started at 8 with visual programming. Found it perfect — not too early, kid was ready for logical thinking.', author: 'Dad_Leo', avatar: '👨', createdAt: Date.now() - 86400000 * 1.8 },
+    { id: 'r2', content: 'Agree! Also check Bingo\'s AI Foundations course — my daughter loved the project-based approach.', author: 'Mom_Sarah', avatar: '👩', createdAt: Date.now() - 86400000 * 1.5 },
+  ]},
+  { id: 't2', title: 'Our competition journey: from zero to provincial award', content: 'Sharing our 10-month path. Started with Python basics, joined AI Innovation Camp, then competition sprint. Key: consistent practice + mentor guidance. Happy to answer questions!', author: 'Parent_David', avatar: '👨', category: 'Parent Experience', image: null, createdAt: Date.now() - 86400000 * 5, replies: [
+    { id: 'r3', content: 'Congratulations! How many hours per week did your child dedicate?', author: 'Curious_Parent', avatar: '🙋', createdAt: Date.now() - 86400000 * 4.8 },
+    { id: 'r4', content: 'About 5–7 hrs including weekend project time. Quality over quantity mattered most.', author: 'Parent_David', avatar: '👨', createdAt: Date.now() - 86400000 * 4.5 },
+  ]},
+  { id: 't3', title: 'Competition registration tips 2024', content: 'Compiled a quick guide from our experience: 1) Check whitelist deadlines early 2) Prepare project documentation 3) Mock defence practice helps. Add your tips below!', author: 'Coach_Lin_Fan', avatar: '🏆', category: 'Competition', createdAt: Date.now() - 86400000 * 1, replies: [] },
+]
+
+function loadForumThreads() {
+  try {
+    const raw = localStorage.getItem(FORUM_STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch (_) {}
+  return JSON.parse(JSON.stringify(SAMPLE_THREADS))
+}
+
+function saveForumThreads(threads) {
+  try { localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(threads)) } catch (_) {}
+}
+
+// ─── Forum Section (BBS-style) ─────────────────────────────────────
+function ForumSection() {
+  const [threads, setThreads] = useState(() => loadForumThreads())
+  const [view, setView] = useState('list') // 'list' | 'thread' | 'new'
+  const [activeThreadId, setActiveThreadId] = useState(null)
+  const [newPost, setNewPost] = useState({ title: '', content: '', imageUrl: '', author: 'Guest', category: 'Discussion' })
+  const [replyText, setReplyText] = useState('')
+  const [replyAuthor, setReplyAuthor] = useState('Guest')
+  const [replyImageUrl, setReplyImageUrl] = useState('')
+
+  const activeThread = threads.find(t => t.id === activeThreadId)
+
+  const handleCreatePost = () => {
+    if (!newPost.title.trim()) return
+    const thread = {
+      id: 't' + Date.now(),
+      title: newPost.title.trim(),
+      content: newPost.content.trim() || '(No content)',
+      author: newPost.author.trim() || 'Anonymous',
+      avatar: '✍️',
+      category: newPost.category,
+      image: newPost.imageUrl.trim() || null,
+      createdAt: Date.now(),
+      replies: [],
+    }
+    setThreads(prev => [thread, ...prev])
+    saveForumThreads([thread, ...threads])
+    setNewPost({ title: '', content: '', imageUrl: '', author: 'Guest', category: 'Discussion' })
+    setView('list')
+  }
+
+  const handleReply = () => {
+    if ((!replyText.trim() && !replyImageUrl.trim()) || !activeThreadId) return
+    const reply = {
+      id: 'r' + Date.now(),
+      content: replyText.trim() || '(Image)',
+      author: replyAuthor.trim() || 'Anonymous',
+      avatar: '💬',
+      image: replyImageUrl.trim() || null,
+      createdAt: Date.now(),
+    }
+    const updated = threads.map(t => t.id === activeThreadId
+      ? { ...t, replies: [...(t.replies || []), reply] }
+      : t)
+    setThreads(updated)
+    saveForumThreads(updated)
+    setReplyText('')
+    setReplyImageUrl('')
+    setActiveThreadId(activeThreadId)
+  }
+
+  const formatTime = (ts) => {
+    const d = new Date(ts)
+    const now = Date.now()
+    const diff = now - ts
+    if (diff < 60000) return 'Just now'
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago'
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago'
+    if (diff < 604800000) return Math.floor(diff / 86400000) + 'd ago'
+    return d.toLocaleDateString()
+  }
+
+  if (view === 'new') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <button onClick={() => setView('list')} className="text-sm text-primary hover:underline flex items-center gap-1">← Back to forum</button>
+          <h2 className="font-bold text-bingo-dark">Create new post</h2>
+        </div>
+        <div className="card p-6">
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-medium text-slate-600 block mb-1">Your name / nickname</label>
+              <input value={newPost.author} onChange={e => setNewPost(p => ({ ...p, author: e.target.value }))}
+                placeholder="e.g. Parent_Mia" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 block mb-1">Category</label>
+              <select value={newPost.category} onChange={e => setNewPost(p => ({ ...p, category: e.target.value }))}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white">
+                {['Discussion', 'Parent Experience', 'Competition', 'Course Q&A', 'Resources', 'Other'].map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 block mb-1">Title *</label>
+              <input value={newPost.title} onChange={e => setNewPost(p => ({ ...p, title: e.target.value }))}
+                placeholder="Post title" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 block mb-1">Content</label>
+              <textarea value={newPost.content} onChange={e => setNewPost(p => ({ ...p, content: e.target.value }))}
+                rows={5} placeholder="Share your thoughts, questions, or experiences..." className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm resize-none" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 block mb-1">Image URL (optional)</label>
+              <input value={newPost.imageUrl} onChange={e => setNewPost(p => ({ ...p, imageUrl: e.target.value }))}
+                placeholder="https://example.com/image.jpg" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={handleCreatePost} className="btn-primary px-6 py-2.5">Publish post</button>
+              <button onClick={() => setView('list')} className="border border-slate-200 rounded-xl px-6 py-2.5 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (view === 'thread' && activeThread) {
+    return (
+      <div className="space-y-6">
+        <button onClick={() => { setView('list'); setActiveThreadId(null) }} className="text-sm text-primary hover:underline flex items-center gap-1">← Back to forum</button>
+        <div className="card p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl shrink-0">{activeThread.avatar || '📝'}</div>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">{activeThread.category}</span>
+              <h2 className="font-bold text-bingo-dark mt-2 mb-1">{activeThread.title}</h2>
+              <p className="text-xs text-slate-500 mb-3">{activeThread.author} · {formatTime(activeThread.createdAt)}</p>
+              <p className="text-slate-700 text-sm whitespace-pre-wrap">{activeThread.content}</p>
+              {activeThread.image && (
+                <img src={activeThread.image} alt="" className="mt-3 max-w-full rounded-xl border border-slate-200 max-h-64 object-contain" onError={e => e.target.style.display = 'none'} />
+              )}
+            </div>
+          </div>
+        </div>
+        {(activeThread.replies || []).map(r => (
+          <div key={r.id} className="card p-4 pl-6 border-l-4 border-primary/30">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-lg shrink-0">{r.avatar || '💬'}</div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-slate-600 mb-1">{r.author} · {formatTime(r.createdAt)}</p>
+                {r.content && r.content !== '(Image)' && <p className="text-slate-700 text-sm whitespace-pre-wrap">{r.content}</p>}
+                {r.image && <img src={r.image} alt="" className="mt-2 max-w-full rounded-lg border border-slate-200 max-h-48 object-contain" onError={e => e.target.style.display = 'none'} />}
+              </div>
+            </div>
+          </div>
+        ))}
+        <div className="card p-5 bg-slate-50 border-slate-200">
+          <h3 className="font-semibold text-bingo-dark mb-3">Add a reply</h3>
+          <div className="space-y-3">
+            <input value={replyAuthor} onChange={e => setReplyAuthor(e.target.value)} placeholder="Your name"
+              className="w-full max-w-xs rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} rows={3} placeholder="Write your reply..."
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm resize-none" />
+            <input value={replyImageUrl} onChange={e => setReplyImageUrl(e.target.value)} placeholder="Image URL (optional)"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            <button onClick={handleReply} className="btn-primary px-5 py-2" disabled={!replyText.trim() && !replyImageUrl.trim()}>Post reply</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-bold text-bingo-dark mb-1">Forum — Discuss & share</h2>
+          <p className="text-slate-500 text-sm">Post topics, share experiences, ask questions. Everyone can reply and join the discussion.</p>
+        </div>
+        <button onClick={() => setView('new')} className="btn-primary px-5 py-2.5 shrink-0">✏️ New post</button>
+      </div>
+      <div className="space-y-2">
+        {threads.map(t => (
+          <div key={t.id} onClick={() => { setActiveThreadId(t.id); setView('thread') }}
+            className="card p-4 flex flex-wrap items-center gap-3 cursor-pointer hover:shadow-md hover:border-primary/30 transition">
+            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-lg shrink-0">{t.avatar || '📝'}</div>
+            <div className="flex-1 min-w-0">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary">{t.category}</span>
+              <h3 className="font-semibold text-bingo-dark text-sm mt-1 truncate">{t.title}</h3>
+              <p className="text-xs text-slate-500">{t.author} · {formatTime(t.createdAt)} · {(t.replies || []).length} replies</p>
+            </div>
+            <span className="text-slate-400 text-xs">→</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Certified Courses ────────────────────────────────────────────
 const CERT_COURSES = [
   { name: 'AI Literacy Certification', age: 'Ages 6–10', cert: 'Foundation Certificate', scholarPts: '+50 Scholar pts', partnerCert: true },
@@ -702,43 +912,9 @@ export default function Community() {
       )}
 
       {/* ══════════════════════════════════════════
-          TAB: 上上AI教育论坛
+          TAB: Forum (BBS-style)
       ══════════════════════════════════════════ */}
-      {tab === 'forum' && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="font-bold text-bingo-dark mb-1">💬 上上AI教育论坛</h2>
-            <p className="text-slate-500 text-sm">权威的AI教育交流平台，汇聚专家、家长与学子，分享前沿理念、实践经验和升学规划，助力孩子成为面向未来的AI人才。</p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-5">
-            <div className="card p-6 border-primary/20 hover:shadow-md transition">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">🎤</div>
-                <div>
-                  <h3 className="font-semibold text-bingo-dark">专家讲座与圆桌</h3>
-                  <p className="text-xs text-slate-500">一线学者与行业大咖定期分享</p>
-                </div>
-              </div>
-              <p className="text-sm text-slate-600">高校教授、竞赛金牌教练、STEM招生专家，围绕AI素养、竞赛路径、升学规划等话题进行深度分享与互动。</p>
-            </div>
-            <div className="card p-6 border-amber-200/60 bg-amber-50/20 hover:shadow-md transition">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl">📋</div>
-                <div>
-                  <h3 className="font-semibold text-bingo-dark">家长经验交流</h3>
-                  <p className="text-xs text-slate-500">真实案例与避坑指南</p>
-                </div>
-              </div>
-              <p className="text-sm text-slate-600">家长分享孩子从零基础到获奖、从迷茫到清晰规划的亲身经历，互相启发，少走弯路。</p>
-            </div>
-          </div>
-          <div className="card p-5 bg-slate-50 border-slate-200">
-            <h3 className="font-semibold text-bingo-dark mb-2">参与方式</h3>
-            <p className="text-sm text-slate-600 mb-3">加入 Bingo AI 学习社区即可免费参与上上AI教育论坛活动。论坛不定期举办线上讲座、家长沙龙及专家答疑，敬请关注社群通知。</p>
-            <button onClick={() => setLeadModal('预约上上AI教育论坛活动')} className="btn-primary text-sm px-5 py-2">预约参加论坛活动 →</button>
-          </div>
-        </div>
-      )}
+      {tab === 'forum' && <ForumSection />}
 
       {/* ── Bottom CTA strip ── */}
       <div className="mt-10 card p-5 bg-gradient-to-r from-cyan-50 to-sky-50 border-primary/20 flex flex-wrap items-center justify-between gap-3">

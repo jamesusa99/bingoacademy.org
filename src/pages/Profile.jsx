@@ -68,7 +68,7 @@ function EarnBySharing() {
   return (
     <div className="space-y-4">
       <div className="card p-6 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/60">
-        <h3 className="font-semibold text-bingo-dark mb-3">Earn by Sharing · 推广赚钱</h3>
+        <h3 className="font-semibold text-bingo-dark mb-3">Earn by Sharing</h3>
         <ul className="text-sm text-slate-700 space-y-2 mb-4">
           <li>· Personal referral code / posters / links (generate, save, share)</li>
           <li>· Daily & monthly earnings (received / pending)</li>
@@ -367,7 +367,7 @@ export default function Profile() {
           <div className="flex items-center gap-3">
             <span className="text-2xl">💰</span>
             <div>
-              <div className="font-semibold text-bingo-dark">Earn by Sharing · 推广赚钱</div>
+              <div className="font-semibold text-bingo-dark">Earn by Sharing</div>
               <div className="text-sm text-slate-500">Share & earn · Commission · Referral tracking · Double commission this month</div>
             </div>
           </div>

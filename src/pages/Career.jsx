@@ -130,7 +130,7 @@ export default function Career() {
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section className="mb-8 section-tech rounded-2xl px-6 py-12 text-center">
         <p className="text-xs font-bold tracking-widest text-primary uppercase mb-2">AI Empowers · Digital Careers · Future-Ready</p>
-        <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mb-3">Smart Careers · 数智职业</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mb-3">Smart Careers</h1>
         <p className="text-slate-600 text-base max-w-2xl mx-auto mb-5">
           One-stop digital career development platform. From skill learning to enterprise internship,
           textbook publishing to job placement — a complete ecosystem for the AI era.
@@ -594,7 +594,7 @@ export default function Career() {
       {tab === 'news' && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-bold text-bingo-dark mb-1">📰 Insights & News · 数智成果资讯</h2>
+            <h2 className="font-bold text-bingo-dark mb-1">📰 Insights & News</h2>
             <p className="text-slate-500 text-sm">Publication milestones, industry-education outcomes, employment results, policy updates, and featured coverage.</p>
           </div>
 
