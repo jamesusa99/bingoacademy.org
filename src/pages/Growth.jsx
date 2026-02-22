@@ -16,7 +16,6 @@ export default function Growth() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Growth Plan</h1>
-      <p className="text-slate-600 mb-6">AI assessment → Learning plan → Stage packages → Progress tracking. Intro/intermediate/advanced assessment; personalized path; packages (commission + share); learning calendar, challenges, points; 1-on-1 mentor follow-up</p>
 
       <section className="mb-8">
         <h2 className="section-title mb-4">AI Capability Assessment · Course Recommendations</h2>

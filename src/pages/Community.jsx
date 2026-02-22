@@ -65,7 +65,6 @@ export default function Community() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">AI Community</h1>
-      <p className="text-slate-600 mb-6">Groups → Details → Chat/live/files. Create or join by course/event/region/grade; announcements, files, live; mentor Q&A, peer review, challenges; invite for commission</p>
 
       <section className="mb-10">
         <h2 className="section-title">Featured Mentors</h2>
