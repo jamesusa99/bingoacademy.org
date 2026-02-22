@@ -163,7 +163,7 @@ export default function Home() {
             <div>
               <p className="text-xs font-bold tracking-widest text-primary uppercase mb-3">AI + Competitions + Full-Chain Education Ecosystem</p>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-bingo-dark leading-tight mb-4">
-                {audience === 'c' ? <>AI Era —<br className="hidden sm:block" /> Are you anxious about your child's AI education?</> : <>Missing AI curriculum, teachers & competition resources for your institution?</>}
+                {audience === 'c' ? <>Future-Ready AI Education<br className="hidden sm:block" /> for High-Performing Students</> : <>Missing AI curriculum, teachers & competition resources for your institution?</>}
               </h1>
 
               {/* Rolling pain point pill */}
