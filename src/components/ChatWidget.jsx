@@ -55,14 +55,14 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* AI Assessment floating button */}
+      {/* AI Assessment floating button — stacked above chat */}
       <button
         type="button"
         onClick={() => navigate('/ai-test')}
-        className="fixed bottom-6 right-24 z-40 h-14 px-4 rounded-full bg-amber-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2 text-sm font-semibold"
+        className="fixed bottom-24 right-6 z-40 h-10 px-3 rounded-full bg-white text-amber-600 border border-amber-200 shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center gap-1.5 text-xs font-semibold"
         aria-label="AI Assessment"
       >
-        <span className="text-base">🧠</span>
+        <span>🧠</span>
         <span>AI Test</span>
       </button>
 
