@@ -249,7 +249,7 @@ function ForumSection() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-bold text-bingo-dark mb-1">Forum — Discuss & share</h2>
+          <h2 className="font-bold text-bingo-dark mb-1">AI-Spark Forum — Discuss & share</h2>
           <p className="text-slate-500 text-sm">Post topics, share experiences, ask questions. Everyone can reply and join the discussion.</p>
         </div>
         <button onClick={() => setView('new')} className="btn-primary px-5 py-2.5 shrink-0">✏️ New post</button>
@@ -428,7 +428,7 @@ export default function Community() {
     { id: 'checkin', icon: '📅', label: 'Check-In & Points' },
     { id: 'courses', icon: '📜', label: 'Certified Courses' },
     { id: 'partners', icon: '🏫', label: 'Partner Institutions' },
-    { id: 'forum', icon: '💬', label: '上上AI教育论坛' },
+    { id: 'forum', icon: '💬', label: 'AI-Spark Forum' },
   ]
 
   const doCheckin = (id) => setCheckedIn(p => ({ ...p, [id]: true }))
@@ -450,7 +450,7 @@ export default function Community() {
           Your complete AI learning ecosystem — structured, social, and results-focused.
         </p>
         <div className="flex flex-wrap gap-2 justify-center text-xs mb-6">
-          {['University-affiliated mentors','Competition & admissions guidance','Certified course programmes','Daily check-in point system','Bingo AI Scholar Honours','上上AI教育论坛'].map((t,i) => (
+          {['University-affiliated mentors','Competition & admissions guidance','Certified course programmes','Daily check-in point system','Bingo AI Scholar Honours','AI-Spark Forum'].map((t,i) => (
             <span key={i} className="bg-white/80 border border-primary/20 rounded-full px-3 py-1.5 text-slate-700">{t}</span>
           ))}
         </div>
