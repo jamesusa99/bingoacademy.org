@@ -4,12 +4,20 @@ import { Link } from 'react-router-dom'
 // ─── Data ──────────────────────────────────────────────────────────
 
 const EVENT_LIST = [
-  { id: 1, name: 'National Youth AI Innovation Challenge', type: 'prestigious', stage: 'Registration Open', students: '8–18 yrs', award: 'National recognition + certificate', enrolled: 1240, whitelist: true, aiCourse: true, desc: 'Premier prestigious youth AI competition. Innovation + engineering + presentation.' },
-  { id: 2, name: 'China Robotics & AI Competition', type: 'prestigious', stage: 'Prep Phase', students: '10–18 yrs', award: 'Provincial / National prizes', enrolled: 890, whitelist: true, aiCourse: true, desc: 'Hands-on robotics and AI integration competition. Team and individual tracks.' },
-  { id: 3, name: 'AIOT Innovation Competition', type: 'provincial', stage: 'Entries Closing Soon', students: '12–18 yrs', award: 'Provincial + industry certificate', enrolled: 560, whitelist: false, aiCourse: true, desc: 'AI + IoT integration challenge. Smart home, smart city, wearables tracks.' },
-  { id: 4, name: 'WAIC Youth AI Competition', type: 'international', stage: 'Open', students: '14–18 yrs', award: 'International certificate + recognition', enrolled: 320, whitelist: false, aiCourse: false, desc: 'World AI Conference youth track. International exposure and networking.' },
-  { id: 5, name: 'Bingo Cup AI Design Challenge', type: 'bingo', stage: 'Active', students: '8–16 yrs', award: 'Prize money + Bingo scholarship', enrolled: 2100, whitelist: false, aiCourse: true, desc: 'Bingo Academy\'s own flagship competition. AIGC, AI art, and data science tracks.' },
-  { id: 6, name: 'Science & Technology Innovation Award', type: 'prestigious', stage: 'Upcoming', students: '14–18 yrs', award: 'National award + 综评 material', enrolled: 780, whitelist: true, aiCourse: true, desc: 'Established national competition. Research project + defence format.' },
+  // Prestigious AI Competitions
+  { id: 1, name: 'IOAI (International Olympiad in AI)', type: 'ai', stage: 'Registration Open', students: 'Secondary school', award: 'Global recognition · scientific inquiry', enrolled: 0, whitelist: true, aiCourse: true, desc: 'The world\'s highest-level secondary school AI competition. Focus on scientific exploration and solving real-world problems.' },
+  { id: 2, name: 'Kaggle Competitions (Junior/Student)', type: 'ai', stage: 'Ongoing', students: 'All ages', award: 'Data science credentials · portfolio', enrolled: 0, whitelist: true, aiCourse: true, desc: 'The world\'s leading machine learning platform. Student-friendly entry-level data science competitions.' },
+  { id: 3, name: 'AI for Good Innovation Factory (ITU)', type: 'ai', stage: 'Annual', students: 'Youth', award: 'UN recognition · SDG impact', enrolled: 0, whitelist: true, aiCourse: true, desc: 'UN-hosted competition encouraging students to use AI to address UN Sustainable Development Goals.' },
+  // World-Class Robotics Competitions
+  { id: 4, name: 'FIRST Robotics (FRC / FTC)', type: 'robotics', stage: 'Seasonal', students: 'K–12', award: 'Global recognition · college admissions', enrolled: 0, whitelist: true, aiCourse: true, desc: 'US-origin, globally recognised. FRC is often called the "Olympics of Robotics." Highly valued for elite college applications.' },
+  { id: 5, name: 'VEX Robotics Competition', type: 'robotics', stage: 'Seasonal', students: 'Elementary – University', award: 'World-class robotics credentials', enrolled: 0, whitelist: true, aiCourse: true, desc: 'One of the world\'s largest robotics competitions. VEX IQ (elementary), VRC (middle/high), VEX U (university).' },
+  { id: 6, name: 'RoboCup & RoboCupJunior', type: 'robotics', stage: 'Annual', students: 'Elementary – University', award: 'Academic prestige · research showcase', enrolled: 0, whitelist: true, aiCourse: true, desc: 'Robot soccer, rescue, and dance. Acclaimed platform for robotics research and innovation.' },
+  // US-Based Premier Challenges
+  { id: 7, name: 'USA Computing Olympiad (USACO)', type: 'us', stage: 'Ongoing', students: 'Secondary', award: 'Gold/Platinum = top AI labs · elite universities', enrolled: 0, whitelist: true, aiCourse: true, desc: 'US Computer Olympiad. Though algorithm-focused, high levels (Gold, Platinum) open doors to top AI labs and elite universities.' },
+  { id: 8, name: 'Regeneron ISEF', type: 'us', stage: 'Annual', students: 'Grades 9–12', award: 'Global science recognition · research pathway', enrolled: 0, whitelist: true, aiCourse: true, desc: 'The world\'s largest pre-college science fair. "Systems Software" and "Intelligent Machines" categories for AI/robotics.' },
+  { id: 9, name: 'National Robotics Challenge (NRC)', type: 'us', stage: 'Annual', students: 'K–12', award: 'Engineering innovation · open platform', enrolled: 0, whitelist: true, aiCourse: true, desc: 'Open platform — no brand restrictions. Ideal for showcasing pure engineering innovation.' },
+  // Bingo
+  { id: 10, name: 'Bingo Cup AI Design Challenge', type: 'bingo', stage: 'Active', students: '8–16 yrs', award: 'Prize money + Bingo scholarship', enrolled: 2100, whitelist: false, aiCourse: true, desc: 'Bingo Academy\'s own flagship competition. AIGC, AI art, and data science tracks.' },
 ]
 
 const GALLERY_WORKS = [
@@ -35,11 +43,20 @@ const CUSTOM_FAQ = [
   { q: 'Can we white-label the platform with our own branding?', a: 'Yes. All packages include full white-label customisation: your logo, colour palette, domain, and branded materials.' },
 ]
 
-const PRESTIGIOUS_EVENTS = [
-  { name: 'National Youth AI Innovation Challenge', cert: 'Nationally Recognised', type: 'AI Innovation', grade: 'Middle + High School', regDeadline: 'Rolling intake', award: 'National certificate + 综评 material', badge: '🏅 Top-tier' },
-  { name: 'China Robotics Competition', cert: 'Nationally Recognised', type: 'Robotics + AI', grade: 'Primary to High School', regDeadline: 'Annual March–April', award: 'National + international pathways', badge: '🏅 Top-tier' },
-  { name: 'Science & Technology Innovation Award', cert: 'National Science Org Recognised', type: 'Research Project', grade: 'High School', regDeadline: 'Annual September', award: 'National prize + 强基 material', badge: '🥇 Recommended' },
-  { name: 'STEAM Education Competition', cert: 'Provincially Recognised', type: 'STEAM Integration', grade: 'Primary + Middle School', regDeadline: 'Bi-annual', award: 'Provincial certificate', badge: '🥈 Verified' },
+// Competition Advisory directory — Global & US AI & Robotics
+const COMPETITION_DIRECTORY = [
+  { category: 'ai', categoryLabel: 'Prestigious AI Competitions', desc: 'Algorithm, data science, and practical AI application.' },
+  { name: 'IOAI (International Olympiad in AI)', cert: 'Global', type: 'AI Olympiad', grade: 'Secondary', regDeadline: 'Annual', award: 'World\'s highest-level secondary AI competition', badge: '🏅 Top-tier', category: 'ai' },
+  { name: 'Kaggle (Junior/Student)', cert: 'Global', type: 'Data Science', grade: 'All ages', regDeadline: 'Ongoing', award: 'ML credentials · portfolio building', badge: '🏅 Top-tier', category: 'ai' },
+  { name: 'AI for Good Innovation Factory (ITU)', cert: 'UN', type: 'AI for SDGs', grade: 'Youth', regDeadline: 'Annual', award: 'UN recognition · social impact', badge: '🏅 Top-tier', category: 'ai' },
+  { category: 'robotics', categoryLabel: 'World-Class Robotics Competitions', desc: 'Engineering design, hardware assembly, autonomous navigation.' },
+  { name: 'FIRST Robotics (FRC/FTC)', cert: 'US · Global', type: 'Robotics', grade: 'K–12', regDeadline: 'Seasonal', award: '"Olympics of Robotics" · college admissions', badge: '🤖 Top-tier', category: 'robotics' },
+  { name: 'VEX Robotics Competition', cert: 'Global', type: 'Robotics', grade: 'Elementary – University', regDeadline: 'Seasonal', award: 'World\'s largest · VEX IQ/VRC/VEX U', badge: '🤖 Top-tier', category: 'robotics' },
+  { name: 'RoboCup & RoboCupJunior', cert: 'Academic', type: 'Robotics', grade: 'Elementary – University', regDeadline: 'Annual', award: 'Soccer · rescue · dance · research', badge: '🤖 Top-tier', category: 'robotics' },
+  { category: 'us', categoryLabel: 'US-Based Premier Challenges', desc: 'High value for US college application background building.' },
+  { name: 'USA Computing Olympiad (USACO)', cert: 'US', type: 'Algorithm', grade: 'Secondary', regDeadline: 'Ongoing', award: 'Gold/Platinum → top AI labs · elite universities', badge: '🥇 Premier', category: 'us' },
+  { name: 'Regeneron ISEF', cert: 'Global', type: 'Science Fair', grade: 'Grades 9–12', regDeadline: 'Annual', award: 'World\'s largest · Systems Software · Intelligent Machines', badge: '🥇 Premier', category: 'us' },
+  { name: 'National Robotics Challenge (NRC)', cert: 'US', type: 'Robotics', grade: 'K–12', regDeadline: 'Annual', award: 'Open platform · engineering innovation', badge: '🥇 Premier', category: 'us' },
 ]
 
 // ─── Small components ──────────────────────────────────────────────
@@ -141,7 +158,7 @@ export default function Events() {
     { id: 'host', icon: '🔧', label: 'Host a Competition' },
     { id: 'ai-academy', icon: '🎓', label: 'AI Academy Link' },
     { id: 'ai-assess', icon: '🧠', label: 'AI Assessment' },
-    { id: 'whitelist', icon: '📋', label: 'Prestigious Competition Advisory' },
+    { id: 'whitelist', icon: '📋', label: 'Competition Advisory' },
   ]
 
   const filteredEvents = evtFilter === 'all' ? EVENT_LIST : EVENT_LIST.filter(e => e.type === evtFilter)
@@ -169,7 +186,7 @@ export default function Events() {
         <div className="flex flex-wrap gap-3 justify-center">
           <button onClick={() => setTab('events')} className="btn-primary px-6 py-2.5">View All Competitions →</button>
           <button onClick={() => setHostModal(true)} className="px-6 py-2.5 rounded-xl border border-amber-400 text-amber-700 font-medium hover:bg-amber-50 transition text-sm">🔧 Host a Competition</button>
-          <button onClick={() => setTab('whitelist')} className="px-6 py-2.5 rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition text-sm">📋 Prestigious Competition Advisory</button>
+          <button onClick={() => setTab('whitelist')} className="px-6 py-2.5 rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition text-sm">📋 Competition Advisory</button>
         </div>
         <p className="text-xs text-slate-400 mt-4">500+ award winners · 50+ prestigious competition entries · 120+ partner schools</p>
       </section>
@@ -201,7 +218,7 @@ export default function Events() {
               {[
                 { icon: '🎓', title: 'AI Academy Link', desc: 'Every major competition has a paired Bingo bootcamp — competition-specific training that dramatically improves win rates. Enrol in the bootcamp at the same time you register for the competition.', tab: 'ai-academy', color: '' },
                 { icon: '🧠', title: 'AI Ability Assessment', desc: 'Structured AI ability testing before competition entry. Identifies strengths and gaps, informs your training focus, and can contribute to competition judging (10% weighting available).', tab: 'ai-assess', color: 'border-purple-200/60 bg-purple-50/10' },
-                { icon: '📋', title: 'Prestigious Competition Advisory', desc: 'Expert guidance on which prestigious competitions best fit your student\'s profile and goals. Application support, entry preparation, and direct connection to organisers.', tab: 'whitelist', color: 'border-amber-200/60 bg-amber-50/20' },
+                { icon: '📋', title: 'Competition Advisory', desc: 'Expert guidance on which competitions best fit your student\'s profile and goals. Application support, entry preparation, and direct connection to organisers.', tab: 'whitelist', color: 'border-amber-200/60 bg-amber-50/20' },
               ].map((p,i) => (
                 <div key={i} className={`card p-6 flex flex-col border-2 ${p.color}`}>
                   <div className="text-2xl mb-2">{p.icon}</div>
@@ -255,7 +272,7 @@ export default function Events() {
             <p className="text-slate-500 text-sm">All active and upcoming competitions. Prestigious competitions marked. Bootcamp training available where indicated.</p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {[['all','All'],['prestigious','Prestigious'],['international','International'],['provincial','Provincial'],['bingo','Bingo Cup']].map(([k,l]) => (
+            {[['all','All'],['ai','AI Competitions'],['robotics','Robotics'],['us','US Premier'],['bingo','Bingo Cup']].map(([k,l]) => (
               <button key={k} onClick={() => setEvtFilter(k)} className={`px-4 py-2 rounded-xl text-sm font-medium transition ${evtFilter===k?'bg-primary text-white shadow':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{l}</button>
             ))}
           </div>
@@ -555,41 +572,54 @@ export default function Events() {
         </div>
       )}
 
-      {/* ══════════════════ PRESTIGIOUS COMPETITION ADVISORY ══════════════════ */}
+      {/* ══════════════════ COMPETITION ADVISORY ══════════════════ */}
       {tab === 'whitelist' && (
         <div className="space-y-6">
           <div className="card p-5 bg-amber-50/30 border-amber-200/60">
-            <h2 className="font-bold text-bingo-dark mb-1">📋 Prestigious Competition Advisory</h2>
-            <p className="text-slate-600 text-sm">Prestigious competitions are officially recognised and carry significant weight in 综评, STEM specialty admissions, and 强基 applications. Our advisors help you identify the right competitions, prepare your entry, and navigate the process.</p>
+            <h2 className="font-bold text-bingo-dark mb-1">📋 Competition Advisory</h2>
+            <p className="text-slate-600 text-sm">Global and US mainstream AI & robotics competitions. Our advisors help you identify the right competitions, prepare your entry, and navigate the process.</p>
           </div>
 
-          {/* Prestigious competition directory */}
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Recognised Prestigious Competitions</p>
-            <div className="space-y-3">
-              {PRESTIGIOUS_EVENTS.map((w,i) => (
-                <div key={i} className="card p-4 hover:shadow-sm transition">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-xs font-bold text-amber-700">{w.badge}</span>
-                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{w.cert}</span>
+          {/* Competition directory by category */}
+          <div className="space-y-6">
+            {['ai','robotics','us'].map(cat => {
+              const items = COMPETITION_DIRECTORY.filter(x => x.category === cat)
+              const header = COMPETITION_DIRECTORY.find(x => x.category === cat && x.categoryLabel)
+              if (!header || items.length === 0) return null
+              const comps = items.filter(x => x.name)
+              return (
+                <div key={cat}>
+                  <div className="mb-2">
+                    <h3 className="font-semibold text-bingo-dark">{header.categoryLabel}</h3>
+                    <p className="text-xs text-slate-500">{header.desc}</p>
+                  </div>
+                  <div className="space-y-2">
+                    {comps.map((w,i) => (
+                      <div key={i} className="card p-4 hover:shadow-sm transition">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="text-xs font-bold text-amber-700">{w.badge}</span>
+                              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{w.cert}</span>
+                            </div>
+                            <h3 className="font-semibold text-bingo-dark text-sm">{w.name}</h3>
+                            <p className="text-xs text-slate-500 mt-0.5">{w.type} · {w.grade} · Registration: {w.regDeadline}</p>
+                            <p className="text-xs text-primary mt-0.5">{w.award}</p>
+                          </div>
+                          <button onClick={() => setLeadModal({ title: `Competition Advisory: ${w.name}`, subtitle: 'Free consultation · entry preparation support' })} className="btn-primary text-xs px-3 py-1.5 shrink-0">Consult →</button>
+                        </div>
                       </div>
-                      <h3 className="font-semibold text-bingo-dark text-sm">{w.name}</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">{w.type} · {w.grade} · Registration: {w.regDeadline}</p>
-                      <p className="text-xs text-primary mt-0.5">{w.award}</p>
-                    </div>
-                    <button onClick={() => setLeadModal({ title: `Prestigious Competition Advisory: ${w.name}`, subtitle: 'Free consultation · entry preparation support' })} className="btn-primary text-xs px-3 py-1.5 shrink-0">Consult →</button>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              )
+            })}
           </div>
 
           {/* Advisory service */}
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { icon: '🎯', title: 'Competition Matching', desc: 'We assess your student\'s current level, interests, and goals, then identify the 2–3 prestigious competitions that best fit.' },
+              { icon: '🎯', title: 'Competition Matching', desc: 'We assess your student\'s current level, interests, and goals, then identify the 2–3 competitions that best fit.' },
               { icon: '📝', title: 'Entry Preparation', desc: 'Support for project development, written submissions, and presentation preparation aligned to each competition\'s judging rubric.' },
               { icon: '🔗', title: 'Direct Connection', desc: 'For schools and institutions, we facilitate direct contact with competition organisers for group entries and partnership arrangements.' },
             ].map((s,i) => (
