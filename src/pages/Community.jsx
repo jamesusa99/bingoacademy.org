@@ -218,6 +218,7 @@ export default function Community() {
     { id: 'checkin', icon: '📅', label: 'Check-In & Points' },
     { id: 'courses', icon: '📜', label: 'Certified Courses' },
     { id: 'partners', icon: '🏫', label: 'Partner Institutions' },
+    { id: 'forum', icon: '💬', label: '上上AI教育论坛' },
   ]
 
   const doCheckin = (id) => setCheckedIn(p => ({ ...p, [id]: true }))
@@ -239,7 +240,7 @@ export default function Community() {
           Your complete AI learning ecosystem — structured, social, and results-focused.
         </p>
         <div className="flex flex-wrap gap-2 justify-center text-xs mb-6">
-          {['University-affiliated mentors','Competition & admissions guidance','Certified course programmes','Daily check-in point system','Bingo AI Scholar Honours'].map((t,i) => (
+          {['University-affiliated mentors','Competition & admissions guidance','Certified course programmes','Daily check-in point system','Bingo AI Scholar Honours','上上AI教育论坛'].map((t,i) => (
             <span key={i} className="bg-white/80 border border-primary/20 rounded-full px-3 py-1.5 text-slate-700">{t}</span>
           ))}
         </div>
@@ -696,6 +697,45 @@ export default function Community() {
             <h3 className="font-semibold text-bingo-dark mb-2">Institutional Partnership</h3>
             <p className="text-sm text-slate-600 mb-3">Partner institutions jointly certify our Scholar certificates, provide research training resources, and sponsor competition opportunities for our students.</p>
             <a href="/#/join" className="btn-primary text-sm px-5 py-2 inline-block">Become a Partner Institution →</a>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════
+          TAB: 上上AI教育论坛
+      ══════════════════════════════════════════ */}
+      {tab === 'forum' && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="font-bold text-bingo-dark mb-1">💬 上上AI教育论坛</h2>
+            <p className="text-slate-500 text-sm">权威的AI教育交流平台，汇聚专家、家长与学子，分享前沿理念、实践经验和升学规划，助力孩子成为面向未来的AI人才。</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="card p-6 border-primary/20 hover:shadow-md transition">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">🎤</div>
+                <div>
+                  <h3 className="font-semibold text-bingo-dark">专家讲座与圆桌</h3>
+                  <p className="text-xs text-slate-500">一线学者与行业大咖定期分享</p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600">高校教授、竞赛金牌教练、STEM招生专家，围绕AI素养、竞赛路径、升学规划等话题进行深度分享与互动。</p>
+            </div>
+            <div className="card p-6 border-amber-200/60 bg-amber-50/20 hover:shadow-md transition">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl">📋</div>
+                <div>
+                  <h3 className="font-semibold text-bingo-dark">家长经验交流</h3>
+                  <p className="text-xs text-slate-500">真实案例与避坑指南</p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600">家长分享孩子从零基础到获奖、从迷茫到清晰规划的亲身经历，互相启发，少走弯路。</p>
+            </div>
+          </div>
+          <div className="card p-5 bg-slate-50 border-slate-200">
+            <h3 className="font-semibold text-bingo-dark mb-2">参与方式</h3>
+            <p className="text-sm text-slate-600 mb-3">加入 Bingo AI 学习社区即可免费参与上上AI教育论坛活动。论坛不定期举办线上讲座、家长沙龙及专家答疑，敬请关注社群通知。</p>
+            <button onClick={() => setLeadModal('预约上上AI教育论坛活动')} className="btn-primary text-sm px-5 py-2">预约参加论坛活动 →</button>
           </div>
         </div>
       )}
