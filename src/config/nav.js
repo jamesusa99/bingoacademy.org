@@ -1,13 +1,12 @@
 // Main nav groups: groups separated by dividers
 export const mainNavGroups = [
-  [{ path: '/', label: 'Home' }],
-  [{ path: '/showcase', label: 'Showcase' }],
+  [{ path: '/', label: 'AI Era Portal' }],
+  [{ path: '/showcase', label: 'Achievements' }],
   [
     { path: '/courses', label: 'AI Courses' },
     { path: '/research', label: 'Science Camp' },
     { path: '/events', label: 'Events Center' },
     { path: '/community', label: 'AI Community' },
-    { path: '/growth', label: 'Growth Plan' },
   ],
   [{ path: '/cert', label: 'Certification' }],
   [{ path: '/mall', label: 'AI Mall' }],

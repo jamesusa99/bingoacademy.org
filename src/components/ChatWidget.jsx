@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const GREETING = 'Hi! I\'m Bingo AI Assistant. How can I help you today? You can ask about our courses, Science Camp, or admissions.'
 const FALLBACK = 'Thanks for your message. For detailed inquiries, please email us or visit our Contact page. Is there anything else I can help with?'
@@ -21,6 +22,7 @@ function getReply(text) {
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
   const [messages, setMessages] = useState([
     { role: 'assistant', text: GREETING, id: 0 },
   ])
@@ -53,6 +55,17 @@ export default function ChatWidget() {
 
   return (
     <>
+      {/* AI Assessment floating button */}
+      <button
+        type="button"
+        onClick={() => navigate('/ai-test')}
+        className="fixed bottom-6 right-24 z-40 h-14 px-4 rounded-full bg-amber-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2 text-sm font-semibold"
+        aria-label="AI Assessment"
+      >
+        <span className="text-base">🧠</span>
+        <span>AI Test</span>
+      </button>
+
       <button
         type="button"
         onClick={() => setOpen(!open)}

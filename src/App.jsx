@@ -14,7 +14,6 @@ import Tools from './pages/Tools'
 import ToolDetail from './pages/ToolDetail'
 import Research from './pages/Research'
 import Career from './pages/Career'
-import Growth from './pages/Growth'
 import Events from './pages/Events'
 import Certification from './pages/Certification'
 import Mall from './pages/Mall'
@@ -26,6 +25,7 @@ import ProfileWorks from './pages/ProfileWorks'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
+import AIAssessment from './pages/AIAssessment'
 
 export default function App() {
   return (
@@ -46,7 +46,6 @@ export default function App() {
         <Route path="/tools/detail/:id" element={<ToolDetail />} />
         <Route path="/research" element={<Research />} />
         <Route path="/career" element={<Career />} />
-        <Route path="/growth" element={<Growth />} />
         <Route path="/events" element={<Events />} />
         <Route path="/cert" element={<Certification />} />
         <Route path="/mall" element={<Mall />} />
@@ -58,6 +57,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/ai-test" element={<AIAssessment />} />
       </Routes>
     </Layout>
   )

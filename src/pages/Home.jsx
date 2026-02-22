@@ -1,27 +1,69 @@
 import { Link } from 'react-router-dom'
 
-const HIGHLIGHTS = [
-  { icon: '🎓', title: 'Expert Mentors', desc: 'University professors & AI researchers from top institutions' },
-  { icon: '🏆', title: 'Competition Ready', desc: 'International AI competitions, awards & recognition' },
-  { icon: '🔬', title: 'Hands-On Projects', desc: 'Real AI projects that build portfolios and research skills' },
-  { icon: '📈', title: 'College Advantage', desc: 'STEM specialty track admissions and transcript-level achievement' },
+const STATS = [
+  { value: '10,000+', label: 'Students Served' },
+  { value: '92%', label: 'Competition Award Rate' },
+  { value: '300+', label: 'International Awards' },
+  { value: '20+', label: 'Years of Research Expertise' },
 ]
 
 const PAIN_POINTS = [
-  'What should students learn to stay competitive in the AI era?',
-  'How do I build a strong AI portfolio for college admissions?',
-  'Which AI skills matter most for top universities?',
-  'My student is curious about AI—how do they learn systematically?',
-  'How do I go beyond using AI tools to actually building with them?',
-  'How can AI projects lead to real competition awards and recognition?',
-  'Which AI courses are designed for high-achieving students?',
-  'How do I connect AI skills to college essays and recommendations?',
+  {
+    icon: '📚',
+    tag: 'No Structured Path',
+    problem: 'No AI curriculum at school—students don\'t know where to start or how to progress systematically.',
+    solutionTitle: 'A complete tiered curriculum from foundations to college-track achievement',
+    solutions: [
+      { label: 'Advanced Track · Ages 14–18', desc: 'STEM specialty admissions, college-level AI research', to: '/courses?type=exam' },
+      { label: 'Intermediate Track · Ages 11–14', desc: 'Applied AI tools, project building, competition prep', to: '/courses?type=contest' },
+      { label: 'Foundations Track · Ages 8–11', desc: 'AI literacy, computational thinking, creativity', to: '/courses?type=literacy' },
+    ],
+    note: 'Students across 20+ countries · 95% course completion rate',
+    cta: 'Explore Courses',
+    to: '/courses',
+  },
+  {
+    icon: '🏆',
+    tag: 'Skills Without Proof',
+    problem: 'Students learn AI but have no credentials, awards, or portfolio items to show colleges or employers.',
+    solutionTitle: 'International competitions + certificates that make ability visible',
+    solutions: [
+      { label: 'AI Skill Certification', desc: 'Recognized credentials tied to tiered levels', to: '/cert' },
+      { label: 'International AI Competitions', desc: 'Guided prep for global AI and science competitions', to: '/events' },
+      { label: 'Science Camp Research Track', desc: 'Publishable research projects with mentor guidance', to: '/research' },
+    ],
+    note: '2,000+ students have earned competitive awards and college distinctions',
+    cta: 'View Events',
+    to: '/events',
+  },
+  {
+    icon: '🔬',
+    tag: 'Using AI vs. Creating with It',
+    problem: 'Students rely on AI tools passively—they lack the depth to build, innovate, and think critically.',
+    solutionTitle: 'A Learn → Practice → Compete → Create cycle that builds real makers',
+    solutions: [
+      { label: 'Science Camp', desc: 'Immersive project experience with certified mentor teams', to: '/research' },
+      { label: 'Student Showcase', desc: 'Publish and share AI projects with a global community', to: '/showcase' },
+    ],
+    note: '100,000+ original AI student works · 300+ national science innovation awards',
+    cta: 'See Student Work',
+    to: '/showcase',
+  },
 ]
 
-const HOT_COURSES = [
-  { name: 'AI Literacy & Foundations', to: '/courses?type=literacy', tag: 'Flagship', desc: 'Build deep understanding of AI systems, not just tool usage' },
-  { name: 'Science Camp · AI Research Track', to: '/research', tag: 'Camp', desc: 'Immersive research experience with real project outcomes' },
-  { name: 'STEM Specialty Track Admissions', to: '/courses?type=exam', tag: 'Admissions', desc: 'Targeted prep for STEM-focused college pathways' },
+const CORE_PRODUCTS = [
+  { icon: '🌱', title: 'AI Foundations', desc: 'Ages 8–11 · Literacy & meta-cognition', to: '/courses?type=literacy' },
+  { icon: '🚀', title: 'Advanced Track', desc: 'Ages 14–18 · STEM admissions', to: '/courses?type=exam' },
+  { icon: '⛺', title: 'Science Camp', desc: 'Research · Projects · Awards', to: '/research' },
+  { icon: '🏅', title: 'Events Center', desc: 'Competitions · Bootcamps · Certs', to: '/events' },
+  { icon: '👥', title: 'AI Community', desc: 'Mentors · Peers · Q&A', to: '/community' },
+  { icon: '📈', title: 'Certification', desc: 'Assessment · Personalized path', to: '/cert' },
+]
+
+const TESTIMONIALS = [
+  { quote: 'My daughter won a national AI innovation award after just one semester. The curriculum is genuinely rigorous.', name: 'Parent · New York', stars: 5 },
+  { quote: 'The Science Camp gave me a real research project I could put on my college application. Completely changed my trajectory.', name: 'Student · Grade 11', stars: 5 },
+  { quote: 'After partnering with Bingo Academy, our school\'s STEM program enrollment increased by 60%. The curriculum and support are excellent.', name: 'STEM Coordinator · International School', stars: 5 },
 ]
 
 export default function Home() {
@@ -29,126 +71,148 @@ export default function Home() {
     <div className="max-w-7xl mx-auto px-4 py-8">
 
       {/* Hero */}
-      <section className="mb-12 text-center py-10 section-tech rounded-2xl">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-bingo-dark leading-tight mb-4">
+      <section className="mb-10 text-center py-12 section-tech rounded-2xl px-4">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-bingo-dark leading-tight mb-5">
           Future-Ready AI Education<br className="hidden sm:block" /> for High-Performing Students
         </h1>
         <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto mb-8">
-          Bingo AI Academy equips students with the skills, projects, and credentials to stand out in the AI era—from foundations to international competitions.
+          Bingo AI Academy gives students the skills, projects, and credentials to lead in the AI era—from foundations to international competitions and college-track research.
         </p>
-        <div className="flex flex-wrap gap-3 justify-center">
-          <Link to="/courses" className="btn-primary px-6 py-2.5 text-base">Explore Courses</Link>
-          <Link to="/research" className="px-6 py-2.5 text-base rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition">Science Camp</Link>
+        <div className="flex flex-wrap gap-3 justify-center mb-10">
+          <Link to="/ai-test" className="btn-primary px-6 py-2.5 text-base">Free AI Assessment →</Link>
+          <Link to="/courses" className="px-6 py-2.5 text-base rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition">Explore Courses</Link>
+          <Link to="/research" className="px-6 py-2.5 text-base rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition">Science Camp</Link>
         </div>
-      </section>
-
-      {/* Why Bingo */}
-      <section className="mb-12">
-        <h2 className="section-title mb-6">Why Bingo AI Academy</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {HIGHLIGHTS.map((h, i) => (
-            <div key={i} className="card p-5 text-center hover:shadow-md hover:border-primary/30 transition">
-              <div className="text-3xl mb-2">{h.icon}</div>
-              <div className="font-semibold text-bingo-dark">{h.title}</div>
-              <p className="text-sm text-slate-500 mt-1">{h.desc}</p>
+        {/* Stats badges */}
+        <div className="flex flex-wrap justify-center gap-4">
+          {STATS.map((s, i) => (
+            <div key={i} className="bg-white/80 border border-primary/20 rounded-xl px-5 py-2 text-center shadow-sm">
+              <div className="text-xl font-bold text-primary">{s.value}</div>
+              <div className="text-xs text-slate-500">{s.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Common questions */}
-      <section className="mb-12 max-w-4xl mx-auto">
-        <h2 className="section-title mb-2">Questions We Hear</h2>
-        <p className="text-slate-500 text-sm mb-5">Sound familiar? We have answers.</p>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-          {PAIN_POINTS.map((q, i) => (
-            <li key={i} className="card px-4 py-3 text-slate-700 hover:border-primary/30 hover:shadow-sm transition">
-              {q}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Flagship courses */}
+      {/* Pain points → solutions */}
       <section className="mb-12">
-        <h2 className="section-title mb-2">Flagship Programs</h2>
-        <p className="text-slate-500 text-sm mb-5">Rigorous, research-backed courses for students who want more than basics</p>
-        <div className="grid sm:grid-cols-3 gap-4">
-          {HOT_COURSES.map((c, i) => (
-            <Link key={i} to={c.to} className="card p-6 hover:shadow-md transition border-primary/20 flex flex-col">
-              <span className="text-xs px-2 py-0.5 rounded bg-primary/20 text-primary self-start">{c.tag}</span>
-              <div className="font-semibold text-primary mt-3">{c.name}</div>
-              <p className="text-sm text-slate-500 mt-1">{c.desc}</p>
-            </Link>
+        <h2 className="section-title mb-2">Every Challenge, Solved</h2>
+        <p className="text-slate-500 text-sm mb-6">Each concern has a dedicated solution, outcome, and action step</p>
+        <div className="space-y-6">
+          {PAIN_POINTS.map((p, i) => (
+            <div key={i} className="card p-6 border-primary/15">
+              <div className="flex flex-wrap items-start gap-4 mb-4">
+                <span className="text-3xl">{p.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded mb-2 inline-block">{p.tag}</span>
+                  <p className="text-slate-600 text-sm">{p.problem}</p>
+                </div>
+              </div>
+              <h3 className="font-semibold text-bingo-dark mb-3">{p.solutionTitle}</h3>
+              <ul className="space-y-2 mb-4">
+                {p.solutions.map((s, j) => (
+                  <li key={j}>
+                    <Link to={s.to} className="flex items-start gap-2 text-sm hover:text-primary transition group">
+                      <span className="text-primary mt-0.5">✓</span>
+                      <span><span className="font-medium">{s.label}</span> · <span className="text-slate-500 group-hover:text-primary transition">{s.desc} →</span></span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="text-xs text-slate-400">✓ {p.note}</span>
+                <Link to={p.to} className="btn-primary text-sm px-4 py-1.5">{p.cta}</Link>
+              </div>
+            </div>
           ))}
-        </div>
-      </section>
-
-      {/* AI Assessment */}
-      <section className="mb-12">
-        <div className="card p-6 bg-gradient-to-r from-cyan-50 to-sky-50 border-primary/20 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h3 className="font-semibold text-bingo-dark text-lg">AI Capability Assessment</h3>
-            <p className="text-slate-600 text-sm mt-1">Discover your student's strengths and get a personalized learning path recommendation.</p>
-            <Link to="/growth" className="text-primary font-medium mt-2 inline-block text-sm">Take Free Assessment →</Link>
-          </div>
-          <Link to="/courses" className="btn-primary shrink-0">View Recommended Courses</Link>
         </div>
       </section>
 
       {/* Core products */}
       <section className="mb-12">
-        <h2 className="section-title mb-6">Core Programs & Services</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <Link to="/courses?type=literacy" className="card p-6 text-center hover:shadow-md transition">
-            <div className="text-primary font-semibold">AI Literacy</div>
-            <div className="text-sm text-slate-500 mt-1">Foundations & Meta-cognition</div>
-          </Link>
-          <Link to="/courses?type=exam" className="card p-6 text-center hover:shadow-md transition">
-            <div className="text-primary font-semibold">Admissions Prep</div>
-            <div className="text-sm text-slate-500 mt-1">STEM Specialty Track</div>
-          </Link>
-          <Link to="/research" className="card p-6 text-center hover:shadow-md transition">
-            <div className="text-primary font-semibold">Science Camp</div>
-            <div className="text-sm text-slate-500 mt-1">Research · Projects · Awards</div>
-          </Link>
-          <Link to="/events" className="card p-6 text-center hover:shadow-md transition border-primary/30">
-            <div className="text-primary font-semibold">Events Center</div>
-            <div className="text-sm text-slate-500 mt-1">Competitions · Bootcamps</div>
-          </Link>
-          <Link to="/community" className="card p-6 text-center hover:shadow-md transition border-primary/30">
-            <div className="text-primary font-semibold">AI Community</div>
-            <div className="text-sm text-slate-500 mt-1">Mentors · Peers · Q&A</div>
-          </Link>
+        <h2 className="section-title mb-2">Core Programs & Services</h2>
+        <p className="text-slate-500 text-sm mb-5">Every program is designed with a clear age range, outcome, and action entry</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {CORE_PRODUCTS.map((c, i) => (
+            <Link key={i} to={c.to} className="card p-5 text-center hover:shadow-md hover:border-primary/30 transition group">
+              <div className="text-2xl mb-2">{c.icon}</div>
+              <div className="font-semibold text-primary text-sm group-hover:underline">{c.title}</div>
+              <div className="text-xs text-slate-500 mt-1">{c.desc}</div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* AI Assessment CTA */}
+      <section className="mb-12">
+        <div className="card p-6 bg-gradient-to-r from-cyan-50 to-sky-50 border-primary/20 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-bingo-dark text-lg">🧠 Free AI Capability Assessment</h3>
+            <p className="text-slate-600 text-sm mt-1">Takes just 3 minutes. Get a personalized learning path and course recommendation instantly.</p>
+            <Link to="/ai-test" className="text-primary font-medium mt-2 inline-block text-sm">Start Free Assessment →</Link>
+          </div>
+          <Link to="/courses" className="btn-primary shrink-0">View Recommended Courses</Link>
+        </div>
+      </section>
+
+      {/* Trust / testimonials */}
+      <section className="mb-12">
+        <h2 className="section-title mb-6">Results You Can Trust</h2>
+        <div className="grid md:grid-cols-3 gap-4 mb-8">
+          {TESTIMONIALS.map((t, i) => (
+            <div key={i} className="card p-6 flex flex-col">
+              <div className="text-yellow-400 text-sm mb-2">{'★'.repeat(t.stars)}</div>
+              <p className="text-slate-600 text-sm leading-relaxed flex-1">"{t.quote}"</p>
+              <div className="text-xs text-slate-400 mt-3 font-medium">{t.name}</div>
+            </div>
+          ))}
+        </div>
+        {/* Trust badges */}
+        <div className="card p-6 bg-slate-50 border-slate-200">
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-600">
+            <span className="flex items-center gap-1.5"><span className="text-primary">✓</span> Official competition partner</span>
+            <span className="flex items-center gap-1.5"><span className="text-primary">✓</span> University-affiliated research mentors</span>
+            <span className="flex items-center gap-1.5"><span className="text-primary">✓</span> STEM college admissions guidance base</span>
+            <span className="flex items-center gap-1.5"><span className="text-primary">✓</span> Strategic partnerships with leading AI companies</span>
+          </div>
         </div>
       </section>
 
       {/* Mission */}
-      <section className="py-8 border-t max-w-3xl mx-auto text-center">
+      <section className="mb-12 py-8 border-t max-w-3xl mx-auto text-center">
         <h2 className="text-xl sm:text-2xl font-bold text-bingo-dark mb-4">
-          Mastering AI—Not Just Using It
+          Mastering AI — Not Just Using It
         </h2>
         <p className="text-slate-600 leading-relaxed mb-4">
-          As AI reshapes every industry, the students who thrive won't be those who use AI passively—they'll be the ones who understand it, build with it, and lead with it.
+          As AI reshapes every field, the students who lead won't be those who use AI passively — they'll be the ones who understand it deeply, build with it confidently, and innovate with purpose.
         </p>
         <p className="text-slate-600 leading-relaxed">
-          Bingo AI Academy is designed for high-performing students who want to go beyond the basics: building real projects, earning meaningful credentials, and developing the AI fluency that top universities and employers are looking for.
+          Bingo AI Academy is built for high-performing students ready to go beyond the basics: real projects, meaningful credentials, and the AI fluency that top universities and employers are looking for.
         </p>
       </section>
 
       {/* Institutional partnerships */}
       <section className="py-8 border-t">
-        <h2 className="section-title mb-4">Institutional Partnerships</h2>
-        <div className="grid sm:grid-cols-2 gap-4">
+        <h2 className="section-title mb-2">Institutional Partnerships</h2>
+        <p className="text-slate-500 text-sm mb-5">500+ partner institutions · Average 60% revenue growth after partnership</p>
+        <div className="grid sm:grid-cols-3 gap-4">
           <a href="/#/join" className="card p-6 border-primary/30 hover:shadow-md transition flex flex-col">
+            <div className="text-xl mb-2">🏫</div>
             <div className="font-semibold text-primary">School & Institution Partnership</div>
-            <p className="text-sm text-slate-600 mt-1">Bring Bingo AI courses to your school—curriculum licensing, teacher training, and full operations support</p>
-            <span className="text-sm text-primary mt-3">Learn more →</span>
+            <p className="text-sm text-slate-600 mt-1">Curriculum licensing, teacher training, and full operations support</p>
+            <span className="text-sm text-primary mt-3">Get Free Proposal →</span>
+          </a>
+          <a href="/#/join" className="card p-6 border-primary/30 hover:shadow-md transition flex flex-col">
+            <div className="text-xl mb-2">🤝</div>
+            <div className="font-semibold text-primary">Franchise Partner</div>
+            <p className="text-sm text-slate-600 mt-1">Full brand support, complete curriculum system, and co-build AI education</p>
+            <span className="text-sm text-primary mt-3">Learn More →</span>
           </a>
           <a href="/#/oem" className="card p-6 border-primary/30 hover:shadow-md transition flex flex-col">
+            <div className="text-xl mb-2">⚙️</div>
             <div className="font-semibold text-primary">OEM Partnership</div>
-            <p className="text-sm text-slate-600 mt-1">Custom courses, tools, and co-branded AI education programs built to your needs</p>
-            <span className="text-sm text-primary mt-3">Learn more →</span>
+            <p className="text-sm text-slate-600 mt-1">Custom courses, tools, co-branded products and technology transfer</p>
+            <span className="text-sm text-primary mt-3">Learn More →</span>
           </a>
         </div>
       </section>
