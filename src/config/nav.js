@@ -12,11 +12,11 @@ export const mainNavGroups = [
   [{ path: '/cert', label: 'Certification' }],
   [{ path: '/mall', label: 'AI Mall' }],
   [{ path: '/charity', label: 'Honors & Charity' }],
-  [{ path: '/profile', label: 'Profile' }],
 ]
 
-// Auth nav
+// Auth nav (right side — Profile, Login, Register)
 export const authNav = [
+  { path: '/profile', label: 'Profile' },
   { path: '/login', label: 'Login' },
   { path: '/register', label: 'Register' },
 ]

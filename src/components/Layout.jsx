@@ -8,7 +8,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 bg-bingo-dark text-white shadow-lg border-b border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b]">
+      <header className="sticky top-0 z-50 bg-bingo-dark text-white shadow-lg border-b border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b] pt-[env(safe-area-inset-top)]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
           <div className="flex items-center gap-2 lg:gap-4 min-h-14">
             <Link to="/" className="shrink-0 flex items-center gap-2">
@@ -35,12 +35,12 @@ export default function Layout({ children }) {
                 </React.Fragment>
               ))}
             </nav>
-            <div className="hidden lg:flex items-center gap-1 shrink-0">
+            <div className="hidden lg:flex items-center gap-1 shrink-0 ml-2">
               {authNav.map(({ path, label }) => (
                 <Link
                   key={path}
                   to={path}
-                  className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
+                  className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors shrink-0 ${
                     loc.pathname === path ? 'bg-cyan-500 text-white' : 'text-slate-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -50,18 +50,18 @@ export default function Layout({ children }) {
             </div>
           </div>
           {/* Mobile nav */}
-          <div className="lg:hidden pb-3 flex flex-wrap gap-1">
-            {mainNav.slice(0, 6).map(({ path, label }) => (
-              <Link key={path} to={path} className="px-2 py-1 text-xs rounded bg-white/10">{label}</Link>
+          <div className="lg:hidden pt-2 pb-3 flex flex-wrap gap-2 items-center">
+            {mainNav.slice(0, 5).map(({ path, label }) => (
+              <Link key={path} to={path} className="px-2 py-1.5 text-xs rounded bg-white/10 shrink-0">{label}</Link>
             ))}
-            <Link to="/mall" className="px-2 py-1 text-xs rounded bg-white/10">AI Mall</Link>
-            <Link to="/profile" className="px-2 py-1 text-xs rounded bg-primary">Profile</Link>
-            <Link to="/login" className="px-2 py-1 text-xs rounded bg-white/10">Login</Link>
-            <Link to="/register" className="px-2 py-1 text-xs rounded bg-white/10">Register</Link>
+            <Link to="/mall" className="px-2 py-1.5 text-xs rounded bg-white/10 shrink-0">AI Mall</Link>
+            <Link to="/profile" className={`px-3 py-1.5 text-xs rounded shrink-0 font-medium ${loc.pathname.startsWith('/profile') ? 'bg-cyan-500 text-white' : 'bg-primary'}`}>Profile</Link>
+            <Link to="/login" className="px-2 py-1.5 text-xs rounded bg-white/10 shrink-0">Login</Link>
+            <Link to="/register" className="px-2 py-1.5 text-xs rounded bg-white/10 shrink-0">Register</Link>
           </div>
         </div>
       </header>
-      <main className="flex-1 pt-20 lg:pt-16">{children}</main>
+      <main className="flex-1 pt-24 lg:pt-20">{children}</main>
       <footer className="bg-bingo-dark text-slate-400 text-sm py-8 border-t border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap justify-between gap-6">
           <div>
