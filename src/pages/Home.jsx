@@ -28,7 +28,7 @@ const PAIN_POINTS = [
     problem: 'Students learn AI but have no credentials, awards, or portfolio to show — making their abilities invisible in admissions.',
     solutionTitle: 'Competitions + certificates that make ability visible and admissions-ready',
     solutions: [
-      { label: 'Whitelist Competition Camp', desc: 'Official prep, award rate 92%, full service', to: '/events' },
+      { label: 'Prestigious Competition Camp', desc: 'Official prep, award rate 92%, full service', to: '/events' },
       { label: 'International AI Events', desc: 'Global stage, expert coaching, background building', to: '/events' },
       { label: 'AI Ability Certificate', desc: 'Authoritative credential, college admissions recognised', to: '/cert' },
     ],
@@ -72,7 +72,7 @@ const C_MARKETING = [
   { icon: '⚡', bg: 'bg-red-50 border-red-200/60', title: '¥9.9 Parent Flash Sale', desc: 'Orig ¥99 · 1,000 slots only', to: '/mall', hot: true },
   { icon: '🧠', bg: 'bg-primary/5 border-primary/20', title: 'Free AI Assessment', desc: 'Personalised learning roadmap', to: '/ai-test', hot: true },
   { icon: '👥', bg: 'bg-amber-50 border-amber-200/60', title: 'Group Buy · Save 50%', desc: '2-person group · any course', to: '/mall?tag=group', hot: false },
-  { icon: '🏕️', bg: 'bg-green-50 border-green-200/60', title: 'Whitelist Camp Early Bird', desc: 'Sign up now, save ¥300', to: '/events', hot: false },
+  { icon: '🏕️', bg: 'bg-green-50 border-green-200/60', title: 'Prestigious Competition Camp Early Bird', desc: 'Sign up now, save ¥300', to: '/events', hot: false },
   { icon: '💰', bg: 'bg-violet-50 border-violet-200/60', title: 'Share & Earn', desc: 'Double commission this month', to: '/profile#promo', hot: false },
   { icon: '🎁', bg: 'bg-slate-50 border-slate-200', title: 'Claim Coupon', desc: 'Redeem at checkout', to: '/profile', hot: false },
 ]
@@ -92,7 +92,7 @@ const TESTIMONIALS = [
 
 const FREE_RESOURCES_C = [
   { icon: '📘', title: 'Ages 6–18 AI Learning Pathway Guide', type: 'PDF Guide' },
-  { icon: '📋', title: 'Whitelist Competition Strategy + Sample Questions', type: 'PDF Guide' },
+  { icon: '📋', title: 'Prestigious Competition Strategy + Sample Questions', type: 'PDF Guide' },
   { icon: '📗', title: '10 Methods for Parents to Guide AI Learning', type: 'PDF Guide' },
   { icon: '🎥', title: 'Free Live Class: STEM Admissions Policy Explained', type: 'Live Preview' },
 ]
@@ -181,7 +181,7 @@ export default function Home() {
 
               {/* Trust micro-badges */}
               <div className="flex flex-wrap gap-2 mb-6">
-                {['✓ Whitelist competition official partner','✓ STEM admissions guidance base','✓ 10,000+ students served','✓ 92% award rate'].map((b,i) => (
+                {['✓ Prestigious competition official partner','✓ STEM admissions guidance base','✓ 10,000+ students served','✓ 92% award rate'].map((b,i) => (
                   <span key={i} className="text-xs bg-white/80 border border-primary/20 rounded-full px-3 py-1 text-slate-700">{b}</span>
                 ))}
               </div>
@@ -209,7 +209,7 @@ export default function Home() {
                     {[
                       { emoji: '🧠', title: 'Free AI Ability Assessment', sub: '3 min · personalised learning roadmap', to: '/ai-test', style: 'btn-primary' },
                       { emoji: '⚡', title: '¥9.9 Parent Essentials Course', sub: 'Flash sale · 1,000 slots · orig. ¥99', to: '/mall', style: 'bg-amber-500 text-white' },
-                      { emoji: '🏆', title: 'Whitelist Competition Entry', sub: 'Early bird · save ¥300', to: '/events', style: '' },
+                      { emoji: '🏆', title: 'Prestigious Competition Entry', sub: 'Early bird · save ¥300', to: '/events', style: '' },
                     ].map((a,i) => (
                       <Link key={i} to={a.to}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${a.style ? `${a.style} hover:opacity-90` : 'bg-slate-50 hover:bg-slate-100 text-bingo-dark'}`}>
@@ -365,7 +365,7 @@ export default function Home() {
 
               <div className="card p-5 bg-slate-50 border-slate-200">
                 <div className="flex flex-wrap justify-center gap-5">
-                  {['✓ Official whitelist competition partner','✓ University-affiliated research mentors','✓ STEM admissions guidance base','✓ Strategic AI company partnerships'].map((b,i) => (
+                  {['✓ Official prestigious competition partner','✓ University-affiliated research mentors','✓ STEM admissions guidance base','✓ Strategic AI company partnerships'].map((b,i) => (
                     <span key={i} className="text-primary font-medium text-sm">{b}</span>
                   ))}
                 </div>
@@ -430,7 +430,7 @@ export default function Home() {
                 {[
                   { icon: '📚', pain: 'No AI curriculum or incomplete course offering', solution: 'Full 1–9★ Bingo curriculum, ready-to-deliver. OEM licensing available under your institution\'s brand.', cta: 'Get curriculum', ctaTo: '/cert' },
                   { icon: '👩‍🏫', pain: 'Weak AI faculty — teachers lack skills to deliver quality AI lessons', solution: 'Bingo certified teacher training programme. Basic, Advanced, and Master Trainer tracks.', cta: 'Teacher training', ctaTo: '/cert' },
-                  { icon: '🏆', pain: 'No access to competitions — can\'t help students compete nationally', solution: 'Group entry management, dedicated competition coach, whitelist and Bingo Cup access.', cta: 'Events partnership', ctaTo: '/events' },
+                  { icon: '🏆', pain: 'No access to competitions — can\'t help students compete nationally', solution: 'Group entry management, dedicated competition coach, prestigious competitions and Bingo Cup access.', cta: 'Events partnership', ctaTo: '/events' },
                   { icon: '📈', pain: 'Enrolment stalling — can\'t differentiate from other tutoring centres', solution: 'Bingo certification badge + platform referral + national rankings. Avg 60% enrolment growth post-partnership.', cta: 'Partnership proposal', ctaTo: '/cert' },
                 ].map((p,i) => (
                   <div key={i} className="card p-5 flex gap-4 items-start hover:shadow-md hover:border-bingo-dark/20 transition">

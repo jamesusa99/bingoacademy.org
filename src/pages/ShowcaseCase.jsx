@@ -10,7 +10,7 @@ const VENTURE_CASES = {
 
 const AWARD_CASES = {
   1: { name: 'James Zhao', title: 'National Youth AI Challenge 1st Prize', content: 'Entry on "AI + Environment": image recognition and data analysis for campus waste sorting. From topic, data collection, model training to deployment—full AI project workflow.\n\nJudge feedback: Clear problem definition, feasible solution, complete presentation. Also used for admissions evaluation and STEM specialty application.', images: ['https://placehold.co/800x450/0f172a/fff?text=1st+Prize'], video: null, links: [{ label: 'Event announcement', url: 'https://example.com/award' }] },
-  2: { name: 'Lily Sun', title: 'Whitelist Event 2nd Prize', content: 'NLP-based subject Q&A and answer generation to support after-class practice and review.', images: [], video: null, links: [] },
+  2: { name: 'Lily Sun', title: 'Prestigious Event 2nd Prize', content: 'NLP-based subject Q&A and answer generation to support after-class practice and review.', images: [], video: null, links: [] },
   3: { name: 'Ethan Zhou', title: 'Provincial 1st Prize', content: 'Multimodal work: voice, image, and text combined in an intelligent learning assistant.', images: ['https://placehold.co/800x450/0f172a/fff?text=Provincial'], video: null, links: [] },
   4: { name: 'Mia Wu', title: 'Bingo Cup Grand Prize', content: 'Creativity and tech combined; full flow from idea to demo.', images: [], video: null, links: [] },
   5: { name: 'Ryan Zheng', title: 'International Event Winner', content: 'Represented school at international youth AI project showcase; recognized by international judges.', images: [], video: null, links: [] },

@@ -50,7 +50,7 @@ const COURSES = {
     price: '$199',
   },
   'contest-1': {
-    name: 'Whitelist Competition Bootcamp',
+    name: 'Prestigious Competition Bootcamp',
     poster: 'https://placehold.co/1400x600/0f172a/ffffff?text=Contest+Training',
     teacher: 'Competition Coaches',
     outline: ['Rules and judging criteria', 'Past papers and question-type breakdown', 'Mock exams and review', '1-on-1 tutoring and debrief'],

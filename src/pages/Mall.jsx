@@ -13,7 +13,7 @@ const COURSES = [
 ]
 
 const EVENTS_PRODUCTS = [
-  { id: 'e1', name: 'National AI Challenge — Full Entry Package', type: 'event', tag: '✦ Whitelist', price: 380, bPrice: 'Group pricing available', desc: 'Registration + materials + mock defence session. Whitelist competition.', deadline: 'Rolling' },
+  { id: 'e1', name: 'National AI Challenge — Full Entry Package', type: 'event', tag: '✦ Prestigious', price: 380, bPrice: 'Group pricing available', desc: 'Registration + materials + mock defence session. Prestigious competition.', deadline: 'Rolling' },
   { id: 'e2', name: 'Competition Bootcamp — 6-Week Sprint', type: 'event', tag: '🏆 Award-focused', price: 890, bPrice: '¥690/student (group)', desc: 'Full competition prep camp. Historically 86% award rate for completing students.', deadline: 'Mar 2026' },
   { id: 'e3', name: 'Bingo Cup AI Design — Entry + Coaching', type: 'event', tag: '🎨 AIGC Track', price: 490, bPrice: 'Group from ¥380', desc: 'Bingo\'s own flagship competition. Entry fee + 4 coaching sessions + judging prep.', deadline: 'Apr 2026' },
   { id: 'e4', name: 'Institution Group Entry Package (10+ students)', type: 'event', tag: '🏫 B-End Exclusive', price: null, bPrice: 'From ¥3,200/group', desc: 'Group entry management + dedicated coach + institution branding support.', deadline: 'Flexible' },
@@ -272,7 +272,7 @@ export default function Mall() {
   const BANNERS = [
     { bg: 'from-primary/20 to-cyan-100', icon: '🎓', headline: 'Spring Sale — AI Courses from ¥9.9', sub: 'Limited time. Parent guide + all starter courses on offer.', cta: 'Shop Courses', target: 'courses' },
     { bg: 'from-amber-100 to-orange-50', icon: '🔬', headline: 'AI Digital Lab — Personal Edition Launch', sub: '3 months cloud access. Start experimenting today.', cta: 'View Lab Plans', target: 'lab' },
-    { bg: 'from-violet-100 to-purple-50', icon: '🏆', headline: 'Competition Season — Entry + Bootcamp Bundles', sub: 'March registration open. Whitelist competitions available.', cta: 'Browse Events', target: 'events' },
+    { bg: 'from-violet-100 to-purple-50', icon: '🏆', headline: 'Competition Season — Entry + Bootcamp Bundles', sub: 'March registration open. Prestigious competitions available.', cta: 'Browse Events', target: 'events' },
   ]
 
   return (
@@ -324,7 +324,7 @@ export default function Mall() {
 
         {/* Stats strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[['10,000+','Products Sold'],['3,500+','Satisfied Families'],['200+','Partner Institutions'],['50+','Whitelist Events']].map(([v,l],i) => (
+          {[['10,000+','Products Sold'],['3,500+','Satisfied Families'],['200+','Partner Institutions'],['50+','Prestigious Events']].map(([v,l],i) => (
             <div key={i} className="card p-3 text-center"><div className="font-bold text-primary">{v}</div><div className="text-xs text-slate-500">{l}</div></div>
           ))}
         </div>
@@ -349,7 +349,7 @@ export default function Mall() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
               {[
                 { icon: '🎓', name: 'AI Courses', sub: 'From ¥9.9', tab: 'courses', hot: true },
-                { icon: '🏆', name: 'Competition', sub: 'Whitelist entry', tab: 'events' },
+                { icon: '🏆', name: 'Competition', sub: 'Prestigious entry', tab: 'events' },
                 { icon: '📜', name: 'Certification', sub: 'Nationally valid', tab: 'cert' },
                 { icon: '📚', name: 'Books & Kits', sub: 'Digital + Physical', tab: 'materials' },
                 { icon: '🔬', name: 'AI Lab', sub: 'Cloud virtual lab', tab: 'lab', hot: true },
@@ -445,7 +445,7 @@ export default function Mall() {
         <div className="space-y-5">
           <div className="card p-4 bg-primary/5 border-primary/20">
             <h2 className="font-bold text-bingo-dark mb-1">🏆 Competition Services</h2>
-            <p className="text-slate-500 text-sm">Entry packages, bootcamp training, and full coaching programmes. Whitelist and Bingo-own competitions.</p>
+            <p className="text-slate-500 text-sm">Entry packages, bootcamp training, and full coaching programmes. Prestigious and Bingo-own competitions.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             {EVENTS_PRODUCTS.map((item,i) => (

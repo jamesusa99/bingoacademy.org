@@ -13,7 +13,7 @@ const MEMBER_TIERS = [
 const MEMBER_BENEFITS = [
   ['AI course discount', '—', '9折', '85折', '7折'],
   ['Competition prep access', 'Free only', 'Partial', 'Most', 'All'],
-  ['Whitelist event support', 'Entry only', 'Entry + guide', 'Entry + materials', 'Entry + camp + 1v1'],
+  ['Prestigious competition support', 'Entry only', 'Entry + guide', 'Entry + materials', 'Entry + camp + 1v1'],
   ['STEM planning', '—', 'Basic docs', 'Plan template', '1v1 planning'],
   ['Mall / teaching kit discount', '—', '95折', '9折', '8折 + free ship'],
   ['Referral commission boost', 'Base', '+5%', '+10%', '+20%'],
@@ -344,7 +344,7 @@ export default function Profile() {
           </div>
           <div className="card p-4 border-primary/20 bg-primary/5">
             <p className="text-xs font-semibold text-primary mb-1">Hot</p>
-            <p className="font-semibold text-bingo-dark text-sm mb-1">Flash sale · Whitelist event early bird</p>
+            <p className="font-semibold text-bingo-dark text-sm mb-1">Flash sale · Prestigious competition early bird</p>
             <p className="text-xs text-slate-500 mb-2">Limited time</p>
             <Link to="/mall" className="text-xs text-primary font-medium hover:underline">Go to Mall →</Link>
           </div>

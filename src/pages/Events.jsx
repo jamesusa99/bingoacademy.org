@@ -4,12 +4,12 @@ import { Link } from 'react-router-dom'
 // ─── Data ──────────────────────────────────────────────────────────
 
 const EVENT_LIST = [
-  { id: 1, name: 'National Youth AI Innovation Challenge', type: 'whitelist', stage: 'Registration Open', students: '8–18 yrs', award: 'National recognition + certificate', enrolled: 1240, whitelist: true, aiCourse: true, desc: 'China\'s premier whitelist youth AI competition. Innovation + engineering + presentation.' },
-  { id: 2, name: 'China Robotics & AI Competition', type: 'whitelist', stage: 'Prep Phase', students: '10–18 yrs', award: 'Provincial / National prizes', enrolled: 890, whitelist: true, aiCourse: true, desc: 'Hands-on robotics and AI integration competition. Team and individual tracks.' },
+  { id: 1, name: 'National Youth AI Innovation Challenge', type: 'prestigious', stage: 'Registration Open', students: '8–18 yrs', award: 'National recognition + certificate', enrolled: 1240, whitelist: true, aiCourse: true, desc: 'Premier prestigious youth AI competition. Innovation + engineering + presentation.' },
+  { id: 2, name: 'China Robotics & AI Competition', type: 'prestigious', stage: 'Prep Phase', students: '10–18 yrs', award: 'Provincial / National prizes', enrolled: 890, whitelist: true, aiCourse: true, desc: 'Hands-on robotics and AI integration competition. Team and individual tracks.' },
   { id: 3, name: 'AIOT Innovation Competition', type: 'provincial', stage: 'Entries Closing Soon', students: '12–18 yrs', award: 'Provincial + industry certificate', enrolled: 560, whitelist: false, aiCourse: true, desc: 'AI + IoT integration challenge. Smart home, smart city, wearables tracks.' },
   { id: 4, name: 'WAIC Youth AI Competition', type: 'international', stage: 'Open', students: '14–18 yrs', award: 'International certificate + recognition', enrolled: 320, whitelist: false, aiCourse: false, desc: 'World AI Conference youth track. International exposure and networking.' },
   { id: 5, name: 'Bingo Cup AI Design Challenge', type: 'bingo', stage: 'Active', students: '8–16 yrs', award: 'Prize money + Bingo scholarship', enrolled: 2100, whitelist: false, aiCourse: true, desc: 'Bingo Academy\'s own flagship competition. AIGC, AI art, and data science tracks.' },
-  { id: 6, name: 'Science & Technology Innovation Award', type: 'whitelist', stage: 'Upcoming', students: '14–18 yrs', award: 'National award + 综评 material', enrolled: 780, whitelist: true, aiCourse: true, desc: 'Established national competition. Research project + defence format.' },
+  { id: 6, name: 'Science & Technology Innovation Award', type: 'prestigious', stage: 'Upcoming', students: '14–18 yrs', award: 'National award + 综评 material', enrolled: 780, whitelist: true, aiCourse: true, desc: 'Established national competition. Research project + defence format.' },
 ]
 
 const GALLERY_WORKS = [
@@ -22,24 +22,24 @@ const GALLERY_WORKS = [
 ]
 
 const CUSTOM_TEMPLATES = [
-  { id: 'gov', icon: '🏛️', name: 'Government & Enterprise Innovation Race', badge: 'AI Science & Innovation', desc: 'For government agencies and enterprises hosting AI science competitions', duration: '2 months', format: 'Teams + individual', phases: ['Registration (15 days)', 'Preliminary (30 days)', 'Semi-final (20 days)', 'Final (15 days)'], criteria: 'Innovation 40% · Feasibility 30% · Value 20% · Presentation 10%', services: ['AI Sprint Bootcamp (8折 discount for entrants)', 'AI Innovation Ability Assessment (10% of judging)', 'Whitelist competition pathway guidance'] },
-  { id: 'school', icon: '🏫', name: 'School & University Teaching Competition', badge: 'Education Track', desc: 'For K-12 schools and universities hosting learning + teaching competitions', duration: '1.5 months', format: 'Students + teachers', phases: ['Registration (10 days)', 'Preliminary (20 days)', 'Final (15 days)'], criteria: 'Teaching fit 40% · Innovation 30% · Expression 20% · Practicality 10%', services: ['AI Teaching Bootcamp + Student Foundations Class', 'Student AI Assessment + Teacher AI Teaching Assessment', 'Whitelist competition entry recommendations'] },
-  { id: 'chamber', icon: '🤝', name: 'Chamber & Industry Public Benefit Race', badge: 'Public Benefit', desc: 'For trade associations, chambers, and industry bodies hosting public AI education events', duration: '1 month', format: 'Open public + members', phases: ['Registration (10 days)', 'Online competition (15 days)', 'Ceremony (5 days)'], criteria: 'Reach 40% · Practicality 30% · Public benefit 20% · Participation 10%', services: ['Free AI Public Education Course for all entrants', 'Free AI Literacy Assessment for all participants', 'Industry whitelist competition matchmaking'] },
+  { id: 'gov', icon: '🏛️', name: 'Government & Enterprise Innovation Race', badge: 'AI Science & Innovation', desc: 'For government agencies and enterprises hosting AI science competitions', duration: '2 months', format: 'Teams + individual', phases: ['Registration (15 days)', 'Preliminary (30 days)', 'Semi-final (20 days)', 'Final (15 days)'], criteria: 'Innovation 40% · Feasibility 30% · Value 20% · Presentation 10%', services: ['AI Sprint Bootcamp (8折 discount for entrants)', 'AI Innovation Ability Assessment (10% of judging)', 'Prestigious competition pathway guidance'] },
+  { id: 'school', icon: '🏫', name: 'School & University Teaching Competition', badge: 'Education Track', desc: 'For K-12 schools and universities hosting learning + teaching competitions', duration: '1.5 months', format: 'Students + teachers', phases: ['Registration (10 days)', 'Preliminary (20 days)', 'Final (15 days)'], criteria: 'Teaching fit 40% · Innovation 30% · Expression 20% · Practicality 10%', services: ['AI Teaching Bootcamp + Student Foundations Class', 'Student AI Assessment + Teacher AI Teaching Assessment', 'Prestigious competition entry recommendations'] },
+  { id: 'chamber', icon: '🤝', name: 'Chamber & Industry Public Benefit Race', badge: 'Public Benefit', desc: 'For trade associations, chambers, and industry bodies hosting public AI education events', duration: '1 month', format: 'Open public + members', phases: ['Registration (10 days)', 'Online competition (15 days)', 'Ceremony (5 days)'], criteria: 'Reach 40% · Practicality 30% · Public benefit 20% · Participation 10%', services: ['Free AI Public Education Course for all entrants', 'Free AI Literacy Assessment for all participants', 'Industry prestigious competition matchmaking'] },
 ]
 
 const CUSTOM_FAQ = [
   { q: 'How quickly can a custom event be launched?', a: 'Basic configuration takes 3–5 business days. Full custom launch with all integrations typically 7–10 days. We have a team dedicated to fast deployment.' },
   { q: 'Does our organisation need technical capability?', a: 'Zero technical knowledge needed. Bingo handles all setup, configuration, and ongoing operation. You focus on your participants and goals.' },
   { q: 'Can we embed the AI Assessment into our competition scoring?', a: 'Yes. Assessment scores can contribute to preliminary judging at any weighting you choose (we recommend 10%). Full integration is included in Professional and Flagship packages.' },
-  { q: 'What is the whitelist competition connection?', a: 'We help organisers apply for provincial/national whitelist status, and help participants identify and prepare for whitelist competitions that match their work.' },
+  { q: 'What is the prestigious competition connection?', a: 'We help organisers gain recognition for their events and help participants identify and prepare for prestigious, nationally recognised competitions that match their work.' },
   { q: 'Can we white-label the platform with our own branding?', a: 'Yes. All packages include full white-label customisation: your logo, colour palette, domain, and branded materials.' },
 ]
 
-const WHITELIST_EVENTS = [
-  { name: 'National Youth AI Innovation Challenge', cert: 'Ministry of Education Whitelist', type: 'AI Innovation', grade: 'Middle + High School', regDeadline: 'Rolling intake', award: 'National certificate + 综评 material', badge: '🏅 Top-tier' },
-  { name: 'China Robotics Competition', cert: 'Ministry Whitelist', type: 'Robotics + AI', grade: 'Primary to High School', regDeadline: 'Annual March–April', award: 'National + international pathways', badge: '🏅 Top-tier' },
-  { name: 'Science & Technology Innovation Award', cert: 'National Science Org Whitelist', type: 'Research Project', grade: 'High School', regDeadline: 'Annual September', award: 'National prize + 强基 material', badge: '🥇 Recommended' },
-  { name: 'STEAM Education Competition', cert: 'Provincial Whitelist', type: 'STEAM Integration', grade: 'Primary + Middle School', regDeadline: 'Bi-annual', award: 'Provincial certificate', badge: '🥈 Verified' },
+const PRESTIGIOUS_EVENTS = [
+  { name: 'National Youth AI Innovation Challenge', cert: 'Nationally Recognised', type: 'AI Innovation', grade: 'Middle + High School', regDeadline: 'Rolling intake', award: 'National certificate + 综评 material', badge: '🏅 Top-tier' },
+  { name: 'China Robotics Competition', cert: 'Nationally Recognised', type: 'Robotics + AI', grade: 'Primary to High School', regDeadline: 'Annual March–April', award: 'National + international pathways', badge: '🏅 Top-tier' },
+  { name: 'Science & Technology Innovation Award', cert: 'National Science Org Recognised', type: 'Research Project', grade: 'High School', regDeadline: 'Annual September', award: 'National prize + 强基 material', badge: '🥇 Recommended' },
+  { name: 'STEAM Education Competition', cert: 'Provincially Recognised', type: 'STEAM Integration', grade: 'Primary + Middle School', regDeadline: 'Bi-annual', award: 'Provincial certificate', badge: '🥈 Verified' },
 ]
 
 // ─── Small components ──────────────────────────────────────────────
@@ -86,7 +86,7 @@ function EventDetailModal({ event, onClose }) {
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                {event.whitelist && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">✦ Whitelist Certified</span>}
+                {event.whitelist && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">✦ Prestigious</span>}
                 {event.aiCourse && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">🎓 Bingo AI Courses Available</span>}
               </div>
               <h3 className="font-bold text-bingo-dark">{event.name}</h3>
@@ -141,7 +141,7 @@ export default function Events() {
     { id: 'host', icon: '🔧', label: 'Host a Competition' },
     { id: 'ai-academy', icon: '🎓', label: 'AI Academy Link' },
     { id: 'ai-assess', icon: '🧠', label: 'AI Assessment' },
-    { id: 'whitelist', icon: '📋', label: 'Whitelist Advisory' },
+    { id: 'whitelist', icon: '📋', label: 'Prestigious Competition Advisory' },
   ]
 
   const filteredEvents = evtFilter === 'all' ? EVENT_LIST : EVENT_LIST.filter(e => e.type === evtFilter)
@@ -162,21 +162,21 @@ export default function Events() {
           From competition discovery to award stage — registration, bootcamp coaching, judging, results, and full event hosting. All in one place.
         </p>
         <div className="flex flex-wrap gap-2 justify-center text-xs mb-6">
-          {['Whitelist competition access','Bingo AI bootcamp training','AI ability assessment','Custom event hosting','Awards gallery & portfolio'].map((t,i) => (
+          {['Prestigious competition access','Bingo AI bootcamp training','AI ability assessment','Custom event hosting','Awards gallery & portfolio'].map((t,i) => (
             <span key={i} className="bg-white/80 border border-primary/20 rounded-full px-3 py-1.5 text-slate-700">{t}</span>
           ))}
         </div>
         <div className="flex flex-wrap gap-3 justify-center">
           <button onClick={() => setTab('events')} className="btn-primary px-6 py-2.5">View All Competitions →</button>
           <button onClick={() => setHostModal(true)} className="px-6 py-2.5 rounded-xl border border-amber-400 text-amber-700 font-medium hover:bg-amber-50 transition text-sm">🔧 Host a Competition</button>
-          <button onClick={() => setTab('whitelist')} className="px-6 py-2.5 rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition text-sm">📋 Whitelist Advisory</button>
+          <button onClick={() => setTab('whitelist')} className="px-6 py-2.5 rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition text-sm">📋 Prestigious Competition Advisory</button>
         </div>
-        <p className="text-xs text-slate-400 mt-4">500+ award winners · 50+ whitelist competition entries · 120+ partner schools</p>
+        <p className="text-xs text-slate-400 mt-4">500+ award winners · 50+ prestigious competition entries · 120+ partner schools</p>
       </section>
 
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-        {[['500+','Award Winners'],['50+','Whitelist Entries'],['120+','Partner Institutions'],['10,000+','Participants Served']].map(([v,l],i) => (
+        {[['500+','Award Winners'],['50+','Prestigious Entries'],['120+','Partner Institutions'],['10,000+','Participants Served']].map(([v,l],i) => (
           <div key={i} className="card p-4 text-center"><div className="text-xl font-bold text-primary">{v}</div><div className="text-xs text-slate-500 mt-0.5">{l}</div></div>
         ))}
       </div>
@@ -201,7 +201,7 @@ export default function Events() {
               {[
                 { icon: '🎓', title: 'AI Academy Link', desc: 'Every major competition has a paired Bingo bootcamp — competition-specific training that dramatically improves win rates. Enrol in the bootcamp at the same time you register for the competition.', tab: 'ai-academy', color: '' },
                 { icon: '🧠', title: 'AI Ability Assessment', desc: 'Structured AI ability testing before competition entry. Identifies strengths and gaps, informs your training focus, and can contribute to competition judging (10% weighting available).', tab: 'ai-assess', color: 'border-purple-200/60 bg-purple-50/10' },
-                { icon: '📋', title: 'Whitelist Advisory', desc: 'Expert guidance on which whitelist competitions best fit your student\'s profile and goals. Application support, entry preparation, and direct connection to organisers.', tab: 'whitelist', color: 'border-amber-200/60 bg-amber-50/20' },
+                { icon: '📋', title: 'Prestigious Competition Advisory', desc: 'Expert guidance on which prestigious competitions best fit your student\'s profile and goals. Application support, entry preparation, and direct connection to organisers.', tab: 'whitelist', color: 'border-amber-200/60 bg-amber-50/20' },
               ].map((p,i) => (
                 <div key={i} className={`card p-6 flex flex-col border-2 ${p.color}`}>
                   <div className="text-2xl mb-2">{p.icon}</div>
@@ -223,7 +223,7 @@ export default function Events() {
               {EVENT_LIST.slice(0,3).map((e,i) => (
                 <div key={i} className="card p-5 hover:shadow-md hover:border-primary/30 transition cursor-pointer" onClick={() => setSelectedEvent(e)}>
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    {e.whitelist && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">✦ Whitelist</span>}
+                    {e.whitelist && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">✦ Prestigious</span>}
                     {e.aiCourse && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">🎓 Bootcamp</span>}
                   </div>
                   <h3 className="font-semibold text-bingo-dark text-sm mb-0.5">{e.name}</h3>
@@ -252,10 +252,10 @@ export default function Events() {
         <div className="space-y-6">
           <div>
             <h2 className="font-bold text-bingo-dark mb-1">🏆 Competition Directory</h2>
-            <p className="text-slate-500 text-sm">All active and upcoming competitions. Whitelist-certified events marked. Bootcamp training available where indicated.</p>
+            <p className="text-slate-500 text-sm">All active and upcoming competitions. Prestigious competitions marked. Bootcamp training available where indicated.</p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {[['all','All'],['whitelist','Whitelist Certified'],['international','International'],['provincial','Provincial'],['bingo','Bingo Cup']].map(([k,l]) => (
+            {[['all','All'],['prestigious','Prestigious'],['international','International'],['provincial','Provincial'],['bingo','Bingo Cup']].map(([k,l]) => (
               <button key={k} onClick={() => setEvtFilter(k)} className={`px-4 py-2 rounded-xl text-sm font-medium transition ${evtFilter===k?'bg-primary text-white shadow':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{l}</button>
             ))}
           </div>
@@ -265,7 +265,7 @@ export default function Events() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      {e.whitelist && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">✦ Whitelist</span>}
+                      {e.whitelist && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">✦ Prestigious</span>}
                       {e.aiCourse && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">🎓 Bootcamp Available</span>}
                       <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{e.stage}</span>
                     </div>
@@ -432,7 +432,7 @@ export default function Events() {
                 <div>
                   <p className="text-xs font-semibold text-slate-600 mb-2">Additional Services Needed:</p>
                   <div className="flex gap-3 flex-wrap">
-                    {[['ai', '🎓 AI Academy Bootcamp Link'], ['assess', '🧠 AI Ability Assessment Integration'], ['whitelist', '📋 Whitelist Competition Connection']].map(([k,l]) => (
+                    {[['ai', '🎓 AI Academy Bootcamp Link'], ['assess', '🧠 AI Ability Assessment Integration'], ['whitelist', '📋 Prestigious Competition Connection']].map(([k,l]) => (
                       <label key={k} className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
                         <input type="checkbox" checked={hostForm[k]} onChange={e => setHostForm(f => ({...f,[k]:e.target.checked}))} />
                         {l}
@@ -555,19 +555,19 @@ export default function Events() {
         </div>
       )}
 
-      {/* ══════════════════ WHITELIST ADVISORY ══════════════════ */}
+      {/* ══════════════════ PRESTIGIOUS COMPETITION ADVISORY ══════════════════ */}
       {tab === 'whitelist' && (
         <div className="space-y-6">
           <div className="card p-5 bg-amber-50/30 border-amber-200/60">
-            <h2 className="font-bold text-bingo-dark mb-1">📋 Whitelist Competition Advisory</h2>
-            <p className="text-slate-600 text-sm">Whitelist competitions are officially recognised by the Ministry of Education and carry significant weight in 综评, STEM specialty admissions, and 强基 applications. Our advisors help you identify the right competitions, prepare your entry, and navigate the process.</p>
+            <h2 className="font-bold text-bingo-dark mb-1">📋 Prestigious Competition Advisory</h2>
+            <p className="text-slate-600 text-sm">Prestigious competitions are officially recognised and carry significant weight in 综评, STEM specialty admissions, and 强基 applications. Our advisors help you identify the right competitions, prepare your entry, and navigate the process.</p>
           </div>
 
-          {/* Whitelist event directory */}
+          {/* Prestigious competition directory */}
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Recognised Whitelist Competitions</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Recognised Prestigious Competitions</p>
             <div className="space-y-3">
-              {WHITELIST_EVENTS.map((w,i) => (
+              {PRESTIGIOUS_EVENTS.map((w,i) => (
                 <div key={i} className="card p-4 hover:shadow-sm transition">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -579,7 +579,7 @@ export default function Events() {
                       <p className="text-xs text-slate-500 mt-0.5">{w.type} · {w.grade} · Registration: {w.regDeadline}</p>
                       <p className="text-xs text-primary mt-0.5">{w.award}</p>
                     </div>
-                    <button onClick={() => setLeadModal({ title: `Whitelist Advisory: ${w.name}`, subtitle: 'Free consultation · entry preparation support' })} className="btn-primary text-xs px-3 py-1.5 shrink-0">Consult →</button>
+                    <button onClick={() => setLeadModal({ title: `Prestigious Competition Advisory: ${w.name}`, subtitle: 'Free consultation · entry preparation support' })} className="btn-primary text-xs px-3 py-1.5 shrink-0">Consult →</button>
                   </div>
                 </div>
               ))}
@@ -589,7 +589,7 @@ export default function Events() {
           {/* Advisory service */}
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { icon: '🎯', title: 'Competition Matching', desc: 'We assess your student\'s current level, interests, and goals, then identify the 2–3 whitelist competitions that best fit.' },
+              { icon: '🎯', title: 'Competition Matching', desc: 'We assess your student\'s current level, interests, and goals, then identify the 2–3 prestigious competitions that best fit.' },
               { icon: '📝', title: 'Entry Preparation', desc: 'Support for project development, written submissions, and presentation preparation aligned to each competition\'s judging rubric.' },
               { icon: '🔗', title: 'Direct Connection', desc: 'For schools and institutions, we facilitate direct contact with competition organisers for group entries and partnership arrangements.' },
             ].map((s,i) => (
@@ -607,11 +607,11 @@ export default function Events() {
               <div className="text-center py-4">
                 <div className="text-3xl mb-2">✅</div>
                 <p className="font-bold text-bingo-dark mb-1">Consultation Request Received</p>
-                <p className="text-sm text-slate-600">Our whitelist advisory team will contact you within 1 business day.</p>
+                <p className="text-sm text-slate-600">Our competition advisory team will contact you within 1 business day.</p>
               </div>
             ) : (
               <>
-                <h3 className="font-semibold text-bingo-dark mb-3">Request a Free Whitelist Consultation</h3>
+                <h3 className="font-semibold text-bingo-dark mb-3">Request a Free Competition Consultation</h3>
                 <div className="grid sm:grid-cols-2 gap-3 mb-3">
                   {['Student Name', 'Grade / Year', 'Parent Phone', 'Target Competitions (optional)'].map((f,i) => (
                     <input key={i} placeholder={f} className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none" />

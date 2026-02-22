@@ -73,7 +73,7 @@ const SAMPLE_THREADS = [
     { id: 'r3', content: 'Congratulations! How many hours per week did your child dedicate?', author: 'Curious_Parent', avatar: '🙋', createdAt: Date.now() - 86400000 * 4.8 },
     { id: 'r4', content: 'About 5–7 hrs including weekend project time. Quality over quantity mattered most.', author: 'Parent_David', avatar: '👨', createdAt: Date.now() - 86400000 * 4.5 },
   ]},
-  { id: 't3', title: 'Competition registration tips 2024', content: 'Compiled a quick guide from our experience: 1) Check whitelist deadlines early 2) Prepare project documentation 3) Mock defence practice helps. Add your tips below!', author: 'Coach_Lin_Fan', avatar: '🏆', category: 'Competition', createdAt: Date.now() - 86400000 * 1, replies: [] },
+  { id: 't3', title: 'Competition registration tips 2024', content: 'Compiled a quick guide from our experience: 1) Check prestigious competition deadlines early 2) Prepare project documentation 3) Mock defence practice helps. Add your tips below!', author: 'Coach_Lin_Fan', avatar: '🏆', category: 'Competition', createdAt: Date.now() - 86400000 * 1, replies: [] },
 ]
 
 function loadForumThreads() {

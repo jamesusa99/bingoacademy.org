@@ -9,11 +9,11 @@ const STATS = [
   { value: '120+', label: 'Partner Schools & Institutions' },
   { value: '98%+', label: 'Parent Satisfaction Rate' },
   { value: '1,000+', label: 'AI Works Produced' },
-  { value: '50+', label: 'Whitelist Competition Wins' },
+  { value: '50+', label: 'Prestigious Competition Wins' },
 ]
 
 const AWARD_CASES = [
-  { student: 'Student A', grade: 'Grade 6 · Primary', pain: 'Zero AI background · didn\'t know which competition to enter', path: 'AI Literacy Camp → Whitelist Bootcamp → 1-on-1 Coach Prep', result: '🥇 National Whitelist Competition · 1st Prize', duration: '6 months', tags: ['AI Zero Background', 'Whitelist Competition', 'Primary School'], detail: 'Starting from zero, A completed the AI Literacy programme in 2 months, joined the Whitelist Bootcamp, and worked with a competition coach on mock defences. Scored in the top 3% nationally.', type: 'competition' },
+  { student: 'Student A', grade: 'Grade 6 · Primary', pain: 'Zero AI background · didn\'t know which competition to enter', path: 'AI Literacy Camp → Prestigious Competition Bootcamp → 1-on-1 Coach Prep', result: '🥇 National Prestigious Competition · 1st Prize', duration: '6 months', tags: ['AI Zero Background', 'Prestigious Competition', 'Primary School'], detail: 'Starting from zero, A completed the AI Literacy programme in 2 months, joined the Prestigious Competition Bootcamp, and worked with a competition coach on mock defences. Scored in the top 3% nationally.', type: 'competition' },
   { student: 'Student B', grade: 'Grade 10 · High School', pain: 'Had AI skills but no competition experience or formal results', path: 'ML Intro Camp → Competition Research Project → Pre-Competition Sprint', result: '🥈 Provincial AI Innovation Competition · 2nd Prize', duration: '8 months', tags: ['ML Skills', 'Competition Research', 'High School'], detail: 'B had basic Python skills. With guided research project mentorship and a personalised competition strategy, achieved provincial 2nd place and built a strong 综评 portfolio.', type: 'competition' },
   { student: 'Student C', grade: 'Grade 8 · Middle School', pain: 'Parents wanted competitions but didn\'t know AI education pathway', path: 'AI Literacy → Robotics Camp → Robotics Competition', result: '🏆 City Robotics Championship · Champion', duration: '5 months', tags: ['Robotics', 'Middle School', 'Competition'], detail: 'Complete beginner at entry. Intensive robotics programme with team collaboration training. Won city championship and was invited to join the school robotics team.', type: 'competition' },
 ]
@@ -208,7 +208,7 @@ export default function Showcase() {
         </div>
 
         <div className="flex flex-wrap gap-2 justify-center text-xs">
-          {['Whitelist competition wins','STEM specialty admissions','AI works portfolio','University research projects','School AI curriculum','Franchise success cases'].map((t,i) => (
+          {['Prestigious competition wins','STEM specialty admissions','AI works portfolio','University research projects','School AI curriculum','Franchise success cases'].map((t,i) => (
             <span key={i} className="bg-white/80 border border-primary/20 rounded-full px-3 py-1.5 text-slate-700">{t}</span>
           ))}
         </div>
@@ -246,7 +246,7 @@ export default function Showcase() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-red-600 mb-1">Pain Points We Solve:</p>
                     <p className="text-sm text-slate-700 mb-2">Which AI competitions should my child enter? Are they realistic for a zero-background student? Will coaching actually lead to wins?</p>
-                    <p className="text-xs font-semibold text-primary">Bingo Solution: Competition Bootcamp + Whitelist pathway + dedicated competition coach. From first lesson to award stage.</p>
+                    <p className="text-xs font-semibold text-primary">Bingo Solution: Competition Bootcamp + prestigious competition pathway + dedicated competition coach. From first lesson to award stage.</p>
                   </div>
                   <Link to="/ai-test" className="btn-primary text-sm px-4 py-2 shrink-0">Free Competition Assessment →</Link>
                 </div>
@@ -406,7 +406,7 @@ export default function Showcase() {
             {[
               { icon: '🧠', title: 'Free AI Assessment', desc: '3 mins · instant level report · personalised learning path', cta: 'Start Assessment', href: '/ai-test' },
               { icon: '📚', title: '1-on-1 Learning Plan', desc: 'Personalised roadmap from advisor · competition + admissions aligned', cta: 'Book Free Consult', href: null },
-              { icon: '🏆', title: 'Competition Bootcamp', desc: 'Whitelist competition training · from beginner to award winner', cta: 'View Programmes', href: '/research' },
+              { icon: '🏆', title: 'Competition Bootcamp', desc: 'Prestigious competition training · from beginner to award winner', cta: 'View Programmes', href: '/research' },
             ].map((p,i) => (
               <div key={i} className="card p-5 text-center hover:shadow-md transition">
                 <div className="text-2xl mb-2">{p.icon}</div>
