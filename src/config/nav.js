@@ -1,22 +1,22 @@
-// Main nav — short labels for compact header
+// Main nav groups: groups separated by dividers
 export const mainNavGroups = [
-  [{ path: '/', label: 'Home' }],
+  [{ path: '/', label: 'AI Era Portal' }],
   [{ path: '/showcase', label: 'Achievements' }],
   [
-    { path: '/courses', label: 'Courses' },
+    { path: '/courses', label: 'AI Courses' },
     { path: '/research', label: 'AI Camp' },
-    { path: '/events', label: 'Events' },
-    { path: '/community', label: 'Community' },
+    { path: '/events', label: 'Events Center' },
+    { path: '/community', label: 'AI Community' },
   ],
-  [{ path: '/career', label: 'Careers' }],
-  [{ path: '/cert', label: 'Cert' }],
-  [{ path: '/mall', label: 'Mall' }],
-  [{ path: '/charity', label: 'Honors' }],
+  [{ path: '/career', label: 'Smart Careers' }],
+  [{ path: '/cert', label: 'Certification' }],
+  [{ path: '/mall', label: 'AI Mall' }],
+  [{ path: '/charity', label: 'Honors & Charity' }],
+  [{ path: '/profile', label: 'Profile' }],
 ]
 
-// Auth nav (right side)
+// Auth nav
 export const authNav = [
-  { path: '/profile', label: 'Profile' },
   { path: '/login', label: 'Login' },
   { path: '/register', label: 'Register' },
 ]
