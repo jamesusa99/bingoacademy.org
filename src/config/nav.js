@@ -8,6 +8,7 @@ export const mainNavGroups = [
     { path: '/events', label: 'Events Center' },
     { path: '/community', label: 'AI Community' },
   ],
+  [{ path: '/career', label: 'Smart Careers' }],
   [{ path: '/cert', label: 'Certification' }],
   [{ path: '/mall', label: 'AI Mall' }],
   [{ path: '/charity', label: 'Honors & Charity' }],
