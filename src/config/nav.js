@@ -4,7 +4,7 @@ export const mainNavGroups = [
   [{ path: '/showcase', label: 'Achievements' }],
   [
     { path: '/courses', label: 'AI Courses' },
-    { path: '/research', label: 'Science Camp' },
+    { path: '/research', label: 'AI Camp' },
     { path: '/events', label: 'Events Center' },
     { path: '/community', label: 'AI Community' },
   ],

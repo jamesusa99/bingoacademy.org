@@ -73,7 +73,7 @@ export default function Layout({ children }) {
               <div className="text-white font-medium mb-2">For Users</div>
               <Link to="/courses" className="block hover:text-white">AI Courses</Link>
               <Link to="/events" className="block hover:text-white">Events Center</Link>
-              <Link to="/research" className="block hover:text-white">Science Camp</Link>
+              <Link to="/research" className="block hover:text-white">AI Camp</Link>
               <Link to="/career" className="block hover:text-white">Industry-Education</Link>
               <Link to="/mall" className="block hover:text-white">AI Mall</Link>
               <Link to="/profile" className="block hover:text-white">Profile</Link>

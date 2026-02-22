@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const GREETING = 'Hi! I\'m Bingo AI Assistant. How can I help you today? You can ask about our courses, Science Camp, or admissions.'
+const GREETING = 'Hi! I\'m Bingo AI Assistant. How can I help you today? You can ask about our courses, AI Camp, or admissions.'
 const FALLBACK = 'Thanks for your message. For detailed inquiries, please email us or visit our Contact page. Is there anything else I can help with?'
 
 const QUICK_REPLIES = {
   course: 'We offer Basic (K7-K9), Intermediate (K9-K11), and Advanced (K10-K12) courses. Basic is $890, Intermediate $990, Advanced $1290. Visit our AI Courses page for details!',
-  camp: 'Our Science Camp program is $1590. It includes AI literacy, data science, and machine learning camps. Check the Science Camp page for more info.',
-  price: 'Basic Course $890 · Intermediate $990 · Advanced $1290 · Science Camp $1590. All prices in USD.',
+  camp: 'Our AI Camp program is $1590. It includes AI literacy, data science, and machine learning camps. Check the AI Camp page for more info.',
+  price: 'Basic Course $890 · Intermediate $990 · Advanced $1290 · AI Camp $1590. All prices in USD.',
   contact: 'You can reach us through the contact form or email. For course registration, please visit the relevant course page and use the Purchase button.',
 }
 

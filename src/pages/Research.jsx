@@ -7,7 +7,7 @@ const AGE_GROUPS = [
 ]
 
 const SAMPLE_CAMPS = [
-  { title: 'AI Literacy Science Camp', outline: 'AI literacy, unplugged activities, robotics', age: '8-12 yrs', to: '/research' },
+  { title: 'AI Literacy AI Camp', outline: 'AI literacy, unplugged activities, robotics', age: '8-12 yrs', to: '/research' },
   { title: 'Data Science Research Camp', outline: 'Data collection, visualization, report writing', age: '12-16 yrs', to: '/research' },
   { title: 'Machine Learning Intro Camp', outline: 'Model intro, hands-on training, outcomes', age: '14-18 yrs', to: '/research' },
 ]
@@ -20,7 +20,7 @@ const TRAINING_PROJECTS = [
 export default function Research() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-bingo-dark mb-2">Science Camp</h1>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-2">AI Camp</h1>
       <p className="text-slate-600 mb-8">Camp Program, research projects, application, and admissions outcomes</p>
 
       {/* Camp Program */}

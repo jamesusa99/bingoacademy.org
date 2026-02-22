@@ -237,7 +237,7 @@ function getResult(score, total, typeId) {
   if (pct >= 80) {
     level = 'Advanced'; color = 'text-green-600 bg-green-50 border-green-200'
     feedback = 'Excellent! You demonstrate strong AI literacy and are well-positioned for competitive programmes and advanced coursework.'
-    courses = ['Advanced AI Research Track', 'Science Camp · AI Research', 'International Competition Prep']
+    courses = ['Advanced AI Research Track', 'AI Camp · AI Research', 'International Competition Prep']
   } else if (pct >= 55) {
     level = 'Intermediate'; color = 'text-primary bg-primary/5 border-primary/20'
     feedback = 'Good foundation! You understand key AI concepts and are ready to deepen your skills with structured practice and project work.'
