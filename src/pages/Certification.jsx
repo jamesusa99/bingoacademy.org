@@ -5,49 +5,49 @@ import { Link } from 'react-router-dom'
 
 const CERT_TIERS = [
   {
-    id: 'qizhi', stars: '1–3★', name: 'Qizhi Tier', chinese: '启智阶', color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200/60',
+    id: 'qizhi', stars: '1–3★', name: 'AI Enlightenment', chinese: 'AI Enlightenment', color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200/60',
     inst: 'Newly established tutoring centres', teacher: 'Basic Teacher Certification', learner: 'AI Foundations Certificate',
     weeks: '4–6 weeks',
     courses: ['AI Basics & Logic Thinking', 'Scratch & Block Coding', 'Data Literacy Introduction', 'Visual AI Applications'],
     criteria: 'Pass rate ≥ 70% · satisfaction ≥ 4.0 · 2+ qualified teachers',
-    benefits: ['Official Qizhi-tier partner badge', 'Bingo branded enrollment materials', 'Basic marketing resource pack'],
+    benefits: ['Official AI Enlightenment partner badge', 'Bingo branded enrollment materials', 'Basic marketing resource pack'],
   },
   {
-    id: 'jichu', stars: '4–6★', name: 'Jichu Tier', chinese: '基础阶', color: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-200/60',
+    id: 'jichu', stars: '4–6★', name: 'AI Skill Acquisition', chinese: 'AI Skill Acquisition', color: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-200/60',
     inst: 'Growing centres with 50+ active students', teacher: 'Intermediate Teacher Certification', learner: 'AI Application Certificate',
     weeks: '5–7 weeks',
     courses: ['Python Programming Foundations', 'Machine Learning Concepts', 'AI in Society', 'Project-Based AI Design'],
     criteria: 'Pass rate ≥ 75% · satisfaction ≥ 4.2 · 4+ qualified teachers',
-    benefits: ['Jichu-tier badge + verified partner page', 'Priority referrals from Bingo platform', 'Curriculum co-branding rights'],
+    benefits: ['AI Skill Acquisition badge + verified partner page', 'Priority referrals from Bingo platform', 'Curriculum co-branding rights'],
   },
   {
-    id: 'jinyan', stars: '7–8★', name: 'Jinyan Tier', chinese: '精研阶', color: 'text-violet-700', bg: 'bg-violet-50', border: 'border-violet-200/60',
+    id: 'jinyan', stars: '7–8★', name: 'Technical Mastery & Ethics', chinese: 'Technical Mastery & Ethics', color: 'text-violet-700', bg: 'bg-violet-50', border: 'border-violet-200/60',
     inst: 'Established centres with proven outcomes', teacher: 'Advanced Teacher Certification', learner: 'AI Proficiency Certificate',
     weeks: '6–8 weeks',
     courses: ['Deep Learning & Neural Nets', 'Computer Vision Projects', 'NLP & Text AI', 'AI Research Methodology'],
     criteria: 'Pass rate ≥ 80% · satisfaction ≥ 4.4 · 6+ qualified teachers',
-    benefits: ['Jinyan-tier badge + featured partner spotlight', 'Access to regional competition coaching support', 'Joint marketing campaign eligibility'],
+    benefits: ['Technical Mastery & Ethics badge + featured partner spotlight', 'Access to regional competition coaching support', 'Joint marketing campaign eligibility'],
   },
   {
-    id: 'zhichuang', stars: '9★', name: 'Zhichuang Tier', chinese: '智创阶', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200/60',
+    id: 'zhichuang', stars: '9★', name: 'Synthesis & Innovation', chinese: 'Synthesis & Innovation', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200/60',
     inst: 'Premium centres seeking flagship status', teacher: 'Master Trainer Certification', learner: 'AI Innovation Certificate',
     weeks: '7–10 weeks',
     courses: ['AI Image Recognition (5-step framework)', 'Face Recognition Systems', 'Full AI Project Lifecycle', 'Competition Entry & Presentation'],
     criteria: 'Pass rate ≥ 85% · satisfaction ≥ 4.5 · 8+ qualified teachers incl. 2 master trainers',
-    benefits: ['Exclusive Zhichuang flagship badge', 'National ranking on Bingo partner map', 'Direct referral from all Bingo competition entrants', 'Revenue sharing on joint events', 'Dedicated account manager'],
+    benefits: ['Exclusive Synthesis & Innovation flagship badge', 'National ranking on Bingo partner map', 'Direct referral from all Bingo competition entrants', 'Revenue sharing on joint events', 'Dedicated account manager'],
   },
 ]
 
 const TEACHER_TYPES = [
-  { id: 'basic', icon: '📗', name: 'Basic Teacher Certification', tier: 'Qizhi · Jichu tier courses', duration: '2–3 weeks', desc: 'Foundations of AI curriculum delivery, classroom management, and Bingo teaching standards.', exam: 'Written test + teaching demo' },
-  { id: 'advanced', icon: '📘', name: 'Advanced Teacher Certification', tier: 'Jinyan · Zhichuang tier courses', duration: '3–4 weeks', desc: 'Deep curriculum expertise, competition coaching, project supervision, and advanced pedagogy.', exam: 'Written test + full project delivery demo' },
+  { id: 'basic', icon: '📗', name: 'Basic Teacher Certification', tier: 'AI Enlightenment · AI Skill Acquisition (Stars 1–6)', duration: '2–3 weeks', desc: 'Foundations of AI curriculum delivery, classroom management, and Bingo teaching standards.', exam: 'Written test + teaching demo' },
+  { id: 'advanced', icon: '📘', name: 'Advanced Teacher Certification', tier: 'Technical Mastery & Ethics · Synthesis & Innovation (Stars 7–9)', duration: '3–4 weeks', desc: 'Deep curriculum expertise, competition coaching, project supervision, and advanced pedagogy.', exam: 'Written test + full project delivery demo' },
   { id: 'trainer', icon: '🎓', name: 'Master Trainer Certification', tier: 'Internal institution trainer', duration: '4–5 weeks', desc: 'Qualified to train and certify other teachers within a Bingo-certified institution.', exam: 'Full certification assessment + panel review' },
 ]
 
 const GALLERY_WORKS = [
-  { title: 'National Youth AI Challenge — Gold', student: 'Student A · Zhichuang Cert', year: 2024 },
-  { title: 'AIOT Competition — Provincial 1st', student: 'Student B · Jinyan Cert', year: 2024 },
-  { title: 'Bingo Cup AIGC — Special Award', student: 'Student C · Jichu Cert', year: 2024 },
+  { title: 'National Youth AI Challenge — Gold', student: 'Student A · Synthesis & Innovation (9★)', year: 2024 },
+  { title: 'AIOT Competition — Provincial 1st', student: 'Student B · Technical Mastery & Ethics (7–8★)', year: 2024 },
+  { title: 'Bingo Cup AIGC — Special Award', student: 'Student C · AI Skill Acquisition (4–6★)', year: 2024 },
 ]
 
 const ISSUING_CENTRES = [
@@ -59,9 +59,9 @@ const ISSUING_CENTRES = [
 
 const FAQ_ITEMS = [
   { q: 'What are the conditions for institution certification?', a: 'Institutions need to: (1) be legally registered as an education/training body, (2) have at least 2 Bingo-certified teachers on staff, (3) commit to using Bingo curriculum materials, and (4) agree to periodic quality review.' },
-  { q: 'How much does certification cost?', a: 'Certification fees vary by tier. Qizhi starts from ¥3,800; Jichu from ¥6,800; Jinyan from ¥12,000; Zhichuang from ¥18,000. Includes all training, materials, audit, and plaque.' },
-  { q: 'How long does the institution certification process take?', a: 'Qizhi: 4–6 weeks. Jichu: 5–7 weeks. Jinyan: 6–8 weeks. Zhichuang: 7–10 weeks. An express track (add ¥2,000) can accelerate the process by 30%.' },
-  { q: 'Can learner certificates be used for school admissions?', a: 'Yes. Zhichuang-tier certificates are widely accepted as supplementary evidence for high school STEM specialty admissions (综评) and have been cited in 强基 application materials.' },
+  { q: 'How much does certification cost?', a: 'Certification fees vary by tier. AI Enlightenment starts from ¥3,800; AI Skill Acquisition from ¥6,800; Technical Mastery & Ethics from ¥12,000; Synthesis & Innovation from ¥18,000. Includes all training, materials, audit, and plaque.' },
+  { q: 'How long does the institution certification process take?', a: 'AI Enlightenment: 4–6 weeks. AI Skill Acquisition: 5–7 weeks. Technical Mastery & Ethics: 6–8 weeks. Synthesis & Innovation: 7–10 weeks. An express track (add ¥2,000) can accelerate the process by 30%.' },
+  { q: 'Can learner certificates be used for school admissions?', a: 'Yes. Synthesis & Innovation (Star 9) certificates are widely accepted as supplementary evidence for high school STEM specialty admissions (综评) and have been cited in 强基 application materials.' },
   { q: 'Are certificates valid nationally?', a: 'All certificates are nationally valid. Learner and institution certificates are registered in the Bingo central verification system and can be verified online or by QR code scan.' },
   { q: 'How do issuing centres relate to institution certification?', a: 'Issuing centres are approved oversight bodies (associations, universities, government bodies) that co-endorse certificates and conduct periodic quality audits of certified institutions.' },
 ]
@@ -115,7 +115,7 @@ function VerifyModal({ onClose }) {
               <div className="flex items-center gap-2 text-green-700 font-semibold mb-2">✅ Certificate Verified</div>
               <div className="space-y-1 text-slate-600 text-xs">
                 <div><span className="font-medium">Holder:</span> Zhang Wei (张**)</div>
-                <div><span className="font-medium">Cert Level:</span> Zhichuang Tier — AI Innovation Certificate</div>
+                <div><span className="font-medium">Cert Level:</span> Synthesis & Innovation (9★) — AI Innovation Certificate</div>
                 <div><span className="font-medium">Issued:</span> Dec 2024 · <span className="font-medium">Valid:</span> Dec 2027</div>
                 <div><span className="font-medium">Issuing Centre:</span> China AI Education Association</div>
                 <div><span className="font-medium">Certificate No:</span> BINGO-2024-ZC-00412</div>
@@ -177,7 +177,7 @@ export default function Certification() {
           The complete AI education credentialing ecosystem — for institutions, teachers, and learners.
         </p>
         <div className="flex flex-wrap gap-2 justify-center text-xs mb-6">
-          {['9-Star curriculum system','4-tier institution certification','Dual issuing-centre endorsement','Nationally verifiable certificates','慧师 teacher development plan'].map((t,i) => (
+          {['9-Star AI Mastery Roadmap','4-tier institution certification','Dual issuing-centre endorsement','Nationally verifiable certificates','慧师 teacher development plan'].map((t,i) => (
             <span key={i} className="bg-white/80 border border-primary/20 rounded-full px-3 py-1.5 text-slate-700">{t}</span>
           ))}
         </div>
@@ -214,7 +214,7 @@ export default function Certification() {
             <h2 className="section-title mb-5">A Three-Pillar Certification Ecosystem</h2>
             <div className="grid md:grid-cols-3 gap-5">
               {[
-                { icon: '🏫', title: 'Institution Certification', sub: '4-tier · Qizhi → Zhichuang', desc: 'Schools and tutoring centres gain authority, curriculum rights, and brand backing. Certification boosts enrolment conversion by 30%+.', color: 'border-amber-200/60 bg-amber-50/20', tab: 'institution' },
+                { icon: '🏫', title: 'Institution Certification', sub: '4-tier · AI Enlightenment → Synthesis & Innovation', desc: 'Schools and tutoring centres gain authority, curriculum rights, and brand backing. Certification boosts enrolment conversion by 30%+.', color: 'border-amber-200/60 bg-amber-50/20', tab: 'institution' },
                 { icon: '👩‍🏫', title: 'Teacher Certification', sub: 'Basic · Advanced · Master Trainer', desc: 'AI curriculum educators gain a professional credential, join the Bingo teacher directory, and unlock priority placement at certified centres.', color: 'border-violet-200/60 bg-violet-50/10', tab: 'teacher' },
                 { icon: '🎓', title: 'Learner Certification', sub: '4-tier · AI Foundations → AI Innovation', desc: 'Students receive dual-endorsed certificates — backed by both the teaching institution and an official issuing centre. Verifiable and nationally recognised.', color: '', tab: 'learner' },
               ].map((p,i) => (
@@ -231,15 +231,14 @@ export default function Certification() {
 
           {/* 9-star overview */}
           <section>
-            <h2 className="section-title mb-4">The 9-Star Curriculum Framework</h2>
+            <h2 className="section-title mb-4">The 9-Star AI Mastery Roadmap</h2>
             <div className="card p-5">
               <div className="grid sm:grid-cols-4 gap-3">
                 {CERT_TIERS.map((t,i) => (
                   <button key={i} onClick={() => { setTab('institution'); setInstTier(t.id) }}
                     className={`rounded-xl p-4 text-left transition hover:shadow-md border-2 ${t.border} ${t.bg}`}>
                     <div className={`text-xs font-bold ${t.color} mb-1`}>{t.stars}</div>
-                    <div className="font-semibold text-bingo-dark text-sm">{t.chinese}</div>
-                    <div className="text-xs text-slate-500">{t.name}</div>
+                    <div className="font-semibold text-bingo-dark text-sm">{t.name}</div>
                     <div className="text-xs text-slate-400 mt-1">{t.inst}</div>
                   </button>
                 ))}
@@ -253,16 +252,16 @@ export default function Certification() {
             <h2 className="section-title mb-4">Certified Institution Outcomes</h2>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
-                { org: 'Star AI Education Centre, Shanghai', tier: 'Zhichuang', result: 'Enrolments up 45% in 6 months after certification. 3 students won national competition awards.' },
-                { org: 'Future Minds Academy, Beijing', tier: 'Jinyan', result: 'Added advanced AI track. Retention rate increased to 92%. Now a regional Bingo showcase partner.' },
-                { org: 'TechKids Learning Hub, Guangzhou', tier: 'Jichu', result: 'Launched from zero to 80 active students within first year with Bingo curriculum and branding support.' },
+                { org: 'Star AI Education Centre, Shanghai', tier: 'Synthesis & Innovation', result: 'Enrolments up 45% in 6 months after certification. 3 students won national competition awards.' },
+                { org: 'Future Minds Academy, Beijing', tier: 'Technical Mastery & Ethics', result: 'Added advanced AI track. Retention rate increased to 92%. Now a regional Bingo showcase partner.' },
+                { org: 'TechKids Learning Hub, Guangzhou', tier: 'AI Skill Acquisition', result: 'Launched from zero to 80 active students within first year with Bingo curriculum and branding support.' },
               ].map((c,i) => (
                 <div key={i} className="card p-5 hover:shadow-md transition">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">🏫</span>
                     <div>
                       <div className="font-semibold text-bingo-dark text-xs">{c.org}</div>
-                      <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{c.tier} Tier</span>
+                      <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{c.tier}</span>
                     </div>
                   </div>
                   <p className="text-xs text-slate-600 mt-2">{c.result}</p>
@@ -305,8 +304,7 @@ export default function Certification() {
               <button key={t.id} onClick={() => setInstTier(t.id)}
                 className={`rounded-xl p-3 text-left transition border-2 ${instTier===t.id ? `${t.border} ${t.bg} shadow` : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                 <div className={`text-xs font-bold mb-0.5 ${instTier===t.id ? t.color : 'text-slate-500'}`}>{t.stars}</div>
-                <div className="font-semibold text-bingo-dark text-sm">{t.chinese}</div>
-                <div className="text-xs text-slate-400">{t.name}</div>
+                <div className="font-semibold text-bingo-dark text-sm leading-tight">{t.name}</div>
               </button>
             ))}
           </div>
@@ -317,7 +315,7 @@ export default function Certification() {
               <div className="flex items-center gap-3 mb-3">
                 <span className={`text-xl font-bold ${activeTierData.color}`}>{activeTierData.stars}</span>
                 <div>
-                  <h3 className="font-bold text-bingo-dark">{activeTierData.chinese} — {activeTierData.name}</h3>
+                  <h3 className="font-bold text-bingo-dark">{activeTierData.name} ({activeTierData.stars})</h3>
                   <p className="text-xs text-slate-500">Best for: {activeTierData.inst} · Certification: ~{activeTierData.weeks}</p>
                 </div>
               </div>
@@ -493,8 +491,8 @@ export default function Certification() {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">How Learner Certificates Are Used</p>
             <div className="grid sm:grid-cols-3 gap-3">
               {[
-                { icon: '🎓', title: 'School Admissions Support', desc: 'Zhichuang-tier certificates accepted as supplementary evidence for STEM specialty admissions (综评) and referenced in 强基 applications.' },
-                { icon: '🏆', title: 'Competition Entry Advantage', desc: 'Certified learners gain priority access to Bingo-partnered competitions. Some competitions waive preliminary rounds for Zhichuang cert holders.' },
+                { icon: '🎓', title: 'School Admissions Support', desc: 'Synthesis & Innovation (Star 9) certificates accepted as supplementary evidence for STEM specialty admissions (综评) and referenced in 强基 applications.' },
+                { icon: '🏆', title: 'Competition Entry Advantage', desc: 'Certified learners gain priority access to Bingo-partnered competitions. Some competitions waive preliminary rounds for Synthesis & Innovation (9★) cert holders.' },
                 { icon: '📋', title: 'Skill Portfolio Record', desc: 'Each certificate maps to a digital skills profile. Learners can share their profile with schools, scholarship committees, or employers.' },
               ].map((u,i) => (
                 <div key={i} className="bg-slate-50 rounded-xl p-3">
@@ -817,7 +815,7 @@ export default function Certification() {
               <p className="text-sm text-slate-500 mb-3">— Certificate of Achievement —</p>
               <p className="font-bold text-bingo-dark text-lg mb-0.5">Your Name Here</p>
               <p className="text-xs text-slate-500 mb-2">Has successfully completed the requirements for</p>
-              <p className="font-bold text-primary text-sm mb-3">AI Innovation Certificate (Zhichuang · 9★)</p>
+              <p className="font-bold text-primary text-sm mb-3">AI Innovation Certificate (Synthesis & Innovation · 9★)</p>
               <div className="flex justify-around text-xs text-slate-400 border-t border-dashed border-amber-200 pt-3">
                 <div><p className="font-medium">Dec 2024</p><p>Issue Date</p></div>
                 <div><p className="font-medium">BINGO-ZC-00000</p><p>Certificate No.</p></div>
