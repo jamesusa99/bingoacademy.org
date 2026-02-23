@@ -369,70 +369,102 @@ function Quiz({ typeId, title, onBack }) {
   )
 }
 
-// ─── Results component ─────────────────────────────────────────────
+// ─── Results component (aligned with bingoacademy.cn post-test design) ─
 function Results({ score, total, result, title, onBack }) {
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <button onClick={onBack} className="text-sm text-slate-500 hover:text-primary transition mb-6 flex items-center gap-1">
         ← Back to Assessment Center
       </button>
 
-      {/* Score card */}
-      <div className="card p-8 text-center mb-6 border-primary/20">
-        <div className={`inline-block text-xs font-semibold px-3 py-1 rounded-full border mb-4 ${result.color}`}>
-          {title}
+      {/* Hero: Completion + Score */}
+      <section className="section-tech rounded-2xl px-6 py-10 mb-6 text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-cyan-500/5" />
+        <div className="relative">
+          <div className="text-5xl mb-3">🎉</div>
+          <p className="text-sm font-medium text-primary mb-2">Assessment Complete</p>
+          <div className="inline-flex items-center justify-center w-32 h-32 rounded-full border-4 border-primary/30 bg-white/80 mb-4">
+            <div className="text-center">
+              <span className="text-4xl font-bold text-primary">{result.pct}</span>
+              <span className="text-xl font-semibold text-primary">%</span>
+            </div>
+          </div>
+          <div className={`inline-block text-sm font-semibold px-5 py-2 rounded-full border mb-3 ${result.color}`}>
+            {result.level}
+          </div>
+          <p className="text-slate-600 text-sm mb-1">{score} / {total} correct</p>
+          <p className="text-xs text-slate-500 mb-0">{title}</p>
         </div>
-        <div className="text-6xl font-bold text-primary mb-1">{result.pct}<span className="text-2xl">%</span></div>
-        <div className="text-slate-500 text-sm mb-3">{score} / {total} correct</div>
-        <div className={`inline-block text-sm font-semibold px-4 py-1.5 rounded-full border ${result.color}`}>
-          Level: {result.level}
-        </div>
-        <p className="text-slate-600 text-sm mt-4 max-w-md mx-auto leading-relaxed">{result.feedback}</p>
+      </section>
+
+      {/* Feedback */}
+      <div className="card p-5 mb-6 border-l-4 border-primary">
+        <p className="text-slate-700 text-sm leading-relaxed">{result.feedback}</p>
       </div>
 
-      {/* Dimension scores */}
-      <div className="card p-6 mb-6">
-        <h3 className="font-semibold text-bingo-dark mb-4">Capability Breakdown</h3>
-        <div className="space-y-4">
+      {/* Capability Map / 能力图谱 */}
+      <section className="card p-6 mb-6">
+        <h3 className="font-semibold text-bingo-dark mb-1">AI Capability Map</h3>
+        <p className="text-xs text-slate-500 mb-5">Multi-dimensional breakdown</p>
+        <div className="space-y-5">
           {result.dimScores.map((d, i) => (
             <div key={i}>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-700">{d.label}</span>
-                <span className="text-primary font-medium">{d.score}%</span>
+              <div className="flex justify-between text-sm mb-1.5">
+                <span className="font-medium text-slate-700">{d.label}</span>
+                <span className="font-semibold text-primary">{d.score}%</span>
               </div>
-              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary rounded-full transition-all duration-700"
+                  className={`h-full rounded-full transition-all duration-700 ease-out ${result.pct >= 80 ? 'bg-green-600' : result.pct >= 55 ? 'bg-primary' : 'bg-amber-500'}`}
                   style={{ width: `${d.score}%` }}
                 />
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Recommended courses */}
-      <div className="card p-6 mb-6 border-primary/20 bg-cyan-50/40">
-        <h3 className="font-semibold text-bingo-dark mb-3">🎓 Recommended for You</h3>
-        <ul className="space-y-2">
+      <section className="card p-6 mb-6 border-primary/20 bg-gradient-to-br from-cyan-50/80 to-primary/5">
+        <h3 className="font-semibold text-bingo-dark mb-1">Recommended for You</h3>
+        <p className="text-xs text-slate-500 mb-4">Based on your assessment results · 3–5 matched courses</p>
+        <div className="space-y-3 mb-4">
           {result.courses.map((c, i) => (
-            <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
-              <span className="text-primary">✓</span>
-              <Link to="/courses" className="hover:text-primary hover:underline transition">{c}</Link>
-            </li>
+            <Link key={i} to="/courses" className="flex items-center gap-3 p-3 rounded-xl bg-white/70 hover:bg-white border border-slate-100 hover:border-primary/20 transition">
+              <span className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">{i + 1}</span>
+              <span className="text-sm font-medium text-slate-800 hover:text-primary transition">{c}</span>
+              <span className="ml-auto text-primary text-xs">View →</span>
+            </Link>
           ))}
-        </ul>
-        <Link to="/courses" className="btn-primary mt-4 inline-block text-sm px-5 py-2">View All Courses →</Link>
-      </div>
+        </div>
+        <Link to="/courses" className="btn-primary w-full py-3 text-sm font-medium rounded-xl">View All Courses →</Link>
+      </section>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-3">
-        <button onClick={onBack} className="px-5 py-2.5 rounded-xl border border-primary text-primary text-sm font-medium hover:bg-primary/5 transition">
+      {/* Report use cases */}
+      <section className="grid grid-cols-3 gap-3 mb-6">
+        {[
+          { icon: '🏆', title: 'Competition', desc: 'Scores can be used in preliminary rounds' },
+          { icon: '📊', title: 'Profile', desc: 'Saved to your personal growth record' },
+          { icon: '🎓', title: 'Courses', desc: 'Get matched learning path' },
+        ].map((u, i) => (
+          <div key={i} className="card p-4 text-center">
+            <div className="text-2xl mb-2">{u.icon}</div>
+            <p className="text-xs font-semibold text-bingo-dark">{u.title}</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">{u.desc}</p>
+          </div>
+        ))}
+      </section>
+
+      {/* Footer CTA */}
+      <div className="flex flex-wrap gap-3 justify-center">
+        <button onClick={onBack} className="px-5 py-2.5 rounded-xl border-2 border-primary text-primary text-sm font-medium hover:bg-primary/5 transition">
           Try Another Assessment
         </button>
+        <Link to="/courses" className="btn-primary px-5 py-2.5 text-sm font-medium rounded-xl">Course Enrollment</Link>
         <Link to="/cert" className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 transition">
-          View Certification Center
+          Certification Center
         </Link>
+        <a href="tel:400-xxx-xxxx" className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition">📞 Call</a>
       </div>
     </div>
   )
