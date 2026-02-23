@@ -76,7 +76,7 @@ export default function Layout({ children }) {
           </div>
         </div>
       </header>
-      <main className="flex-1 pt-24 lg:pt-20">{children}</main>
+      <main className="flex-1">{children}</main>
       <footer className="bg-bingo-dark text-slate-400 text-sm py-8 border-t border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap justify-between gap-6">
           <div>
