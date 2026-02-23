@@ -4,47 +4,47 @@ import { Link } from 'react-router-dom'
 // ─── Product data ───────────────────────────────────────────────────
 
 const COURSES = [
-  { id: 'c1', name: 'AI Foundations Bootcamp (Ages 8–12)', type: 'course', cat: 'qizhi', tag: '🔥 Bestseller', price: 299, bPrice: '¥199/seat (bulk)', sold: 3420, rating: 4.9, desc: 'Core AI literacy, visual programming, and introductory projects. Suitable for complete beginners.', badge: '启智阶', aiLab: false },
-  { id: 'c2', name: 'Competition Sprint: National AI Challenge', type: 'course', cat: 'competition', tag: '⭐ Top-rated', price: 890, bPrice: '¥690/seat (bulk)', sold: 1240, rating: 4.8, desc: 'Competition-specific prep: project selection, development, defence. 86% pass-through rate.', badge: '竞赛培优', aiLab: true },
-  { id: 'c3', name: 'Python + AI Projects (Middle School)', type: 'course', cat: 'jichu', tag: '📈 Popular', price: 680, bPrice: '¥480/seat (bulk)', sold: 2100, rating: 4.7, desc: 'Python basics to machine learning projects. Produces verifiable competition-ready work.', badge: '基础阶', aiLab: false },
-  { id: 'c4', name: 'AIGC Creative Design Course', type: 'course', cat: 'aigc', tag: '🆕 New', price: 490, bPrice: '¥360/seat (bulk)', sold: 870, rating: 4.8, desc: 'AI art, prompt engineering, creative concept development. Portfolio-ready in 3 weeks.', badge: 'AIGC', aiLab: false },
+  { id: 'c1', name: 'AI Foundations Bootcamp (Ages 8–12)', type: 'course', cat: 'qizhi', tag: '🔥 Bestseller', price: 299, bPrice: '$199/seat (bulk)', sold: 3420, rating: 4.9, desc: 'Core AI literacy, visual programming, and introductory projects. Suitable for complete beginners.', badge: '启智阶', aiLab: false },
+  { id: 'c2', name: 'Competition Sprint: National AI Challenge', type: 'course', cat: 'competition', tag: '⭐ Top-rated', price: 890, bPrice: '$690/seat (bulk)', sold: 1240, rating: 4.8, desc: 'Competition-specific prep: project selection, development, defence. 86% pass-through rate.', badge: '竞赛培优', aiLab: true },
+  { id: 'c3', name: 'Python + AI Projects (Middle School)', type: 'course', cat: 'jichu', tag: '📈 Popular', price: 680, bPrice: '$480/seat (bulk)', sold: 2100, rating: 4.7, desc: 'Python basics to machine learning projects. Produces verifiable competition-ready work.', badge: '基础阶', aiLab: false },
+  { id: 'c4', name: 'AIGC Creative Design Course', type: 'course', cat: 'aigc', tag: '🆕 New', price: 490, bPrice: '$360/seat (bulk)', sold: 870, rating: 4.8, desc: 'AI art, prompt engineering, creative concept development. Portfolio-ready in 3 weeks.', badge: 'AIGC', aiLab: false },
   { id: 'c5', name: 'AI Lab Companion Course (Institution)', type: 'course', cat: 'lab', tag: '🏫 B-End', price: null, bPrice: 'Consult for pricing', sold: 340, rating: 4.9, desc: 'Structured curriculum matched to the AI Digital Lab setup. Delivered with lab deployment.', badge: '实验室配套', aiLab: true },
-  { id: 'c6', name: 'Parent: Understanding AI Education', type: 'course', cat: 'parent', tag: '💰 ¥9.9', price: 9.9, bPrice: null, sold: 8900, rating: 4.9, desc: 'Best-selling parent guide. 30-minute video course explaining AI education and how to choose the right path.', badge: '家长必读', aiLab: false },
+  { id: 'c6', name: 'Parent: Understanding AI Education', type: 'course', cat: 'parent', tag: '💰 $9.9', price: 9.9, bPrice: null, sold: 8900, rating: 4.9, desc: 'Best-selling parent guide. 30-minute video course explaining AI education and how to choose the right path.', badge: '家长必读', aiLab: false },
 ]
 
 const EVENTS_PRODUCTS = [
   { id: 'e1', name: 'National AI Challenge — Full Entry Package', type: 'event', tag: '✦ Prestigious', price: 380, bPrice: 'Group pricing available', desc: 'Registration + materials + mock defence session. Prestigious competition.', deadline: 'Rolling' },
-  { id: 'e2', name: 'Competition Bootcamp — 6-Week Sprint', type: 'event', tag: '🏆 Award-focused', price: 890, bPrice: '¥690/student (group)', desc: 'Full competition prep camp. Historically 86% award rate for completing students.', deadline: 'Mar 2026' },
-  { id: 'e3', name: 'Bingo Cup AI Design — Entry + Coaching', type: 'event', tag: '🎨 AIGC Track', price: 490, bPrice: 'Group from ¥380', desc: 'Bingo\'s own flagship competition. Entry fee + 4 coaching sessions + judging prep.', deadline: 'Apr 2026' },
-  { id: 'e4', name: 'Institution Group Entry Package (10+ students)', type: 'event', tag: '🏫 B-End Exclusive', price: null, bPrice: 'From ¥3,200/group', desc: 'Group entry management + dedicated coach + institution branding support.', deadline: 'Flexible' },
+  { id: 'e2', name: 'Competition Bootcamp — 6-Week Sprint', type: 'event', tag: '🏆 Award-focused', price: 890, bPrice: '$690/student (group)', desc: 'Full competition prep camp. Historically 86% award rate for completing students.', deadline: 'Mar 2026' },
+  { id: 'e3', name: 'Bingo Cup AI Design — Entry + Coaching', type: 'event', tag: '🎨 AIGC Track', price: 490, bPrice: 'Group from $380', desc: 'Bingo\'s own flagship competition. Entry fee + 4 coaching sessions + judging prep.', deadline: 'Apr 2026' },
+  { id: 'e4', name: 'Institution Group Entry Package (10+ students)', type: 'event', tag: '🏫 B-End Exclusive', price: null, bPrice: 'From $3,200/group', desc: 'Group entry management + dedicated coach + institution branding support.', deadline: 'Flexible' },
 ]
 
 const CERT_PRODUCTS = [
-  { id: 'cert1', name: 'AI Foundations Certificate (Qizhi)', type: 'cert', tag: '🌱 Entry level', price: 198, bPrice: 'Bulk: ¥149/student', desc: 'Nationally verifiable. Dual-endorsed by institution + issuing centre. Suitable for Grades 3–6.' },
-  { id: 'cert2', name: 'AI Application Certificate (Jichu)', type: 'cert', tag: '📘 Intermediate', price: 298, bPrice: 'Bulk: ¥229/student', desc: 'AI project proficiency. Referenced in STEM admissions applications.' },
-  { id: 'cert3', name: 'AI Innovation Certificate (Zhichuang)', type: 'cert', tag: '🏆 Top tier', price: 498, bPrice: 'Bulk: ¥380/student', desc: 'Highest tier. Accepted for 综评 and 强基 supplementary evidence.' },
+  { id: 'cert1', name: 'AI Foundations Certificate (Qizhi)', type: 'cert', tag: '🌱 Entry level', price: 198, bPrice: 'Bulk: $149/student', desc: 'Nationally verifiable. Dual-endorsed by institution + issuing centre. Suitable for Grades 3–6.' },
+  { id: 'cert2', name: 'AI Application Certificate (Jichu)', type: 'cert', tag: '📘 Intermediate', price: 298, bPrice: 'Bulk: $229/student', desc: 'AI project proficiency. Referenced in STEM admissions applications.' },
+  { id: 'cert3', name: 'AI Innovation Certificate (Zhichuang)', type: 'cert', tag: '🏆 Top tier', price: 498, bPrice: 'Bulk: $380/student', desc: 'Highest tier. Accepted for 综评 and 强基 supplementary evidence.' },
   { id: 'cert4', name: 'Teacher Advanced Certification', type: 'cert', tag: '👩‍🏫 Teacher', price: 680, bPrice: 'Institution package pricing', desc: 'For institutions: certify your teaching staff. Required for Jinyan/Zhichuang tier status.' },
 ]
 
 const MATERIALS = [
-  { id: 'm1', name: 'AI Literacy Textbook Series (Grades 3–9)', type: 'material', tag: '📚 Digital', price: 128, bPrice: 'Bulk: ¥89/set', desc: 'Full 7-volume series. Digital + print options. Updated annually. Aligned to Bingo 9-star curriculum.' },
-  { id: 'm2', name: 'AI Hardware Kit — Starter (Ages 8–12)', type: 'material', tag: '🔧 Physical', price: 398, bPrice: 'Bulk: ¥298/kit', desc: 'Components + instructions + companion digital guide. Compatible with Foundations Bootcamp.' },
-  { id: 'm3', name: 'Robotics & Sensors Kit (Ages 12+)', type: 'material', tag: '🤖 Advanced', price: 698, bPrice: 'Bulk: ¥520/kit', desc: 'For Competition Sprint or Robotics competition prep. Includes sensor pack + codebase.' },
-  { id: 'm4', name: 'AI Course + Starter Kit Bundle', type: 'material', tag: '💰 Bundle deal', price: 599, bPrice: 'Bulk: ¥440/bundle', desc: 'Foundations Bootcamp course + physical starter kit. Save ¥98 vs. buying separately.' },
+  { id: 'm1', name: 'AI Literacy Textbook Series (Grades 3–9)', type: 'material', tag: '📚 Digital', price: 128, bPrice: 'Bulk: $89/set', desc: 'Full 7-volume series. Digital + print options. Updated annually. Aligned to Bingo 9-star curriculum.' },
+  { id: 'm2', name: 'AI Hardware Kit — Starter (Ages 8–12)', type: 'material', tag: '🔧 Physical', price: 398, bPrice: 'Bulk: $298/kit', desc: 'Components + instructions + companion digital guide. Compatible with Foundations Bootcamp.' },
+  { id: 'm3', name: 'Robotics & Sensors Kit (Ages 12+)', type: 'material', tag: '🤖 Advanced', price: 698, bPrice: 'Bulk: $520/kit', desc: 'For Competition Sprint or Robotics competition prep. Includes sensor pack + codebase.' },
+  { id: 'm4', name: 'AI Course + Starter Kit Bundle', type: 'material', tag: '💰 Bundle deal', price: 599, bPrice: 'Bulk: $440/bundle', desc: 'Foundations Bootcamp course + physical starter kit. Save $98 vs. buying separately.' },
 ]
 
 const AI_LAB = [
   { id: 'lab1', name: 'AI Digital Lab — Personal Edition', type: 'lab', tag: '🏠 For families', price: 299, bPrice: null, desc: 'Cloud-based virtual AI lab. Sim experiments, AI guidance, 3-month access. Beginner-friendly.' },
   { id: 'lab2', name: 'AI Digital Lab — Family Starter', type: 'lab', tag: '👨‍👩‍👧 1-year access', price: 899, bPrice: null, desc: 'Full-year access + parent dashboard + 2 online coaching sessions. Best value home plan.' },
-  { id: 'lab3', name: 'AI Digital Lab — Institution Standard', type: 'lab', tag: '🏫 B-End', price: null, bPrice: 'From ¥12,800/yr · up to 50 students', desc: 'Institution-grade lab with teacher dashboard, student progress, and branded environment.' },
+  { id: 'lab3', name: 'AI Digital Lab — Institution Standard', type: 'lab', tag: '🏫 B-End', price: null, bPrice: 'From $12,800/yr · up to 50 students', desc: 'Institution-grade lab with teacher dashboard, student progress, and branded environment.' },
   { id: 'lab4', name: 'AI Digital Lab — Custom Build', type: 'lab', tag: '✏️ Custom', price: null, bPrice: 'Consult for proposal', desc: 'Fully customised lab environment with your institution\'s branding, curriculum, and integration.' },
 ]
 
 const AI_TRAINING = [
-  { id: 'tr1', name: 'AI Training Room — Standard Package', type: 'training', tag: '🏫 For institutions', price: null, bPrice: 'From ¥68,000', desc: 'Complete hardware + software + curriculum. Fits 20–30 students. On-site installation + teacher training included.' },
+  { id: 'tr1', name: 'AI Training Room — Standard Package', type: 'training', tag: '🏫 For institutions', price: null, bPrice: 'From $68,000', desc: 'Complete hardware + software + curriculum. Fits 20–30 students. On-site installation + teacher training included.' },
   { id: 'tr2', name: 'AI Training Room — Custom Build', type: 'training', tag: '✏️ Enterprise', price: null, bPrice: 'Request proposal', desc: 'Fully configured to your space, student count, and curriculum needs. Full project management.' },
   { id: 'tr3', name: 'AI Competition Training Station (C-end)', type: 'training', tag: '🏆 Personal', price: 2980, bPrice: null, desc: 'Compact personal training station. Ideal for high-school students preparing for AI science competitions.' },
-  { id: 'tr4', name: 'Teacher Training Service Bundle', type: 'training', tag: '👩‍🏫 B-End', price: null, bPrice: 'From ¥8,800', desc: 'On-site teacher training for AI training room operation. Covers curriculum delivery + equipment use.' },
+  { id: 'tr4', name: 'Teacher Training Service Bundle', type: 'training', tag: '👩‍🏫 B-End', price: null, bPrice: 'From $8,800', desc: 'On-site teacher training for AI training room operation. Covers curriculum delivery + equipment use.' },
 ]
 
 // ─── Sub-components ────────────────────────────────────────────────
@@ -70,7 +70,7 @@ function ProductModal({ item, onClose, onCart, onBuy }) {
           <p className="text-sm text-slate-600 mb-4">{item.desc}</p>
 
           <div className="bg-slate-50 rounded-xl p-4 mb-4 space-y-1 text-sm">
-            {item.price && <div><span className="text-slate-500">C-end price: </span><span className="font-bold text-primary text-lg">¥{item.price}</span></div>}
+            {item.price && <div><span className="text-slate-500">C-end price: </span><span className="font-bold text-primary text-lg">${item.price}</span></div>}
             {item.bPrice && <div><span className="text-slate-500">B-end / bulk: </span><span className="font-semibold text-amber-600">{item.bPrice}</span></div>}
             {item.deadline && <div><span className="text-slate-500">Deadline: </span><span className="text-slate-700">{item.deadline}</span></div>}
             {item.badge && <div><span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{item.badge}</span></div>}
@@ -95,7 +95,7 @@ function ProductModal({ item, onClose, onCart, onBuy }) {
           <div className="flex gap-2 flex-wrap">
             {item.price && (
               <>
-                <button onClick={() => { onBuy(item); onClose() }} className="flex-1 btn-primary text-sm py-2.5">Buy Now — ¥{item.price * qty}</button>
+                <button onClick={() => { onBuy(item); onClose() }} className="flex-1 btn-primary text-sm py-2.5">Buy Now — ${item.price * qty}</button>
                 <button onClick={() => { onCart(item); onClose() }} className="border border-primary text-primary text-sm px-4 py-2.5 rounded-xl hover:bg-primary/5 transition">Add to Cart</button>
               </>
             )}
@@ -124,7 +124,7 @@ function ProductCard({ item, onOpen }) {
       <p className="text-xs text-slate-500 line-clamp-2 flex-1 mb-2">{item.desc}</p>
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100">
         <div>
-          {item.price && <span className="font-bold text-primary">¥{item.price}</span>}
+          {item.price && <span className="font-bold text-primary">${item.price}</span>}
           {isBOnly && <span className="text-xs text-amber-600 font-medium">Consult pricing</span>}
         </div>
         <button className="text-xs btn-primary px-3 py-1.5">Details →</button>
@@ -194,15 +194,15 @@ function CheckoutModal({ items, onClose }) {
                 {items.map((item,i) => (
                   <div key={i} className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-3">
                     <span className="text-slate-700 flex-1 mr-2">{item.name}</span>
-                    <span className="font-medium text-primary shrink-0">{item.price ? `¥${item.price}` : 'Quote'}</span>
+                    <span className="font-medium text-primary shrink-0">{item.price ? `$${item.price}` : 'Quote'}</span>
                   </div>
                 ))}
               </div>
               <div className="flex items-center justify-between mb-1 text-sm">
-                <span className="text-slate-500">Subtotal</span><span className="font-bold text-bingo-dark">¥{total}</span>
+                <span className="text-slate-500">Subtotal</span><span className="font-bold text-bingo-dark">${total}</span>
               </div>
               <div className="flex items-center justify-between mb-4 text-xs text-green-600">
-                <span>Points discount (if any)</span><span>−¥0</span>
+                <span>Points discount (if any)</span><span>−$0</span>
               </div>
               <button onClick={() => setStep(2)} className="w-full btn-primary py-2.5">Continue to Details</button>
             </>
@@ -220,9 +220,9 @@ function CheckoutModal({ items, onClose }) {
                 ))}
               </div>
               <div className="flex items-center justify-between text-sm font-bold mb-4">
-                <span>Total</span><span className="text-primary text-lg">¥{total}</span>
+                <span>Total</span><span className="text-primary text-lg">${total}</span>
               </div>
-              <button onClick={() => setStep(3)} className="w-full btn-primary py-2.5">Pay ¥{total}</button>
+              <button onClick={() => setStep(3)} className="w-full btn-primary py-2.5">Pay ${total}</button>
             </>
           )}
           {step === 3 && (
@@ -270,7 +270,7 @@ export default function Mall() {
   ]
 
   const BANNERS = [
-    { bg: 'from-primary/20 to-cyan-100', icon: '🎓', headline: 'Spring Sale — AI Courses from ¥9.9', sub: 'Limited time. Parent guide + all starter courses on offer.', cta: 'Shop Courses', target: 'courses' },
+    { bg: 'from-primary/20 to-cyan-100', icon: '🎓', headline: 'Spring Sale — AI Courses from $9.9', sub: 'Limited time. Parent guide + all starter courses on offer.', cta: 'Shop Courses', target: 'courses' },
     { bg: 'from-amber-100 to-orange-50', icon: '🔬', headline: 'AI Digital Lab — Personal Edition Launch', sub: '3 months cloud access. Start experimenting today.', cta: 'View Lab Plans', target: 'lab' },
     { bg: 'from-violet-100 to-purple-50', icon: '🏆', headline: 'Competition Season — Entry + Bootcamp Bundles', sub: 'March registration open. Prestigious competitions available.', cta: 'Browse Events', target: 'events' },
   ]
@@ -348,7 +348,7 @@ export default function Mall() {
             <h2 className="section-title mb-5">Shop by Category</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
               {[
-                { icon: '🎓', name: 'AI Courses', sub: 'From ¥9.9', tab: 'courses', hot: true },
+                { icon: '🎓', name: 'AI Courses', sub: 'From $9.9', tab: 'courses', hot: true },
                 { icon: '🏆', name: 'Competition', sub: 'Prestigious entry', tab: 'events' },
                 { icon: '📜', name: 'Certification', sub: 'Nationally valid', tab: 'cert' },
                 { icon: '📚', name: 'Books & Kits', sub: 'Digital + Physical', tab: 'materials' },
@@ -612,9 +612,9 @@ export default function Mall() {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Your Family Benefits</p>
             <div className="grid sm:grid-cols-3 gap-3 text-xs">
               {[
-                { icon: '🪙', title: 'Points System', desc: `You have ${points.toLocaleString()} points. Every ¥1 spent = 1 point. 100 pts = ¥1 off.` },
+                { icon: '🪙', title: 'Points System', desc: `You have ${points.toLocaleString()} points. Every $1 spent = 1 point. 100 pts = $1 off.` },
                 { icon: '💌', title: 'Referral Rewards', desc: 'Share any product and earn commission on every purchase made through your link.' },
-                { icon: '🎁', title: 'Family Coupons', desc: 'New-user ¥20 coupon. Monthly activity rewards. AI lab trial credits.' },
+                { icon: '🎁', title: 'Family Coupons', desc: 'New-user $20 coupon. Monthly activity rewards. AI lab trial credits.' },
               ].map((b,i) => (
                 <div key={i} className="bg-white rounded-xl p-3">
                   <div className="text-xl mb-1">{b.icon}</div>

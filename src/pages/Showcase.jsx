@@ -37,7 +37,7 @@ const SCHOOL_CASES = [
 ]
 
 const FRANCHISE_CASES = [
-  { org: 'BrightPath Education Centre', region: 'Chengdu', type: 'Franchise Partner', pain: 'Converting from English tutoring to AI education — no curriculum or brand', timeline: '6 months post-launch', result: '200+ students enrolled · 3 in-house competitions hosted · Revenue +¥40万', months: 6 },
+  { org: 'BrightPath Education Centre', region: 'Chengdu', type: 'Franchise Partner', pain: 'Converting from English tutoring to AI education — no curriculum or brand', timeline: '6 months post-launch', result: '200+ students enrolled · 3 in-house competitions hosted · Revenue +$400k', months: 6 },
   { org: 'Future Minds Academy', region: 'Guangzhou', type: 'Franchise Partner', pain: 'New AI education brand, zero market recognition', timeline: '8 months post-launch', result: '350+ students · 95% course renewal rate · Regional AI leader recognition', months: 8 },
 ]
 

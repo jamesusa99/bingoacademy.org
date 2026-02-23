@@ -51,11 +51,11 @@ const PAIN_POINTS = [
     problem: 'Parents feel helpless — they don\'t understand AI well enough to guide their child or choose the right course.',
     solutionTitle: 'Parent AI education system — become your child\'s AI guide',
     solutions: [
-      { label: 'Parent Essentials Course', desc: '¥9.9 flash sale (original ¥99), 30 min video', to: '/mall' },
+      { label: 'Parent Essentials Course', desc: '$9.9 flash sale (original $99), 30 min video', to: '/mall' },
       { label: 'Free AI Education Community', desc: 'Expert Q&A + learning guide PDF', to: '/community' },
     ],
     note: '50,000+ parents supported · 98% said it helped them guide their child',
-    cta: '¥9.9 Get Parent Course', ctaTo: '/mall',
+    cta: '$9.9 Get Parent Course', ctaTo: '/mall',
   },
 ]
 
@@ -69,10 +69,10 @@ const CORE_PRODUCTS_C = [
 ]
 
 const C_MARKETING = [
-  { icon: '⚡', bg: 'bg-red-50 border-red-200/60', title: '¥9.9 Parent Flash Sale', desc: 'Orig ¥99 · 1,000 slots only', to: '/mall', hot: true },
+  { icon: '⚡', bg: 'bg-red-50 border-red-200/60', title: '$9.9 Parent Flash Sale', desc: 'Orig $99 · 1,000 slots only', to: '/mall', hot: true },
   { icon: '🧠', bg: 'bg-primary/5 border-primary/20', title: 'Free AI Assessment', desc: 'Personalised learning roadmap', to: '/ai-test', hot: true },
   { icon: '👥', bg: 'bg-amber-50 border-amber-200/60', title: 'Group Buy · Save 50%', desc: '2-person group · any course', to: '/mall?tag=group', hot: false },
-  { icon: '🏕️', bg: 'bg-green-50 border-green-200/60', title: 'Prestigious Competition Camp Early Bird', desc: 'Sign up now, save ¥300', to: '/events', hot: false },
+  { icon: '🏕️', bg: 'bg-green-50 border-green-200/60', title: 'Prestigious Competition Camp Early Bird', desc: 'Sign up now, save $300', to: '/events', hot: false },
   { icon: '💰', bg: 'bg-violet-50 border-violet-200/60', title: 'Share & Earn', desc: 'Double commission this month', to: '/profile#promo', hot: false },
   { icon: '🎁', bg: 'bg-slate-50 border-slate-200', title: 'Claim Coupon', desc: 'Redeem at checkout', to: '/profile', hot: false },
 ]
@@ -208,8 +208,8 @@ export default function Home() {
                   <div className="space-y-3">
                     {[
                       { emoji: '🧠', title: 'Free AI Ability Assessment', sub: '3 min · personalised learning roadmap', to: '/ai-test', style: 'btn-primary' },
-                      { emoji: '⚡', title: '¥9.9 Parent Essentials Course', sub: 'Flash sale · 1,000 slots · orig. ¥99', to: '/mall', style: 'bg-amber-500 text-white' },
-                      { emoji: '🏆', title: 'Prestigious Competition Entry', sub: 'Early bird · save ¥300', to: '/events', style: '' },
+                      { emoji: '⚡', title: '$9.9 Parent Essentials Course', sub: 'Flash sale · 1,000 slots · orig. $99', to: '/mall', style: 'bg-amber-500 text-white' },
+                      { emoji: '🏆', title: 'Prestigious Competition Entry', sub: 'Early bird · save $300', to: '/events', style: '' },
                     ].map((a,i) => (
                       <Link key={i} to={a.to}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${a.style ? `${a.style} hover:opacity-90` : 'bg-slate-50 hover:bg-slate-100 text-bingo-dark'}`}>
@@ -489,7 +489,7 @@ export default function Home() {
               <div className="grid sm:grid-cols-3 gap-4">
                 {[
                   { icon: '🎁', title: 'New Partner — Waived Fee', desc: 'New curriculum partners: waiver + teacher training slots + course set', bg: 'bg-amber-50 border-amber-200/60' },
-                  { icon: '⚙️', title: 'OEM Bonus', desc: 'Orders ≥ ¥50k get 1-year tech maintenance free', bg: 'bg-primary/5 border-primary/20' },
+                  { icon: '⚙️', title: 'OEM Bonus', desc: 'Orders ≥ $50k get 1-year tech maintenance free', bg: 'bg-primary/5 border-primary/20' },
                   { icon: '📢', title: 'AI Education Summit', desc: 'Free registration · limited to 500 institutions · reserve now', bg: 'bg-slate-50 border-slate-200' },
                 ].map((m,i) => (
                   <div key={i} className={`card p-5 border-2 ${m.bg} hover:shadow-md transition`}>

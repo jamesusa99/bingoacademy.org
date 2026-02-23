@@ -92,7 +92,7 @@ function EarnBySharing() {
         <h3 className="font-semibold text-bingo-dark mb-3">Commission settlement</h3>
         <ul className="text-sm text-slate-700 space-y-1 mb-4">
           <li>· Withdrawable balance, pending commission, settled commission</li>
-          <li>· Withdraw: min ¥68, T+1 arrival</li>
+          <li>· Withdraw: min $68, T+1 arrival</li>
           <li>· Withdrawal history: amount, request time, arrival time, status</li>
           <li>· Settlement: 7 days after order completion; refunds deduct commission</li>
         </ul>
@@ -108,7 +108,7 @@ function EarnBySharing() {
           <li>· Commission varies by product/course/role — see product pages</li>
           <li>· Referral binding: 30 days after referred user clicks/scans</li>
           <li>· Refunds/void orders: deduct commission</li>
-          <li>· Withdrawal: min ¥68, T+1, no fee</li>
+          <li>· Withdrawal: min $68, T+1, no fee</li>
         </ul>
       </div>
 
@@ -128,7 +128,7 @@ function EarnBySharing() {
           <div><dt className="font-medium text-slate-800">Pending commission</dt><dd className="text-slate-600 mt-0.5">Commission from valid orders, not yet settled</dd></div>
           <div><dt className="font-medium text-slate-800">Withdrawable commission</dt><dd className="text-slate-600 mt-0.5">Settled, in referrer balance</dd></div>
           <div><dt className="font-medium text-slate-800">Settlement period</dt><dd className="text-slate-600 mt-0.5">7 days after order completion</dd></div>
-          <div><dt className="font-medium text-slate-800">Min withdrawal</dt><dd className="text-slate-600 mt-0.5">¥68 (no fee)</dd></div>
+          <div><dt className="font-medium text-slate-800">Min withdrawal</dt><dd className="text-slate-600 mt-0.5">$68 (no fee)</dd></div>
         </dl>
       </div>
 
@@ -174,7 +174,7 @@ function EarnBySharing() {
             { title: 'Share flow', body: 'Share button on product/course/event pages: generate poster, copy link, share. Poster includes QR, product info, commission tip. Earn by Sharing: high-commission picks → one-click share.' },
             { title: 'Referral binding', body: 'Referred user enters via link/QR → system parses referrer ID; auto-bind. Binding valid 30 days; first click wins.' },
             { title: 'Commission & settlement', body: 'Order amount × rate. Status: Paid → Pending; after settlement period → Withdrawable; refund → deduct. Notifications via app.' },
-            { title: 'Withdrawal', body: 'Profile → Commission settlement; Withdraw (min ¥68) → confirm → auto review (≤10 min) → transfer.' },
+            { title: 'Withdrawal', body: 'Profile → Commission settlement; Withdraw (min $68) → confirm → auto review (≤10 min) → transfer.' },
             { title: 'Team promotion', body: 'Earn by Sharing → Team → Invite members; team commission split; team stats.' },
           ].map((item, i) => (
             <details key={i} className="group border border-slate-200 rounded-lg overflow-hidden">
@@ -230,9 +230,9 @@ export default function Profile() {
     { label: 'Orders', value: '12', unit: '', shareModule: 'My Orders' },
     { label: 'Teaching kit stock', value: '2', unit: 'items', shareModule: null },
     { label: 'Charity points', value: '1,240', unit: 'pts', shareModule: null },
-    { label: 'Commission balance', value: '¥86', unit: '', shareModule: null },
+    { label: 'Commission balance', value: '$86', unit: '', shareModule: null },
     { label: 'Invited', value: '12', unit: 'friends', shareModule: null },
-    { label: 'Pending commission', value: '¥24', unit: '', shareModule: null },
+    { label: 'Pending commission', value: '$24', unit: '', shareModule: null },
     { label: 'Member benefits to claim', value: '2', unit: '', shareModule: null },
   ]
 
@@ -420,8 +420,8 @@ export default function Profile() {
             {MEMBER_TIERS.filter(t => t.id !== 'free').map(t => (
               <div key={t.id} className={`card p-5 border-2 ${t.id === memberTier ? 'border-primary ring-2 ring-primary/20' : 'border-slate-100'} ${t.bg}`}>
                 <div className={`font-bold ${t.color} mb-1`}>{t.chinese}</div>
-                <div className="text-2xl font-bold text-bingo-dark mb-1">¥{t.price}<span className="text-sm font-normal text-slate-500">/period</span></div>
-                {t.autoPrice && <p className="text-xs text-green-600 mb-3">Auto-renew ¥{t.autoPrice} {t.autoLabel}</p>}
+                <div className="text-2xl font-bold text-bingo-dark mb-1">${t.price}<span className="text-sm font-normal text-slate-500">/period</span></div>
+                {t.autoPrice && <p className="text-xs text-green-600 mb-3">Auto-renew ${t.autoPrice} {t.autoLabel}</p>}
                 <div className="flex flex-col gap-2">
                   <button type="button" className="w-full btn-primary py-2 text-sm">Subscribe</button>
                   <button type="button" className="w-full border border-slate-200 text-slate-600 py-2 rounded-xl text-sm hover:bg-slate-50">Auto-renew (save)</button>

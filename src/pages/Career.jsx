@@ -11,11 +11,11 @@ const TRAINING_BASES = [
 ]
 
 const JOB_LIST = [
-  { title: 'AI Trainer (Junior)', company: 'Alibaba Cloud', level: 'Junior', salary: '¥8k–12k', location: 'Remote / Hangzhou', skill: 'AI Basics · Python', courseLinked: true },
-  { title: 'Data Analyst', company: 'ByteDance Data Lab', level: 'Junior', salary: '¥10k–15k', location: 'Beijing / Remote', skill: 'SQL · Data Vis', courseLinked: true },
-  { title: 'Short Video Operations', company: 'New Media Agency', level: 'Entry', salary: '¥5k–8k', location: 'Multiple cities', skill: 'AIGC · Content Ops', courseLinked: false },
-  { title: 'Smart Mfg Ops Engineer', company: 'SAIC Partner', level: 'Mid', salary: '¥12k–18k', location: 'Shanghai', skill: 'PLC · MES Systems', courseLinked: true },
-  { title: 'Business Data Analyst', company: 'Retail Group', level: 'Junior', salary: '¥9k–13k', location: 'Guangzhou', skill: 'SQL · Excel · BI', courseLinked: true },
+  { title: 'AI Trainer (Junior)', company: 'Alibaba Cloud', level: 'Junior', salary: '$8k–12k', location: 'Remote / Hangzhou', skill: 'AI Basics · Python', courseLinked: true },
+  { title: 'Data Analyst', company: 'ByteDance Data Lab', level: 'Junior', salary: '$10k–15k', location: 'Beijing / Remote', skill: 'SQL · Data Vis', courseLinked: true },
+  { title: 'Short Video Operations', company: 'New Media Agency', level: 'Entry', salary: '$5k–8k', location: 'Multiple cities', skill: 'AIGC · Content Ops', courseLinked: false },
+  { title: 'Smart Mfg Ops Engineer', company: 'SAIC Partner', level: 'Mid', salary: '$12k–18k', location: 'Shanghai', skill: 'PLC · MES Systems', courseLinked: true },
+  { title: 'Business Data Analyst', company: 'Retail Group', level: 'Junior', salary: '$9k–13k', location: 'Guangzhou', skill: 'SQL · Excel · BI', courseLinked: true },
 ]
 
 const TEXTBOOKS = [
@@ -62,7 +62,7 @@ const PARTNERS = {
 const NEWS_ITEMS = [
   { type: 'publication', tag: '📖 New Publication', title: '"Generative AI Foundations" selected for 2024 Provincial Curriculum Reform Textbook List', date: 'Feb 2025', excerpt: 'The textbook has now been adopted by 38+ colleges and sold 2,100+ copies since launch in October 2024.' },
   { type: 'industry', tag: '🏭 Industry-Education', title: 'Bingo × Huawei ICT Academy Sign Strategic Cooperation Agreement', date: 'Jan 2025', excerpt: 'Formalising an AI talent pipeline from campus to job-ready. Students receive co-branded certification upon completion.' },
-  { type: 'employment', tag: '💼 Employment', title: '2024 Smart Career Cohort: 94% Employment Rate, Average Starting Salary ¥9,800', date: 'Dec 2024', excerpt: 'Latest annual report shows significant improvements over 2023. 68% of students placed in AI-related roles.' },
+  { type: 'employment', tag: '💼 Employment', title: '2024 Smart Career Cohort: 94% Employment Rate, Average Starting Salary $9,800', date: 'Dec 2024', excerpt: 'Latest annual report shows significant improvements over 2023. 68% of students placed in AI-related roles.' },
   { type: 'policy', tag: '📋 Policy Update', title: 'MoE Releases New Vocational AI Education Framework — What It Means for Training Centres', date: 'Nov 2024', excerpt: 'Bingo curriculum team has analysed key policy changes and updated relevant modules accordingly.' },
   { type: 'publication', tag: '📖 New Publication', title: '"Business Data Analysis with SQL" Passes 3,400 Sales Milestone', date: 'Oct 2024', excerpt: 'Now the platform\'s bestselling vocational textbook. Adopted by 54 schools nationwide.' },
 ]
@@ -355,7 +355,7 @@ export default function Career() {
           <div className="card p-5 bg-green-50/20 border-green-200/60">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Employment Outcomes 2024</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-sm">
-              {[['94%','Employment rate'],['¥9,800','Avg starting salary'],['68%','AI-related roles'],['30+','Hiring partners']].map(([v,l],i) => (
+              {[['94%','Employment rate'],['$9,800','Avg starting salary'],['68%','AI-related roles'],['30+','Hiring partners']].map(([v,l],i) => (
                 <div key={i}><p className="font-bold text-primary text-lg">{v}</p><p className="text-xs text-slate-500">{l}</p></div>
               ))}
             </div>
@@ -501,7 +501,7 @@ export default function Career() {
                 <h3 className="font-semibold text-bingo-dark text-sm mb-0.5">{c.name}</h3>
                 <p className="text-xs text-slate-500 mb-1">{c.level} · {c.weeks} weeks</p>
                 <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
-                  <span className="font-bold text-primary">¥{c.price}</span>
+                  <span className="font-bold text-primary">${c.price}</span>
                   <div className="flex gap-1.5">
                     {c.free && <button className="border border-primary text-primary text-xs px-2 py-1 rounded-lg hover:bg-primary/5">Free trial</button>}
                     <button onClick={() => setLead({ title: `Enrol: ${c.name}` })} className="btn-primary text-xs px-3 py-1.5">Enrol</button>

@@ -539,8 +539,8 @@ export default function Events() {
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             {[
               { icon: '🌱', name: 'AI Foundations Assessment', desc: 'Core AI literacy and conceptual understanding. Recommended for new entrants before registration.', duration: '15 mins', price: 'Free', level: 'Beginner' },
-              { icon: '⚙️', name: 'AI Application Skills Assessment', desc: 'Practical AI tool proficiency. Project planning, prompt engineering, and data handling.', duration: '25 mins', price: '¥49', level: 'Intermediate' },
-              { icon: '🏆', name: 'Competition Readiness Assessment', desc: 'Full competition preparation check. Identifies specific gaps against competition judging criteria.', duration: '35 mins', price: '¥99', level: 'Advanced' },
+              { icon: '⚙️', name: 'AI Application Skills Assessment', desc: 'Practical AI tool proficiency. Project planning, prompt engineering, and data handling.', duration: '25 mins', price: '$49', level: 'Intermediate' },
+              { icon: '🏆', name: 'Competition Readiness Assessment', desc: 'Full competition preparation check. Identifies specific gaps against competition judging criteria.', duration: '35 mins', price: '$99', level: 'Advanced' },
             ].map((a,i) => (
               <div key={i} className="card p-5 flex flex-col hover:shadow-md transition">
                 <div className="text-2xl mb-2">{a.icon}</div>
