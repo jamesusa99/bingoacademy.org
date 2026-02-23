@@ -233,19 +233,26 @@ function getResult(score, total, typeId) {
     score: Math.min(100, Math.max(30, pct + Math.floor(Math.random() * 20) - 10)),
   }))
 
+  const typeCourses = {
+    basic: { adv: ['Advanced AI Research Track', 'Competition Bootcamp', 'AI Camp · AI Research'], int: ['Intermediate AI Project Course', 'AI Innovation Workshop', 'Competition Foundations'], fnd: ['AI Literacy Foundations', 'Intro to AI Tools', 'AI Thinking for Students'] },
+    innovation: { adv: ['AI Research Project Camp', 'International Innovation Competition Prep', 'Cross-disciplinary AI Lab'], int: ['AI Innovation Workshop', 'Design Thinking for AI', 'Competition Project Sprint'], fnd: ['Creative AI Applications', 'Intro to AI Projects', 'AI Thinking for Students'] },
+    coding: { adv: ['Deep Learning & Neural Nets', 'AI Research Project', 'Advanced Python + ML'], int: ['Python + AI Projects', 'Machine Learning Foundations', 'Competition Coding Bootcamp'], fnd: ['Python Programming Basics', 'Intro to Data Science', 'AI Foundations Bootcamp'] },
+    literacy: { adv: ['AI Literacy Capstone', 'STEM Admissions Prep', 'Research & Portfolio Build'], int: ['Youth AI Literacy Level 2', 'Competition Readiness', 'AI Application Practice'], fnd: ['AI Literacy Foundations', 'Intro to AI Tools', 'AI Perception & Ethics'] },
+  }
+  const tc = typeCourses[typeId] || typeCourses.basic
   let level, color, feedback, courses
   if (pct >= 80) {
     level = 'Advanced'; color = 'text-green-600 bg-green-50 border-green-200'
-    feedback = 'Excellent! You demonstrate strong AI literacy and are well-positioned for competitive programmes and advanced coursework.'
-    courses = ['Advanced AI Research Track', 'AI Camp · AI Research', 'International Competition Prep']
+    feedback = 'Excellent! You demonstrate strong AI capability and are well-positioned for competitive programmes and advanced coursework.'
+    courses = tc.adv
   } else if (pct >= 55) {
     level = 'Intermediate'; color = 'text-primary bg-primary/5 border-primary/20'
-    feedback = 'Good foundation! You understand key AI concepts and are ready to deepen your skills with structured practice and project work.'
-    courses = ['Intermediate AI Project Course', 'AI Innovation Workshop', 'Competition Foundations']
+    feedback = 'Good foundation! You understand key concepts and are ready to deepen your skills with structured practice and project work.'
+    courses = tc.int
   } else {
     level = 'Foundations'; color = 'text-amber-700 bg-amber-50 border-amber-200'
-    feedback = 'Great start! Building a strong foundation in AI literacy now will prepare you for rapid progress. Focus on core concepts first.'
-    courses = ['AI Literacy Foundations', 'Intro to AI Tools', 'AI Thinking for Students']
+    feedback = 'Great start! Building a strong foundation now will prepare you for rapid progress. Focus on core concepts first.'
+    courses = tc.fnd
   }
   return { pct, level, color, feedback, courses, dimScores }
 }
@@ -433,57 +440,90 @@ function Results({ score, total, result, title, onBack }) {
 
 // ─── Assessment type definitions ──────────────────────────────────
 const ASSESSMENT_TYPES = [
-  {
-    id: 'basic',
-    title: 'AI Foundations Assessment',
-    badge: 'Free',
-    badgeStyle: 'bg-green-100 text-green-700',
-    events: 'General / All competitions',
-    duration: '20 min',
-    questionCount: 8,
-    desc: 'Evaluates foundational AI concepts, tool awareness, and ethical understanding. Ideal for students who want to know their baseline before entering any competition.',
+  { id: 'basic', title: 'AI Foundations Assessment', shortTitle: 'AI Foundations', badge: 'Free', badgeStyle: 'bg-green-100 text-green-700 border-green-200',
+    price: null, events: 'General / All competitions', duration: '20 min', questionCount: 8,
+    desc: 'Evaluates foundational AI concepts, tool awareness, and ethical understanding.',
+    ages: ['elementary','middle','high'], goals: ['literacy','competition','stem'],
+    sampleReport: { pct: 72, level: 'Intermediate', dimScores: [{ label: 'AI Concept Awareness', score: 78 }, { label: 'Tool Recognition', score: 65 }, { label: 'Ethics Sensitivity', score: 72 }] },
   },
-  {
-    id: 'innovation',
-    title: 'AI Innovation & Creativity Assessment',
-    badge: '$39 / session',
-    badgeStyle: 'bg-primary/10 text-primary',
-    events: 'Science & innovation competitions',
-    duration: '40 min',
-    questionCount: 10,
-    desc: 'Measures creative thinking, project design capability, and cross-disciplinary application. Results can be included as a reference score in competition preliminary rounds.',
+  { id: 'innovation', title: 'AI Innovation & Creativity Assessment', shortTitle: 'AI Innovation', badge: '$39/session', badgeStyle: 'bg-primary/10 text-primary border-primary/30',
+    price: 39, events: 'Science & innovation competitions', duration: '40 min', questionCount: 10,
+    desc: 'Measures creative thinking, project design capability, and cross-disciplinary application.',
+    ages: ['middle','high'], goals: ['competition','stem'],
+    sampleReport: { pct: 65, level: 'Intermediate', dimScores: [{ label: 'Creative Thinking', score: 70 }, { label: 'Project Design', score: 62 }, { label: 'Cross-disciplinary Application', score: 64 }] },
   },
-  {
-    id: 'coding',
-    title: 'AI Programming & Algorithms Assessment',
-    badge: '$59 / session',
-    badgeStyle: 'bg-primary/10 text-primary',
-    events: 'Coding / Robotics competitions',
-    duration: '60 min',
-    questionCount: 12,
-    desc: 'Deep technical evaluation covering Python programming, machine learning fundamentals, and algorithmic logic. Designed for students pursuing technical tracks.',
+  { id: 'coding', title: 'AI Programming & Algorithms Assessment', shortTitle: 'AI Programming', badge: '$59/session', badgeStyle: 'bg-primary/10 text-primary border-primary/30',
+    price: 59, events: 'Coding / Robotics competitions', duration: '60 min', questionCount: 12,
+    desc: 'Covers Python programming, machine learning fundamentals, and algorithmic logic.',
+    ages: ['middle','high'], goals: ['competition','stem'],
+    sampleReport: { pct: 58, level: 'Intermediate', dimScores: [{ label: 'Programming Fundamentals', score: 55 }, { label: 'ML Algorithms', score: 60 }, { label: 'Data Handling', score: 58 }] },
   },
-  {
-    id: 'literacy',
-    title: 'Youth AI Literacy Comprehensive Assessment',
-    badge: '$49 / session',
-    badgeStyle: 'bg-primary/10 text-primary',
-    events: 'Literacy / College admissions track',
-    duration: '45 min',
-    questionCount: 11,
-    desc: 'Multi-dimensional evaluation across four AI literacy dimensions: Perception, Understanding, Application, and Creation. Generates a personalized AI Literacy Capability Map.',
+  { id: 'literacy', title: 'Youth AI Literacy Comprehensive Assessment', shortTitle: 'AI Literacy', badge: '$49/session', badgeStyle: 'bg-primary/10 text-primary border-primary/30',
+    price: 49, events: 'Literacy / College admissions track', duration: '45 min', questionCount: 11,
+    desc: 'Multi-dimensional evaluation. Generates a personalized AI Literacy Capability Map.',
+    ages: ['elementary','middle','high'], goals: ['literacy','competition','stem'],
+    sampleReport: { pct: 68, level: 'Intermediate', dimScores: [{ label: 'AI Perception', score: 72 }, { label: 'AI Understanding', score: 65 }, { label: 'AI Application & Creation', score: 68 }] },
   },
 ]
 
 const USE_CASES = [
-  { icon: '🏆', title: 'Competition Reference', desc: 'Assessment scores can be factored into preliminary round evaluations by organizers' },
-  { icon: '📊', title: 'Personal Growth Record', desc: 'Synced to your profile to track your AI capability growth over time' },
-  { icon: '🎓', title: 'Course Recommendations', desc: 'Get matched AI courses based on your assessment results' },
+  { icon: '🏆', title: 'Competition Preliminary Reference', desc: 'Scores can be factored into judging by competition organizers' },
+  { icon: '📊', title: 'Personal Growth Record', desc: 'Synced to your profile to track AI capability growth over time' },
+  { icon: '🎓', title: 'Course Recommendations', desc: 'Get 3–5 matched AI courses based on your assessment results' },
 ]
+
+// Filter by age + goal → recommended assessment IDs
+function getRecommendedIds(age, goal) {
+  const all = ASSESSMENT_TYPES.filter(a => (age ? a.ages.includes(age) : true) && (goal ? a.goals.includes(goal) : true))
+  const ids = all.map(a => a.id)
+  if (ids.length === 0) return ASSESSMENT_TYPES.map(a => a.id)
+  return ids
+}
+
+// ─── Sample Report Modal ───────────────────────────────────────────
+function SampleReportModal({ assessment, onClose }) {
+  if (!assessment) return null
+  const r = assessment.sampleReport
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl my-8" onClick={e => e.stopPropagation()}>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-bingo-dark">Sample Report — {assessment.shortTitle}</h3>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-4 space-y-4">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-primary">{r.pct}%</div>
+              <div className="text-sm text-slate-500 mt-1">Level: {r.level}</div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-600 mb-2">Capability breakdown</p>
+              {r.dimScores.map((d,i) => (
+                <div key={i} className="flex justify-between text-xs mb-2">
+                  <span>{d.label}</span>
+                  <span className="font-medium text-primary">{d.score}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 mt-4 text-center">This is a sample. Your actual report will reflect your performance.</p>
+          <button onClick={onClose} className="w-full mt-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50">Close</button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ─── Main page ─────────────────────────────────────────────────────
 export default function AIAssessment() {
   const [activeQuiz, setActiveQuiz] = useState(null)
+  const [ageFilter, setAgeFilter] = useState('') // elementary | middle | high
+  const [goalFilter, setGoalFilter] = useState('') // literacy | competition | stem
+  const [sampleReportFor, setSampleReportFor] = useState(null)
+
+  const recommendedIds = getRecommendedIds(ageFilter, goalFilter)
+  const filteredTypes = ASSESSMENT_TYPES.filter(a => !ageFilter && !goalFilter ? true : recommendedIds.includes(a.id))
 
   if (activeQuiz) {
     const type = ASSESSMENT_TYPES.find((a) => a.id === activeQuiz)
@@ -496,6 +536,8 @@ export default function AIAssessment() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {sampleReportFor && <SampleReportModal assessment={sampleReportFor} onClose={() => setSampleReportFor(null)} />}
+
       {/* Breadcrumb */}
       <div className="text-sm text-slate-500 mb-4">
         <Link to="/events" className="hover:text-primary transition">Events Center</Link>
@@ -504,54 +546,84 @@ export default function AIAssessment() {
       </div>
 
       {/* Hero */}
-      <section className="mb-10 text-center py-10 section-tech rounded-2xl px-4">
-        <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mb-4">AI Assessment Center</h1>
-        <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto mb-8">
-          Professional AI capability evaluation. Assessment reports are valid for competition preliminary reference, personal ability certification, and learning path optimization.
+      <section className="mb-8 section-tech rounded-2xl px-6 py-10 text-center">
+        <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mb-3">AI Assessment Center</h1>
+        <p className="text-slate-600 text-base max-w-2xl mx-auto mb-6">
+          Select assessments by age and goal. Get personalized course recommendations and learning path planning.
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
-          <button onClick={() => setActiveQuiz('basic')} className="btn-primary px-6 py-2.5 text-base">
+          <button onClick={() => setActiveQuiz('basic')} className="btn-primary px-6 py-2.5 text-sm font-medium">
             🧠 Free Trial Assessment
           </button>
-          <button onClick={() => setActiveQuiz('literacy')} className="px-6 py-2.5 text-base rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition">
+          <button onClick={() => setActiveQuiz('literacy')} className="px-6 py-2.5 text-sm font-medium rounded-xl border border-primary text-primary hover:bg-primary/5 transition">
             Book Specialized Assessment
           </button>
         </div>
       </section>
 
+      {/* Filters */}
+      <section className="mb-6">
+        <div className="flex flex-wrap gap-4 items-center">
+          <span className="text-sm font-medium text-slate-600">By age:</span>
+          <div className="flex gap-2">
+            {['elementary','middle','high'].map(a => (
+              <button key={a} onClick={() => setAgeFilter(prev => prev === a ? '' : a)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${ageFilter === a ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                {a === 'elementary' ? 'Elementary' : a === 'middle' ? 'Middle School' : 'High School'}
+              </button>
+            ))}
+          </div>
+          <span className="text-sm font-medium text-slate-600 ml-4">By goal:</span>
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { id: 'literacy', label: 'Literacy' },
+              { id: 'competition', label: 'Competition' },
+              { id: 'stem', label: 'STEM Admissions' },
+            ].map(g => (
+              <button key={g.id} onClick={() => setGoalFilter(prev => prev === g.id ? '' : g.id)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${goalFilter === g.id ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Assessment types */}
-      <section className="mb-12">
-        <h2 className="section-title mb-6">Choose Your Assessment Type</h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          {ASSESSMENT_TYPES.map((a) => (
-            <div key={a.id} className="card p-6 flex flex-col hover:shadow-md hover:border-primary/30 transition">
+      <section className="mb-10">
+        <h2 className="section-title mb-5">Choose Assessment Type</h2>
+        <div className="grid md:grid-cols-2 gap-5">
+          {filteredTypes.map((a) => (
+            <div key={a.id} className={`card p-6 flex flex-col transition border-2 ${recommendedIds.includes(a.id) && (ageFilter || goalFilter) ? 'border-primary/40 bg-primary/5' : 'hover:border-primary/20'}`}>
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h3 className="font-semibold text-bingo-dark text-base">{a.title}</h3>
-                <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${a.badgeStyle}`}>{a.badge}</span>
+                <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full border ${a.badgeStyle}`}>{a.badge}</span>
               </div>
-              <div className="flex gap-4 text-xs text-slate-500 mb-3">
-                <span>🏅 {a.events}</span>
+              <p className="text-sm text-slate-600 mb-4">{a.desc}</p>
+              <div className="flex flex-wrap gap-4 text-xs text-slate-500 mb-4">
                 <span>⏱ {a.duration}</span>
                 <span>📝 {a.questionCount} questions</span>
+                <span>🏅 {a.events}</span>
               </div>
-              <p className="text-sm text-slate-600 flex-1 mb-4">{a.desc}</p>
-              <button
-                onClick={() => setActiveQuiz(a.id)}
-                className="w-full btn-primary text-sm py-2.5 rounded-xl font-medium"
-              >
-                Start Assessment →
-              </button>
+              <div className="flex gap-2 mt-auto">
+                <button onClick={() => setActiveQuiz(a.id)} className="flex-1 btn-primary text-sm py-2.5 rounded-xl font-medium">
+                  Start Assessment →
+                </button>
+                <button onClick={() => setSampleReportFor(a)} className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">
+                  Sample Report
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       {/* Use cases */}
-      <section className="mb-12">
-        <h2 className="section-title mb-6">How Your Report Can Be Used</h2>
+      <section className="mb-10">
+        <h2 className="section-title mb-5">Report Use Cases</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {USE_CASES.map((u, i) => (
-            <div key={i} className="card p-6 text-center hover:shadow-md transition">
+            <div key={i} className="card p-6 text-center hover:shadow-md hover:border-primary/20 transition">
               <div className="text-3xl mb-3">{u.icon}</div>
               <h3 className="font-semibold text-bingo-dark mb-1">{u.title}</h3>
               <p className="text-sm text-slate-500">{u.desc}</p>
@@ -559,6 +631,13 @@ export default function AIAssessment() {
           ))}
         </div>
       </section>
+
+      {/* Footer CTA */}
+      <div className="flex flex-wrap gap-3 justify-center text-sm">
+        <Link to="/courses" className="px-4 py-2 rounded-xl bg-primary/10 text-primary font-medium hover:bg-primary/20 transition">Course Enrollment</Link>
+        <Link to="/community" className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition">💬 Community</Link>
+        <a href="tel:400-xxx-xxxx" className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition">📞 Call</a>
+      </div>
     </div>
   )
 }
