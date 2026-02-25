@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 // ─── Data ──────────────────────────────────────────────────────────
 
@@ -24,7 +25,7 @@ const AGE_COHORTS = [
   },
 ]
 
-const PREMIUM_CAMPS = [
+const PREMIUM_CAMPS_FALLBACK = [
   { id: 'ai', title: 'AI Literacy AI Camp', age: '8–12 yrs', icon: '🤖', direction: 'Starter Interest',
     core: 'AI literacy · unplugged experiments · robotics hands-on',
     highlight: 'Hands-on experiments + hardware practice. Zero-background AI entry — fun and knowledge-rich.',
@@ -88,7 +89,7 @@ const RESEARCH_PROJECTS = [
     suitedFor: 'National/provincial AI innovation competitions · ISEF prep', weeks: '8–12 weeks' },
 ]
 
-const FACULTY = [
+const FACULTY_FALLBACK = [
   { name: 'Director Chen', team: 'Research Faculty', area: 'AI Literacy & Youth STEM Education', exp: '8 yrs youth STEM · led 20+ curriculum designs · 500+ students guided', philosophy: 'Start with curiosity, end with capability.', type: 'research' },
   { name: 'Prof. Li', team: 'University Partner Faculty', area: 'Machine Learning & Computer Vision', exp: 'Associate Professor · 30+ published papers · 10 yrs university teaching', philosophy: 'Research projects should solve real problems.', type: 'university' },
   { name: 'Coach Wang', team: 'Competition Coaches', area: 'Youth AI Competition Strategy', exp: '50+ award-winning teams coached · National competition gold coach', philosophy: 'Prepare early, compete with confidence.', type: 'competition' },
@@ -236,7 +237,7 @@ function OutcomeDetailModal({ item, onClose }) {
   )
 }
 
-function RegisterModal({ preselect, onClose }) {
+function RegisterModal({ preselect, camps = PREMIUM_CAMPS_FALLBACK, onClose }) {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({ name: '', age: '', grade: '', phone: '', parent: '', camp: preselect || '', notes: '', agreed: false })
   const valid = form.name && form.age && form.phone && form.parent && form.camp && form.agreed
@@ -264,7 +265,7 @@ function RegisterModal({ preselect, onClose }) {
             <select value={form.camp} onChange={e => setForm(f => ({...f, camp: e.target.value}))}
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none bg-white">
               <option value="">Select a programme</option>
-              {PREMIUM_CAMPS.map(c => <option key={c.id} value={c.title}>{c.title} ({c.age})</option>)}
+              {camps.map(c => <option key={c.id} value={c.title}>{c.title} ({c.age})</option>)}
               {RESEARCH_PROJECTS.map(p => <option key={p.id} value={p.title}>{p.title}</option>)}
             </select>
           </div>
@@ -340,6 +341,17 @@ export default function Research() {
   const [registerModal, setRegisterModal] = useState(null)
   const [consultModal, setConsultModal] = useState(false)
   const [faqOpen, setFaqOpen] = useState({})
+  const [premiumCamps, setPremiumCamps] = useState(PREMIUM_CAMPS_FALLBACK)
+  const [faculty, setFaculty] = useState(FACULTY_FALLBACK)
+
+  useEffect(() => {
+    supabase.from('research_camps').select('*').order('sort_order').then(({ data }) => {
+      if (data?.length) setPremiumCamps(data.map((r) => ({ id: r.id, title: r.title, age: r.age, icon: r.icon, direction: r.direction, core: r.core, highlight: r.highlight, outcome: r.outcome, ratio: r.ratio, competition: r.competition, price: r.price, weeks: r.weeks })))
+    })
+    supabase.from('research_faculty').select('*').order('sort_order').then(({ data }) => {
+      if (data?.length) setFaculty(data.map((r) => ({ name: r.name, team: r.team, area: r.area, exp: r.exp, philosophy: r.philosophy, type: r.type })))
+    })
+  }, [])
 
   const NAV = [
     { id: 'home', icon: '🏠', label: 'Overview' },
@@ -354,9 +366,9 @@ export default function Research() {
     { id: 'services', icon: '📋', label: 'Service Centre' },
   ]
 
-  const filteredCamps = campFilter === 'all' ? PREMIUM_CAMPS : PREMIUM_CAMPS.filter(c => c.direction === campFilter)
+  const filteredCamps = campFilter === 'all' ? premiumCamps : premiumCamps.filter(c => c.direction === campFilter)
   const filteredOutcomes = outcomeFilter === 'all' ? OUTCOMES : OUTCOMES.filter(o => o.type === outcomeFilter)
-  const filteredFaculty = facultyFilter === 'all' ? FACULTY : FACULTY.filter(f => f.type === facultyFilter)
+  const filteredFaculty = facultyFilter === 'all' ? faculty : faculty.filter(f => f.type === facultyFilter)
   const filteredDownloads = downloadFilter === 'all' ? DOWNLOADS : DOWNLOADS.filter(d => d.type === downloadFilter)
   const filteredFaq = faqFilter === 'all' ? FAQ_ITEMS : FAQ_ITEMS.filter(f => f.cat === faqFilter)
 
@@ -367,7 +379,7 @@ export default function Research() {
       {activeCamp && <CampDetailModal camp={activeCamp} onClose={() => setActiveCamp(null)} />}
       {activeResearch && <ResearchDetailModal project={activeResearch} onClose={() => setActiveResearch(null)} />}
       {activeOutcome && <OutcomeDetailModal item={activeOutcome} onClose={() => setActiveOutcome(null)} />}
-      {registerModal !== null && <RegisterModal preselect={registerModal || ''} onClose={() => setRegisterModal(null)} />}
+      {registerModal !== null && <RegisterModal preselect={registerModal || ''} camps={premiumCamps} onClose={() => setRegisterModal(null)} />}
       {consultModal && <ConsultModal onClose={() => setConsultModal(false)} />}
 
       {/* ── Hero Banner ── */}
@@ -450,7 +462,7 @@ export default function Research() {
           <section>
             <h2 className="section-title mb-4">Featured Programmes</h2>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {PREMIUM_CAMPS.slice(0,3).map((c,i) => (
+              {premiumCamps.slice(0,3).map((c,i) => (
                 <div key={i} className="card p-5 hover:shadow-md hover:border-primary/30 transition cursor-pointer" onClick={() => setActiveCamp(c)}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">{c.icon}</span>
@@ -501,7 +513,7 @@ export default function Research() {
                   <p className="text-xs font-semibold text-slate-700 mb-2">Recommended Programmes:</p>
                   <div className="flex flex-wrap gap-2">
                     {c.camps.map((camp,j) => {
-                      const found = PREMIUM_CAMPS.find(p => p.title === camp)
+                      const found = premiumCamps.find(p => p.title === camp)
                       return (
                         <button key={j} onClick={() => found && setActiveCamp(found)} className="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full hover:bg-primary/20 transition font-medium">
                           {camp} →

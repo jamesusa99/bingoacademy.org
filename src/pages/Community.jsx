@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 // ─── Certified Mentors data ────────────────────────────────────────
-const CERTIFIED_MENTORS = [
+const CERTIFIED_MENTORS_FALLBACK = [
   { name: 'James Chen', title: 'Professor · UESTC', photo: '/mentors/jianwen-chen.jpg', tag: 'AI Research', intro: 'Over 20 years of research in video processing and AI algorithms; multimodal feature fusion for affective computing. Professor & doctoral supervisor at UESTC; Director of Visual Intelligence Research Center.', awards: '200+ papers · National research grants' },
   { name: 'Wenyi Wang', title: 'Ph.D · Associate Professor', photo: '/mentors/wenyi-wang.jpg', tag: 'Data Mining & AI', intro: 'AI expert at UESTC. Research spans data mining, AI, and algorithm optimisation. M.Sc. and Ph.D. from University of Ottawa, Canada.', awards: 'Best-paper awards · Industry AI advisory' },
   { name: 'Michell Xu', title: 'Ph.D · AI Scientist', photo: '/mentors/feng-xu.jpg', tag: 'Computer Vision', intro: 'Researcher at Beijing Academy of AI; Beijing High-Level Overseas Talent. Former researcher at Samsung Research America and Thomson. Postdoctoral fellow at UPenn; Ph.D. from Tsinghua University.', awards: '50+ international patents · Samsung innovation awards' },
@@ -62,9 +63,9 @@ const PARTNERS = [
   { name: 'Maker Education Institute', region: 'Sichuan · Chengdu', type: 'Maker Space' },
 ]
 
-// ─── Forum: seed threads (BBS-style) ───────────────────────────────
+// ─── Forum: seed threads (fallback when Supabase empty) ─────────────
 const FORUM_STORAGE_KEY = 'bingo-forum-threads'
-const SAMPLE_THREADS = [
+const SAMPLE_THREADS_FALLBACK = [
   { id: 't1', title: 'Best age to start AI education?', content: 'Hi everyone! I have a 7-year-old and wondering when is the ideal time to introduce AI concepts. Would love to hear from parents who started early.', author: 'Parent_Mia', avatar: '👩', category: 'Discussion', createdAt: Date.now() - 86400000 * 2, replies: [
     { id: 'r1', content: 'We started at 8 with visual programming. Found it perfect — not too early, kid was ready for logical thinking.', author: 'Dad_Leo', avatar: '👨', createdAt: Date.now() - 86400000 * 1.8 },
     { id: 'r2', content: 'Agree! Also check Bingo\'s AI Foundations course — my daughter loved the project-based approach.', author: 'Mom_Sarah', avatar: '👩', createdAt: Date.now() - 86400000 * 1.5 },
@@ -76,7 +77,7 @@ const SAMPLE_THREADS = [
   { id: 't3', title: 'Competition registration tips 2024', content: 'Compiled a quick guide from our experience: 1) Check prestigious competition deadlines early 2) Prepare project documentation 3) Mock defence practice helps. Add your tips below!', author: 'Coach_Lin_Fan', avatar: '🏆', category: 'Competition', createdAt: Date.now() - 86400000 * 1, replies: [] },
 ]
 
-function loadForumThreads() {
+function loadForumThreadsFallback() {
   try {
     const raw = localStorage.getItem(FORUM_STORAGE_KEY)
     if (raw) {
@@ -84,16 +85,20 @@ function loadForumThreads() {
       if (Array.isArray(parsed) && parsed.length > 0) return parsed
     }
   } catch (_) {}
-  return JSON.parse(JSON.stringify(SAMPLE_THREADS))
+  return JSON.parse(JSON.stringify(SAMPLE_THREADS_FALLBACK))
 }
 
-function saveForumThreads(threads) {
+function saveForumThreadsFallback(threads) {
   try { localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(threads)) } catch (_) {}
 }
 
-// ─── Forum Section (BBS-style) ─────────────────────────────────────
+// ─── Forum Section (BBS-style, Supabase-backed) ──────────────────────
 function ForumSection() {
-  const [threads, setThreads] = useState(() => loadForumThreads())
+  const [threads, setThreads] = useState([])
+  const [useSupabase, setUseSupabase] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [replies, setReplies] = useState([])
+  const [repliesLoading, setRepliesLoading] = useState(false)
   const [view, setView] = useState('list') // 'list' | 'thread' | 'new'
   const [activeThreadId, setActiveThreadId] = useState(null)
   const [newPost, setNewPost] = useState({ title: '', content: '', imageUrl: '', author: 'Guest', category: 'Discussion' })
@@ -102,44 +107,84 @@ function ForumSection() {
   const [replyImageUrl, setReplyImageUrl] = useState('')
 
   const activeThread = threads.find(t => t.id === activeThreadId)
+  const activeThreadReplies = useSupabase && activeThreadId ? replies : (activeThread?.replies ?? [])
 
-  const handleCreatePost = () => {
-    if (!newPost.title.trim()) return
-    const thread = {
-      id: 't' + Date.now(),
-      title: newPost.title.trim(),
-      content: newPost.content.trim() || '(No content)',
-      author: newPost.author.trim() || 'Anonymous',
-      avatar: '✍️',
-      category: newPost.category,
-      image: newPost.imageUrl.trim() || null,
-      createdAt: Date.now(),
-      replies: [],
+  const fetchThreads = async () => {
+    const { data, error } = await supabase.from('forum_threads').select('*').order('created_at', { ascending: false })
+    if (!error && data?.length > 0) {
+      const withCount = await Promise.all(
+        data.map(async (r) => {
+          const { count } = await supabase.from('forum_replies').select('id', { count: 'exact', head: true }).eq('thread_id', r.id)
+          return { id: r.id, title: r.title, content: r.content, author: r.author || 'Anonymous', avatar: r.avatar, category: r.category || 'Discussion', image: r.image, createdAt: new Date(r.created_at).getTime(), replies: [], replyCount: count ?? 0 }
+        })
+      )
+      setThreads(withCount)
+      setUseSupabase(true)
+    } else {
+      setThreads(loadForumThreadsFallback())
+      setUseSupabase(false)
     }
-    setThreads(prev => [thread, ...prev])
-    saveForumThreads([thread, ...threads])
-    setNewPost({ title: '', content: '', imageUrl: '', author: 'Guest', category: 'Discussion' })
-    setView('list')
+    setLoading(false)
   }
 
-  const handleReply = () => {
-    if ((!replyText.trim() && !replyImageUrl.trim()) || !activeThreadId) return
-    const reply = {
-      id: 'r' + Date.now(),
-      content: replyText.trim() || '(Image)',
-      author: replyAuthor.trim() || 'Anonymous',
-      avatar: '💬',
-      image: replyImageUrl.trim() || null,
-      createdAt: Date.now(),
+  const fetchReplies = async (threadId) => {
+    setRepliesLoading(true)
+    const { data } = await supabase.from('forum_replies').select('*').eq('thread_id', threadId).order('created_at', { ascending: true })
+    setReplies((data || []).map(r => ({ id: r.id, content: r.content, author: r.author || 'Anonymous', avatar: r.avatar || '💬', image: r.image, createdAt: new Date(r.created_at).getTime() })))
+    setRepliesLoading(false)
+  }
+
+  useEffect(() => { fetchThreads() }, [])
+  useEffect(() => { if (useSupabase && activeThreadId) fetchReplies(activeThreadId) }, [useSupabase, activeThreadId])
+
+  const handleCreatePost = async () => {
+    if (!newPost.title.trim()) return
+    if (useSupabase) {
+      const { data, error } = await supabase.from('forum_threads').insert({
+        title: newPost.title.trim(),
+        content: newPost.content.trim() || '(No content)',
+        author: newPost.author.trim() || 'Anonymous',
+        avatar: '✍️',
+        category: newPost.category,
+        image: newPost.imageUrl.trim() || null,
+      }).select().single()
+      if (!error) {
+        setNewPost({ title: '', content: '', imageUrl: '', author: 'Guest', category: 'Discussion' })
+        setView('list')
+        fetchThreads()
+      }
+    } else {
+      const thread = { id: 't' + Date.now(), title: newPost.title.trim(), content: newPost.content.trim() || '(No content)', author: newPost.author.trim() || 'Anonymous', avatar: '✍️', category: newPost.category, image: newPost.imageUrl.trim() || null, createdAt: Date.now(), replies: [] }
+      setThreads(prev => [thread, ...prev])
+      saveForumThreadsFallback([thread, ...threads])
+      setNewPost({ title: '', content: '', imageUrl: '', author: 'Guest', category: 'Discussion' })
+      setView('list')
     }
-    const updated = threads.map(t => t.id === activeThreadId
-      ? { ...t, replies: [...(t.replies || []), reply] }
-      : t)
-    setThreads(updated)
-    saveForumThreads(updated)
-    setReplyText('')
-    setReplyImageUrl('')
-    setActiveThreadId(activeThreadId)
+  }
+
+  const handleReply = async () => {
+    if ((!replyText.trim() && !replyImageUrl.trim()) || !activeThreadId) return
+    if (useSupabase) {
+      const { error } = await supabase.from('forum_replies').insert({
+        thread_id: activeThreadId,
+        content: replyText.trim() || '(Image)',
+        author: replyAuthor.trim() || 'Anonymous',
+        avatar: '💬',
+        image: replyImageUrl.trim() || null,
+      })
+      if (!error) {
+        setReplyText('')
+        setReplyImageUrl('')
+        fetchReplies(activeThreadId)
+      }
+    } else {
+      const reply = { id: 'r' + Date.now(), content: replyText.trim() || '(Image)', author: replyAuthor.trim() || 'Anonymous', avatar: '💬', image: replyImageUrl.trim() || null, createdAt: Date.now() }
+      const updated = threads.map(t => t.id === activeThreadId ? { ...t, replies: [...(t.replies || []), reply] } : t)
+      setThreads(updated)
+      saveForumThreadsFallback(updated)
+      setReplyText('')
+      setReplyImageUrl('')
+    }
   }
 
   const formatTime = (ts) => {
@@ -217,7 +262,7 @@ function ForumSection() {
             </div>
           </div>
         </div>
-        {(activeThread.replies || []).map(r => (
+        {repliesLoading ? <div className="text-center py-4 text-slate-500">Loading replies...</div> : activeThreadReplies.map(r => (
           <div key={r.id} className="card p-4 pl-6 border-l-4 border-primary/30">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-lg shrink-0">{r.avatar || '💬'}</div>
@@ -254,6 +299,7 @@ function ForumSection() {
         </div>
         <button onClick={() => setView('new')} className="btn-primary px-5 py-2.5 shrink-0">✏️ New post</button>
       </div>
+      {loading ? <div className="card p-8 text-center text-slate-500">Loading...</div> : (
       <div className="space-y-2">
         {threads.map(t => (
           <div key={t.id} onClick={() => { setActiveThreadId(t.id); setView('thread') }}
@@ -262,12 +308,13 @@ function ForumSection() {
             <div className="flex-1 min-w-0">
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary">{t.category}</span>
               <h3 className="font-semibold text-bingo-dark text-sm mt-1 truncate">{t.title}</h3>
-              <p className="text-xs text-slate-500">{t.author} · {formatTime(t.createdAt)} · {(t.replies || []).length} replies</p>
+              <p className="text-xs text-slate-500">{t.author} · {formatTime(t.createdAt)} · {(t.replyCount ?? (t.replies || []).length)} replies</p>
             </div>
             <span className="text-slate-400 text-xs">→</span>
           </div>
         ))}
       </div>
+      )}
     </div>
   )
 }
@@ -420,6 +467,13 @@ export default function Community() {
   const [checkedIn, setCheckedIn] = useState({})
   const [joinDone, setJoinDone] = useState(false)
   const [redeemed, setRedeemed] = useState({})
+  const [certifiedMentors, setCertifiedMentors] = useState(CERTIFIED_MENTORS_FALLBACK)
+
+  useEffect(() => {
+    supabase.from('community_mentors').select('*').order('sort_order').then(({ data }) => {
+      if (data?.length) setCertifiedMentors(data.map((r) => ({ name: r.name, title: r.title, photo: r.photo, tag: r.tag, intro: r.intro, awards: r.awards })))
+    })
+  }, [])
 
   const NAV_TABS = [
     { id: 'home', icon: '🏠', label: 'Community Home' },
@@ -703,7 +757,7 @@ export default function Community() {
           <section>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Certified Research Mentors</p>
             <div className="grid md:grid-cols-2 gap-5">
-              {CERTIFIED_MENTORS.map((m,i) => (
+              {certifiedMentors.map((m,i) => (
                 <div key={i} className="card p-5 flex gap-4 hover:shadow-md transition">
                   <Avatar src={m.photo} name={m.name} size="md" />
                   <div className="flex-1 min-w-0">

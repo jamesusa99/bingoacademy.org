@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 // ─── Data ──────────────────────────────────────────────────────────
 
@@ -12,34 +13,55 @@ const STATS = [
   { value: '50+', label: 'Prestigious Competition Wins' },
 ]
 
-const AWARD_CASES = [
+const AWARD_CASES_FALLBACK = [
   { student: 'Student A', grade: 'Grade 6 · Primary', pain: 'Zero AI background · didn\'t know which competition to enter', path: 'AI Literacy Camp → Prestigious Competition Bootcamp → 1-on-1 Coach Prep', result: '🥇 National Prestigious Competition · 1st Prize', duration: '6 months', tags: ['AI Zero Background', 'Prestigious Competition', 'Primary School'], detail: 'Starting from zero, A completed the AI Literacy programme in 2 months, joined the Prestigious Competition Bootcamp, and worked with a competition coach on mock defences. Scored in the top 3% nationally.', type: 'competition' },
   { student: 'Student B', grade: 'Grade 10 · High School', pain: 'Had AI skills but no competition experience or formal results', path: 'ML Intro Camp → Competition Research Project → Pre-Competition Sprint', result: '🥈 Provincial AI Innovation Competition · 2nd Prize', duration: '8 months', tags: ['ML Skills', 'Competition Research', 'High School'], detail: 'B had basic Python skills. With guided research project mentorship and a personalised competition strategy, achieved provincial 2nd place and built a strong 综评 portfolio.', type: 'competition' },
   { student: 'Student C', grade: 'Grade 8 · Middle School', pain: 'Parents wanted competitions but didn\'t know AI education pathway', path: 'AI Literacy → Robotics Camp → Robotics Competition', result: '🏆 City Robotics Championship · Champion', duration: '5 months', tags: ['Robotics', 'Middle School', 'Competition'], detail: 'Complete beginner at entry. Intensive robotics programme with team collaboration training. Won city championship and was invited to join the school robotics team.', type: 'competition' },
 ]
 
-const ADMISSIONS_CASES = [
+const ADMISSIONS_CASES_FALLBACK = [
   { student: 'Student D', grade: 'Grade 12 · High School', pain: 'Wanted STEM specialty admission but had no qualifying AI results', path: '综评 Research Project → AI Portfolio → STEM Specialty Application', result: '🎓 STEM Specialty Admission · Key Provincial High School', duration: '10 months', tags: ['综评 Admissions', 'STEM Specialty', 'High School'], detail: 'D used our ML research project as the cornerstone of their 综评 application. Research report, competition certificates, and mentor recommendation letter all contributed to a successful STEM specialty offer.', type: 'admissions' },
   { student: 'Student E', grade: 'Grade 11 · High School', pain: 'Strong AI interest but no formal pathway or documentation', path: 'AI Agent Research → Competition Entry → 强基 Application', result: '🎓 强基 Programme Shortlisted · CS Major · Top-10 University', duration: '12 months', tags: ['强基 Programme', 'University Application', 'AI Research'], detail: 'E built an AI agent prototype and competed in two national competitions. The working prototype was demonstrated in the 强基 interview, directly supporting the CS major shortlisting.', type: 'admissions' },
   { student: 'Student F', grade: 'Grade 12 · International Track', pain: 'Applying to US universities without standout STEM projects', path: 'Data Science Camp → Research Project → International Application', result: '🌏 US University Early Decision · Top-50 School', duration: '8 months', tags: ['International', 'US Admissions', 'Data Science'], detail: '"Impressive depth of STEM project work" — cited directly by admissions letter. Data science portfolio and competition certificate formed the core of the application.', type: 'admissions' },
 ]
 
-const ABILITY_CASES = [
+const ABILITY_CASES_FALLBACK = [
   { student: 'Student G', grade: 'Grade 5 · Primary', pain: 'Worried child would only use AI tools, not think creatively', path: 'AI Literacy Starter → AIGC Creative Design → Project Portfolio', result: '🎨 AI Art Portfolio · 12 original works · School Exhibition', improvement: ['Creative Thinking +85%', 'Tool Application +90%', 'Self-directed Learning +70%'], type: 'ability' },
   { student: 'Student H', grade: 'Grade 7 · Middle School', pain: 'Child used AI passively — copy-paste mentality', path: 'AI Literacy + Unplugged Science → Data Analysis Project', result: '📊 School Data Science Project Award · District 1st', improvement: ['Logical Thinking +78%', 'Data Literacy +92%', 'Problem Solving +80%'], type: 'ability' },
   { student: 'Student I', grade: 'Grade 9 · Middle School', pain: 'Wanted to learn AI but couldn\'t focus or stay consistent', path: 'AI Foundations → Check-In Programme → ML Intro', result: '🧠 AI Literacy Level 3 Certificate · Competition Portfolio Started', improvement: ['Consistency Score +88%', 'AI Concepts Mastery +82%', 'Confidence +75%'], type: 'ability' },
 ]
 
-const SCHOOL_CASES = [
+const SCHOOL_CASES_FALLBACK = [
   { org: 'Maple Grove Academy', region: 'Shanghai', type: 'Public School', pain: 'Required AI curriculum by new standards — no teachers, no resources', solution: 'Full AI curriculum pack + 3-day teacher training + embedded competition resources', result: '1,200+ students reached · 8 teachers certified · 15 competition award winners in Year 1', duration: '3 months to full launch', tags: ['Curriculum', 'Teacher Training', 'Competition'] },
   { org: 'Horizon International School', region: 'Beijing', type: 'International School', pain: 'Wanted AI programme aligned with IB and AP curriculum', solution: 'Custom AI integration programme + bilingual materials + international competition pathway', result: '300+ students · IB extended essay AI track established · 4 international competition entries', duration: '4 months', tags: ['International Curriculum', 'Bilingual', 'IB/AP'] },
   { org: 'Tech Focus Middle School', region: 'Shenzhen', type: 'STEM Focus School', pain: 'Had STEM label but no AI education depth or competition results', solution: 'Advanced AI lab setup + competition coaching track + STEM specialty pathway guidance', result: 'Designated "AI Education Demonstration School" by district · 20+ competition awards Year 1', duration: '6 months', tags: ['STEM School', 'AI Lab', 'Demonstration School'] },
 ]
 
-const FRANCHISE_CASES = [
+const FRANCHISE_CASES_FALLBACK = [
   { org: 'BrightPath Education Centre', region: 'Chengdu', type: 'Franchise Partner', pain: 'Converting from English tutoring to AI education — no curriculum or brand', timeline: '6 months post-launch', result: '200+ students enrolled · 3 in-house competitions hosted · Revenue +$400k', months: 6 },
   { org: 'Future Minds Academy', region: 'Guangzhou', type: 'Franchise Partner', pain: 'New AI education brand, zero market recognition', timeline: '8 months post-launch', result: '350+ students · 95% course renewal rate · Regional AI leader recognition', months: 8 },
 ]
+
+function mapCase(r) {
+  return {
+    student: r.student,
+    org: r.org,
+    grade: r.grade,
+    region: r.region,
+    type: r.type,
+    role: r.role,
+    pain: r.pain,
+    path: r.path,
+    solution: r.solution,
+    result: r.result,
+    detail: r.detail,
+    improvement: r.improvement,
+    tags: r.tags || [],
+    duration: r.duration,
+    timeline: r.timeline,
+    months: r.months,
+  }
+}
 
 const PARENT_TESTIMONIALS = [
   { name: 'Parent of Student A (Shanghai)', quote: 'We were worried AI would just make our child dependent on technology. What actually happened was the complete opposite — she started questioning outputs, fact-checking AI, and proposing her own solutions. That shift in mindset was worth every penny.' },
@@ -164,6 +186,24 @@ export default function Showcase() {
   const [bTab, setBTab] = useState('school')
   const [activeCase, setActiveCase] = useState(null)
   const [activeCaseType, setActiveCaseType] = useState(null)
+  const [awardCases, setAwardCases] = useState(AWARD_CASES_FALLBACK)
+  const [admissionsCases, setAdmissionsCases] = useState(ADMISSIONS_CASES_FALLBACK)
+  const [abilityCases, setAbilityCases] = useState(ABILITY_CASES_FALLBACK)
+  const [schoolCases, setSchoolCases] = useState(SCHOOL_CASES_FALLBACK)
+  const [franchiseCases, setFranchiseCases] = useState(FRANCHISE_CASES_FALLBACK)
+
+  useEffect(() => {
+    supabase.from('showcase_cases').select('*').order('sort_order').then(({ data }) => {
+      if (data?.length) {
+        const byType = (t) => data.filter((r) => r.type === t).map(mapCase)
+        setAwardCases(byType('competition').length ? byType('competition') : AWARD_CASES_FALLBACK)
+        setAdmissionsCases(byType('admissions').length ? byType('admissions') : ADMISSIONS_CASES_FALLBACK)
+        setAbilityCases(byType('ability').length ? byType('ability') : ABILITY_CASES_FALLBACK)
+        setSchoolCases(byType('school').length ? byType('school') : SCHOOL_CASES_FALLBACK)
+        setFranchiseCases(byType('franchise').length ? byType('franchise') : FRANCHISE_CASES_FALLBACK)
+      }
+    })
+  }, [])
 
   const cTabs = [
     { id: 'awards', icon: '🏆', label: 'Competition Awards' },
@@ -274,9 +314,9 @@ export default function Showcase() {
 
               {/* Cases grid */}
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Real Student Award Cases</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Student Award Cases</p>
                 <div className="grid sm:grid-cols-3 gap-4">
-                  {AWARD_CASES.map((c,i) => (
+                  {awardCases.map((c,i) => (
                     <CaseCard key={i} item={c} onClick={() => { setActiveCase(c); setActiveCaseType('award') }} />
                   ))}
                 </div>
@@ -319,7 +359,7 @@ export default function Showcase() {
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Verified Admissions Cases (All anonymised)</p>
                 <div className="grid sm:grid-cols-3 gap-4">
-                  {ADMISSIONS_CASES.map((c,i) => (
+                  {admissionsCases.map((c,i) => (
                     <CaseCard key={i} item={c} onClick={() => { setActiveCase(c); setActiveCaseType('admissions') }} />
                   ))}
                 </div>
@@ -374,7 +414,7 @@ export default function Showcase() {
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Ability Growth Cases</p>
                 <div className="grid sm:grid-cols-3 gap-4">
-                  {ABILITY_CASES.map((c,i) => (
+                  {abilityCases.map((c,i) => (
                     <CaseCard key={i} item={c} onClick={() => { setActiveCase(c); setActiveCaseType('ability') }} />
                   ))}
                 </div>
@@ -461,7 +501,7 @@ export default function Showcase() {
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Partner School Success Cases</p>
                 <div className="space-y-4">
-                  {SCHOOL_CASES.map((c,i) => (
+                  {schoolCases.map((c,i) => (
                     <div key={i} className="card p-5 hover:shadow-md hover:border-primary/30 transition">
                       <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                         <div>
@@ -521,7 +561,7 @@ export default function Showcase() {
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Franchise Partner Results</p>
                 <div className="grid sm:grid-cols-2 gap-4">
-                  {FRANCHISE_CASES.map((c,i) => (
+                  {franchiseCases.map((c,i) => (
                     <div key={i} className="card p-5 hover:shadow-md hover:border-amber-300 transition">
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div>

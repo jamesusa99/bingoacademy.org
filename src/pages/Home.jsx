@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 // ─── Data ────────────────────────────────────────────────────────────
 
@@ -77,14 +78,14 @@ const C_MARKETING = [
   { icon: '🎁', bg: 'bg-slate-50 border-slate-200', title: 'Claim Coupon', desc: 'Redeem at checkout', to: '/profile', hot: false },
 ]
 
-const TRUST_STATS = [
+const TRUST_STATS_FALLBACK = [
   { icon: '👥', value: '100,000+', label: 'Students Served' },
   { icon: '🏆', value: '92%', label: 'Competition Award Rate' },
   { icon: '🎓', value: '2,000+', label: 'STEM Admissions Results' },
   { icon: '🤝', value: '500+', label: 'Partner Institutions' },
 ]
 
-const TESTIMONIALS = [
+const TESTIMONIALS_FALLBACK = [
   { quote: 'My daughter had zero AI background. Six months of Bingo curriculum and she won a national science innovation award. The structured path makes all the difference.', name: 'Ms. Chen · Shanghai', role: 'Parent of Grade 8 student', stars: 5 },
   { quote: 'From not knowing what AI was to competing internationally and getting into my top-choice high school STEM programme. Bingo changed my trajectory.', name: 'Kevin · Grade 10', role: 'AI Camp & Events alumnus', stars: 5 },
   { quote: 'We added Bingo\'s AI curriculum and our enrolment grew 60% in one year. The teacher training and curriculum support are genuinely excellent.', name: 'Director Wang · Shenzhen', role: 'Partner institution director', stars: 5 },
@@ -132,6 +133,13 @@ function LeadForm({ audience }) {
 export default function Home() {
   const [rollingIdx, setRollingIdx] = useState(0)
   const [audience, setAudience] = useState('c')
+  const [trustStats, setTrustStats] = useState(TRUST_STATS_FALLBACK)
+  const [testimonials, setTestimonials] = useState(TESTIMONIALS_FALLBACK)
+
+  useEffect(() => {
+    supabase.from('home_stats').select('*').order('sort_order').then(({ data }) => { if (data?.length) setTrustStats(data.map((r) => ({ icon: r.icon, value: r.value, label: r.label }))) })
+    supabase.from('home_testimonials').select('*').order('sort_order').then(({ data }) => { if (data?.length) setTestimonials(data.map((r) => ({ quote: r.quote, name: r.name, role: r.role, stars: r.stars ?? 5 }))) })
+  }, [])
 
   // Cycle pain point text every 3s
   useState(() => {
@@ -341,7 +349,7 @@ export default function Home() {
               <h2 className="section-title mb-1">Results You Can Trust</h2>
               <p className="text-slate-500 text-sm mb-6">Data + outcomes + real cases — every claim backed by evidence</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                {TRUST_STATS.map((s, i) => (
+                {trustStats.map((s, i) => (
                   <div key={i} className="card p-5 text-center hover:shadow-md transition">
                     <div className="text-2xl mb-1">{s.icon}</div>
                     <div className="text-2xl font-bold text-primary">{s.value}</div>
@@ -351,7 +359,7 @@ export default function Home() {
               </div>
 
               <div className="grid md:grid-cols-3 gap-4 mb-5">
-                {TESTIMONIALS.map((t, i) => (
+                {testimonials.map((t, i) => (
                   <div key={i} className="card p-5 flex flex-col">
                     <div className="text-yellow-400 text-sm mb-2">{'★'.repeat(t.stars)}</div>
                     <p className="text-slate-600 text-sm leading-relaxed flex-1">"{t.quote}"</p>

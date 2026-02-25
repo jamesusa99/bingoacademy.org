@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 // ─── Data ──────────────────────────────────────────────────────────
 
-const CERT_TIERS = [
+const CERT_TIERS_FALLBACK = [
   {
     id: 'qizhi', stars: '1–3★', name: 'AI Enlightenment', chinese: 'AI Enlightenment', color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200/60',
     inst: 'Newly established tutoring centres', teacher: 'Basic Teacher Certification', learner: 'AI Foundations Certificate',
@@ -150,6 +151,13 @@ export default function Certification() {
   const [learnerDone, setLearnerDone] = useState(false)
   const [issuerDone, setIssuerDone] = useState(false)
   const [certPreview, setCertPreview] = useState(false)
+  const [certTiers, setCertTiers] = useState(CERT_TIERS_FALLBACK)
+
+  useEffect(() => {
+    supabase.from('cert_tiers').select('*').order('sort_order').then(({ data }) => {
+      if (data?.length) setCertTiers(data.map((r) => ({ id: r.tier_id || r.id, stars: r.stars, name: r.name, chinese: r.chinese, color: r.color, bg: r.bg, border: r.border, inst: r.inst, teacher: r.teacher, learner: r.learner, weeks: r.weeks, courses: r.courses || [], criteria: r.criteria, benefits: r.benefits || [] })))
+    })
+  }, [])
 
   const TABS = [
     { id: 'home', icon: '🏠', label: 'Cert Hub' },
@@ -160,7 +168,7 @@ export default function Certification() {
     { id: 'issuing', icon: '🏛️', label: 'Issuing Centres' },
   ]
 
-  const activeTierData = CERT_TIERS.find(t => t.id === instTier) || CERT_TIERS[3]
+  const activeTierData = certTiers.find(t => t.id === instTier) || certTiers[3]
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -234,7 +242,7 @@ export default function Certification() {
             <h2 className="section-title mb-4">The 9-Star AI Mastery Roadmap</h2>
             <div className="card p-5">
               <div className="grid sm:grid-cols-4 gap-3">
-                {CERT_TIERS.map((t,i) => (
+                {certTiers.map((t,i) => (
                   <button key={i} onClick={() => { setTab('institution'); setInstTier(t.id) }}
                     className={`rounded-xl p-4 text-left transition hover:shadow-md border-2 ${t.border} ${t.bg}`}>
                     <div className={`text-xs font-bold ${t.color} mb-1`}>{t.stars}</div>
@@ -300,7 +308,7 @@ export default function Certification() {
 
           {/* Tier selector */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {CERT_TIERS.map(t => (
+            {certTiers.map(t => (
               <button key={t.id} onClick={() => setInstTier(t.id)}
                 className={`rounded-xl p-3 text-left transition border-2 ${instTier===t.id ? `${t.border} ${t.bg} shadow` : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                 <div className={`text-xs font-bold mb-0.5 ${instTier===t.id ? t.color : 'text-slate-500'}`}>{t.stars}</div>
@@ -346,7 +354,7 @@ export default function Certification() {
                 <thead>
                   <tr className="border-b border-slate-100">
                     <th className="text-left py-2 pr-4 text-slate-500 font-medium">Benefit</th>
-                    {CERT_TIERS.map(t => <th key={t.id} className={`text-center py-2 px-2 font-semibold ${t.color}`}>{t.chinese}</th>)}
+                    {certTiers.map(t => <th key={t.id} className={`text-center py-2 px-2 font-semibold ${t.color}`}>{t.chinese}</th>)}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -362,7 +370,7 @@ export default function Certification() {
                     <tr key={i} className="hover:bg-slate-50/50">
                       <td className="py-2 pr-4 text-slate-600">{row[0]}</td>
                       {row.slice(1).map((v,j) => (
-                        <td key={j} className={`text-center py-2 px-2 ${CERT_TIERS[j].id===instTier ? `font-semibold ${CERT_TIERS[j].color}` : 'text-slate-500'}`}>{v}</td>
+                        <td key={j} className={`text-center py-2 px-2 ${certTiers[j].id===instTier ? `font-semibold ${certTiers[j].color}` : 'text-slate-500'}`}>{v}</td>
                       ))}
                     </tr>
                   ))}
@@ -410,7 +418,7 @@ export default function Certification() {
                     <div>
                       <label className="text-xs text-slate-500 mb-1 block">Target certification tier</label>
                       <select value={instTier} onChange={e => setInstTier(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none bg-white">
-                        {CERT_TIERS.map(t => <option key={t.id} value={t.id}>{t.chinese} — {t.stars}</option>)}
+                        {certTiers.map(t => <option key={t.id} value={t.id}>{t.chinese} — {t.stars}</option>)}
                       </select>
                     </div>
                     <div>
@@ -439,7 +447,7 @@ export default function Certification() {
 
           {/* Tier cards */}
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
-            {CERT_TIERS.map(t => (
+            {certTiers.map(t => (
               <div key={t.id} className={`card p-4 border-2 ${t.border} ${t.bg}`}>
                 <div className={`text-xs font-bold ${t.color} mb-1`}>{t.stars}</div>
                 <div className="font-semibold text-bingo-dark text-sm mb-0.5">{t.chinese}</div>
@@ -523,7 +531,7 @@ export default function Certification() {
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Certification tier applying for</label>
                   <select className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none bg-white">
-                    {CERT_TIERS.map(t => <option key={t.id}>{t.chinese} — {t.learner}</option>)}
+                    {certTiers.map(t => <option key={t.id}>{t.chinese} — {t.learner}</option>)}
                   </select>
                 </div>
                 <p className="text-xs text-slate-400">📋 Your institution must be a certified Bingo partner. <button onClick={() => setTab('institution')} className="text-primary hover:underline">Check institution certification →</button></p>
@@ -650,7 +658,7 @@ export default function Certification() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {CERT_TIERS.map(t => (
+                {certTiers.map(t => (
                   <tr key={t.id} className="hover:bg-slate-50/50">
                     <td className={`py-2 pr-4 font-medium ${t.color}`}>{t.chinese} {t.stars}</td>
                     <td className="py-2 px-2 text-slate-600">{t.name} Centre</td>

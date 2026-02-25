@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
-// ─── Product data ───────────────────────────────────────────────────
+// ─── Product data (fallback when Supabase empty) ─────────────────────
 
-const COURSES = [
+const COURSES_FALLBACK = [
   { id: 'c1', name: 'AI Foundations Bootcamp (Ages 8–12)', type: 'course', cat: 'qizhi', tag: '🔥 Bestseller', price: 299, bPrice: '$199/seat (bulk)', sold: 3420, rating: 4.9, desc: 'Core AI literacy, visual programming, and introductory projects. Suitable for complete beginners.', badge: '启智阶', aiLab: false },
   { id: 'c2', name: 'Competition Sprint: National AI Challenge', type: 'course', cat: 'competition', tag: '⭐ Top-rated', price: 890, bPrice: '$690/seat (bulk)', sold: 1240, rating: 4.8, desc: 'Competition-specific prep: project selection, development, defence. 86% pass-through rate.', badge: '竞赛培优', aiLab: true },
   { id: 'c3', name: 'Python + AI Projects (Middle School)', type: 'course', cat: 'jichu', tag: '📈 Popular', price: 680, bPrice: '$480/seat (bulk)', sold: 2100, rating: 4.7, desc: 'Python basics to machine learning projects. Produces verifiable competition-ready work.', badge: '基础阶', aiLab: false },
@@ -11,6 +12,23 @@ const COURSES = [
   { id: 'c5', name: 'AI Lab Companion Course (Institution)', type: 'course', cat: 'lab', tag: '🏫 B-End', price: null, bPrice: 'Consult for pricing', sold: 340, rating: 4.9, desc: 'Structured curriculum matched to the AI Digital Lab setup. Delivered with lab deployment.', badge: '实验室配套', aiLab: true },
   { id: 'c6', name: 'Parent: Understanding AI Education', type: 'course', cat: 'parent', tag: '💰 $9.9', price: 9.9, bPrice: null, sold: 8900, rating: 4.9, desc: 'Best-selling parent guide. 30-minute video course explaining AI education and how to choose the right path.', badge: '家长必读', aiLab: false },
 ]
+
+function courseFromDb(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    type: row.type || 'course',
+    cat: row.cat,
+    tag: row.tag,
+    price: row.price,
+    bPrice: row.b_price,
+    sold: row.sold ?? 0,
+    rating: row.rating,
+    desc: row.desc,
+    badge: row.badge,
+    aiLab: !!row.ai_lab,
+  }
+}
 
 const EVENTS_PRODUCTS = [
   { id: 'e1', name: 'National AI Challenge — Full Entry Package', type: 'event', tag: '✦ Prestigious', price: 380, bPrice: 'Group pricing available', desc: 'Registration + materials + mock defence session. Prestigious competition.', deadline: 'Rolling' },
@@ -243,6 +261,8 @@ function CheckoutModal({ items, onClose }) {
 
 // ─── Main Component ────────────────────────────────────────────────
 export default function Mall() {
+  const [courses, setCourses] = useState(COURSES_FALLBACK)
+  const [coursesLoading, setCoursesLoading] = useState(true)
   const [audience, setAudience] = useState('both')
   const [tab, setTab] = useState('home')
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -252,10 +272,38 @@ export default function Mall() {
   const [bookingModal, setBookingModal] = useState(null)
   const [points] = useState(1280)
   const [bannerIdx, setBannerIdx] = useState(0)
+  const [certProducts, setCertProducts] = useState(CERT_PRODUCTS)
+  const [materialProducts, setMaterialProducts] = useState(MATERIALS)
+  const [labProducts, setLabProducts] = useState(AI_LAB)
+  const [trainingProducts, setTrainingProducts] = useState(AI_TRAINING)
+  const [eventsProducts, setEventsProducts] = useState(EVENTS_PRODUCTS)
 
   const addToCart = (item) => setCart(c => [...c, item])
   const buyNow = (item) => { setCart([item]); setCheckoutOpen(true) }
   const cartCount = cart.length
+
+  const mapMallProduct = (r) => ({ id: r.id, name: r.name, type: r.type, tag: r.tag, price: r.price, bPrice: r.b_price, desc: r.desc, deadline: r.deadline })
+
+  useEffect(() => {
+    supabase.from('courses').select('*').order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        setCoursesLoading(false)
+        if (!error && data?.length > 0) setCourses(data.map(courseFromDb))
+      })
+      .catch(() => setCoursesLoading(false))
+  }, [])
+  useEffect(() => {
+    supabase.from('mall_products').select('*').order('sort_order').then(({ data }) => {
+      if (data?.length) {
+        const by = (t) => data.filter((r) => r.type === t).map(mapMallProduct)
+        if (by('cert').length) setCertProducts(by('cert'))
+        if (by('material').length) setMaterialProducts(by('material'))
+        if (by('lab').length) setLabProducts(by('lab'))
+        if (by('training').length) setTrainingProducts(by('training'))
+        if (by('event').length) setEventsProducts(by('event'))
+      }
+    })
+  }, [])
 
   const TABS = [
     { id: 'home', icon: '🏠', label: 'Mall Home' },
@@ -398,7 +446,7 @@ export default function Mall() {
               <span className="text-xs text-slate-400">Updated daily</span>
             </div>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {[...COURSES.slice(0,2), ...MATERIALS.slice(3,4), ...AI_LAB.slice(0,1), ...CERT_PRODUCTS.slice(2,3), ...EVENTS_PRODUCTS.slice(1,2)].map((item,i) => (
+              {[...courses.slice(0,2), ...materialProducts.slice(3,4), ...labProducts.slice(0,1), ...certProducts.slice(2,3), ...eventsProducts.slice(1,2)].map((item,i) => (
                 <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
               ))}
             </div>
@@ -429,7 +477,7 @@ export default function Mall() {
             ))}
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {(audience === 'b' ? COURSES.filter(c => c.badge === '实验室配套' || !c.price || c.bPrice) : audience === 'c' ? COURSES.filter(c => c.price) : COURSES).map((item,i) => (
+            {coursesLoading ? <div className="col-span-full text-center py-8 text-slate-500">Loading...</div> : (audience === 'b' ? courses.filter(c => c.badge === '实验室配套' || !c.price || c.bPrice) : audience === 'c' ? courses.filter(c => c.price) : courses).map((item,i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
@@ -448,7 +496,7 @@ export default function Mall() {
             <p className="text-slate-500 text-sm">Entry packages, bootcamp training, and full coaching programmes. Prestigious and Bingo-own competitions.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            {EVENTS_PRODUCTS.map((item,i) => (
+            {eventsProducts.map((item,i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
@@ -470,7 +518,7 @@ export default function Mall() {
             <p className="text-slate-500 text-sm">Learner, teacher, and institution certifications. Dual-endorsed, nationally verifiable. Admissions-referenced at Zhichuang tier.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            {CERT_PRODUCTS.map((item,i) => (
+            {certProducts.map((item,i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
@@ -494,7 +542,7 @@ export default function Mall() {
             ))}
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {MATERIALS.map((item,i) => (
+            {materialProducts.map((item,i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
@@ -515,13 +563,13 @@ export default function Mall() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">C-end: Personal & Family</p>
-              {AI_LAB.filter(l => l.price).map((item,i) => (
+              {labProducts.filter(l => l.price).map((item,i) => (
                 <div key={i} className="mb-3"><ProductCard item={item} onOpen={setSelectedProduct} /></div>
               ))}
             </div>
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">B-end: Institution & School</p>
-              {AI_LAB.filter(l => !l.price).map((item,i) => (
+              {labProducts.filter(l => !l.price).map((item,i) => (
                 <div key={i} className="mb-3"><ProductCard item={item} onOpen={setSelectedProduct} /></div>
               ))}
             </div>
@@ -543,7 +591,7 @@ export default function Mall() {
             <p className="text-slate-600 text-sm">Full hardware + software + curriculum solutions for institutions and schools. Zero-to-operational setup with on-site installation and teacher training. Personal competition station also available.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            {AI_TRAINING.map((item,i) => (
+            {trainingProducts.map((item,i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
@@ -601,7 +649,7 @@ export default function Mall() {
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Parent Top Picks</p>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {[COURSES[5], COURSES[0], MATERIALS[0], MATERIALS[1], AI_LAB[0], CERT_PRODUCTS[0]].map((item,i) => (
+              {[courses[5], courses[0], materialProducts[0], materialProducts[1], labProducts[0], certProducts[0]].filter(Boolean).map((item,i) => (
                 <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
               ))}
             </div>
@@ -666,7 +714,7 @@ export default function Mall() {
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Top Institution Products</p>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {[COURSES[1], COURSES[4], EVENTS_PRODUCTS[3], AI_LAB[2], AI_TRAINING[0], CERT_PRODUCTS[3]].map((item,i) => (
+              {[courses[1], courses[4], eventsProducts[3], labProducts[2], trainingProducts[0], certProducts[3]].filter(Boolean).map((item,i) => (
                 <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
               ))}
             </div>

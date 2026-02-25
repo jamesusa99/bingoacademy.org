@@ -1,4 +1,7 @@
-const REPORT_ITEMS = [
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
+
+const REPORT_ITEMS_FALLBACK = [
   { type: 'Trending', text: 'Ministry pushes K-12 AI education, literacy and ethics', date: '2025-02' },
   { type: 'Industry', text: 'Youth AI prestigious competitions expand, STEM literacy boosts admissions', date: '2025-02' },
   { type: 'Honor', text: 'Bingo AI Academy named "Annual AI Education Innovation Institution"', date: '2025-01' },
@@ -7,7 +10,7 @@ const REPORT_ITEMS = [
   { type: 'Industry', text: 'Industry-education policy support, enterprise-institution AI training partnerships', date: '2024-12' },
 ]
 
-const items = [
+const PROJECTS_FALLBACK = [
   { title: 'Charity Education', desc: 'Donate materials/tools, free charity courses for youth/underserved groups' },
   { title: 'Charity Events', desc: 'AI charity events to raise brand impact' },
   { title: 'Charity Challenges', desc: 'User participation, platform donates to charity fund' },
@@ -15,6 +18,18 @@ const items = [
 ]
 
 export default function Charity() {
+  const [reportItems, setReportItems] = useState(REPORT_ITEMS_FALLBACK)
+  const [projects, setProjects] = useState(PROJECTS_FALLBACK)
+
+  useEffect(() => {
+    supabase.from('charity_reports').select('*').order('sort_order').then(({ data }) => {
+      if (data?.length) setReportItems(data.map((r) => ({ type: r.type, text: r.text, date: r.report_date })))
+    })
+    supabase.from('charity_projects').select('*').order('sort_order').then(({ data }) => {
+      if (data?.length) setProjects(data.map((r) => ({ title: r.title, desc: r.desc })))
+    })
+  }, [])
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Honors & Charity</h1>
@@ -24,7 +39,7 @@ export default function Charity() {
         <h2 className="section-title mb-4">Recent Coverage</h2>
         <div className="card overflow-hidden">
           <ul className="divide-y divide-slate-100">
-            {REPORT_ITEMS.map((r, i) => (
+            {reportItems.map((r, i) => (
               <li key={i} className="px-4 py-3 flex flex-wrap items-center gap-2 hover:bg-slate-50 transition">
                 <span className={`text-xs px-2 py-0.5 rounded ${
                   r.type === 'Honor' ? 'bg-amber-100 text-amber-800' : r.type === 'Trending' ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-600'
@@ -42,7 +57,7 @@ export default function Charity() {
       <section>
         <h2 className="section-title">Charity Projects</h2>
         <div className="grid md:grid-cols-2 gap-4">
-          {items.map((item, i) => (
+          {projects.map((item, i) => (
             <div key={i} className="card p-6">
               <h3 className="font-semibold text-primary">{item.title}</h3>
               <p className="text-sm text-slate-600 mt-1">{item.desc}</p>

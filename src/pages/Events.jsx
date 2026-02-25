@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
-// ─── Data ──────────────────────────────────────────────────────────
+// ─── Data (fallback when Supabase empty) ────────────────────────────
 
-const EVENT_LIST = [
+const EVENT_LIST_FALLBACK = [
   // Prestigious AI Competitions
   { id: 1, name: 'IOAI (International Olympiad in AI)', type: 'ai', stage: 'Registration Open', students: 'Secondary school', award: 'Global recognition · scientific inquiry', enrolled: 0, whitelist: true, aiCourse: true, desc: 'The world\'s highest-level secondary school AI competition. Focus on scientific exploration and solving real-world problems.' },
   { id: 2, name: 'Kaggle Competitions (Junior/Student)', type: 'ai', stage: 'Ongoing', students: 'All ages', award: 'Data science credentials · portfolio', enrolled: 0, whitelist: true, aiCourse: true, desc: 'The world\'s leading machine learning platform. Student-friendly entry-level data science competitions.' },
@@ -19,6 +20,21 @@ const EVENT_LIST = [
   // Bingo
   { id: 10, name: 'Bingo Cup AI Design Challenge', type: 'bingo', stage: 'Active', students: '8–16 yrs', award: 'Prize money + Bingo scholarship', enrolled: 2100, whitelist: false, aiCourse: true, desc: 'Bingo Academy\'s own flagship competition. AIGC, AI art, and data science tracks.' },
 ]
+
+function eventFromDb(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    stage: row.stage,
+    students: row.students,
+    award: row.award,
+    enrolled: row.enrolled ?? 0,
+    whitelist: !!row.whitelist,
+    aiCourse: !!row.ai_course,
+    desc: row.desc,
+  }
+}
 
 const GALLERY_WORKS = [
   { title: 'AI Campus Navigation Robot', student: 'Student A · Grade 10', award: '🥇 National 1st Prize', type: 'robotics', year: 2024 },
@@ -138,6 +154,8 @@ function EventDetailModal({ event, onClose }) {
 
 // ─── Main Page ─────────────────────────────────────────────────────
 export default function Events() {
+  const [eventList, setEventList] = useState(EVENT_LIST_FALLBACK)
+  const [eventsLoading, setEventsLoading] = useState(true)
   const [tab, setTab] = useState('home')
   const [evtFilter, setEvtFilter] = useState('all')
   const [galleryFilter, setGalleryFilter] = useState('all')
@@ -151,6 +169,15 @@ export default function Events() {
   const [whitelistQuery, setWhitelistQuery] = useState('')
   const [whitelistDone, setWhitelistDone] = useState(false)
 
+  useEffect(() => {
+    supabase.from('events').select('*').order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        setEventsLoading(false)
+        if (!error && data?.length > 0) setEventList(data.map(eventFromDb))
+      })
+      .catch(() => setEventsLoading(false))
+  }, [])
+
   const TABS = [
     { id: 'home', icon: '🏠', label: 'Hub Home' },
     { id: 'events', icon: '🏆', label: 'Competition List' },
@@ -161,7 +188,7 @@ export default function Events() {
     { id: 'whitelist', icon: '📋', label: 'Competition Advisory' },
   ]
 
-  const filteredEvents = evtFilter === 'all' ? EVENT_LIST : EVENT_LIST.filter(e => e.type === evtFilter)
+  const filteredEvents = evtFilter === 'all' ? eventList : eventList.filter(e => e.type === evtFilter)
   const filteredGallery = galleryFilter === 'all' ? GALLERY_WORKS : GALLERY_WORKS.filter(w => w.type === galleryFilter)
 
   return (
@@ -237,7 +264,7 @@ export default function Events() {
               <button onClick={() => setTab('events')} className="text-xs text-primary hover:underline">View all →</button>
             </div>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {EVENT_LIST.slice(0,3).map((e,i) => (
+              {eventList.slice(0,3).map((e,i) => (
                 <div key={i} className="card p-5 hover:shadow-md hover:border-primary/30 transition cursor-pointer" onClick={() => setSelectedEvent(e)}>
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     {e.whitelist && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">✦ Prestigious</span>}
@@ -277,7 +304,7 @@ export default function Events() {
             ))}
           </div>
           <div className="space-y-3">
-            {filteredEvents.map((e,i) => (
+            {eventsLoading ? <div className="card p-8 text-center text-slate-500">Loading competitions...</div> : filteredEvents.map((e,i) => (
               <div key={i} className="card p-5 hover:shadow-md hover:border-primary/30 transition cursor-pointer" onClick={() => setSelectedEvent(e)}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">

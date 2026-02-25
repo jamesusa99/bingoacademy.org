@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 // ─── Data ───────────────────────────────────────────────────────────
 
@@ -10,7 +11,7 @@ const TRAINING_BASES = [
   { name: 'SAIC Intelligent Mfg', field: 'Smart Manufacturing', roles: ['Robotics Ops', 'MES Systems'], weeks: 16, cert: 'SAIC Partner Cert', badge: '' },
 ]
 
-const JOB_LIST = [
+const JOB_LIST_FALLBACK = [
   { title: 'AI Trainer (Junior)', company: 'Alibaba Cloud', level: 'Junior', salary: '$8k–12k', location: 'Remote / Hangzhou', skill: 'AI Basics · Python', courseLinked: true },
   { title: 'Data Analyst', company: 'ByteDance Data Lab', level: 'Junior', salary: '$10k–15k', location: 'Beijing / Remote', skill: 'SQL · Data Vis', courseLinked: true },
   { title: 'Short Video Operations', company: 'New Media Agency', level: 'Entry', salary: '$5k–8k', location: 'Multiple cities', skill: 'AIGC · Content Ops', courseLinked: false },
@@ -109,6 +110,13 @@ export default function Career() {
   const [newsFilter, setNewsFilter] = useState('all')
   const [partnerTab, setPartnerTab] = useState('enterprise')
   const [assessDone, setAssessDone] = useState(false)
+  const [jobList, setJobList] = useState(JOB_LIST_FALLBACK)
+
+  useEffect(() => {
+    supabase.from('career_jobs').select('*').order('sort_order').then(({ data }) => {
+      if (data?.length) setJobList(data.map((r) => ({ title: r.title, company: r.company, level: r.level, salary: r.salary, location: r.location, skill: r.skill, courseLinked: !!r.course_linked })))
+    })
+  }, [])
 
   const TABS = [
     { id: 'home', icon: '🏠', label: 'Hub Home' },
@@ -330,7 +338,7 @@ export default function Career() {
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Current Openings</p>
             <div className="space-y-3">
-              {JOB_LIST.map((j,i) => (
+              {jobList.map((j,i) => (
                 <div key={i} className="card p-4 hover:shadow-sm hover:border-primary/30 transition">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
