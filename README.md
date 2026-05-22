@@ -31,7 +31,7 @@ In the Railway service → **Variables**, set:
 | `VITE_SUPABASE_URL` | Your Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase **anon** (public) key |
 
-Redeploy after changing variables so Vite bakes them into the build. The repo includes `railway.toml` (`npm run build` → `npm run start` serves `dist/` as an SPA).
+Redeploy after changing variables so Vite bakes them into the build. The repo includes `railway.toml` + `nixpacks.toml` (Node **22**, `npm run build` → `npm run start` serves `dist/` as an SPA). Requires Node ≥ 20.19 locally and on Railway.
 
 ### Vercel
 

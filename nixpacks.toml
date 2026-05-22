@@ -1,0 +1,9 @@
+# Railway / Nixpacks — Node 20+ required by Vite 7, React Router 7, Supabase
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+
+[phases.install]
+cmds = ["npm ci --cache /tmp/npm-cache --prefer-offline"]
+
+[phases.build]
+cmds = ["npm run build"]
