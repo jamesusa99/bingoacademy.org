@@ -23,6 +23,7 @@ import ShowcaseMaterials from './pages/ShowcaseMaterials'
 import Courses from './pages/Courses'
 import AILab from './pages/AILab'
 import AIHideAndSeekPage from './pages/lab/AIHideAndSeekPage'
+import AIVirtualConductorPage from './pages/lab/AIVirtualConductorPage'
 import CourseDetail from './pages/CourseDetail'
 import Certification from './pages/Certification'
 import Mall from './pages/Mall'
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="courses" element={<Courses />} />
         <Route path="lab" element={<AILab />} />
         <Route path="lab/hide-and-seek" element={<AIHideAndSeekPage />} />
+        <Route path="lab/virtual-conductor" element={<AIVirtualConductorPage />} />
         <Route path="courses/detail/:id" element={<CourseDetail />} />
         <Route path="cert" element={<Certification />} />
         <Route path="mall" element={<Mall />} />

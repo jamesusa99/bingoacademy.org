@@ -84,7 +84,7 @@ export const EXPLORATION_EXPERIMENTS = [
     category: 'cv',
     number: 2,
     emoji: '🎵',
-    title: 'Statue Conductor',
+    title: 'AI Virtual Conductor',
     subtitle: 'Pose Estimation & Control',
     gameplay:
       'Stand in front of the camera and conduct a virtual band — raise your left hand for volume, wave the right for tempo, squat to pause. Haptic-style feedback on iPad.',
@@ -94,7 +94,8 @@ export const EXPLORATION_EXPERIMENTS = [
     badge: { id: 'pose-maestro', name: 'Pose Maestro', icon: '🎼' },
     difficulty: 'Beginner',
     duration: '12–18 min',
-    status: 'coming-soon',
+    status: 'live',
+    playPath: '/lab/virtual-conductor',
     dashboardMetrics: ['keypoints', 'latency', 'joint-angle'],
   },
   {
