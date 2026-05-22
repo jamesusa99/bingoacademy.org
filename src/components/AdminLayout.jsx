@@ -4,12 +4,12 @@ import { supabase } from '../lib/supabase'
 
 const ADMIN_NAV = [
   { path: '/admin', label: 'Dashboard', icon: '📊' },
-  { path: '/admin/home', label: 'Home Portal', icon: '🏠' },
+  { path: '/admin/mentors', label: 'Instructors', icon: '👤' },
+  { path: '/admin/research', label: 'Series Courses', icon: '📂' },
+  { path: '/admin/courses', label: 'Courses', icon: '📚' },
+  { path: '/admin/home', label: 'Content', icon: '📝' },
   { path: '/admin/showcase', label: 'Achievements', icon: '🏅' },
-  { path: '/admin/courses', label: 'AI Courses', icon: '📚' },
-  { path: '/admin/research', label: 'AI Camp', icon: '⛺' },
   { path: '/admin/events', label: 'Events Center', icon: '🏆' },
-  { path: '/admin/mentors', label: 'AI Community', icon: '👥' },
   { path: '/admin/career', label: 'Smart Careers', icon: '💼' },
   { path: '/admin/cert', label: 'Certification', icon: '📜' },
   { path: '/admin/mall-products', label: 'AI Mall Products', icon: '🛒' },
@@ -30,20 +30,19 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen flex bg-slate-100">
-      {/* Sidebar */}
       <aside className="w-56 bg-bingo-dark flex flex-col shrink-0">
         <div className="p-4 border-b border-cyan-500/20">
-          <Link to="/admin" className="flex items-center gap-2">
-            <span className="text-cyan-400 font-bold">Bingo</span>
-            <span className="text-white/80 text-sm">Admin</span>
+          <Link to="/admin" className="flex items-center gap-2 min-w-0">
+            <img src="/logo-icon.png" alt="" className="h-8 w-auto shrink-0" width={340} height={209} aria-hidden />
+            <span className="text-white/90 text-sm font-medium truncate">Admin</span>
           </Link>
           <div className="mt-3 text-xs font-medium">
             {dbConnected === null ? (
-              <span className="text-slate-400">检测中…</span>
+              <span className="text-slate-400">Checking…</span>
             ) : dbConnected ? (
-              <span className="text-green-400">✓ 连接成功</span>
+              <span className="text-green-400">✓ Connected</span>
             ) : (
-              <span className="text-red-400">✗ 连接数据失败</span>
+              <span className="text-red-400">✗ Connection failed</span>
             )}
           </div>
         </div>
@@ -71,7 +70,6 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="flex-1 overflow-auto">
         <div className="p-6">
           <Outlet />

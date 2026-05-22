@@ -402,7 +402,7 @@ function Results({ score, total, result, title, onBack }) {
         <p className="text-slate-700 text-sm leading-relaxed">{result.feedback}</p>
       </div>
 
-      {/* Capability Map / 能力图谱 */}
+      {/* Capability Map */}
       <section className="card p-6 mb-6">
         <h3 className="font-semibold text-bingo-dark mb-1">AI Capability Map</h3>
         <p className="text-xs text-slate-500 mb-5">Multi-dimensional breakdown</p>

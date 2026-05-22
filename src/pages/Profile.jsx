@@ -4,18 +4,18 @@ import { Link } from 'react-router-dom'
 // ─── Member tier data ──────────────────────────────────────────────
 
 const MEMBER_TIERS = [
-  { id: 'free', name: 'Free Member', chinese: '普通会员', price: 0, autoPrice: null, color: 'text-slate-600', bg: 'bg-slate-50' },
-  { id: 'monthly', name: 'Monthly', chinese: '月度会员', price: 39, autoPrice: 35, autoLabel: 'Auto-renew −10%', color: 'text-sky-600', bg: 'bg-sky-50' },
-  { id: 'quarterly', name: 'Quarterly', chinese: '季度会员', price: 99, autoPrice: 84, autoLabel: 'Auto-renew −15% + 1 trial class', color: 'text-violet-600', bg: 'bg-violet-50' },
-  { id: 'annual', name: 'Annual', chinese: '年度会员', price: 299, autoPrice: 239, autoLabel: 'Auto-renew −20% + extra perks', color: 'text-amber-600', bg: 'bg-amber-50' },
+  { id: 'free', name: 'Free Member', chinese: 'Free Member', price: 0, autoPrice: null, color: 'text-slate-600', bg: 'bg-slate-50' },
+  { id: 'monthly', name: 'Monthly', chinese: 'Monthly Member', price: 39, autoPrice: 35, autoLabel: 'Auto-renew −10%', color: 'text-sky-600', bg: 'bg-sky-50' },
+  { id: 'quarterly', name: 'Quarterly', chinese: 'Quarterly Member', price: 99, autoPrice: 84, autoLabel: 'Auto-renew −15% + 1 trial class', color: 'text-violet-600', bg: 'bg-violet-50' },
+  { id: 'annual', name: 'Annual', chinese: 'Annual Member', price: 299, autoPrice: 239, autoLabel: 'Auto-renew −20% + extra perks', color: 'text-amber-600', bg: 'bg-amber-50' },
 ]
 
 const MEMBER_BENEFITS = [
-  ['AI course discount', '—', '9折', '85折', '7折'],
+  ['AI course discount', '—', '10% off', '15% off', '30% off'],
   ['Competition prep access', 'Free only', 'Partial', 'Most', 'All'],
   ['Prestigious competition support', 'Entry only', 'Entry + guide', 'Entry + materials', 'Entry + camp + 1v1'],
   ['STEM planning', '—', 'Basic docs', 'Plan template', '1v1 planning'],
-  ['Mall / teaching kit discount', '—', '95折', '9折', '8折 + free ship'],
+  ['Mall / teaching kit discount', '—', '5% off', '10% off', '20% off + free ship'],
   ['Referral commission boost', 'Base', '+5%', '+10%', '+20%'],
   ['Charity points multiplier', '1×', '1.2×', '1.5×', '2×'],
   ['Member-only assessments', '—', '1/month', '1/quarter', 'Unlimited'],
@@ -62,7 +62,7 @@ function ShareModal({ title, onClose }) {
   )
 }
 
-// ─── Earn by Sharing (原推广中心，更名) ─────────────────────────────
+// ─── Earn by Sharing ─────────────────────────────
 
 function EarnBySharing() {
   return (
@@ -113,7 +113,7 @@ function EarnBySharing() {
       </div>
 
       <div className="card p-6 border-amber-200/60 bg-amber-50/50">
-        <h3 className="font-semibold text-bingo-dark mb-3">Team promotion (teachers / institutions only)</h3>
+        <h3 className="font-semibold text-bingo-dark mb-3">Team promotion (teachers only)</h3>
         <p className="text-sm text-slate-600 mb-2">Team list, total earnings, team commission split; stats (new members, conversions, total commission); team promo materials</p>
         <button type="button" className="rounded-lg border border-primary text-primary px-4 py-2 text-sm">Team promotion</button>
       </div>
@@ -207,18 +207,15 @@ export default function Profile() {
 
   const coreLinks = [
     { to: '/profile/study', icon: '📚', label: 'My Courses', share: false },
-    { to: '/profile#events', icon: '🏆', label: 'My Events', share: true },
     { to: '/profile/works', icon: '🎨', label: 'My Works', share: true },
     { to: '/profile#orders', icon: '📦', label: 'My Orders', share: true },
     { to: '/profile#cert', icon: '📜', label: 'My Certificates', share: true },
-    { to: '/cert', icon: '📊', label: 'Capability Profile', share: true },
-    { to: '/ai-test', icon: '🧠', label: 'My AI Assessment', share: false },
-    { to: '/profile#tools', icon: '🔧', label: 'My Teaching Tools', share: false },
+    { to: '/cert', icon: '📊', label: 'Certification', share: true },
+    { to: '/showcase', icon: '🏅', label: 'Achievements', share: true },
+    { to: '/mall', icon: '🛒', label: 'AI Mall Orders', share: false },
     { to: '/profile#messages', icon: '🔔', label: 'Notifications', share: false },
     { to: '/profile#settings', icon: '⚙️', label: 'Settings', share: false },
     { action: () => setView('member'), icon: '👑', label: 'Member Center', share: false },
-    { action: () => setShowEarnBySharing(v => !v), icon: '💰', label: 'Earn by Sharing', share: false, highlight: true },
-    { to: '/charity', icon: '❤️', label: 'Charity Points', share: false },
   ]
 
   const dataCards = [
@@ -237,7 +234,7 @@ export default function Profile() {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="page-content w-full py-6 sm:py-8">
       {shareModal && <ShareModal title={shareModal} onClose={() => setShareModal(null)} />}
 
       {/* ── Top bar: user + member ─────────────────────────────────── */}
@@ -357,7 +354,7 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* ── Earn by Sharing (expandable, 原推广中心) ────────────────── */}
+      {/* ── Earn by Sharing (expandable) ────────────────── */}
       <section id="promo" className="mb-8">
         <button
           type="button"
@@ -463,13 +460,6 @@ export default function Profile() {
           </div>
           <p className="text-xs text-slate-400">Bingo AI Academy · Profile & Member Center</p>
         </div>
-      </section>
-
-      {/* ── B2B (retained) ─────────────────────────────────────────── */}
-      <section className="mt-10">
-        <h2 className="section-title">B2B login</h2>
-        <p className="text-slate-600 text-sm mb-3">Schools, institutions, franchise partners, event partners: use separate B2B account</p>
-        <a href="/#/b" className="btn-primary">B2B login</a>
       </section>
     </div>
   )

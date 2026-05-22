@@ -1,4 +1,5 @@
-import { Routes, Route, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import AdminLayout from './components/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -18,33 +19,41 @@ import Showcase from './pages/Showcase'
 import ShowcaseCase from './pages/ShowcaseCase'
 import ShowcaseWorks from './pages/ShowcaseWorks'
 import ShowcaseAwards from './pages/ShowcaseAwards'
-import ShowcaseSchool from './pages/ShowcaseSchool'
 import ShowcaseMaterials from './pages/ShowcaseMaterials'
 import Courses from './pages/Courses'
+import AILab from './pages/AILab'
 import CourseDetail from './pages/CourseDetail'
-import Community from './pages/Community'
-import Tools from './pages/Tools'
-import ToolDetail from './pages/ToolDetail'
-import Research from './pages/Research'
-import Career from './pages/Career'
-import Events from './pages/Events'
 import Certification from './pages/Certification'
 import Mall from './pages/Mall'
-import Charity from './pages/Charity'
-import Materials from './pages/Materials'
 import Study from './pages/Study'
 import Profile from './pages/Profile'
 import ProfileWorks from './pages/ProfileWorks'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
-import AIAssessment from './pages/AIAssessment'
+
+function HashRedirect() {
+  const navigate = useNavigate()
+  const loc = useLocation()
+  useEffect(() => {
+    // Hash /#/admin → redirect to /admin when pathname is /
+    const hash = window.location.hash
+    if ((hash === '#/admin' || hash.startsWith('#/admin/')) && loc.pathname === '/') {
+      const target = hash.slice(1)
+      navigate(target, { replace: true })
+      window.history.replaceState(null, '', target)
+    }
+  }, [navigate, loc.pathname])
+  return null
+}
 
 export default function App() {
   return (
-    <Routes>
-      {/* Admin routes (no main Layout) */}
-      <Route path="/admin" element={<AdminLayout />}>
+    <>
+      <HashRedirect />
+      <Routes>
+      {/* Admin routes - path="/admin/*" ensures /admin and /admin/xxx are never matched by path="/" */}
+      <Route path="/admin/*" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
         <Route path="home" element={<AdminHome />} />
         <Route path="showcase" element={<AdminShowcase />} />
@@ -64,30 +73,33 @@ export default function App() {
         <Route path="showcase" element={<Showcase />} />
         <Route path="showcase/works" element={<ShowcaseWorks />} />
         <Route path="showcase/awards" element={<ShowcaseAwards />} />
-        <Route path="showcase/school" element={<ShowcaseSchool />} />
+        <Route path="showcase/school" element={<Navigate to="/showcase" replace />} />
         <Route path="showcase/materials" element={<ShowcaseMaterials />} />
         <Route path="showcase/venture/:id" element={<ShowcaseCase />} />
         <Route path="showcase/award/:id" element={<ShowcaseCase />} />
         <Route path="courses" element={<Courses />} />
+        <Route path="lab" element={<AILab />} />
         <Route path="courses/detail/:id" element={<CourseDetail />} />
-        <Route path="community" element={<Community />} />
-        <Route path="tools" element={<Tools />} />
-        <Route path="tools/detail/:id" element={<ToolDetail />} />
-        <Route path="research" element={<Research />} />
-        <Route path="career" element={<Career />} />
-        <Route path="events" element={<Events />} />
         <Route path="cert" element={<Certification />} />
         <Route path="mall" element={<Mall />} />
-        <Route path="mall/materials" element={<Materials />} />
-        <Route path="charity" element={<Charity />} />
         <Route path="profile" element={<Profile />} />
         <Route path="profile/study" element={<Study />} />
         <Route path="profile/works" element={<ProfileWorks />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="forgot-password" element={<ForgotPassword />} />
-        <Route path="ai-test" element={<AIAssessment />} />
+        {/* Legacy routes → new product structure */}
+        <Route path="research" element={<Navigate to="/courses?line=ioai" replace />} />
+        <Route path="events" element={<Navigate to="/courses?line=ioai" replace />} />
+        <Route path="community" element={<Navigate to="/" replace />} />
+        <Route path="career" element={<Navigate to="/courses?line=k12" replace />} />
+        <Route path="charity" element={<Navigate to="/" replace />} />
+        <Route path="tools" element={<Navigate to="/mall" replace />} />
+        <Route path="tools/detail/:id" element={<Navigate to="/mall" replace />} />
+        <Route path="ai-test" element={<Navigate to="/courses" replace />} />
+        <Route path="mall/materials" element={<Navigate to="/mall" replace />} />
       </Route>
     </Routes>
+    </>
   )
 }

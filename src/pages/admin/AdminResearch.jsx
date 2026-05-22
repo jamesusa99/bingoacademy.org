@@ -34,16 +34,17 @@ export default function AdminResearch() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-6">AI Camp (Research)</h1>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-2">Series Courses</h1>
+      <p className="text-slate-600 text-sm mb-6">Manage series programmes and faculty teams</p>
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
       <div className="flex gap-2 mb-6">
-        <button onClick={() => setTab('camps')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'camps' ? 'bg-primary text-white' : 'bg-slate-200'}`}>Camps</button>
-        <button onClick={() => setTab('faculty')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'faculty' ? 'bg-primary text-white' : 'bg-slate-200'}`}>Faculty</button>
+        <button onClick={() => setTab('camps')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'camps' ? 'bg-primary text-white' : 'bg-slate-200'}`}>Series Programmes</button>
+        <button onClick={() => setTab('faculty')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'faculty' ? 'bg-primary text-white' : 'bg-slate-200'}`}>Faculty Team</button>
       </div>
       {tab === 'camps' && (
         <div className="space-y-6">
           <div className="card p-6">
-            <h2 className="font-semibold mb-4">Add / Edit Camp</h2>
+            <h2 className="font-semibold mb-4">Add / Edit Series Programme</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {campFields.map((k) => (
                 <div key={k} className={['core','highlight','outcome','ratio','competition'].includes(k) ? 'sm:col-span-2' : ''}>
@@ -58,8 +59,8 @@ export default function AdminResearch() {
             </div>
           </div>
           <div className="card overflow-hidden">
-            <div className="p-4 border-b font-semibold">Camps List</div>
-            {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : <ul className="divide-y">{camps.map((c) => (<li key={c.id} className="p-4 flex justify-between"><span>{c.icon} {c.title} · {c.age}</span><span><button onClick={() => { setEditingCamp(c); setFormCamp(Object.fromEntries(campFields.map((k) => [k, c[k] ?? (k === 'sort_order' ? 0 : '')]))) }} className="text-primary mr-2">Edit</button><button onClick={async () => { if (confirm('Delete?')) await supabase.from('research_camps').delete().eq('id', c.id); fetchCamps() }} className="text-red-600">Delete</button></span></li>))}</ul>}
+            <div className="p-4 border-b font-semibold">Series Programme List</div>
+            {loading ? <div className="p-8 text-center text-slate-500">Loading…</div> : <ul className="divide-y">{camps.map((c) => (<li key={c.id} className="p-4 flex justify-between"><span>{c.icon} {c.title} · {c.age}</span><span><button onClick={() => { setEditingCamp(c); setFormCamp(Object.fromEntries(campFields.map((k) => [k, c[k] ?? (k === 'sort_order' ? 0 : '')]))) }} className="text-primary mr-2">Edit</button><button onClick={async () => { if (confirm('Delete this item?')) await supabase.from('research_camps').delete().eq('id', c.id); fetchCamps() }} className="text-red-600">Delete</button></span></li>))}</ul>}
           </div>
         </div>
       )}
@@ -82,7 +83,7 @@ export default function AdminResearch() {
           </div>
           <div className="card overflow-hidden">
             <div className="p-4 border-b font-semibold">Faculty List</div>
-            {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : <ul className="divide-y">{faculty.map((f) => (<li key={f.id} className="p-4 flex justify-between"><span>{f.name} · {f.team}</span><span><button onClick={() => { setEditingFaculty(f); setFormFaculty(Object.fromEntries(facultyFields.map((k) => [k, f[k] ?? (k === 'sort_order' ? 0 : '')]))) }} className="text-primary mr-2">Edit</button><button onClick={async () => { if (confirm('Delete?')) await supabase.from('research_faculty').delete().eq('id', f.id); fetchFaculty() }} className="text-red-600">Delete</button></span></li>))}</ul>}
+            {loading ? <div className="p-8 text-center text-slate-500">Loading…</div> : <ul className="divide-y">{faculty.map((f) => (<li key={f.id} className="p-4 flex justify-between"><span>{f.name} · {f.team}</span><span><button onClick={() => { setEditingFaculty(f); setFormFaculty(Object.fromEntries(facultyFields.map((k) => [k, f[k] ?? (k === 'sort_order' ? 0 : '')]))) }} className="text-primary mr-2">Edit</button><button onClick={async () => { if (confirm('Delete this item?')) await supabase.from('research_faculty').delete().eq('id', f.id); fetchFaculty() }} className="text-red-600">Delete</button></span></li>))}</ul>}
           </div>
         </div>
       )}

@@ -1,28 +1,28 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 
-const GREETING = 'Hi! I\'m Bingo AI Assistant. How can I help you today? You can ask about our courses, AI Camp, or admissions.'
-const FALLBACK = 'Thanks for your message. For detailed inquiries, please email us or visit our Contact page. Is there anything else I can help with?'
+const GREETING = 'Hi! I\'m Bingo AI Assistant. Ask about our three product lines: Foundations of AI Program, IOAI Competition Training, or K12 Classroom Edition.'
+const FALLBACK = 'Thanks for your message. Browse AI Courses, Certification, or AI Mall — or email us for school partnerships.'
 
 const QUICK_REPLIES = {
-  course: 'We offer Basic (K7-K9), Intermediate (K9-K11), and Advanced (K10-K12) courses. Basic is $890, Intermediate $990, Advanced $1290. Visit our AI Courses page for details!',
-  camp: 'Our AI Camp program is $1590. It includes AI literacy, data science, and machine learning camps. Check the AI Camp page for more info.',
-  price: 'Basic Course $890 · Intermediate $990 · Advanced $1290 · AI Camp $1590. All prices in USD.',
-  contact: 'You can reach us through the contact form or email. For course registration, please visit the relevant course page and use the Purchase button.',
+  course: 'We have three lines: (1) Foundations of AI Program — courses, online labs, materials packs; (2) IOAI Competition Training — video lessons & training camps; (3) K12 Classroom — books, courses, labs for schools. Visit /courses',
+  ioai: 'IOAI Competition Training includes AI video courses and training camps. See /courses?line=ioai',
+  k12: 'K12 Classroom Edition includes books, classroom courses, online/offline labs, and offline lab kits. See /courses?line=k12',
+  cert: 'Bingo AI Certification validates course completion. Visit the Certification page for tiers and application.',
+  mall: 'AI Mall offers books, experiment kits, and materials packs. Visit /mall',
 }
 
 function getReply(text) {
   const lower = text.toLowerCase()
-  if (lower.includes('course') || lower.includes('课')) return QUICK_REPLIES.course
-  if (lower.includes('camp') || lower.includes('营')) return QUICK_REPLIES.camp
-  if (lower.includes('price') || lower.includes('cost') || lower.includes('多少钱') || lower.includes('fee')) return QUICK_REPLIES.price
-  if (lower.includes('contact') || lower.includes('email') || lower.includes('联系')) return QUICK_REPLIES.contact
+  if (lower.includes('ioai') || lower.includes('competition')) return QUICK_REPLIES.ioai
+  if (lower.includes('k12') || lower.includes('classroom') || lower.includes('school')) return QUICK_REPLIES.k12
+  if (lower.includes('cert') || lower.includes('certificate')) return QUICK_REPLIES.cert
+  if (lower.includes('mall') || lower.includes('materials') || lower.includes('kit')) return QUICK_REPLIES.mall
+  if (lower.includes('course') || lower.includes('lesson')) return QUICK_REPLIES.course
   return FALLBACK
 }
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
-  const navigate = useNavigate()
   const [messages, setMessages] = useState([
     { role: 'assistant', text: GREETING, id: 0 },
   ])
@@ -55,21 +55,11 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* AI Assessment floating button — stacked above chat */}
-      <button
-        type="button"
-        onClick={() => navigate('/ai-test')}
-        className="fixed bottom-24 right-6 z-40 h-10 px-3 rounded-full bg-white text-amber-600 border border-amber-200 shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center gap-1.5 text-xs font-semibold"
-        aria-label="AI Assessment"
-      >
-        <span>🧠</span>
-        <span>AI Test</span>
-      </button>
-
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+        className="fixed z-40 w-14 h-14 rounded-full bg-primary text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+        style={{ bottom: 'max(1.5rem, env(safe-area-inset-bottom))', right: 'max(1.5rem, env(safe-area-inset-right))' }}
         aria-label="Open chat"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +68,10 @@ export default function ChatWidget() {
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[480px] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div
+          className="fixed z-50 w-[380px] max-w-[calc(100vw-2rem)] max-h-[min(480px,calc(100vh-8rem))] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+          style={{ bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem))', right: 'max(1rem, env(safe-area-inset-right))' }}
+        >
           <div className="bg-primary text-white px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">

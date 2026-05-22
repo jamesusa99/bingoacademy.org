@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import PageBanner from '../components/PageBanner'
+import PageContent from '../components/PageContent'
 
 // ─── Data ──────────────────────────────────────────────────────────
 
@@ -59,12 +61,10 @@ const ISSUING_CENTRES = [
 ]
 
 const FAQ_ITEMS = [
-  { q: 'What are the conditions for institution certification?', a: 'Institutions need to: (1) be legally registered as an education/training body, (2) have at least 2 Bingo-certified teachers on staff, (3) commit to using Bingo curriculum materials, and (4) agree to periodic quality review.' },
-  { q: 'How much does certification cost?', a: 'Certification fees vary by tier. AI Enlightenment starts from $3,800; AI Skill Acquisition from $6,800; Technical Mastery & Ethics from $12,000; Synthesis & Innovation from $18,000. Includes all training, materials, audit, and plaque.' },
-  { q: 'How long does the institution certification process take?', a: 'AI Enlightenment: 4–6 weeks. AI Skill Acquisition: 5–7 weeks. Technical Mastery & Ethics: 6–8 weeks. Synthesis & Innovation: 7–10 weeks. An express track (add $2,000) can accelerate the process by 30%.' },
-  { q: 'Can learner certificates be used for school admissions?', a: 'Yes. Synthesis & Innovation (Star 9) certificates are widely accepted as supplementary evidence for high school STEM specialty admissions (综评) and have been cited in 强基 application materials.' },
-  { q: 'Are certificates valid nationally?', a: 'All certificates are nationally valid. Learner and institution certificates are registered in the Bingo central verification system and can be verified online or by QR code scan.' },
-  { q: 'How do issuing centres relate to institution certification?', a: 'Issuing centres are approved oversight bodies (associations, universities, government bodies) that co-endorse certificates and conduct periodic quality audits of certified institutions.' },
+  { q: 'How much does learner certification cost?', a: 'Fees vary by tier and course bundle. Entry-level certificates start around $198; top-tier innovation certificates around $498. Full pricing is in the certification guide PDF.' },
+  { q: 'Can learner certificates be used for school admissions?', a: 'Yes. Synthesis & Innovation (Star 9) certificates are widely accepted as supplementary evidence for high school STEM specialty admissions (comprehensive evaluation tracks) and have been cited in strong-foundation programme application materials.' },
+  { q: 'Are certificates valid nationally?', a: 'All certificates are nationally valid. Learner certificates are registered in the Bingo central verification system and can be verified online or by QR code scan.' },
+  { q: 'How do issuing centres endorse certificates?', a: 'Issuing centres are approved oversight bodies (associations, universities, government bodies) that co-endorse learner certificates and conduct periodic quality audits.' },
 ]
 
 // ─── Sub-components ────────────────────────────────────────────────
@@ -115,7 +115,7 @@ function VerifyModal({ onClose }) {
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm">
               <div className="flex items-center gap-2 text-green-700 font-semibold mb-2">✅ Certificate Verified</div>
               <div className="space-y-1 text-slate-600 text-xs">
-                <div><span className="font-medium">Holder:</span> Zhang Wei (张**)</div>
+                <div><span className="font-medium">Holder:</span> Zhang Wei (Z**)</div>
                 <div><span className="font-medium">Cert Level:</span> Synthesis & Innovation (9★) — AI Innovation Certificate</div>
                 <div><span className="font-medium">Issued:</span> Dec 2024 · <span className="font-medium">Valid:</span> Dec 2027</div>
                 <div><span className="font-medium">Issuing Centre:</span> China AI Education Association</div>
@@ -142,14 +142,12 @@ function VerifyModal({ onClose }) {
 // ─── Main Component ────────────────────────────────────────────────
 export default function Certification() {
   const [tab, setTab] = useState('home')
-  const [instTier, setInstTier] = useState('zhichuang')
+  const [learnerTier, setLearnerTier] = useState('zhichuang')
   const [leadModal, setLeadModal] = useState(null)
   const [verifyModal, setVerifyModal] = useState(false)
   const [faqOpen, setFaqOpen] = useState({})
-  const [instDone, setInstDone] = useState(false)
   const [teacherDone, setTeacherDone] = useState(false)
   const [learnerDone, setLearnerDone] = useState(false)
-  const [issuerDone, setIssuerDone] = useState(false)
   const [certPreview, setCertPreview] = useState(false)
   const [certTiers, setCertTiers] = useState(CERT_TIERS_FALLBACK)
 
@@ -161,45 +159,40 @@ export default function Certification() {
 
   const TABS = [
     { id: 'home', icon: '🏠', label: 'Cert Hub' },
-    { id: 'institution', icon: '🏫', label: 'Institution Certification' },
     { id: 'learner', icon: '🎓', label: 'Learner Certification' },
     { id: 'teacher', icon: '👩‍🏫', label: 'Teacher Certification' },
     { id: 'overview', icon: '📊', label: 'Cert Overview' },
     { id: 'issuing', icon: '🏛️', label: 'Issuing Centres' },
   ]
 
-  const activeTierData = certTiers.find(t => t.id === instTier) || certTiers[3]
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-
+    <div className="w-full">
       {leadModal && <LeadModal title={leadModal.title} subtitle={leadModal.subtitle} onClose={() => setLeadModal(null)} />}
       {verifyModal && <VerifyModal onClose={() => setVerifyModal(false)} />}
 
-      {/* ── Hero ── */}
-      <section className="mb-8 section-tech rounded-2xl px-6 py-12 text-center">
-        <p className="text-xs font-bold tracking-widest text-primary uppercase mb-2">Empower Institutions · Certify Talent · Build Authority</p>
-        <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mb-3">Bingo AI Certification Centre</h1>
-        <p className="text-slate-600 text-base max-w-2xl mx-auto mb-5">
-          Nine-star curriculum certification · Four-tier institution framework · Dual-endorsed learner certificates.<br className="hidden sm:block" />
-          The complete AI education credentialing ecosystem — for institutions, teachers, and learners.
-        </p>
-        <div className="flex flex-wrap gap-2 justify-center text-xs mb-6">
-          {['9-Star AI Mastery Roadmap','4-tier institution certification','Dual issuing-centre endorsement','Nationally verifiable certificates','慧师 teacher development plan'].map((t,i) => (
+      <PageBanner
+        eyebrow="Certify Talent · Verify Skills"
+        title="Bingo AI Certification Centre"
+        subtitle="Nine-star curriculum · Dual-endorsed learner certificates · Teacher credentials for all three product lines."
+        gradient="from-emerald-500/15 via-emerald-50 to-cyan-50"
+      >
+        <div className="flex flex-wrap gap-2 justify-center lg:justify-start text-xs mb-5">
+          {['9-Star AI Mastery Roadmap','Learner & teacher certificates','Nationally verifiable'].map((t,i) => (
             <span key={i} className="bg-white/80 border border-primary/20 rounded-full px-3 py-1.5 text-slate-700">{t}</span>
           ))}
         </div>
-        <div className="flex flex-wrap gap-3 justify-center">
-          <button onClick={() => setTab('institution')} className="btn-primary px-6 py-2.5">Institution Certification →</button>
-          <button onClick={() => setTab('learner')} className="border border-primary text-primary px-6 py-2.5 rounded-xl font-medium hover:bg-primary/5 transition text-sm">Learner Certification</button>
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center lg:justify-start">
+          <button onClick={() => setTab('learner')} className="btn-primary px-6 py-2.5">Learner Certification →</button>
+          <button onClick={() => setTab('teacher')} className="border border-primary text-primary px-6 py-2.5 rounded-xl font-medium hover:bg-primary/5 transition text-sm">Teacher Certification</button>
           <button onClick={() => setVerifyModal(true)} className="border border-slate-300 text-slate-600 px-6 py-2.5 rounded-xl font-medium hover:bg-slate-50 transition text-sm">🔍 Verify a Certificate</button>
         </div>
-        <p className="text-xs text-slate-400 mt-4">200+ certified institutions · 8,000+ certified learners · 500+ certified teachers</p>
-      </section>
+        <p className="text-xs text-slate-400 mt-4 text-center lg:text-left">8,000+ certified learners · 500+ certified teachers · nationally verifiable credentials</p>
+      </PageBanner>
 
+      <PageContent className="py-6 sm:py-8">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-        {[['200+','Certified Institutions'],['8,000+','Certified Learners'],['500+','Certified Teachers'],['30%+','Enrolment uplift reported']].map(([v,l],i) => (
+        {[['8,000+','Certified Learners'],['500+','Certified Teachers'],['4','Learner tiers'],['9★','Mastery roadmap']].map(([v,l],i) => (
           <div key={i} className="card p-4 text-center"><div className="text-xl font-bold text-primary">{v}</div><div className="text-xs text-slate-500 mt-0.5">{l}</div></div>
         ))}
       </div>
@@ -219,12 +212,11 @@ export default function Certification() {
         <div className="space-y-8">
           {/* Three-in-one system graphic */}
           <section>
-            <h2 className="section-title mb-5">A Three-Pillar Certification Ecosystem</h2>
-            <div className="grid md:grid-cols-3 gap-5">
+            <h2 className="section-title mb-5">Learner & Teacher Certification</h2>
+            <div className="grid md:grid-cols-2 gap-5">
               {[
-                { icon: '🏫', title: 'Institution Certification', sub: '4-tier · AI Enlightenment → Synthesis & Innovation', desc: 'Schools and tutoring centres gain authority, curriculum rights, and brand backing. Certification boosts enrolment conversion by 30%+.', color: 'border-amber-200/60 bg-amber-50/20', tab: 'institution' },
-                { icon: '👩‍🏫', title: 'Teacher Certification', sub: 'Basic · Advanced · Master Trainer', desc: 'AI curriculum educators gain a professional credential, join the Bingo teacher directory, and unlock priority placement at certified centres.', color: 'border-violet-200/60 bg-violet-50/10', tab: 'teacher' },
-                { icon: '🎓', title: 'Learner Certification', sub: '4-tier · AI Foundations → AI Innovation', desc: 'Students receive dual-endorsed certificates — backed by both the teaching institution and an official issuing centre. Verifiable and nationally recognised.', color: '', tab: 'learner' },
+                { icon: '👩‍🏫', title: 'Teacher Certification', sub: 'Basic · Advanced · Master Trainer', desc: 'AI curriculum educators gain a professional credential and join the Bingo teacher directory.', color: 'border-violet-200/60 bg-violet-50/10', tab: 'teacher' },
+                { icon: '🎓', title: 'Learner Certification', sub: '4-tier · AI Foundations → AI Innovation', desc: 'Students receive dual-endorsed certificates — backed by their learning centre and an official issuing centre. Verifiable and nationally recognised.', color: '', tab: 'learner' },
               ].map((p,i) => (
                 <div key={i} className={`card p-6 flex flex-col border-2 ${p.color}`}>
                   <div className="text-2xl mb-2">{p.icon}</div>
@@ -243,7 +235,7 @@ export default function Certification() {
             <div className="card p-5">
               <div className="grid sm:grid-cols-4 gap-3">
                 {certTiers.map((t,i) => (
-                  <button key={i} onClick={() => { setTab('institution'); setInstTier(t.id) }}
+                  <button key={i} onClick={() => { setTab('learner'); setLearnerTier(t.id) }}
                     className={`rounded-xl p-4 text-left transition hover:shadow-md border-2 ${t.border} ${t.bg}`}>
                     <div className={`text-xs font-bold ${t.color} mb-1`}>{t.stars}</div>
                     <div className="font-semibold text-bingo-dark text-sm">{t.name}</div>
@@ -251,30 +243,7 @@ export default function Certification() {
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-3 text-center">Click any tier to view full curriculum details and institution requirements →</p>
-            </div>
-          </section>
-
-          {/* Certified institution cases */}
-          <section>
-            <h2 className="section-title mb-4">Certified Institution Outcomes</h2>
-            <div className="grid sm:grid-cols-3 gap-4">
-              {[
-                { org: 'Star AI Education Centre, Shanghai', tier: 'Synthesis & Innovation', result: 'Enrolments up 45% in 6 months after certification. 3 students won national competition awards.' },
-                { org: 'Future Minds Academy, Beijing', tier: 'Technical Mastery & Ethics', result: 'Added advanced AI track. Retention rate increased to 92%. Now a regional Bingo showcase partner.' },
-                { org: 'TechKids Learning Hub, Guangzhou', tier: 'AI Skill Acquisition', result: 'Launched from zero to 80 active students within first year with Bingo curriculum and branding support.' },
-              ].map((c,i) => (
-                <div key={i} className="card p-5 hover:shadow-md transition">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">🏫</span>
-                    <div>
-                      <div className="font-semibold text-bingo-dark text-xs">{c.org}</div>
-                      <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{c.tier}</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-600 mt-2">{c.result}</p>
-                </div>
-              ))}
+              <p className="text-xs text-slate-400 mt-3 text-center">Click any tier to view learner certification paths →</p>
             </div>
           </section>
 
@@ -293,145 +262,6 @@ export default function Certification() {
                 <p className="text-xs text-slate-500 mt-0.5">Free PDF — conditions, process, and pricing</p>
               </div>
               <button onClick={() => setLeadModal({ title: 'Download Certification Guide', subtitle: 'Enter your phone to receive the PDF guide instantly.' })} className="border border-amber-400 text-amber-700 text-sm px-4 py-2 rounded-xl hover:bg-amber-50 transition shrink-0">Download →</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════ INSTITUTION CERTIFICATION ══════════════════ */}
-      {tab === 'institution' && (
-        <div className="space-y-6">
-          <div className="card p-5 bg-amber-50/30 border-amber-200/60">
-            <h2 className="font-bold text-bingo-dark mb-1">🏫 Institution Certification — 4-Tier Framework</h2>
-            <p className="text-slate-600 text-sm">Four certification tiers matched to the 9-star curriculum. Each tier unlocks specific curriculum rights, brand endorsement, and Bingo platform support.</p>
-          </div>
-
-          {/* Tier selector */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {certTiers.map(t => (
-              <button key={t.id} onClick={() => setInstTier(t.id)}
-                className={`rounded-xl p-3 text-left transition border-2 ${instTier===t.id ? `${t.border} ${t.bg} shadow` : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                <div className={`text-xs font-bold mb-0.5 ${instTier===t.id ? t.color : 'text-slate-500'}`}>{t.stars}</div>
-                <div className="font-semibold text-bingo-dark text-sm leading-tight">{t.name}</div>
-              </button>
-            ))}
-          </div>
-
-          {/* Tier detail */}
-          <div className="space-y-4">
-            <div className={`card p-5 border-2 ${activeTierData.border} ${activeTierData.bg}`}>
-              <div className="flex items-center gap-3 mb-3">
-                <span className={`text-xl font-bold ${activeTierData.color}`}>{activeTierData.stars}</span>
-                <div>
-                  <h3 className="font-bold text-bingo-dark">{activeTierData.name} ({activeTierData.stars})</h3>
-                  <p className="text-xs text-slate-500">Best for: {activeTierData.inst} · Certification: ~{activeTierData.weeks}</p>
-                </div>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                <div className="bg-white/60 rounded-xl p-3">
-                  <p className="text-xs font-semibold text-slate-600 mb-2">Curriculum Scope (authorised courses):</p>
-                  <ul className="space-y-1">
-                    {activeTierData.courses.map((c,i) => <li key={i} className="text-xs text-slate-600 flex gap-1.5"><span className="text-primary">✓</span>{c}</li>)}
-                  </ul>
-                </div>
-                <div className="bg-white/60 rounded-xl p-3">
-                  <p className="text-xs font-semibold text-slate-600 mb-2">Certification Benefits:</p>
-                  <ul className="space-y-1">
-                    {activeTierData.benefits.map((b,i) => <li key={i} className="text-xs text-slate-600 flex gap-1.5"><span className="text-amber-600">★</span>{b}</li>)}
-                  </ul>
-                </div>
-              </div>
-              <div className="mt-3 bg-white/60 rounded-xl p-3">
-                <p className="text-xs font-semibold text-slate-600 mb-1">Quality Standards Required:</p>
-                <p className="text-xs text-slate-600">{activeTierData.criteria}</p>
-              </div>
-            </div>
-
-            {/* Benefits comparison table */}
-            <div className="card p-5 overflow-x-auto">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Tier Benefits Comparison</p>
-              <table className="w-full text-xs min-w-[480px]">
-                <thead>
-                  <tr className="border-b border-slate-100">
-                    <th className="text-left py-2 pr-4 text-slate-500 font-medium">Benefit</th>
-                    {certTiers.map(t => <th key={t.id} className={`text-center py-2 px-2 font-semibold ${t.color}`}>{t.chinese}</th>)}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {[
-                    ['Curriculum use rights', '1–3★', '1–6★', '1–8★', '1–9★'],
-                    ['Branded partner badge', '✓', '✓', '✓', '✓ Premium'],
-                    ['Platform referral priority', '—', 'Standard', 'High', 'Exclusive'],
-                    ['Issuing centre endorsement', '1 centre', '1 centre', '2 centres', '3 centres'],
-                    ['Dedicated account manager', '—', '—', '✓', '✓ Senior'],
-                    ['Revenue sharing (joint events)', '—', '—', '—', '✓'],
-                    ['National partner directory', '—', '✓', '✓ Featured', '✓ Top listing'],
-                  ].map((row,i) => (
-                    <tr key={i} className="hover:bg-slate-50/50">
-                      <td className="py-2 pr-4 text-slate-600">{row[0]}</td>
-                      {row.slice(1).map((v,j) => (
-                        <td key={j} className={`text-center py-2 px-2 ${certTiers[j].id===instTier ? `font-semibold ${certTiers[j].color}` : 'text-slate-500'}`}>{v}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Application process */}
-            <div className="card p-5">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-4">Application Process</p>
-              <div className="flex gap-2 items-center flex-wrap">
-                {[['📝','Submit Credentials','Org info + teacher certs + existing curriculum','~2 days'],['🔍','Curriculum Review','Bingo reviews course coverage and standards fit','~3 days'],['🎓','Training & Assessment','Teacher training + final certification audit','~2–3 weeks'],['🏆','Certified & Badged','Plaque issued, platform listing activated, onboarding','1 day']].map(([icon,title,desc,time],i,arr) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="bg-slate-50 rounded-xl p-3 text-center w-36 shrink-0">
-                      <div className="text-xl mb-1">{icon}</div>
-                      <div className="font-semibold text-bingo-dark text-xs mb-0.5">{title}</div>
-                      <div className="text-[10px] text-slate-400 mb-1">{desc}</div>
-                      <div className="text-[10px] text-primary font-medium">{time}</div>
-                    </div>
-                    {i < arr.length-1 && <span className="text-slate-300 shrink-0">→</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Application form */}
-            <div className="card p-5">
-              <h3 className="font-semibold text-bingo-dark mb-3">Apply for Institution Certification</h3>
-              {instDone ? (
-                <div className="text-center py-4">
-                  <div className="text-3xl mb-2">✅</div>
-                  <p className="font-bold text-bingo-dark">Application Received!</p>
-                  <p className="text-sm text-slate-600 mt-1">A certification guide will be sent to your email. Our team will contact you within 1 business day.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {['Institution Name *', 'Contact Person *', 'Phone *', 'City / Region *'].map((f,i) => (
-                      <div key={i}>
-                        <input placeholder={f} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none" />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-slate-500 mb-1 block">Target certification tier</label>
-                      <select value={instTier} onChange={e => setInstTier(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none bg-white">
-                        {certTiers.map(t => <option key={t.id} value={t.id}>{t.chinese} — {t.stars}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs text-slate-500 mb-1 block">Current student count</label>
-                      <select className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none bg-white">
-                        <option>Under 50</option><option>50–150</option><option>150–500</option><option>500+</option>
-                      </select>
-                    </div>
-                  </div>
-                  <textarea placeholder="Current courses and any questions (optional)" rows={2} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none resize-none" />
-                  <button onClick={() => setInstDone(true)} className="w-full btn-primary py-2.5">Submit Application — Response within 1 business day</button>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -499,7 +329,7 @@ export default function Certification() {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">How Learner Certificates Are Used</p>
             <div className="grid sm:grid-cols-3 gap-3">
               {[
-                { icon: '🎓', title: 'School Admissions Support', desc: 'Synthesis & Innovation (Star 9) certificates accepted as supplementary evidence for STEM specialty admissions (综评) and referenced in 强基 applications.' },
+                { icon: '🎓', title: 'School Admissions Support', desc: 'Synthesis & Innovation (Star 9) certificates accepted as supplementary evidence for STEM specialty admissions (comprehensive evaluation) and referenced in strong-foundation programme applications.' },
                 { icon: '🏆', title: 'Competition Entry Advantage', desc: 'Certified learners gain priority access to Bingo-partnered competitions. Some competitions waive preliminary rounds for Synthesis & Innovation (9★) cert holders.' },
                 { icon: '📋', title: 'Skill Portfolio Record', desc: 'Each certificate maps to a digital skills profile. Learners can share their profile with schools, scholarship committees, or employers.' },
               ].map((u,i) => (
@@ -534,7 +364,7 @@ export default function Certification() {
                     {certTiers.map(t => <option key={t.id}>{t.chinese} — {t.learner}</option>)}
                   </select>
                 </div>
-                <p className="text-xs text-slate-400">📋 Your institution must be a certified Bingo partner. <button onClick={() => setTab('institution')} className="text-primary hover:underline">Check institution certification →</button></p>
+                <p className="text-xs text-slate-400">📋 Apply through your course provider or learning centre that offers Bingo certification.</p>
                 <button onClick={() => setLearnerDone(true)} className="w-full btn-primary py-2.5">Submit Application</button>
               </div>
             )}
@@ -546,7 +376,7 @@ export default function Certification() {
       {tab === 'teacher' && (
         <div className="space-y-6">
           <div className="card p-5 bg-violet-50/30 border-violet-200/60">
-            <h2 className="font-bold text-bingo-dark mb-1">👩‍🏫 Teacher Certification & 慧师 Development Plan</h2>
+            <h2 className="font-bold text-bingo-dark mb-1">👩‍🏫 Teacher Certification & Teacher Excellence Programme</h2>
             <p className="text-slate-600 text-sm">Three certification levels for AI curriculum educators. Certified teachers are added to the Bingo teacher directory and matched to certified institutions hiring locally.</p>
           </div>
 
@@ -574,12 +404,12 @@ export default function Certification() {
             </div>
           </div>
 
-          {/* 慧师 Plan */}
+          {/* Teacher Excellence Plan */}
           <div className="card p-5 border-amber-200/60 bg-amber-50/10">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-2xl">✨</span>
               <div>
-                <h3 className="font-bold text-bingo-dark">慧师计划 — Bingo Teacher Development Programme</h3>
+                <h3 className="font-bold text-bingo-dark">Teacher Excellence Programme — Bingo Teacher Development</h3>
                 <p className="text-xs text-primary">Goal: develop 1,000 certified AI educators per year · Direct institutional placement</p>
               </div>
             </div>
@@ -601,7 +431,7 @@ export default function Certification() {
             </div>
             {teacherDone ? (
               <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700">
-                ✅ Application received. The 慧师计划 handbook has been sent to your email. We will contact you within 2 business days.
+                ✅ Application received. The Teacher Excellence Programme handbook has been sent to your email. We will contact you within 2 business days.
               </div>
             ) : (
               <div className="space-y-3">
@@ -610,7 +440,7 @@ export default function Certification() {
                     <input key={i} placeholder={f} className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none" />
                   ))}
                 </div>
-                <button onClick={() => setTeacherDone(true)} className="w-full btn-primary py-2.5">Apply for 慧师计划</button>
+                <button onClick={() => setTeacherDone(true)} className="w-full btn-primary py-2.5">Apply for Teacher Excellence Programme</button>
               </div>
             )}
           </div>
@@ -622,17 +452,16 @@ export default function Certification() {
         <div className="space-y-6">
           <div>
             <h2 className="font-bold text-bingo-dark mb-1">📊 Certification System Overview</h2>
-            <p className="text-slate-500 text-sm">The complete picture of how institution, teacher, and learner certification interlock.</p>
+            <p className="text-slate-500 text-sm">How teacher credentials and learner certificates connect across the 9-star roadmap.</p>
           </div>
 
           {/* Architecture */}
           <div className="card p-5">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-4">Three-in-One Architecture</p>
-            <div className="grid sm:grid-cols-3 gap-4">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-4">Certification Architecture</p>
+            <div className="grid sm:grid-cols-2 gap-4">
               {[
-                { icon: '🏫', title: 'Institution', sub: 'Core', detail: 'Provides the curriculum and qualified teachers. Certification tier determines which Bingo courses can be taught and what brand authority is granted.', color: 'border-amber-200/60 bg-amber-50/20' },
-                { icon: '👩‍🏫', title: 'Teacher', sub: 'Support', detail: 'Teacher certification ensures teaching quality at every certified institution. Without certified teachers, institutions cannot hold or maintain their tier status.', color: 'border-violet-200/60 bg-violet-50/10' },
-                { icon: '🎓', title: 'Learner', sub: 'Outcome', detail: 'The result of quality teaching at a certified institution. Learner certificates carry the weight of both the institution and the issuing centre endorsement.', color: '' },
+                { icon: '👩‍🏫', title: 'Teacher', sub: 'Instruction', detail: 'Teacher certification ensures quality delivery of Bingo curriculum and eligibility for the teacher directory.', color: 'border-violet-200/60 bg-violet-50/10' },
+                { icon: '🎓', title: 'Learner', sub: 'Outcome', detail: 'Learner certificates document verified skills. Dual endorsement from the learning centre and an issuing centre.', color: '' },
               ].map((p,i) => (
                 <div key={i} className={`card p-4 border-2 ${p.color}`}>
                   <div className="text-2xl mb-1">{p.icon}</div>
@@ -646,12 +475,11 @@ export default function Certification() {
 
           {/* Tier correspondence table */}
           <div className="card p-5 overflow-x-auto">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Tier Correspondence Across All Three Certifications</p>
-            <table className="w-full text-xs min-w-[480px]">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Tier Correspondence — Teacher & Learner</p>
+            <table className="w-full text-xs min-w-[400px]">
               <thead>
                 <tr className="border-b border-slate-100 text-left">
                   <th className="py-2 pr-4 text-slate-400 font-medium">Curriculum Tier</th>
-                  <th className="py-2 px-2 text-amber-600 font-medium">Institution</th>
                   <th className="py-2 px-2 text-violet-600 font-medium">Teacher</th>
                   <th className="py-2 px-2 text-primary font-medium">Learner</th>
                   <th className="py-2 px-2 text-slate-400 font-medium">Timeline</th>
@@ -661,7 +489,6 @@ export default function Certification() {
                 {certTiers.map(t => (
                   <tr key={t.id} className="hover:bg-slate-50/50">
                     <td className={`py-2 pr-4 font-medium ${t.color}`}>{t.chinese} {t.stars}</td>
-                    <td className="py-2 px-2 text-slate-600">{t.name} Centre</td>
                     <td className="py-2 px-2 text-slate-600">{t.teacher}</td>
                     <td className="py-2 px-2 text-slate-600">{t.learner}</td>
                     <td className="py-2 px-2 text-slate-400">{t.weeks}</td>
@@ -676,9 +503,8 @@ export default function Certification() {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Certificate Uses by Type</p>
             <div className="space-y-3 text-sm">
               {[
-                { title: 'Institution Certificate', uses: 'Enrolment promotion materials · partnership negotiations · government grant / project applications · regional competition eligibility' },
-                { title: 'Teacher Certificate', uses: 'Career advancement at certified centres · job applications to new institutions · eligibility for master trainer revenue share · professional CPD records' },
-                { title: 'Learner Certificate', uses: 'High school STEM admissions (综评) · 强基 application supplementary material · competition entry advantage · digital skills portfolio sharing' },
+                { title: 'Teacher Certificate', uses: 'Career advancement · job applications · master trainer pathway · professional CPD records' },
+                { title: 'Learner Certificate', uses: 'High school STEM admissions (comprehensive evaluation) · strong-foundation programme supplementary material · competition entry advantage · digital skills portfolio sharing' },
               ].map((c,i) => (
                 <div key={i} className="bg-slate-50 rounded-xl p-3">
                   <p className="font-semibold text-bingo-dark mb-1 text-xs">{c.title}</p>
@@ -691,9 +517,8 @@ export default function Certification() {
           {/* Validity and renewal */}
           <div className="card p-5">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Validity, Renewal & Replacement</p>
-            <div className="grid sm:grid-cols-3 gap-3 text-xs">
+            <div className="grid sm:grid-cols-2 gap-3 text-xs">
               {[
-                ['Institution', '2 years', 'Annual quality review + re-audit every 2 years'],
                 ['Teacher', '3 years', 'CPD credits + short renewal assessment'],
                 ['Learner', '3 years', 'Optional top-up course to renew'],
               ].map(([t,v,r],i) => (
@@ -705,7 +530,7 @@ export default function Certification() {
               ))}
             </div>
             <div className="mt-3 text-xs text-slate-500 bg-primary/5 rounded-xl p-3">
-              🚀 <strong>Express track available</strong> for institution and teacher certification — reduces processing time by ~30%. Contact us for details.
+              🚀 <strong>Express track available</strong> for teacher certification — reduces processing time by ~30%. Contact us for details.
             </div>
           </div>
 
@@ -773,40 +598,6 @@ export default function Certification() {
             <button onClick={() => setLeadModal({ title: 'Submit a Quality Complaint', subtitle: 'Our issuing centre will review and respond within 3 business days.' })} className="border border-slate-300 text-slate-600 text-sm px-4 py-2 rounded-xl hover:bg-slate-50 transition">Submit Complaint</button>
           </div>
 
-          {/* Apply to become an issuing centre */}
-          <div className="card p-5 bg-amber-50/10 border-amber-200/60">
-            <h3 className="font-semibold text-bingo-dark mb-2">Apply to Become an Issuing Centre Partner</h3>
-            <p className="text-sm text-slate-600 mb-4">We invite qualified organisations — associations, universities, regional education bodies — to join the Bingo issuing centre network. Partners receive brand co-marketing, revenue share on certifications, and direct influence on AI education quality standards.</p>
-            <div className="grid sm:grid-cols-3 gap-2 text-xs text-slate-600 mb-4">
-              {['Relevant industry or education sector qualifications','Experience in education quality oversight or assessment','Alignment with Bingo\'s AI education mission'].map((r,i) => (
-                <div key={i} className="bg-white rounded-xl p-2.5 border border-amber-100 flex gap-1.5"><span className="text-amber-600 shrink-0">✓</span>{r}</div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2 items-center text-xs text-slate-500 mb-4">
-              {[['📝','Apply','Submit credentials + intent'],['🔍','Review','Bingo vets organisation + alignment'],['🤝','Negotiate','Define region, scope, revenue share'],['✍️','Sign','Partnership agreement + onboarding']].map(([icon,title,desc],i,arr) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <div className="bg-white rounded-lg border border-slate-100 p-2 text-center w-24">
-                    <div>{icon} <span className="font-semibold text-slate-700">{title}</span></div>
-                    <div className="text-slate-400 text-[10px]">{desc}</div>
-                  </div>
-                  {i < arr.length-1 && <span className="text-slate-300">→</span>}
-                </div>
-              ))}
-            </div>
-            {issuerDone ? (
-              <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700">✅ Application received. A dedicated account manager will contact you within 2 business days.</div>
-            ) : (
-              <div className="space-y-2">
-                <div className="grid sm:grid-cols-2 gap-2">
-                  {['Organisation name *', 'Contact person *', 'Phone *', 'Region / Coverage area'].map((f,i) => (
-                    <input key={i} placeholder={f} className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none" />
-                  ))}
-                </div>
-                <textarea placeholder="Brief description of your organisation and reason for applying" rows={2} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none resize-none" />
-                <button onClick={() => setIssuerDone(true)} className="w-full bg-amber-500 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-amber-600 transition">Submit Issuing Centre Application</button>
-              </div>
-            )}
-          </div>
         </div>
       )}
 
@@ -844,14 +635,15 @@ export default function Certification() {
       <div className="mt-10 card p-5 bg-gradient-to-r from-cyan-50 to-sky-50 border-primary/20 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-semibold text-bingo-dark">Start your certification journey today</p>
-          <p className="text-xs text-slate-500 mt-0.5">Institutions · Teachers · Learners — all paths start here</p>
+          <p className="text-xs text-slate-500 mt-0.5">Teachers and learners — start your certification journey here</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setTab('institution')} className="btn-primary text-sm px-4 py-2">Certify My Institution</button>
-          <button onClick={() => setTab('learner')} className="border border-primary text-primary text-sm px-4 py-2 rounded-xl hover:bg-primary/5 transition">Learner Certificate</button>
+          <button onClick={() => setTab('learner')} className="btn-primary text-sm px-4 py-2">Learner Certificate</button>
+          <button onClick={() => setTab('teacher')} className="border border-primary text-primary text-sm px-4 py-2 rounded-xl hover:bg-primary/5 transition">Teacher Certification</button>
           <button onClick={() => setVerifyModal(true)} className="border border-slate-300 text-slate-600 text-sm px-4 py-2 rounded-xl hover:bg-slate-50 transition">🔍 Verify</button>
         </div>
       </div>
+      </PageContent>
     </div>
   )
 }

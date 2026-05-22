@@ -7,13 +7,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+#Temporal Data 
 node_modules
 dist
 dist-ssr
 *.local
 
+# Sensitive env files — never commit
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env.*.local
 
 # Editor directories and files

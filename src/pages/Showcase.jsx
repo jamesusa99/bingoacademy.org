@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import PageBanner from '../components/PageBanner'
+import PageContent from '../components/PageContent'
 
 // ─── Data ──────────────────────────────────────────────────────────
 
 const STATS = [
   { value: '500+', label: 'Competition Award Winners' },
   { value: '300+', label: 'STEM Admissions Cases' },
-  { value: '120+', label: 'Partner Schools & Institutions' },
+  { value: '120+', label: 'K12 Classroom Projects' },
   { value: '98%+', label: 'Parent Satisfaction Rate' },
   { value: '1,000+', label: 'AI Works Produced' },
   { value: '50+', label: 'Prestigious Competition Wins' },
@@ -15,13 +17,13 @@ const STATS = [
 
 const AWARD_CASES_FALLBACK = [
   { student: 'Student A', grade: 'Grade 6 · Primary', pain: 'Zero AI background · didn\'t know which competition to enter', path: 'AI Literacy Camp → Prestigious Competition Bootcamp → 1-on-1 Coach Prep', result: '🥇 National Prestigious Competition · 1st Prize', duration: '6 months', tags: ['AI Zero Background', 'Prestigious Competition', 'Primary School'], detail: 'Starting from zero, A completed the AI Literacy programme in 2 months, joined the Prestigious Competition Bootcamp, and worked with a competition coach on mock defences. Scored in the top 3% nationally.', type: 'competition' },
-  { student: 'Student B', grade: 'Grade 10 · High School', pain: 'Had AI skills but no competition experience or formal results', path: 'ML Intro Camp → Competition Research Project → Pre-Competition Sprint', result: '🥈 Provincial AI Innovation Competition · 2nd Prize', duration: '8 months', tags: ['ML Skills', 'Competition Research', 'High School'], detail: 'B had basic Python skills. With guided research project mentorship and a personalised competition strategy, achieved provincial 2nd place and built a strong 综评 portfolio.', type: 'competition' },
+  { student: 'Student B', grade: 'Grade 10 · High School', pain: 'Had AI skills but no competition experience or formal results', path: 'ML Intro Camp → Competition Research Project → Pre-Competition Sprint', result: '🥈 Provincial AI Innovation Competition · 2nd Prize', duration: '8 months', tags: ['ML Skills', 'Competition Research', 'High School'], detail: 'B had basic Python skills. With guided research project mentorship and a personalised competition strategy, achieved provincial 2nd place and built a strong comprehensive-evaluation portfolio.', type: 'competition' },
   { student: 'Student C', grade: 'Grade 8 · Middle School', pain: 'Parents wanted competitions but didn\'t know AI education pathway', path: 'AI Literacy → Robotics Camp → Robotics Competition', result: '🏆 City Robotics Championship · Champion', duration: '5 months', tags: ['Robotics', 'Middle School', 'Competition'], detail: 'Complete beginner at entry. Intensive robotics programme with team collaboration training. Won city championship and was invited to join the school robotics team.', type: 'competition' },
 ]
 
 const ADMISSIONS_CASES_FALLBACK = [
-  { student: 'Student D', grade: 'Grade 12 · High School', pain: 'Wanted STEM specialty admission but had no qualifying AI results', path: '综评 Research Project → AI Portfolio → STEM Specialty Application', result: '🎓 STEM Specialty Admission · Key Provincial High School', duration: '10 months', tags: ['综评 Admissions', 'STEM Specialty', 'High School'], detail: 'D used our ML research project as the cornerstone of their 综评 application. Research report, competition certificates, and mentor recommendation letter all contributed to a successful STEM specialty offer.', type: 'admissions' },
-  { student: 'Student E', grade: 'Grade 11 · High School', pain: 'Strong AI interest but no formal pathway or documentation', path: 'AI Agent Research → Competition Entry → 强基 Application', result: '🎓 强基 Programme Shortlisted · CS Major · Top-10 University', duration: '12 months', tags: ['强基 Programme', 'University Application', 'AI Research'], detail: 'E built an AI agent prototype and competed in two national competitions. The working prototype was demonstrated in the 强基 interview, directly supporting the CS major shortlisting.', type: 'admissions' },
+  { student: 'Student D', grade: 'Grade 12 · High School', pain: 'Wanted STEM specialty admission but had no qualifying AI results', path: 'Comprehensive Evaluation Research Project → AI Portfolio → STEM Specialty Application', result: '🎓 STEM Specialty Admission · Key Provincial High School', duration: '10 months', tags: ['Comprehensive Evaluation', 'STEM Specialty', 'High School'], detail: 'D used our ML research project as the cornerstone of their comprehensive evaluation application. Research report, competition certificates, and mentor recommendation letter all contributed to a successful STEM specialty offer.', type: 'admissions' },
+  { student: 'Student E', grade: 'Grade 11 · High School', pain: 'Strong AI interest but no formal pathway or documentation', path: 'AI Agent Research → Competition Entry → Strong Foundation Application', result: '🎓 Strong Foundation Programme Shortlisted · CS Major · Top-10 University', duration: '12 months', tags: ['Strong Foundation Programme', 'University Application', 'AI Research'], detail: 'E built an AI agent prototype and competed in two national competitions. The working prototype was demonstrated in the strong-foundation interview, directly supporting the CS major shortlisting.', type: 'admissions' },
   { student: 'Student F', grade: 'Grade 12 · International Track', pain: 'Applying to US universities without standout STEM projects', path: 'Data Science Camp → Research Project → International Application', result: '🌏 US University Early Decision · Top-50 School', duration: '8 months', tags: ['International', 'US Admissions', 'Data Science'], detail: '"Impressive depth of STEM project work" — cited directly by admissions letter. Data science portfolio and competition certificate formed the core of the application.', type: 'admissions' },
 ]
 
@@ -29,17 +31,6 @@ const ABILITY_CASES_FALLBACK = [
   { student: 'Student G', grade: 'Grade 5 · Primary', pain: 'Worried child would only use AI tools, not think creatively', path: 'AI Literacy Starter → AIGC Creative Design → Project Portfolio', result: '🎨 AI Art Portfolio · 12 original works · School Exhibition', improvement: ['Creative Thinking +85%', 'Tool Application +90%', 'Self-directed Learning +70%'], type: 'ability' },
   { student: 'Student H', grade: 'Grade 7 · Middle School', pain: 'Child used AI passively — copy-paste mentality', path: 'AI Literacy + Unplugged Science → Data Analysis Project', result: '📊 School Data Science Project Award · District 1st', improvement: ['Logical Thinking +78%', 'Data Literacy +92%', 'Problem Solving +80%'], type: 'ability' },
   { student: 'Student I', grade: 'Grade 9 · Middle School', pain: 'Wanted to learn AI but couldn\'t focus or stay consistent', path: 'AI Foundations → Check-In Programme → ML Intro', result: '🧠 AI Literacy Level 3 Certificate · Competition Portfolio Started', improvement: ['Consistency Score +88%', 'AI Concepts Mastery +82%', 'Confidence +75%'], type: 'ability' },
-]
-
-const SCHOOL_CASES_FALLBACK = [
-  { org: 'Maple Grove Academy', region: 'Shanghai', type: 'Public School', pain: 'Required AI curriculum by new standards — no teachers, no resources', solution: 'Full AI curriculum pack + 3-day teacher training + embedded competition resources', result: '1,200+ students reached · 8 teachers certified · 15 competition award winners in Year 1', duration: '3 months to full launch', tags: ['Curriculum', 'Teacher Training', 'Competition'] },
-  { org: 'Horizon International School', region: 'Beijing', type: 'International School', pain: 'Wanted AI programme aligned with IB and AP curriculum', solution: 'Custom AI integration programme + bilingual materials + international competition pathway', result: '300+ students · IB extended essay AI track established · 4 international competition entries', duration: '4 months', tags: ['International Curriculum', 'Bilingual', 'IB/AP'] },
-  { org: 'Tech Focus Middle School', region: 'Shenzhen', type: 'STEM Focus School', pain: 'Had STEM label but no AI education depth or competition results', solution: 'Advanced AI lab setup + competition coaching track + STEM specialty pathway guidance', result: 'Designated "AI Education Demonstration School" by district · 20+ competition awards Year 1', duration: '6 months', tags: ['STEM School', 'AI Lab', 'Demonstration School'] },
-]
-
-const FRANCHISE_CASES_FALLBACK = [
-  { org: 'BrightPath Education Centre', region: 'Chengdu', type: 'Franchise Partner', pain: 'Converting from English tutoring to AI education — no curriculum or brand', timeline: '6 months post-launch', result: '200+ students enrolled · 3 in-house competitions hosted · Revenue +$400k', months: 6 },
-  { org: 'Future Minds Academy', region: 'Guangzhou', type: 'Franchise Partner', pain: 'New AI education brand, zero market recognition', timeline: '8 months post-launch', result: '350+ students · 95% course renewal rate · Regional AI leader recognition', months: 8 },
 ]
 
 function mapCase(r) {
@@ -65,7 +56,7 @@ function mapCase(r) {
 
 const PARENT_TESTIMONIALS = [
   { name: 'Parent of Student A (Shanghai)', quote: 'We were worried AI would just make our child dependent on technology. What actually happened was the complete opposite — she started questioning outputs, fact-checking AI, and proposing her own solutions. That shift in mindset was worth every penny.' },
-  { name: 'Parent of Student D (Beijing)', quote: 'The 综评 application process was terrifying until we had the research report and competition certificates. Bingo\'s team guided us through every step. Our daughter got her first-choice STEM programme.' },
+  { name: 'Parent of Student D (Beijing)', quote: 'The comprehensive evaluation application process was daunting until we had the research report and competition certificates. Bingo\'s team guided us through every step. Our daughter got her first-choice STEM programme.' },
   { name: 'Parent of Student G (Shenzhen)', quote: 'My son went from copy-pasting homework to building his own AI art portfolio. His school showed it at the parents\' evening. I couldn\'t believe it was his work.' },
 ]
 
@@ -181,16 +172,12 @@ function LeadCapture({ title, subtitle, btnText }) {
 
 // ─── Main Page ─────────────────────────────────────────────────────
 export default function Showcase() {
-  const [audience, setAudience] = useState('c') // 'c' | 'b'
   const [cTab, setCTab] = useState('awards')
-  const [bTab, setBTab] = useState('school')
   const [activeCase, setActiveCase] = useState(null)
   const [activeCaseType, setActiveCaseType] = useState(null)
   const [awardCases, setAwardCases] = useState(AWARD_CASES_FALLBACK)
   const [admissionsCases, setAdmissionsCases] = useState(ADMISSIONS_CASES_FALLBACK)
   const [abilityCases, setAbilityCases] = useState(ABILITY_CASES_FALLBACK)
-  const [schoolCases, setSchoolCases] = useState(SCHOOL_CASES_FALLBACK)
-  const [franchiseCases, setFranchiseCases] = useState(FRANCHISE_CASES_FALLBACK)
 
   useEffect(() => {
     supabase.from('showcase_cases').select('*').order('sort_order').then(({ data }) => {
@@ -199,8 +186,6 @@ export default function Showcase() {
         setAwardCases(byType('competition').length ? byType('competition') : AWARD_CASES_FALLBACK)
         setAdmissionsCases(byType('admissions').length ? byType('admissions') : ADMISSIONS_CASES_FALLBACK)
         setAbilityCases(byType('ability').length ? byType('ability') : ABILITY_CASES_FALLBACK)
-        setSchoolCases(byType('school').length ? byType('school') : SCHOOL_CASES_FALLBACK)
-        setFranchiseCases(byType('franchise').length ? byType('franchise') : FRANCHISE_CASES_FALLBACK)
       }
     })
   }, [])
@@ -210,50 +195,29 @@ export default function Showcase() {
     { id: 'admissions', icon: '🎓', label: 'Admissions Outcomes' },
     { id: 'ability', icon: '🧠', label: 'Ability Growth' },
   ]
-  const bTabs = [
-    { id: 'school', icon: '🏫', label: 'School Partnerships' },
-    { id: 'franchise', icon: '🤝', label: 'Franchise Partners' },
-    { id: 'oem', icon: '🔧', label: 'OEM Custom' },
-  ]
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-
-      {/* Case Detail Modal */}
+    <div className="w-full">
       <CaseModal item={activeCase} type={activeCaseType} onClose={() => { setActiveCase(null); setActiveCaseType(null) }} />
 
-      {/* ── Hero ── */}
-      <section className="mb-8 section-tech rounded-2xl px-6 py-12 text-center">
-        <p className="text-xs font-bold tracking-widest text-primary uppercase mb-2">Real Outcomes · Verified Results · Proven Pathways</p>
-        <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mb-2">Achievements</h1>
-        <p className="text-lg text-slate-600 mb-1">Breaking AI Education Anxiety with Real Results</p>
-        <p className="text-sm text-slate-500 max-w-2xl mx-auto mb-5">1,000+ student success stories · 120+ partner institutions · Full competition-to-admissions ecosystem</p>
-
-        {/* Pain point hook */}
-        <div className="bg-red-50 border border-red-200/60 rounded-xl px-4 py-3 mb-6 max-w-xl mx-auto">
-          <p className="text-red-700 text-sm font-medium">Worried AI learning leads nowhere? No competition wins? No admissions edge?</p>
-          <p className="text-red-600 text-xs mt-0.5">↓ See real student answers to every one of these fears ↓</p>
+      <PageBanner
+        eyebrow="Real Outcomes · Verified Results"
+        title="Achievements"
+        subtitle="1,000+ student success stories · IOAI competition results · K12 classroom outcomes"
+        gradient="from-amber-500/15 via-amber-50 to-orange-50"
+      >
+        <div className="bg-red-50 border border-red-200/60 rounded-xl px-4 py-3 mb-5 max-w-xl mx-auto lg:mx-0 text-left sm:text-center">
+          <p className="text-red-700 text-sm font-medium">Worried AI learning leads nowhere? See real student results below.</p>
         </div>
 
-        {/* B/C toggle */}
-        <div className="flex justify-center gap-2 mb-6">
-          <button onClick={() => setAudience('c')}
-            className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition ${audience==='c' ? 'bg-primary text-white shadow' : 'bg-white border border-primary text-primary hover:bg-primary/5'}`}>
-            👦 Student & Family Outcomes
-          </button>
-          <button onClick={() => setAudience('b')}
-            className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition ${audience==='b' ? 'bg-primary text-white shadow' : 'bg-white border border-primary text-primary hover:bg-primary/5'}`}>
-            🏫 School & Institution Outcomes
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-2 justify-center text-xs">
-          {['Prestigious competition wins','STEM specialty admissions','AI works portfolio','University research projects','School AI curriculum','Franchise success cases'].map((t,i) => (
+        <div className="flex flex-wrap gap-2 justify-center lg:justify-start text-xs mt-4">
+          {['Prestigious competition wins','STEM specialty admissions','AI works portfolio','University research projects','K12 lab work','Certified learners'].map((t,i) => (
             <span key={i} className="bg-white/80 border border-primary/20 rounded-full px-3 py-1.5 text-slate-700">{t}</span>
           ))}
         </div>
-      </section>
+      </PageBanner>
 
+      <PageContent className="py-6 sm:py-8">
       {/* ── Stats ── */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-8">
         {STATS.map((s,i) => (
@@ -264,9 +228,7 @@ export default function Showcase() {
         ))}
       </div>
 
-      {/* ══════════════════ C-END ══════════════════ */}
-      {audience === 'c' && (
-        <div className="space-y-6">
+      <div className="space-y-6">
           {/* Tab nav */}
           <div className="flex gap-2 flex-wrap">
             {cTabs.map(t => (
@@ -288,7 +250,7 @@ export default function Showcase() {
                     <p className="text-sm text-slate-700 mb-2">Which AI competitions should my child enter? Are they realistic for a zero-background student? Will coaching actually lead to wins?</p>
                     <p className="text-xs font-semibold text-primary">Bingo Solution: Competition Bootcamp + prestigious competition pathway + dedicated competition coach. From first lesson to award stage.</p>
                   </div>
-                  <Link to="/ai-test" className="btn-primary text-sm px-4 py-2 shrink-0">Free Competition Assessment →</Link>
+                  <Link to="/courses?line=ioai" className="btn-primary text-sm px-4 py-2 shrink-0">IOAI Training Courses →</Link>
                 </div>
               </div>
 
@@ -336,7 +298,7 @@ export default function Showcase() {
                 <div className="flex flex-wrap gap-4 items-start">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-red-600 mb-1">Pain Points We Solve:</p>
-                    <p className="text-sm text-slate-700 mb-2">Can AI skills actually help with 综评, 强基, or university applications? How do I turn my child's AI learning into formal admissions material?</p>
+                    <p className="text-sm text-slate-700 mb-2">Can AI skills actually help with comprehensive evaluation, strong-foundation programmes, or university applications? How do I turn my child's AI learning into formal admissions material?</p>
                     <p className="text-xs font-semibold text-purple-600">Bingo Solution: Structured research projects + competition entries + certified portfolio → direct admissions pathway.</p>
                   </div>
                   <button className="btn-primary text-sm px-4 py-2 shrink-0">Free Admissions Planning →</button>
@@ -347,7 +309,7 @@ export default function Showcase() {
               <div className="card p-5 border-purple-200/60">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">The Bingo Admissions Pathway</p>
                 <div className="flex items-center gap-1 flex-wrap text-xs">
-                  {['AI Learning','Competition/Project','Research Certificate','Portfolio Build','Admissions Application','STEM Specialty / 综评 / 强基 / International'].map((step,i,arr) => (
+                  {['AI Learning','Competition/Project','Research Certificate','Portfolio Build','Admissions Application','STEM Specialty / Comprehensive Eval / Strong Foundation / International'].map((step,i,arr) => (
                     <div key={i} className="flex items-center gap-1">
                       <span className="bg-primary/10 text-primary px-2 py-1 rounded-lg font-medium">{step}</span>
                       {i < arr.length - 1 && <span className="text-slate-300">→</span>}
@@ -379,7 +341,7 @@ export default function Showcase() {
               </div>
 
               <div className="card p-5 bg-purple-50/20 border-purple-200/60">
-                <LeadCapture title="Get a personalised admissions roadmap" subtitle="Free consultation · 综评 / 强基 / international track" btnText="Book Free Consultation →" />
+                <LeadCapture title="Get a personalised admissions roadmap" subtitle="Free consultation · comprehensive evaluation / strong foundation / international track" btnText="Book Free Consultation →" />
               </div>
             </div>
           )}
@@ -394,7 +356,7 @@ export default function Showcase() {
                     <p className="text-sm text-slate-700 mb-2">Worried your child just uses AI passively — copy-pasting instead of thinking? Will AI make them lazy rather than capable?</p>
                     <p className="text-xs font-semibold text-green-600">Bingo Solution: AI Literacy courses train questioning, creation, and critical evaluation — not just tool usage.</p>
                   </div>
-                  <Link to="/ai-test" className="btn-primary text-sm px-4 py-2 shrink-0">Free AI Literacy Assessment →</Link>
+                  <Link to="/courses?line=general" className="btn-primary text-sm px-4 py-2 shrink-0">Foundations of AI Program →</Link>
                 </div>
               </div>
 
@@ -444,9 +406,9 @@ export default function Showcase() {
           {/* C-end bottom promo row */}
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { icon: '🧠', title: 'Free AI Assessment', desc: '3 mins · instant level report · personalised learning path', cta: 'Start Assessment', href: '/ai-test' },
+              { icon: '📚', title: 'Foundations of AI Program', desc: 'Self-study literacy, labs, and materials', cta: 'Browse Courses', href: '/courses?line=general' },
               { icon: '📚', title: '1-on-1 Learning Plan', desc: 'Personalised roadmap from advisor · competition + admissions aligned', cta: 'Book Free Consult', href: null },
-              { icon: '🏆', title: 'Competition Bootcamp', desc: 'Prestigious competition training · from beginner to award winner', cta: 'View Programmes', href: '/research' },
+              { icon: '🏆', title: 'IOAI Training', desc: 'Video lessons and training camps for competitions', cta: 'View Programmes', href: '/courses?line=ioai' },
             ].map((p,i) => (
               <div key={i} className="card p-5 text-center hover:shadow-md transition">
                 <div className="text-2xl mb-2">{p.icon}</div>
@@ -459,195 +421,6 @@ export default function Showcase() {
             ))}
           </div>
         </div>
-      )}
-
-      {/* ══════════════════ B-END ══════════════════ */}
-      {audience === 'b' && (
-        <div className="space-y-6">
-          {/* Tab nav */}
-          <div className="flex gap-2 flex-wrap">
-            {bTabs.map(t => (
-              <button key={t.id} onClick={() => setBTab(t.id)}
-                className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-1.5 ${bTab===t.id?'bg-primary text-white shadow':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                {t.icon} {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* School Partnerships */}
-          {bTab === 'school' && (
-            <div className="space-y-6">
-              <div className="card p-5 border-2 border-primary/20 bg-primary/5">
-                <div className="flex flex-wrap gap-4 items-start">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-red-600 mb-1">School Pain Points We Solve:</p>
-                    <p className="text-sm text-slate-700 mb-2">New curriculum requires AI classes — but no qualified teachers, no ready curriculum, no competition resources. How to launch fast with quality?</p>
-                    <p className="text-xs font-semibold text-primary">Bingo Solution: Complete AI curriculum package + 3-day teacher certification + embedded competition pathway. Full launch in weeks.</p>
-                  </div>
-                  <button className="btn-primary text-sm px-4 py-2 shrink-0">Request School Proposal →</button>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-4">
-                {[['📋','Curriculum Ready','Full AI course package, lesson plans, assessments — ready to teach from Day 1'],['👨‍🏫','Teacher Certified','3-day intensive certification programme. Teach with confidence, not uncertainty'],['🏆','Competition Results','Embedded competition pathway means your school shows real AI achievement, fast']].map(([i,t,d],idx) => (
-                  <div key={idx} className="card p-5 text-center">
-                    <div className="text-2xl mb-2">{i}</div>
-                    <h3 className="font-semibold text-bingo-dark text-sm mb-1">{t}</h3>
-                    <p className="text-xs text-slate-500">{d}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Partner School Success Cases</p>
-                <div className="space-y-4">
-                  {schoolCases.map((c,i) => (
-                    <div key={i} className="card p-5 hover:shadow-md hover:border-primary/30 transition">
-                      <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                        <div>
-                          <span className="font-semibold text-bingo-dark">{c.org}</span>
-                          <span className="text-xs text-slate-500 ml-2">{c.region} · {c.type}</span>
-                        </div>
-                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{c.duration}</span>
-                      </div>
-                      <p className="text-xs text-red-600 italic mb-2">"{c.pain}"</p>
-                      <p className="text-xs text-slate-600 mb-2"><strong>Solution:</strong> {c.solution}</p>
-                      <p className="text-sm font-medium text-primary mb-2">✓ {c.result}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {c.tags.map((t,j) => <PainTag key={j} text={t} />)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="card p-5 bg-primary/5 border-primary/20">
-                <div className="grid sm:grid-cols-3 gap-3 text-sm text-center mb-4">
-                  {[['120+','Partner Schools'],['50,000+','Students Reached'],['200+','Teachers Certified']].map(([v,l],i) => (
-                    <div key={i}><div className="text-lg font-bold text-primary">{v}</div><div className="text-xs text-slate-500">{l}</div></div>
-                  ))}
-                </div>
-                <LeadCapture title="Get the full school AI curriculum proposal" subtitle="Free · includes curriculum plan, teacher training schedule, and budget estimate" btnText="Request Free Proposal →" />
-              </div>
-            </div>
-          )}
-
-          {/* Franchise */}
-          {bTab === 'franchise' && (
-            <div className="space-y-6">
-              <div className="card p-5 border-2 border-amber-200/60 bg-amber-50/10">
-                <div className="flex flex-wrap gap-4 items-start">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-red-600 mb-1">Institution Pain Points We Solve:</p>
-                    <p className="text-sm text-slate-700 mb-2">Transitioning to AI education but have no brand, no proven curriculum, and no support system. How to profit quickly without building from scratch?</p>
-                    <p className="text-xs font-semibold text-amber-700">Bingo Franchise: Brand licence + full curriculum + teacher training + competition resources + operations playbook. Zero to revenue in months.</p>
-                  </div>
-                  <button className="btn-primary text-sm px-4 py-2 shrink-0">Franchise Enquiry →</button>
-                </div>
-              </div>
-
-              {/* Franchise value chain */}
-              <div className="card p-5 border-amber-200/60">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">What You Get as a Franchise Partner</p>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 text-center text-xs">
-                  {['🏷️ Brand Licence','📚 Full Curriculum','👨‍🏫 Teacher Training','🏆 Competition Resources','📊 Operations Playbook','📣 Marketing Support'].map((s,i) => (
-                    <div key={i} className="bg-amber-50 rounded-xl p-2">
-                      <p className="font-medium text-amber-800 leading-tight">{s}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Franchise Partner Results</p>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {franchiseCases.map((c,i) => (
-                    <div key={i} className="card p-5 hover:shadow-md hover:border-amber-300 transition">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div>
-                          <span className="font-semibold text-bingo-dark">{c.org}</span>
-                          <span className="text-xs text-slate-500 ml-2">{c.region}</span>
-                        </div>
-                        <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{c.timeline}</span>
-                      </div>
-                      <p className="text-xs text-red-600 italic mb-2">"{c.pain}"</p>
-                      <p className="text-sm font-medium text-primary">✓ {c.result}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-3 gap-3">
-                {[['Avg. Break-even','< 8 months'],['Avg. Monthly Enrolment','80+ new students'],['Course Renewal Rate','90%+']].map(([l,v],i) => (
-                  <div key={i} className="card p-4 text-center bg-amber-50/30 border-amber-200/60">
-                    <div className="text-sm text-slate-500">{l}</div>
-                    <div className="font-bold text-amber-700 text-lg mt-0.5">{v}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="card p-5 bg-amber-50/20 border-amber-200/60">
-                <LeadCapture title="Check franchise availability in your area" subtitle="Limited regional slots available" btnText="Check Availability →" />
-              </div>
-            </div>
-          )}
-
-          {/* OEM */}
-          {bTab === 'oem' && (
-            <div className="space-y-6">
-              <div className="card p-5 border-2 border-slate-200 bg-slate-50/50">
-                <div className="flex flex-wrap gap-4 items-start">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-red-600 mb-1">OEM Client Pain Points:</p>
-                    <p className="text-sm text-slate-700 mb-2">You have the distribution and brand — but no R&D capability to build AI courses or hardware. How to launch a credible own-brand AI education product?</p>
-                    <p className="text-xs font-semibold text-slate-700">Bingo OEM: Course content · hardware kit · teaching tools · all white-label. Your brand, our expertise.</p>
-                  </div>
-                  <button className="btn-primary text-sm px-4 py-2 shrink-0">OEM Enquiry →</button>
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-3 gap-4">
-                {[['📖','Custom Course Content','AI curriculum built to your brand standards and student demographics'],['🔧','Hardware & Kits','AI-powered maker kits, robotics components, and sensor packages — white label ready'],['🖥️','Software & Tools','AI teaching tools, assessment platform, and learning management system']].map(([i,t,d],idx) => (
-                  <div key={idx} className="card p-5">
-                    <div className="text-2xl mb-2">{i}</div>
-                    <h3 className="font-semibold text-bingo-dark text-sm mb-1">{t}</h3>
-                    <p className="text-xs text-slate-500">{d}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* OEM process */}
-              <div className="card p-5">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">OEM Delivery Process</p>
-                <div className="flex items-start gap-1 flex-wrap text-xs">
-                  {['Requirement Brief','Custom Design','R&D & Prototyping','Testing & QA','Delivery & Branding','Post-launch Support'].map((s,i,arr) => (
-                    <div key={i} className="flex items-center gap-1 mb-1">
-                      <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-medium">{s}</div>
-                      {i < arr.length-1 && <span className="text-slate-300">→</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="card p-5 bg-slate-50 border-slate-200">
-                <LeadCapture title="Submit your OEM requirements" subtitle="Free feasibility assessment · proposal within 48 hours" btnText="Submit Requirements →" />
-              </div>
-            </div>
-          )}
-
-          {/* B-end bottom CTA */}
-          <div className="card p-5 bg-gradient-to-r from-cyan-50 to-sky-50 border-primary/20 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="font-semibold text-bingo-dark">Ready to launch AI education at your institution?</p>
-              <p className="text-xs text-slate-500 mt-0.5">School · franchise · OEM — all enquiries welcome. No obligation.</p>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <button className="btn-primary text-sm px-4 py-2">Get Partnership Proposal</button>
-              <Link to="/community" className="border border-primary text-primary text-sm px-4 py-2 rounded-xl hover:bg-primary/5 transition">Visit Community →</Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Universal trust footer ── */}
       <div className="mt-10 card p-5 border-slate-200 bg-slate-50">
@@ -659,6 +432,7 @@ export default function Showcase() {
         </div>
       </div>
 
+      </PageContent>
     </div>
   )
 }

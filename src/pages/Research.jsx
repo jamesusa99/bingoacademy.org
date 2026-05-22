@@ -73,8 +73,8 @@ const PREMIUM_CAMPS_FALLBACK = [
 const RESEARCH_PROJECTS = [
   { id: 'ml', title: 'Machine Learning Research Project', age: '14–18 yrs', icon: '🧠',
     steps: ['Topic selection guidance (align with interests & admissions goals)', 'Theory instruction (ML basics + Python tools)', 'Hands-on project (model training & optimisation under university mentor)', 'Report writing (research report format + content polish)', 'Outcome defence (mock university defence, build presentation skills)'],
-    tools: 'Python · TensorFlow basics', outcomes: 'University mentor reference letter · ML project report ·综评/portfolio material · Research training certificate',
-    suitedFor: 'Integrated evaluation (综评) · Qiangji program · Competition research support', weeks: '6–8 weeks' },
+    tools: 'Python · TensorFlow basics', outcomes: 'University mentor reference letter · ML project report ·comprehensive evaluation/portfolio material · Research training certificate',
+    suitedFor: 'Comprehensive evaluation · Strong Foundation Programme · Competition research support', weeks: '6–8 weeks' },
   { id: 'data', title: 'Data Visualisation Analysis Project', age: '12–18 yrs', icon: '📊',
     steps: ['Data collection & cleaning', 'Visualisation tools (Python/Tableau)', 'Data story & insights', 'Final presentation & report'],
     tools: 'Python · Tableau · Excel advanced', outcomes: 'Data analysis portfolio · visualisation report · project certificate',
@@ -82,7 +82,7 @@ const RESEARCH_PROJECTS = [
   { id: 'agent', title: 'AI Agent Design Research', age: '14–18 yrs', icon: '🤖',
     steps: ['Use-case research & design', 'Prompt engineering & agent architecture', 'Prototype build & testing', 'Outcome presentation & paper draft'],
     tools: 'ChatGPT API · LangChain basics · Python', outcomes: 'AI agent prototype · design report · conference paper draft',
-    suitedFor: 'AI innovation competitions · 强基 & 综评 · College CS applications', weeks: '6 weeks' },
+    suitedFor: 'AI innovation competitions · strong-foundation programme & comprehensive evaluation · College CS applications', weeks: '6 weeks' },
   { id: 'custom', title: 'Custom Competition Research Project', age: '14–18 yrs', icon: '🏆',
     steps: ['Personalised topic design (match target competition)', 'Intensive research & iteration', 'Competition entry preparation', 'Mock defence & final polish'],
     tools: 'Customised per project', outcomes: 'Competition entry materials · research report · defence PPT',
@@ -100,9 +100,9 @@ const FACULTY_FALLBACK = [
 
 const OUTCOMES = [
   { student: 'Student L', age: 16, prog: 'ML Intro Camp + Custom Research Project', result: 'Provincial 1st Prize · National Camp selection', type: 'competition', detail: '6-month journey: ML foundations → competition research project → pre-competition sprint. Entered National Youth AI Innovation Competition.' },
-  { student: 'Student M', age: 17, prog: 'Data Science Camp + ML Research Project', result: '综评 accepted · Top provincial STEM school', type: 'admissions', detail: 'Research report used as 综评 (holistic evaluation) material. Project portfolio demonstrated data analysis + AI competence.' },
+  { student: 'Student M', age: 17, prog: 'Data Science Camp + ML Research Project', result: 'comprehensive evaluation accepted · Top provincial STEM school', type: 'admissions', detail: 'Research report used as comprehensive evaluation (holistic evaluation) material. Project portfolio demonstrated data analysis + AI competence.' },
   { student: 'Student K', age: 15, prog: 'Robotics Competition Camp', result: 'City-level 2nd Place · school robotics team captain', type: 'competition', detail: 'From zero robotics experience to podium finish in 3 months. Joined school team and mentored junior students.' },
-  { student: 'Student S', age: 18, prog: 'AI Agent Research + 强基 prep', result: '强基 program interview shortlisted · CS major', type: 'admissions', detail: 'AI agent design research used in 强基 application. Interview materials included a working prototype demo.' },
+  { student: 'Student S', age: 18, prog: 'AI Agent Research + strong-foundation programme prep', result: 'Strong Foundation Programme interview shortlisted · CS major', type: 'admissions', detail: 'AI agent design research used in strong-foundation programme application. Interview materials included a working prototype demo.' },
   { student: 'Student T', age: 16, prog: 'ML Camp + STEM specialty track', result: 'STEM specialty admission · Top-tier provincial school', type: 'stem', detail: 'Three-semester project portfolio. STEM specialty application supported by research certificate and mentor reference.' },
   { student: 'Student W', age: 15, prog: 'Data Science Camp', result: 'International student · US college early decision', type: 'overseas', detail: 'Data analysis project portfolio included in US college application. Admission officers cited "impressive STEM project depth".' },
 ]
@@ -130,7 +130,7 @@ const DOWNLOADS = [
   { name: 'Research Outcome Report Template', type: 'template', fmt: 'Word' },
   { name: 'Presentation Slide Template', type: 'template', fmt: 'PPT' },
   { name: 'Competition Research Report Template', type: 'template', fmt: 'Word' },
-  { name: '综评 Application Materials Template', type: 'template', fmt: 'Word' },
+  { name: 'Comprehensive Evaluation Application Materials Template', type: 'template', fmt: 'Word' },
 ]
 
 const FAQ_ITEMS = [
@@ -139,8 +139,8 @@ const FAQ_ITEMS = [
   { cat: 'camp', q: 'Does the camp include meals and accommodation?', a: 'Residential camps include all meals and dormitory accommodation. Day camps include lunch and all materials. No additional items needed.' },
   { cat: 'camp', q: 'What is the instructor-to-student ratio?', a: 'Starter camps: 1:8. Intermediate camps: 1:10. Competition and research camps: 1:6. Each class has one lead instructor plus one teaching assistant.' },
   { cat: 'research', q: 'Do research projects require prior experience?', a: 'No prior experience required. We assess your current level at intake and tailor the project scope. Starter and intermediate backgrounds both welcome.' },
-  { cat: 'research', q: 'What can the research outcomes be used for?', a: 'Outcomes can be used for 综评 materials, 强基 applications, competition entries, STEM specialty admissions, and overseas college applications.' },
-  { cat: 'admissions', q: 'Can camp results be used for 综评 applications?', a: 'Yes. Research reports, certificates, and mentor reference letters from our programmes are accepted as 综评 supporting materials by many schools.' },
+  { cat: 'research', q: 'What can the research outcomes be used for?', a: 'Outcomes can be used for comprehensive evaluation materials, strong-foundation programme applications, competition entries, STEM specialty admissions, and overseas college applications.' },
+  { cat: 'admissions', q: 'Can camp results be used for comprehensive evaluation applications?', a: 'Yes. Research reports, certificates, and mentor reference letters from our programmes are accepted as comprehensive evaluation supporting materials by many schools.' },
   { cat: 'admissions', q: 'Do competition awards help with college admissions?', a: 'Provincial-level awards and above are recognised by most STEM specialty programmes. National competition results significantly strengthen college applications.' },
   { cat: 'other', q: 'What is the refund policy?', a: 'Cancellations more than 14 days before camp start: full refund. 7–14 days: 80% refund. Under 7 days: 50% refund. Detailed policy available in the Refund Policy document.' },
 ]
@@ -577,7 +577,7 @@ export default function Research() {
         <div className="space-y-6">
           <div className="card p-5 bg-purple-50/30 border-purple-200/60">
             <h2 className="font-bold text-bingo-dark mb-1">🔬 University Research Projects</h2>
-            <p className="text-slate-600 text-sm">Partner with university labs. Produce real research outcomes. Generate 综评, 强基, and college application materials.</p>
+            <p className="text-slate-600 text-sm">Partner with university labs. Produce real research outcomes. Generate comprehensive evaluation, strong-foundation programme, and college application materials.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-5">
             {RESEARCH_PROJECTS.map((p,i) => (
@@ -789,7 +789,7 @@ function ServiceCentre({ onRegister, onConsult, filteredDownloads, downloadFilte
     { id: 'group', label: 'Group Camp (20+ students)', icon: '🏫', fields: ['Organisation / School Name', 'Number of Students', 'Age Range', 'Preferred Dates', 'Budget Range', 'Focus Area'] },
     { id: 'individual', label: 'Individual Custom', icon: '👤', fields: ['Student Name', 'Student Age', 'Current Grade', 'Core Learning Goals', 'Preferred Duration'] },
     { id: 'competition', label: 'Competition Research Custom', icon: '🏆', fields: ['Student Name', 'Age', 'Target Competition', 'Current Skill Level', 'Preferred Research Direction', 'Sprint Timeline'] },
-    { id: 'research', label: 'Admissions Research Custom', icon: '🎓', fields: ['Student Name', 'Age', 'Admissions Goal (综评/强基/overseas)', 'Research Interest', 'Project Duration'] },
+    { id: 'research', label: 'Admissions Research Custom', icon: '🎓', fields: ['Student Name', 'Age', 'Admissions Goal (comprehensive evaluation/strong-foundation programme/overseas)', 'Research Interest', 'Project Duration'] },
   ]
 
   return (

@@ -1,16 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import PageBanner from '../components/PageBanner'
+import PageContent from '../components/PageContent'
 
 // ─── Product data (fallback when Supabase empty) ─────────────────────
 
+const isRetail = (item) => item.price != null && item.price !== ''
+
 const COURSES_FALLBACK = [
-  { id: 'c1', name: 'AI Foundations Bootcamp (Ages 8–12)', type: 'course', cat: 'qizhi', tag: '🔥 Bestseller', price: 299, bPrice: '$199/seat (bulk)', sold: 3420, rating: 4.9, desc: 'Core AI literacy, visual programming, and introductory projects. Suitable for complete beginners.', badge: '启智阶', aiLab: false },
-  { id: 'c2', name: 'Competition Sprint: National AI Challenge', type: 'course', cat: 'competition', tag: '⭐ Top-rated', price: 890, bPrice: '$690/seat (bulk)', sold: 1240, rating: 4.8, desc: 'Competition-specific prep: project selection, development, defence. 86% pass-through rate.', badge: '竞赛培优', aiLab: true },
-  { id: 'c3', name: 'Python + AI Projects (Middle School)', type: 'course', cat: 'jichu', tag: '📈 Popular', price: 680, bPrice: '$480/seat (bulk)', sold: 2100, rating: 4.7, desc: 'Python basics to machine learning projects. Produces verifiable competition-ready work.', badge: '基础阶', aiLab: false },
+  { id: 'c1', name: 'AI Foundations Bootcamp (Ages 8–12)', type: 'course', cat: 'qizhi', tag: '🔥 Bestseller', price: 299, bPrice: '$199/seat (bulk)', sold: 3420, rating: 4.9, desc: 'Core AI literacy, visual programming, and introductory projects. Suitable for complete beginners.', badge: 'Enlightenment', aiLab: false },
+  { id: 'c2', name: 'Competition Sprint: National AI Challenge', type: 'course', cat: 'competition', tag: '⭐ Top-rated', price: 890, bPrice: '$690/seat (bulk)', sold: 1240, rating: 4.8, desc: 'Competition-specific prep: project selection, development, defence. 86% pass-through rate.', badge: 'Competition', aiLab: true },
+  { id: 'c3', name: 'Python + AI Projects (Middle School)', type: 'course', cat: 'jichu', tag: '📈 Popular', price: 680, bPrice: '$480/seat (bulk)', sold: 2100, rating: 4.7, desc: 'Python basics to machine learning projects. Produces verifiable competition-ready work.', badge: 'Foundations', aiLab: false },
   { id: 'c4', name: 'AIGC Creative Design Course', type: 'course', cat: 'aigc', tag: '🆕 New', price: 490, bPrice: '$360/seat (bulk)', sold: 870, rating: 4.8, desc: 'AI art, prompt engineering, creative concept development. Portfolio-ready in 3 weeks.', badge: 'AIGC', aiLab: false },
-  { id: 'c5', name: 'AI Lab Companion Course (Institution)', type: 'course', cat: 'lab', tag: '🏫 B-End', price: null, bPrice: 'Consult for pricing', sold: 340, rating: 4.9, desc: 'Structured curriculum matched to the AI Digital Lab setup. Delivered with lab deployment.', badge: '实验室配套', aiLab: true },
-  { id: 'c6', name: 'Parent: Understanding AI Education', type: 'course', cat: 'parent', tag: '💰 $9.9', price: 9.9, bPrice: null, sold: 8900, rating: 4.9, desc: 'Best-selling parent guide. 30-minute video course explaining AI education and how to choose the right path.', badge: '家长必读', aiLab: false },
+  { id: 'c6', name: 'Parent: Understanding AI Education', type: 'course', cat: 'parent', tag: '💰 $9.9', price: 9.9, bPrice: null, sold: 8900, rating: 4.9, desc: 'Best-selling parent guide. 30-minute video course explaining AI education and how to choose the right path.', badge: 'Parent Essentials', aiLab: false },
 ]
 
 function courseFromDb(row) {
@@ -34,13 +37,12 @@ const EVENTS_PRODUCTS = [
   { id: 'e1', name: 'National AI Challenge — Full Entry Package', type: 'event', tag: '✦ Prestigious', price: 380, bPrice: 'Group pricing available', desc: 'Registration + materials + mock defence session. Prestigious competition.', deadline: 'Rolling' },
   { id: 'e2', name: 'Competition Bootcamp — 6-Week Sprint', type: 'event', tag: '🏆 Award-focused', price: 890, bPrice: '$690/student (group)', desc: 'Full competition prep camp. Historically 86% award rate for completing students.', deadline: 'Mar 2026' },
   { id: 'e3', name: 'Bingo Cup AI Design — Entry + Coaching', type: 'event', tag: '🎨 AIGC Track', price: 490, bPrice: 'Group from $380', desc: 'Bingo\'s own flagship competition. Entry fee + 4 coaching sessions + judging prep.', deadline: 'Apr 2026' },
-  { id: 'e4', name: 'Institution Group Entry Package (10+ students)', type: 'event', tag: '🏫 B-End Exclusive', price: null, bPrice: 'From $3,200/group', desc: 'Group entry management + dedicated coach + institution branding support.', deadline: 'Flexible' },
 ]
 
 const CERT_PRODUCTS = [
   { id: 'cert1', name: 'AI Foundations Certificate (Qizhi)', type: 'cert', tag: '🌱 Entry level', price: 198, bPrice: 'Bulk: $149/student', desc: 'Nationally verifiable. Dual-endorsed by institution + issuing centre. Suitable for Grades 3–6.' },
   { id: 'cert2', name: 'AI Application Certificate (Jichu)', type: 'cert', tag: '📘 Intermediate', price: 298, bPrice: 'Bulk: $229/student', desc: 'AI project proficiency. Referenced in STEM admissions applications.' },
-  { id: 'cert3', name: 'AI Innovation Certificate (Zhichuang)', type: 'cert', tag: '🏆 Top tier', price: 498, bPrice: 'Bulk: $380/student', desc: 'Highest tier. Accepted for 综评 and 强基 supplementary evidence.' },
+  { id: 'cert3', name: 'AI Innovation Certificate (Zhichuang)', type: 'cert', tag: '🏆 Top tier', price: 498, bPrice: 'Bulk: $380/student', desc: 'Highest tier. Accepted for comprehensive evaluation and strong-foundation programme supplementary evidence.' },
   { id: 'cert4', name: 'Teacher Advanced Certification', type: 'cert', tag: '👩‍🏫 Teacher', price: 680, bPrice: 'Institution package pricing', desc: 'For institutions: certify your teaching staff. Required for Jinyan/Zhichuang tier status.' },
 ]
 
@@ -54,24 +56,17 @@ const MATERIALS = [
 const AI_LAB = [
   { id: 'lab1', name: 'AI Digital Lab — Personal Edition', type: 'lab', tag: '🏠 For families', price: 299, bPrice: null, desc: 'Cloud-based virtual AI lab. Sim experiments, AI guidance, 3-month access. Beginner-friendly.' },
   { id: 'lab2', name: 'AI Digital Lab — Family Starter', type: 'lab', tag: '👨‍👩‍👧 1-year access', price: 899, bPrice: null, desc: 'Full-year access + parent dashboard + 2 online coaching sessions. Best value home plan.' },
-  { id: 'lab3', name: 'AI Digital Lab — Institution Standard', type: 'lab', tag: '🏫 B-End', price: null, bPrice: 'From $12,800/yr · up to 50 students', desc: 'Institution-grade lab with teacher dashboard, student progress, and branded environment.' },
-  { id: 'lab4', name: 'AI Digital Lab — Custom Build', type: 'lab', tag: '✏️ Custom', price: null, bPrice: 'Consult for proposal', desc: 'Fully customised lab environment with your institution\'s branding, curriculum, and integration.' },
 ]
 
 const AI_TRAINING = [
-  { id: 'tr1', name: 'AI Training Room — Standard Package', type: 'training', tag: '🏫 For institutions', price: null, bPrice: 'From $68,000', desc: 'Complete hardware + software + curriculum. Fits 20–30 students. On-site installation + teacher training included.' },
-  { id: 'tr2', name: 'AI Training Room — Custom Build', type: 'training', tag: '✏️ Enterprise', price: null, bPrice: 'Request proposal', desc: 'Fully configured to your space, student count, and curriculum needs. Full project management.' },
-  { id: 'tr3', name: 'AI Competition Training Station (C-end)', type: 'training', tag: '🏆 Personal', price: 2980, bPrice: null, desc: 'Compact personal training station. Ideal for high-school students preparing for AI science competitions.' },
-  { id: 'tr4', name: 'Teacher Training Service Bundle', type: 'training', tag: '👩‍🏫 B-End', price: null, bPrice: 'From $8,800', desc: 'On-site teacher training for AI training room operation. Covers curriculum delivery + equipment use.' },
+  { id: 'tr3', name: 'AI Competition Training Station', type: 'training', tag: '🏆 Personal', price: 2980, bPrice: null, desc: 'Compact personal training station. Ideal for high-school students preparing for AI science competitions.' },
 ]
 
 // ─── Sub-components ────────────────────────────────────────────────
 
 function ProductModal({ item, onClose, onCart, onBuy }) {
   const [qty, setQty] = useState(1)
-  const [bookDone, setBookDone] = useState(false)
   if (!item) return null
-  const isBOnly = !item.price
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
@@ -88,8 +83,7 @@ function ProductModal({ item, onClose, onCart, onBuy }) {
           <p className="text-sm text-slate-600 mb-4">{item.desc}</p>
 
           <div className="bg-slate-50 rounded-xl p-4 mb-4 space-y-1 text-sm">
-            {item.price && <div><span className="text-slate-500">C-end price: </span><span className="font-bold text-primary text-lg">${item.price}</span></div>}
-            {item.bPrice && <div><span className="text-slate-500">B-end / bulk: </span><span className="font-semibold text-amber-600">{item.bPrice}</span></div>}
+            {item.price && <div><span className="text-slate-500">Price: </span><span className="font-bold text-primary text-lg">${item.price}</span></div>}
             {item.deadline && <div><span className="text-slate-500">Deadline: </span><span className="text-slate-700">{item.deadline}</span></div>}
             {item.badge && <div><span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{item.badge}</span></div>}
           </div>
@@ -101,7 +95,7 @@ function ProductModal({ item, onClose, onCart, onBuy }) {
             ))}
           </div>
 
-          {!isBOnly && item.price && (
+          {item.price && (
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xs text-slate-500">Qty:</span>
               <button onClick={() => setQty(q => Math.max(1,q-1))} className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-sm">−</button>
@@ -117,11 +111,6 @@ function ProductModal({ item, onClose, onCart, onBuy }) {
                 <button onClick={() => { onCart(item); onClose() }} className="border border-primary text-primary text-sm px-4 py-2.5 rounded-xl hover:bg-primary/5 transition">Add to Cart</button>
               </>
             )}
-            {(isBOnly || item.bPrice) && (
-              <button onClick={() => setBookDone(true)} className={`${isBOnly ? 'flex-1' : ''} bg-amber-500 text-white text-sm px-4 py-2.5 rounded-xl hover:bg-amber-600 transition`}>
-                {bookDone ? '✅ Request sent!' : 'Contact B-end Advisor →'}
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -130,7 +119,6 @@ function ProductModal({ item, onClose, onCart, onBuy }) {
 }
 
 function ProductCard({ item, onOpen }) {
-  const isBOnly = !item.price
   return (
     <div className="card p-4 flex flex-col hover:shadow-md hover:border-primary/30 transition cursor-pointer" onClick={() => onOpen(item)}>
       <div className="rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 h-24 flex items-center justify-center text-3xl mb-3 hover:from-primary/10 hover:to-primary/20 transition">
@@ -143,7 +131,6 @@ function ProductCard({ item, onOpen }) {
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100">
         <div>
           {item.price && <span className="font-bold text-primary">${item.price}</span>}
-          {isBOnly && <span className="text-xs text-amber-600 font-medium">Consult pricing</span>}
         </div>
         <button className="text-xs btn-primary px-3 py-1.5">Details →</button>
       </div>
@@ -263,7 +250,6 @@ function CheckoutModal({ items, onClose }) {
 export default function Mall() {
   const [courses, setCourses] = useState(COURSES_FALLBACK)
   const [coursesLoading, setCoursesLoading] = useState(true)
-  const [audience, setAudience] = useState('both')
   const [tab, setTab] = useState('home')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [cart, setCart] = useState([])
@@ -271,7 +257,6 @@ export default function Mall() {
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [bookingModal, setBookingModal] = useState(null)
   const [points] = useState(1280)
-  const [bannerIdx, setBannerIdx] = useState(0)
   const [certProducts, setCertProducts] = useState(CERT_PRODUCTS)
   const [materialProducts, setMaterialProducts] = useState(MATERIALS)
   const [labProducts, setLabProducts] = useState(AI_LAB)
@@ -307,24 +292,28 @@ export default function Mall() {
 
   const TABS = [
     { id: 'home', icon: '🏠', label: 'Mall Home' },
-    { id: 'courses', icon: '🎓', label: 'AI Courses' },
-    { id: 'events', icon: '🏆', label: 'Competition Services' },
+    { id: 'general', icon: '🌐', label: 'General · Materials' },
+    { id: 'ioai', icon: '🏆', label: 'IOAI · Training' },
+    { id: 'k12', icon: '🏫', label: 'K12 · School' },
     { id: 'cert', icon: '📜', label: 'Certification' },
     { id: 'materials', icon: '📚', label: 'Books & Kits' },
-    { id: 'lab', icon: '🔬', label: 'AI Digital Lab' },
-    { id: 'training', icon: '🖥️', label: 'AI Training Room' },
-    { id: 'c-zone', icon: '👨‍👩‍👧', label: 'Family Zone' },
-    { id: 'b-zone', icon: '🏫', label: 'Institution Zone' },
+    { id: 'lab', icon: '🧪', label: 'Online Labs' },
   ]
 
-  const BANNERS = [
-    { bg: 'from-primary/20 to-cyan-100', icon: '🎓', headline: 'Spring Sale — AI Courses from $9.9', sub: 'Limited time. Parent guide + all starter courses on offer.', cta: 'Shop Courses', target: 'courses' },
-    { bg: 'from-amber-100 to-orange-50', icon: '🔬', headline: 'AI Digital Lab — Personal Edition Launch', sub: '3 months cloud access. Start experimenting today.', cta: 'View Lab Plans', target: 'lab' },
-    { bg: 'from-violet-100 to-purple-50', icon: '🏆', headline: 'Competition Season — Entry + Bootcamp Bundles', sub: 'March registration open. Prestigious competitions available.', cta: 'Browse Events', target: 'events' },
-  ]
+  const mallBannerSlides = useMemo(
+    () => [
+      { id: 'general', gradient: 'from-primary/20 via-cyan-50 to-sky-100', icon: '🌐', eyebrow: 'Bingo AI Smart Mall', title: 'Foundations of AI — Experiment Materials', subtitle: 'Self-study kits and online lab access.', ctaLabel: 'Shop general line', onCta: () => setTab('general') },
+      { id: 'ioai', gradient: 'from-amber-100 via-orange-50 to-amber-50/80', icon: '🏆', eyebrow: 'Bingo AI Smart Mall', title: 'IOAI Competition Training', subtitle: 'Video courses and training camps for whitelist events.', ctaLabel: 'IOAI products', onCta: () => setTab('ioai') },
+      { id: 'k12', gradient: 'from-violet-100 via-purple-50 to-violet-50/80', icon: '🏫', eyebrow: 'Bingo AI Smart Mall', title: 'K12 Classroom Edition', subtitle: 'Books, class kits, offline lab setups for schools.', ctaLabel: 'K12 school', onCta: () => setTab('k12') },
+    ],
+    []
+  )
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="w-full">
+      <PageBanner slides={mallBannerSlides} autoPlayMs={7000} />
+
+      <PageContent className="py-6 sm:py-8">
 
       {selectedProduct && <ProductModal item={selectedProduct} onClose={() => setSelectedProduct(null)} onCart={addToCart} onBuy={buyNow} />}
       {bookingModal && <BookingModal title={bookingModal} onClose={() => setBookingModal(null)} />}
@@ -333,56 +322,30 @@ export default function Mall() {
       {/* Cart sidebar trigger */}
       {cartCount > 0 && !checkoutOpen && (
         <button onClick={() => setCheckoutOpen(true)}
-          className="fixed bottom-24 right-5 z-40 bg-primary text-white rounded-2xl px-4 py-2.5 shadow-lg flex items-center gap-2 text-sm font-semibold hover:bg-primary/90 transition">
+          className="fixed z-40 bg-primary text-white rounded-2xl px-4 py-2.5 shadow-lg flex items-center gap-2 text-sm font-semibold hover:bg-primary/90 transition min-h-[44px]"
+          style={{ bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom) + 4rem))', right: 'max(1rem, env(safe-area-inset-right))' }}>
           🛒 Cart ({cartCount})
         </button>
       )}
 
-      {/* ── Hero ── */}
-      <section className="mb-8">
-        {/* Banner */}
-        <div className={`rounded-2xl bg-gradient-to-r ${BANNERS[bannerIdx].bg} p-8 flex flex-wrap items-center justify-between gap-4 mb-5`}>
-          <div>
-            <p className="text-xs font-bold tracking-widest text-primary uppercase mb-1">Bingo AI Smart Mall</p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-bingo-dark mb-1">{BANNERS[bannerIdx].headline}</h1>
-            <p className="text-slate-600 text-sm mb-4">{BANNERS[bannerIdx].sub}</p>
-            <div className="flex gap-2 flex-wrap">
-              <button onClick={() => setTab(BANNERS[bannerIdx].target)} className="btn-primary px-5 py-2">{BANNERS[bannerIdx].cta} →</button>
-              <div className="flex gap-1 items-center">
-                {BANNERS.map((_,i) => <button key={i} onClick={() => setBannerIdx(i)} className={`w-2 h-2 rounded-full transition ${i===bannerIdx?'bg-primary':'bg-slate-300'}`} />)}
-              </div>
-            </div>
-          </div>
-          <div className="text-6xl hidden sm:block">{BANNERS[bannerIdx].icon}</div>
-        </div>
-
-        {/* Audience toggle + stats */}
+      <section className="mb-6 sm:mb-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <div className="flex gap-2">
-            {[['both','All Products'],['c','Family / Personal'],['b','Institutions & Schools']].map(([k,l]) => (
-              <button key={k} onClick={() => setAudience(k)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${audience===k?'bg-bingo-dark text-white shadow':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{l}</button>
-            ))}
-          </div>
-          <div className="flex gap-3 text-xs text-slate-500">
+          <p className="text-sm text-slate-600">Books, courses, kits, labs, and certification products for families and learners.</p>
+          <div className="flex gap-3 text-xs text-slate-500 items-center">
             <span>🪙 <strong className="text-primary">{points.toLocaleString()}</strong> points</span>
-            <button onClick={() => setBookingModal('Request a Purchase Advisor')} className="text-primary hover:underline">Get advisor →</button>
           </div>
         </div>
-
-        {/* Stats strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[['10,000+','Products Sold'],['3,500+','Satisfied Families'],['200+','Partner Institutions'],['50+','Prestigious Events']].map(([v,l],i) => (
-            <div key={i} className="card p-3 text-center"><div className="font-bold text-primary">{v}</div><div className="text-xs text-slate-500">{l}</div></div>
+          {[['10,000+','Products Sold'],['3,500+','Satisfied Families'],['1,000+','Certified Learners'],['50+','IOAI Programs']].map(([v,l],i) => (
+            <div key={i} className="card p-3 sm:p-4 text-center"><div className="font-bold text-primary text-sm sm:text-base">{v}</div><div className="text-xs text-slate-500">{l}</div></div>
           ))}
         </div>
       </section>
 
-      {/* Tab nav */}
-      <div className="flex gap-2 flex-wrap mb-6 overflow-x-auto pb-1">
+      <div className="nav-scroll-mobile mb-6 sm:flex sm:flex-wrap sm:gap-2 sm:overflow-visible sm:pb-0">
         {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${tab===t.id?'bg-primary text-white shadow':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+          <button key={t.id} type="button" onClick={() => setTab(t.id)}
+            className={`shrink-0 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1 min-h-[44px] ${tab===t.id?'bg-primary text-white shadow':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
             {t.icon} {t.label}
           </button>
         ))}
@@ -393,15 +356,15 @@ export default function Mall() {
         <div className="space-y-8">
           {/* 6 category grid */}
           <section>
-            <h2 className="section-title mb-5">Shop by Category</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            <h2 className="section-title mb-5">Shop by Product Line</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3">
               {[
-                { icon: '🎓', name: 'AI Courses', sub: 'From $9.9', tab: 'courses', hot: true },
-                { icon: '🏆', name: 'Competition', sub: 'Prestigious entry', tab: 'events' },
-                { icon: '📜', name: 'Certification', sub: 'Nationally valid', tab: 'cert' },
-                { icon: '📚', name: 'Books & Kits', sub: 'Digital + Physical', tab: 'materials' },
-                { icon: '🔬', name: 'AI Lab', sub: 'Cloud virtual lab', tab: 'lab', hot: true },
-                { icon: '🖥️', name: 'Training Room', sub: 'Institution setup', tab: 'training' },
+                { icon: '🌐', name: 'Foundations of AI', sub: 'Courses · Labs · Kits', tab: 'general', hot: true },
+                { icon: '🏆', name: 'IOAI Training', sub: 'Video · Training Camp', tab: 'ioai' },
+                { icon: '🏫', name: 'K12 School', sub: 'Books · Class · Labs', tab: 'k12' },
+                { icon: '📜', name: 'Certification', sub: 'Ability certs', tab: 'cert' },
+                { icon: '📚', name: 'Books & Kits', sub: 'All materials', tab: 'materials' },
+                { icon: '🧪', name: 'Online Labs', sub: 'Cloud access', tab: 'lab' },
               ].map((c,i) => (
                 <button key={i} onClick={() => setTab(c.tab)}
                   className="card p-4 flex flex-col items-center text-center hover:shadow-md hover:border-primary/30 transition relative">
@@ -414,29 +377,24 @@ export default function Mall() {
             </div>
           </section>
 
-          {/* B/C split */}
           <section>
-            <h2 className="section-title mb-4">Choose Your Path</h2>
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div className="card p-6 border-2 border-primary/20 bg-primary/5">
-                <div className="text-3xl mb-2">👨‍👩‍👧</div>
-                <h3 className="font-bold text-bingo-dark mb-1">Family & Personal Zone</h3>
-                <p className="text-sm text-slate-600 mb-4">Curated AI learning products for children and families. Personalised recommendations based on age and AI assessment results.</p>
-                <ul className="space-y-1 text-xs text-slate-600 mb-4">
-                  {['Personalised age-based recommendations','Points & rewards on every purchase','Share to earn — referral commissions','AI lab personal home access'].map((b,i) => <li key={i} className="flex gap-1.5"><span className="text-primary">✓</span>{b}</li>)}
-                </ul>
-                <button onClick={() => setTab('c-zone')} className="btn-primary w-full py-2.5">Enter Family Zone →</button>
-              </div>
-              <div className="card p-6 border-2 border-amber-200/60 bg-amber-50/20">
-                <div className="text-3xl mb-2">🏫</div>
-                <h3 className="font-bold text-bingo-dark mb-1">Institution & School Zone</h3>
-                <p className="text-sm text-slate-600 mb-4">Bulk purchasing, curriculum licensing, AI training room setup, and full institutional empowerment services.</p>
-                <ul className="space-y-1 text-xs text-slate-600 mb-4">
-                  {['Volume discounts on all products','OEM curriculum + branding rights','AI training room full installation support','Dedicated 1-on-1 purchasing advisor'].map((b,i) => <li key={i} className="flex gap-1.5"><span className="text-amber-600">✓</span>{b}</li>)}
-                </ul>
-                <button onClick={() => setTab('b-zone')} className="bg-amber-500 text-white w-full py-2.5 rounded-xl font-semibold hover:bg-amber-600 transition">Enter Institution Zone →</button>
-              </div>
+            <h2 className="section-title mb-4">Three Product Lines</h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { icon: '🌐', title: 'Foundations of AI Program', desc: 'Courses, online labs, materials packs', tab: 'general' },
+                { icon: '🏆', title: 'IOAI Competition Training', desc: 'Video lessons and training camps', tab: 'ioai' },
+                { icon: '🏫', title: 'K12 Classroom Edition', desc: 'Books, class packs, offline lab kits', tab: 'k12' },
+              ].map((p, i) => (
+                <button key={i} type="button" onClick={() => setTab(p.tab)} className="card p-5 text-left hover:shadow-md hover:border-primary/30 transition">
+                  <div className="text-2xl mb-2">{p.icon}</div>
+                  <h3 className="font-bold text-bingo-dark text-sm mb-1">{p.title}</h3>
+                  <p className="text-xs text-slate-500">{p.desc}</p>
+                </button>
+              ))}
             </div>
+            <p className="text-center mt-4 text-sm text-slate-500">
+              <Link to="/courses" className="text-primary hover:underline">Browse full course catalogue →</Link>
+            </p>
           </section>
 
           {/* Flash deals */}
@@ -446,7 +404,7 @@ export default function Mall() {
               <span className="text-xs text-slate-400">Updated daily</span>
             </div>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {[...courses.slice(0,2), ...materialProducts.slice(3,4), ...labProducts.slice(0,1), ...certProducts.slice(2,3), ...eventsProducts.slice(1,2)].map((item,i) => (
+              {[...courses, ...materialProducts, ...labProducts, ...certProducts, ...eventsProducts].filter(isRetail).slice(0, 6).map((item,i) => (
                 <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
               ))}
             </div>
@@ -456,7 +414,7 @@ export default function Mall() {
           <section className="card p-5 bg-slate-50 border-slate-200">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3 text-center">Why Buy from Bingo Mall</p>
             <div className="grid sm:grid-cols-4 gap-3 text-center text-xs">
-              {[['🔒','Verified Quality','All courses and products reviewed by our curriculum team'],['🏅','Authoritative Certs','Issuing-centre endorsed, nationally verifiable'],['📦','Fast Delivery','Digital instant access · Physical 3–5 days'],['💬','After-sales Support','7×12h C-end · Dedicated advisor B-end']].map(([icon,t,d],i) => (
+              {[['🔒','Verified Quality','All courses and products reviewed by our curriculum team'],['🏅','Authoritative Certs','Issuing-centre endorsed, nationally verifiable'],['📦','Fast Delivery','Digital instant access · Physical 3–5 days'],['💬','After-sales Support','7×12h online support for orders and access']].map(([icon,t,d],i) => (
                 <div key={i}><div className="text-2xl mb-1">{icon}</div><p className="font-semibold text-bingo-dark mb-0.5">{t}</p><p className="text-slate-500">{d}</p></div>
               ))}
             </div>
@@ -464,49 +422,83 @@ export default function Mall() {
         </div>
       )}
 
-      {/* ══════════════════ COURSES ══════════════════ */}
+      {tab === 'general' && (
+        <div className="space-y-5">
+          <div className="card p-4 bg-cyan-50/50 border-cyan-200/60">
+            <h2 className="font-bold text-bingo-dark mb-1">🌐 Foundations of AI Program</h2>
+            <p className="text-slate-500 text-sm">AI literacy courses, online experiments, and home materials packs.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {courses.filter((c) => isRetail(c) && !c.badge?.includes('Competition') && !c.badge?.includes('Lab Bundle')).map((item, i) => (
+              <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
+            ))}
+            {materialProducts.slice(0, 2).map((item, i) => (
+              <ProductCard key={`m-${i}`} item={item} onOpen={setSelectedProduct} />
+            ))}
+          </div>
+          <Link to="/courses?line=general" className="text-sm text-primary hover:underline">View all general courses →</Link>
+        </div>
+      )}
+
+      {tab === 'ioai' && (
+        <div className="space-y-5">
+          <div className="card p-4 bg-amber-50/30 border-amber-200/60">
+            <h2 className="font-bold text-bingo-dark mb-1">🏆 IOAI Competition Training</h2>
+            <p className="text-slate-500 text-sm">Video courses and training camps for whitelist competition preparation.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {eventsProducts.map((item, i) => (
+              <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
+            ))}
+            {courses.filter((c) => isRetail(c) && (c.cat === 'competition' || c.badge?.includes('Competition'))).map((item, i) => (
+              <ProductCard key={`c-${i}`} item={item} onOpen={setSelectedProduct} />
+            ))}
+          </div>
+          <Link to="/courses?line=ioai" className="text-sm text-primary hover:underline">View IOAI courses →</Link>
+        </div>
+      )}
+
+      {tab === 'k12' && (
+        <div className="space-y-5">
+          <div className="card p-4 bg-violet-50/30 border-violet-200/60">
+            <h2 className="font-bold text-bingo-dark mb-1">🏫 K12 Classroom School Edition</h2>
+            <p className="text-slate-500 text-sm">Books, classroom courses, online/offline labs, and school experiment kits.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {materialProducts.filter(isRetail).map((item, i) => (
+              <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
+            ))}
+            {trainingProducts.filter(isRetail).map((item, i) => (
+              <ProductCard key={`t-${i}`} item={item} onOpen={setSelectedProduct} />
+            ))}
+          </div>
+          <Link to="/courses?line=k12" className="text-sm text-primary hover:underline">View K12 classroom products →</Link>
+        </div>
+      )}
+
+      {/* ══════════════════ COURSES (legacy tab id) ══════════════════ */}
       {tab === 'courses' && (
         <div className="space-y-5">
           <div className="card p-4 bg-primary/5 border-primary/20">
             <h2 className="font-bold text-bingo-dark mb-1">🎓 AI Courses</h2>
-            <p className="text-slate-500 text-sm">Curriculum matched to the Bingo 9-star framework. Competition prep, foundations, AIGC, and parent series. C-end and B-end pricing shown.</p>
+            <p className="text-slate-500 text-sm">Curriculum matched to the Bingo 9-star framework. Competition prep, foundations, AIGC, and parent series.</p>
           </div>
           <div className="flex gap-2 flex-wrap text-xs">
-            {['All','Competition Prep','Foundations','AIGC','AI Lab Companion','Parent Series'].map((f,i) => (
+            {['All','Competition Prep','Foundations','AIGC','Parent Series'].map((f,i) => (
               <button key={i} className={`px-3 py-1.5 rounded-xl font-medium transition ${i===0?'bg-primary text-white':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{f}</button>
             ))}
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {coursesLoading ? <div className="col-span-full text-center py-8 text-slate-500">Loading...</div> : (audience === 'b' ? courses.filter(c => c.badge === '实验室配套' || !c.price || c.bPrice) : audience === 'c' ? courses.filter(c => c.price) : courses).map((item,i) => (
+            {coursesLoading ? <div className="col-span-full text-center py-8 text-slate-500">Loading...</div> : courses.filter(isRetail).map((item,i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
-          </div>
-          <div className="card p-4 bg-amber-50/20 border-amber-200/60 flex flex-wrap items-center justify-between gap-3">
-            <div><p className="font-medium text-bingo-dark text-sm">Need a bulk curriculum package for your institution?</p><p className="text-xs text-slate-500">OEM licensing, branded materials, and teacher training included</p></div>
-            <button onClick={() => setBookingModal('Bulk Course Package — Institution Enquiry')} className="bg-amber-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-amber-600 transition">Request B-end Package</button>
           </div>
         </div>
       )}
 
-      {/* ══════════════════ EVENTS ══════════════════ */}
       {tab === 'events' && (
-        <div className="space-y-5">
-          <div className="card p-4 bg-primary/5 border-primary/20">
-            <h2 className="font-bold text-bingo-dark mb-1">🏆 Competition Services</h2>
-            <p className="text-slate-500 text-sm">Entry packages, bootcamp training, and full coaching programmes. Prestigious and Bingo-own competitions.</p>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {eventsProducts.map((item,i) => (
-              <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
-            ))}
-          </div>
-          <div className="card p-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-700">Not sure which competition to enter?</p>
-            <div className="flex gap-2">
-              <Link to="/ai-test" className="btn-primary text-xs px-4 py-2">Free AI Assessment →</Link>
-              <Link to="/events" className="border border-primary text-primary text-xs px-4 py-2 rounded-xl hover:bg-primary/5 transition">Competition Hub →</Link>
-            </div>
-          </div>
+        <div className="p-4 text-center">
+          <Link to="/courses?line=ioai" className="text-primary hover:underline">IOAI training moved to IOAI tab →</Link>
         </div>
       )}
 
@@ -515,10 +507,10 @@ export default function Mall() {
         <div className="space-y-5">
           <div className="card p-4 bg-primary/5 border-primary/20">
             <h2 className="font-bold text-bingo-dark mb-1">📜 Certification Products</h2>
-            <p className="text-slate-500 text-sm">Learner, teacher, and institution certifications. Dual-endorsed, nationally verifiable. Admissions-referenced at Zhichuang tier.</p>
+            <p className="text-slate-500 text-sm">Learner and teacher certification products. Dual-endorsed, nationally verifiable. Admissions-referenced at top tiers.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            {certProducts.map((item,i) => (
+            {certProducts.filter(isRetail).map((item,i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
@@ -542,13 +534,9 @@ export default function Mall() {
             ))}
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {materialProducts.map((item,i) => (
+            {materialProducts.filter(isRetail).map((item,i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
-          </div>
-          <div className="card p-4 bg-amber-50/20 border-amber-200/60 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-700">Bulk order 20+ kits? Contact us for custom printing and institution pricing.</p>
-            <button onClick={() => setBookingModal('Bulk Materials Order Enquiry')} className="bg-amber-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-amber-600 transition">Bulk Order Enquiry</button>
           </div>
         </div>
       )}
@@ -558,21 +546,12 @@ export default function Mall() {
         <div className="space-y-5">
           <div className="card p-4 bg-violet-50/30 border-violet-200/60">
             <h2 className="font-bold text-bingo-dark mb-1">🔬 AI Digital Laboratory</h2>
-            <p className="text-slate-600 text-sm">Cloud-based virtual AI lab with guided experiments, AI coaching, and progress tracking. Personal and institutional editions available.</p>
+            <p className="text-slate-600 text-sm">Cloud-based virtual AI lab with guided experiments, AI coaching, and progress tracking for families and independent learners.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">C-end: Personal & Family</p>
-              {labProducts.filter(l => l.price).map((item,i) => (
-                <div key={i} className="mb-3"><ProductCard item={item} onOpen={setSelectedProduct} /></div>
-              ))}
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">B-end: Institution & School</p>
-              {labProducts.filter(l => !l.price).map((item,i) => (
-                <div key={i} className="mb-3"><ProductCard item={item} onOpen={setSelectedProduct} /></div>
-              ))}
-            </div>
+            {labProducts.filter(isRetail).map((item,i) => (
+              <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
+            ))}
           </div>
           <div className="card p-5 grid sm:grid-cols-3 gap-3 text-xs">
             {[['🧪','Guided Experiments','50+ curated AI experiments with step-by-step guidance'],['🤖','AI Coach','In-lab AI tutor answers questions and adapts to student level'],['📊','Progress Dashboard','Parents and teachers see real-time learning progress and milestones']].map(([icon,t,d],i) => (
@@ -623,128 +602,6 @@ export default function Mall() {
         </div>
       )}
 
-      {/* ══════════════════ C-ZONE (FAMILY) ══════════════════ */}
-      {tab === 'c-zone' && (
-        <div className="space-y-6">
-          <div className="card p-5 bg-primary/5 border-primary/20">
-            <h2 className="font-bold text-bingo-dark mb-1">👨‍👩‍👧 Family & Personal Zone</h2>
-            <p className="text-slate-600 text-sm">Everything a family needs for a child's AI learning journey — from the first introduction to competition-level preparation.</p>
-          </div>
-
-          {/* Age-based selector */}
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Shop by Age Group</p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-              {[['🌱','Ages 3–6','Starter & Intro'],['📚','Ages 7–9','Foundations'],['🔧','Ages 10–12','Applied'],['⚙️','Ages 13–15','Projects'],['🚀','Ages 16+','Competition']].map(([icon,age,label],i) => (
-                <button key={i} className="card p-3 text-center hover:shadow-md hover:border-primary/30 transition">
-                  <div className="text-xl mb-0.5">{icon}</div>
-                  <div className="font-semibold text-bingo-dark text-xs">{age}</div>
-                  <div className="text-[10px] text-slate-400">{label}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Top picks for families */}
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Parent Top Picks</p>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {[courses[5], courses[0], materialProducts[0], materialProducts[1], labProducts[0], certProducts[0]].filter(Boolean).map((item,i) => (
-                <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
-              ))}
-            </div>
-          </div>
-
-          {/* Points & benefits */}
-          <div className="card p-5 border-primary/20 bg-primary/5">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Your Family Benefits</p>
-            <div className="grid sm:grid-cols-3 gap-3 text-xs">
-              {[
-                { icon: '🪙', title: 'Points System', desc: `You have ${points.toLocaleString()} points. Every $1 spent = 1 point. 100 pts = $1 off.` },
-                { icon: '💌', title: 'Referral Rewards', desc: 'Share any product and earn commission on every purchase made through your link.' },
-                { icon: '🎁', title: 'Family Coupons', desc: 'New-user $20 coupon. Monthly activity rewards. AI lab trial credits.' },
-              ].map((b,i) => (
-                <div key={i} className="bg-white rounded-xl p-3">
-                  <div className="text-xl mb-1">{b.icon}</div>
-                  <p className="font-semibold text-bingo-dark mb-0.5">{b.title}</p>
-                  <p className="text-slate-500">{b.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* AI test link */}
-          <div className="card p-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="font-medium text-bingo-dark text-sm">Not sure where to start?</p>
-              <p className="text-xs text-slate-500">Take the free AI assessment to get personalised product recommendations</p>
-            </div>
-            <Link to="/ai-test" className="btn-primary text-sm px-4 py-2">Free AI Assessment →</Link>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════ B-ZONE (INSTITUTION) ══════════════════ */}
-      {tab === 'b-zone' && (
-        <div className="space-y-6">
-          <div className="card p-5 bg-amber-50/30 border-amber-200/60">
-            <h2 className="font-bold text-bingo-dark mb-1">🏫 Institution & School Zone</h2>
-            <p className="text-slate-600 text-sm">One-stop sourcing for teaching centres and schools. Curriculum + kits + lab + training room + teacher training + certifications. Volume pricing and dedicated advisor included.</p>
-          </div>
-
-          {/* Institution benefits */}
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              { icon: '📦', title: 'Volume Pricing', desc: 'Bulk discounts from 10 units. Custom quotes for orders of 50+.' },
-              { icon: '🎨', title: 'OEM & Branding', desc: 'Curriculum licensed under your school name. Kits printed with your logo.' },
-              { icon: '👩‍🏫', title: 'Teacher Training', desc: 'Online and on-site teacher development. Required for Jinyan/Zhichuang certification.' },
-              { icon: '🏆', title: 'Competition Support', desc: 'Group entry management. Dedicated competition coach for institutional entrants.' },
-              { icon: '🔬', title: 'Lab & Room Setup', desc: 'AI Digital Lab or full Training Room. We manage the entire deployment.' },
-              { icon: '📋', title: 'Dedicated Advisor', desc: '1-on-1 purchasing advisor. Purchase contracts, invoice support, and delivery tracking.' },
-            ].map((b,i) => (
-              <div key={i} className="card p-4">
-                <div className="text-xl mb-1">{b.icon}</div>
-                <p className="font-semibold text-bingo-dark text-sm mb-0.5">{b.title}</p>
-                <p className="text-xs text-slate-500">{b.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Institution top products */}
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Top Institution Products</p>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {[courses[1], courses[4], eventsProducts[3], labProducts[2], trainingProducts[0], certProducts[3]].filter(Boolean).map((item,i) => (
-                <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
-              ))}
-            </div>
-          </div>
-
-          {/* Custom services */}
-          <div className="card p-5">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Custom Services</p>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {[
-                ['📝 Curriculum Design', 'Custom AI curriculum development using your school\'s context and requirements'],
-                ['🏷️ Brand Licensing', 'White-label Bingo curriculum and materials under your school brand'],
-                ['🖥️ Training Room Build', 'End-to-end AI training room project management from spec to operational'],
-                ['🎓 Teacher Certification Drive', 'Whole-school teacher certification coordinated and managed by Bingo'],
-              ].map(([t,d],i) => (
-                <div key={i} className="bg-slate-50 rounded-xl p-3 text-xs">
-                  <p className="font-semibold text-bingo-dark mb-0.5">{t}</p>
-                  <p className="text-slate-500">{d}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-3 flex-wrap">
-            <button onClick={() => setBookingModal('Institution Purchasing Advisor — Request a Call')} className="flex-1 bg-amber-500 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-amber-600 transition">Contact Purchasing Advisor →</button>
-            <button onClick={() => setBookingModal('Institution — Bulk Quote Request')} className="flex-1 border border-amber-400 text-amber-700 py-2.5 rounded-xl font-semibold text-sm hover:bg-amber-50 transition">Request Bulk Quote</button>
-          </div>
-        </div>
-      )}
-
       {/* ── Bottom CTA ── */}
       <div className="mt-10 card p-5 bg-gradient-to-r from-cyan-50 to-sky-50 border-primary/20 flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -752,11 +609,12 @@ export default function Mall() {
           <p className="text-xs text-slate-500 mt-0.5">Every purchase earns points · Share products to earn commission · Redeem for courses and lab access</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setTab('c-zone')} className="btn-primary text-sm px-4 py-2">Family Zone</button>
-          <button onClick={() => setTab('b-zone')} className="bg-amber-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-amber-600 transition">Institution Zone</button>
-          <button onClick={() => setBookingModal('Mall Purchase Advisor Request')} className="border border-slate-300 text-slate-600 text-sm px-4 py-2 rounded-xl hover:bg-slate-50 transition">Get Advisor →</button>
+          <button type="button" onClick={() => setTab('general')} className="btn-primary text-sm px-4 py-2.5 min-h-[44px]">General line</button>
+          <button type="button" onClick={() => setTab('k12')} className="bg-amber-500 text-white text-sm px-4 py-2.5 rounded-xl hover:bg-amber-600 transition min-h-[44px]">K12 school</button>
+          <Link to="/profile" className="border border-slate-300 text-slate-600 text-sm px-4 py-2.5 rounded-xl hover:bg-slate-50 transition min-h-[44px] inline-flex items-center">My Profile</Link>
         </div>
       </div>
+      </PageContent>
     </div>
   )
 }
