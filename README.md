@@ -18,7 +18,24 @@ Required for live CMS/admin data (site still loads without them, using built-in 
 | `VITE_SUPABASE_URL` | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anon/public key |
 
-Copy `.env.example` to `.env.local` for local development. On **Vercel** (or similar), add the same keys under Project → Settings → Environment Variables, then redeploy.
+Copy `.env.example` to `.env.local` for local development (or use the project’s `.env.local` if already provisioned).
+
+### Railway
+
+Production host: `https://bingoacademyorg-production.up.railway.app` (listens on `$PORT`, default **8080**).
+
+In the Railway service → **Variables**, set:
+
+| Variable | Value |
+|----------|--------|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase **anon** (public) key |
+
+Redeploy after changing variables so Vite bakes them into the build. The repo includes `railway.toml` (`npm run build` → `npm run start` serves `dist/` as an SPA).
+
+### Vercel
+
+Same `VITE_*` keys under Project → Settings → Environment Variables, then redeploy.
 
 ## Scripts
 
