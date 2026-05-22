@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const ADMIN_NAV = [
   { path: '/admin', label: 'Dashboard', icon: '📊' },
@@ -23,6 +23,10 @@ export default function AdminLayout() {
   const [dbConnected, setDbConnected] = useState(null)
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setDbConnected(false)
+      return
+    }
     supabase.from('courses').select('id').limit(1)
       .then(({ error }) => setDbConnected(!error))
       .catch(() => setDbConnected(false))

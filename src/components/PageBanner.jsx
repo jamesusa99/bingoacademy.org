@@ -65,14 +65,22 @@ export default function PageBanner({
                     {slide.ctaLabel} →
                   </button>
                 ) : null}
-                {slide.secondaryHref && (
+                {slide.secondaryHref ? (
                   <Link
                     to={slide.secondaryHref}
                     className="px-6 py-3 text-sm font-semibold rounded-xl border-2 border-primary text-primary hover:bg-primary/5 transition min-h-[44px] w-full sm:w-auto text-center"
                   >
                     {slide.secondaryLabel}
                   </Link>
-                )}
+                ) : slide.onCtaSecondary && slide.secondaryLabel ? (
+                  <button
+                    type="button"
+                    onClick={slide.onCtaSecondary}
+                    className="px-6 py-3 text-sm font-semibold rounded-xl border-2 border-primary text-primary hover:bg-primary/5 transition min-h-[44px] w-full sm:w-auto"
+                  >
+                    {slide.secondaryLabel}
+                  </button>
+                ) : null}
               </div>
               {count > 1 && (
                 <div className="flex items-center justify-center lg:justify-start gap-2 mt-6" role="tablist" aria-label="Banner slides">

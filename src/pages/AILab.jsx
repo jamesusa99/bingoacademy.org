@@ -1,168 +1,256 @@
-import { useMemo } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { PRODUCT_LINES, getProductLine, subcategoryLabel, COURSE_CATALOG } from '../config/products'
+import { useState, useEffect, useMemo } from 'react'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
+import ExperimentCard from '../components/lab/ExperimentCard'
+import {
+  LAB_STANDALONE_INTRO,
+  LAB_VALUE_PROPS,
+  LAB_UX_PRINCIPLES,
+  LAB_TECH_STACK,
+  LAB_CATEGORIES,
+  EXPLORATION_EXPERIMENTS,
+  BADGE_STORAGE_KEY,
+  getExperimentsByCategory,
+} from '../config/explorationLab'
 
-const LAB_SUBS = ['online-lab', 'offline-lab']
+function scrollToExperiments() {
+  document.getElementById('experiments')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
-const LAB_CATALOG = COURSE_CATALOG.filter((c) => LAB_SUBS.includes(c.sub))
+function scrollToLearningLoop() {
+  document.getElementById('learning-loop')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
-const LAB_FEATURES = [
-  { icon: '🧪', title: 'Guided Experiments', desc: 'Step-by-step cloud labs with auto-graded tasks' },
-  { icon: '🤖', title: 'AI Coach', desc: 'In-lab tutor adapts hints to your level' },
-  { icon: '📊', title: 'Progress Tracking', desc: 'See milestones and completion in your profile' },
-]
-
-function LabCard({ item }) {
-  return (
-    <div className="card p-5 flex flex-col hover:shadow-md hover:border-primary/30 transition h-full">
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="text-[10px] font-semibold bg-violet-100 text-violet-800 px-2 py-0.5 rounded">
-          {subcategoryLabel(item.line, item.sub)}
-        </span>
-        <span className="font-bold text-primary text-sm shrink-0">{item.price}</span>
-      </div>
-      <h3 className="font-semibold text-bingo-dark text-sm leading-snug mb-1">{item.name}</h3>
-      <p className="text-[10px] text-slate-400 mb-2">
-        {subcategoryLabel(item.line, item.sub)} · {item.hours}
-      </p>
-      <p className="text-xs text-slate-600 leading-relaxed flex-1 mb-4">{item.desc}</p>
-      <div className="flex gap-2 flex-wrap">
-        <Link to={`/courses/detail/${item.id}`} className="btn-primary text-xs px-3 py-1.5">View Details</Link>
-        <Link to="/mall" className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">
-          Lab access in Mall
-        </Link>
-      </div>
-    </div>
-  )
+function loadBadges() {
+  try {
+    const raw = localStorage.getItem(BADGE_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
 }
 
 export default function AILab() {
-  const [params, setParams] = useSearchParams()
-  const lineId = params.get('line') || 'general'
-  const subId = params.get('sub') || ''
-  const line = getProductLine(lineId)
+  const [badges, setBadges] = useState(loadBadges)
+  const [activeCategory, setActiveCategory] = useState('all')
 
-  const labSubsForLine = useMemo(
-    () => line.subcategories.filter((s) => LAB_SUBS.includes(s.id)),
-    [line]
+  useEffect(() => {
+    setBadges(loadBadges())
+  }, [])
+
+  const filteredExperiments = useMemo(() => {
+    if (activeCategory === 'all') return EXPLORATION_EXPERIMENTS
+    return getExperimentsByCategory(activeCategory)
+  }, [activeCategory])
+
+  const unlockedBadgeDetails = useMemo(
+    () =>
+      EXPLORATION_EXPERIMENTS.filter((e) => badges.includes(e.badge.id)).map((e) => e.badge),
+    [badges]
   )
-
-  const filtered = useMemo(() => {
-    let list = LAB_CATALOG.filter((c) => c.line === line.id)
-    if (subId) list = list.filter((c) => c.sub === subId)
-    return list
-  }, [line.id, subId])
-
-  const bannerSlides = PRODUCT_LINES.map((pl) => ({
-    id: pl.id,
-    gradient: pl.gradient,
-    icon: '🧪',
-    eyebrow: 'AI Exploration Lab',
-    title: `${pl.name} · Labs`,
-    subtitle: pl.subcategories.find((s) => s.id === 'online-lab')?.desc ?? 'Hands-on practice in the cloud and classroom',
-    ctaLabel: 'Browse labs',
-    href: `/lab?line=${pl.id}`,
-  }))
 
   return (
     <div className="w-full">
-      <PageBanner slides={bannerSlides} autoPlayMs={8000} />
+      <PageBanner
+        slides={[
+          {
+            id: 'exploration-lab',
+            gradient: 'from-violet-500/20 via-cyan-50 to-sky-100',
+            icon: '🧭',
+            eyebrow: 'AI Exploration Lab',
+            title: 'Gamified Web Experiments — Play to Understand AI',
+            subtitle:
+              'Zero setup. Instant play on PC, Mac, and iPad. Canvas, WebGL, and in-browser ML — no installs, no course enrollment.',
+            ctaLabel: 'Start experimenting',
+            onCta: scrollToExperiments,
+            secondaryLabel: 'How it works',
+            onCtaSecondary: scrollToLearningLoop,
+          },
+        ]}
+        autoPlayMs={0}
+      />
 
-      <PageContent className="py-6 sm:py-8">
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1" style={{ WebkitOverflowScrolling: 'touch' }}>
-          {PRODUCT_LINES.map((pl) => (
-            <button
-              key={pl.id}
-              type="button"
-              onClick={() => setParams({ line: pl.id })}
-              className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition shrink-0 min-h-[44px] ${
-                line.id === pl.id ? 'bg-primary text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {pl.icon} {pl.name}
-            </button>
-          ))}
-        </div>
-
-        <div className={`card p-5 mb-6 border-2 ${line.border} bg-gradient-to-r ${line.gradient}`}>
-          <h2 className="font-bold text-bingo-dark text-lg">🧪 {line.name} — AI Exploration Lab</h2>
-          <p className="text-sm text-slate-600 mt-1">
-            Online cloud labs and practice tasks aligned with {line.name}. Pair with courses or use standalone.
+      <PageContent className="py-6 sm:py-10">
+        {/* Standalone positioning */}
+        <section className="mb-8 card p-5 sm:p-6 border-violet-200/60 bg-violet-50/40">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600 mb-1">
+            Independent module
           </p>
-        </div>
+          <h2 className="font-bold text-bingo-dark text-lg mb-2">{LAB_STANDALONE_INTRO.title}</h2>
+          <p className="text-sm text-slate-600 leading-relaxed max-w-3xl">{LAB_STANDALONE_INTRO.desc}</p>
+        </section>
 
-        <div className="grid sm:grid-cols-3 gap-3 mb-8">
-          {LAB_FEATURES.map((f) => (
-            <div key={f.title} className="card p-4 text-center">
-              <div className="text-2xl mb-2">{f.icon}</div>
-              <p className="font-semibold text-bingo-dark text-sm">{f.title}</p>
-              <p className="text-xs text-slate-500 mt-1">{f.desc}</p>
+        {/* Value props */}
+        <section className="mb-10">
+          <div className="grid sm:grid-cols-3 gap-4">
+            {LAB_VALUE_PROPS.map((p) => (
+              <div
+                key={p.id}
+                className="card p-5 text-center bg-gradient-to-b from-white to-cyan-50/30 border-cyan-200/40"
+              >
+                <div className="text-3xl mb-2">{p.icon}</div>
+                <h2 className="font-bold text-bingo-dark text-sm">{p.title}</h2>
+                <p className="text-xs text-slate-600 mt-2 leading-relaxed">{p.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2 justify-center">
+            {LAB_TECH_STACK.map((t) => (
+              <span
+                key={t}
+                className="text-[10px] font-mono bg-slate-900 text-cyan-300 px-2.5 py-1 rounded-full"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        {/* Gamification UX */}
+        <section className="mb-10 card p-6 sm:p-8 bg-gradient-to-r from-bingo-dark to-slate-800 text-white border-0">
+          <h2 className="text-lg font-bold mb-1">Cross-platform game design</h2>
+          <p className="text-sm text-slate-300 mb-6 max-w-2xl">
+            Built for overseas families and young explorers: touch-first on iPad, precise on desktop, and
+            science dashboards that connect every move to the math underneath.
+          </p>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {LAB_UX_PRINCIPLES.map((u) => (
+              <div key={u.title} className="rounded-xl bg-white/5 border border-white/10 p-4">
+                <div className="text-2xl mb-2">{u.icon}</div>
+                <p className="font-semibold text-sm">{u.title}</p>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{u.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Badges */}
+        {unlockedBadgeDetails.length > 0 && (
+          <section className="mb-8 card p-5 border-amber-200/60 bg-amber-50/30">
+            <h3 className="text-sm font-bold text-bingo-dark mb-3">Your explorer badges</h3>
+            <div className="flex flex-wrap gap-3">
+              {unlockedBadgeDetails.map((b) => (
+                <div
+                  key={b.id}
+                  className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-amber-200/60 shadow-sm"
+                >
+                  <span className="text-2xl">{b.icon}</span>
+                  <span className="text-sm font-semibold text-bingo-dark">{b.name}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+            <p className="text-xs text-slate-500 mt-3">Share your badge — social sharing coming soon.</p>
+          </section>
+        )}
 
-        {labSubsForLine.length > 0 && (
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* Experiment matrix */}
+        <section id="experiments" className="scroll-mt-24 mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="section-title mb-1">Experiment matrix</h2>
+              <p className="text-sm text-slate-600 max-w-xl">
+                Six browser games that teach computer vision, NLP, and machine learning — open any experiment
+                below and play in-tab.
+              </p>
+            </div>
+          </div>
+
+          <div
+            className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+            role="tablist"
+            aria-label="Experiment categories"
+          >
             <button
               type="button"
-              onClick={() => setParams({ line: line.id })}
-              className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] ${
-                !subId ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              role="tab"
+              aria-selected={activeCategory === 'all'}
+              onClick={() => setActiveCategory('all')}
+              className={`px-4 py-2.5 rounded-xl text-sm font-semibold shrink-0 min-h-[44px] transition ${
+                activeCategory === 'all' ? 'bg-primary text-white shadow' : 'bg-slate-100 text-slate-600'
               }`}
             >
-              All lab types
+              All · {EXPLORATION_EXPERIMENTS.length}
             </button>
-            {labSubsForLine.map((s) => (
+            {LAB_CATEGORIES.map((cat) => (
               <button
-                key={s.id}
+                key={cat.id}
                 type="button"
-                onClick={() => setParams({ line: line.id, sub: s.id })}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] ${
-                  subId === s.id ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                role="tab"
+                aria-selected={activeCategory === cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-semibold shrink-0 min-h-[44px] transition ${
+                  activeCategory === cat.id ? 'bg-primary text-white shadow' : 'bg-slate-100 text-slate-600'
                 }`}
               >
-                {s.icon} {s.name}
+                {cat.icon} {cat.label}
               </button>
             ))}
           </div>
-        )}
 
-        <section>
-          <h3 className="text-sm font-semibold text-slate-500 mb-4">
-            {filtered.length} lab{filtered.length !== 1 ? 's' : ''}
-            {subId ? ` · ${subcategoryLabel(line.id, subId)}` : ''}
-          </h3>
-          {filtered.length === 0 ? (
-            <div className="card p-10 text-center text-slate-500 text-sm">
-              No labs listed for this line yet.{' '}
-              <Link to={`/courses?line=${line.id}`} className="text-primary hover:underline">
-                Browse courses
-              </Link>{' '}
-              or{' '}
-              <Link to="/mall" className="text-primary hover:underline">
-                AI Mall
-              </Link>{' '}
-              for cloud lab access.
-            </div>
+          {activeCategory === 'all' ? (
+            LAB_CATEGORIES.map((cat) => {
+              const items = getExperimentsByCategory(cat.id)
+              return (
+                <div key={cat.id} className="mb-10">
+                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                    <span>{cat.icon}</span> {cat.label}
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-5">
+                    {items.map((exp) => (
+                      <ExperimentCard
+                        key={exp.id}
+                        experiment={exp}
+                        onBadgeUnlock={() => setBadges(loadBadges())}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-              {filtered.map((item) => (
-                <LabCard key={item.id} item={item} />
+            <div className="grid md:grid-cols-2 gap-5">
+              {filteredExperiments.map((exp) => (
+                <ExperimentCard
+                  key={exp.id}
+                  experiment={exp}
+                  onBadgeUnlock={() => setBadges(loadBadges())}
+                />
               ))}
             </div>
           )}
         </section>
 
-        <section className="card p-6 bg-violet-50/40 border-violet-200/60 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h3 className="font-semibold text-bingo-dark">Cloud lab subscriptions</h3>
-            <p className="text-sm text-slate-600 mt-1">Personal and family AI Digital Lab plans — instant access after purchase.</p>
-          </div>
-          <Link to="/mall" className="btn-primary px-5 py-2.5 text-sm min-h-[44px] inline-flex items-center">
-            Shop lab access →
-          </Link>
+        {/* How it works loop */}
+        <section
+          id="learning-loop"
+          className="scroll-mt-24 mb-6 card p-6 border-dashed border-primary/30 bg-primary/5"
+        >
+          <h3 className="font-bold text-bingo-dark mb-4">The learning loop</h3>
+          <ol className="grid sm:grid-cols-3 gap-4 text-sm mb-6">
+            {[
+              { step: '1', title: 'Play', desc: 'Camera, canvas, or chat — no install step.' },
+              { step: '2', title: 'Watch', desc: 'Dashboard shows weights, confidence, reward live.' },
+              { step: '3', title: 'Unlock', desc: 'Beat the level → digital badge → share (soon).' },
+            ].map((s) => (
+              <li key={s.step} className="flex gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white text-xs font-bold">
+                  {s.step}
+                </span>
+                <div>
+                  <p className="font-semibold text-bingo-dark">{s.title}</p>
+                  <p className="text-xs text-slate-600 mt-0.5">{s.desc}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <button
+            type="button"
+            onClick={scrollToExperiments}
+            className="btn-primary px-6 py-2.5 text-sm min-h-[44px]"
+          >
+            Jump to experiments →
+          </button>
         </section>
       </PageContent>
     </div>

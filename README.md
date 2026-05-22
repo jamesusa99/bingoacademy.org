@@ -9,6 +9,17 @@ React + Vite web app for Bingo AI Academy — AI courses and authoritative compe
 - React Router 7
 - Tailwind CSS 4
 
+## Environment variables
+
+Required for live CMS/admin data (site still loads without them, using built-in fallbacks):
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon/public key |
+
+Copy `.env.example` to `.env.local` for local development. On **Vercel** (or similar), add the same keys under Project → Settings → Environment Variables, then redeploy.
+
 ## Scripts
 
 - `npm run dev` — Start dev server
