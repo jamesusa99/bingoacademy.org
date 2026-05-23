@@ -113,7 +113,8 @@ export const EXPLORATION_EXPERIMENTS = [
     badge: { id: 'embedding-navigator', name: 'Embedding Navigator', icon: '🛸' },
     difficulty: 'Intermediate',
     duration: '8–12 min',
-    status: 'preview',
+    status: 'live',
+    playPath: '/lab/word-gravity',
     dashboardMetrics: ['cosine-sim', 'vector-dim', 'pull-force'],
   },
   {
@@ -131,7 +132,8 @@ export const EXPLORATION_EXPERIMENTS = [
     badge: { id: 'prompt-strategist', name: 'Prompt Strategist', icon: '🗝️' },
     difficulty: 'Intermediate',
     duration: '15–20 min',
-    status: 'coming-soon',
+    status: 'live',
+    playPath: '/lab/jailbreak-adventure',
     dashboardMetrics: ['tokens', 'safety-score', 'turn-count'],
   },
   {
@@ -139,7 +141,7 @@ export const EXPLORATION_EXPERIMENTS = [
     category: 'ml',
     number: 5,
     emoji: '🏎️',
-    title: 'Evolve the AI Racer',
+    title: 'Evolve! AI Car',
     subtitle: 'Reinforcement Learning',
     gameplay:
       'Draw tracks and obstacles with finger or mouse. Hit “Evolve” — the car crashes at first, then learns over generations. Tune reward: speed vs. safety and watch behavior shift.',
@@ -149,7 +151,8 @@ export const EXPLORATION_EXPERIMENTS = [
     badge: { id: 'rl-engineer', name: 'RL Engineer', icon: '🏁' },
     difficulty: 'Advanced',
     duration: '20–30 min',
-    status: 'coming-soon',
+    status: 'live',
+    playPath: '/lab/evolve-car',
     dashboardMetrics: ['reward', 'generation', 'crash-rate'],
   },
   {
@@ -167,7 +170,8 @@ export const EXPLORATION_EXPERIMENTS = [
     badge: { id: 'ml-trainer', name: 'ML Trainer', icon: '🎨' },
     difficulty: 'Beginner',
     duration: '10–15 min',
-    status: 'coming-soon',
+    status: 'live',
+    playPath: '/lab/doodle-monsters',
     dashboardMetrics: ['accuracy', 'train-size', 'margin'],
   },
 ]

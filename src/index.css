@@ -190,3 +190,17 @@
     flex-shrink: 0;
   }
 }
+
+@keyframes doodle-wiggle {
+  0%,
+  100% {
+    transform: rotate(-5deg) scale(1.02);
+  }
+  50% {
+    transform: rotate(5deg) scale(1.02);
+  }
+}
+
+.animate-doodle-wiggle {
+  animation: doodle-wiggle 0.55s ease-in-out infinite;
+}

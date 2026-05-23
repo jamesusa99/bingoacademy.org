@@ -31,7 +31,9 @@ In the Railway service → **Variables**, set:
 | `VITE_SUPABASE_URL` | Your Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase **anon** (public) key |
 
-Redeploy after changing variables so Vite bakes them into the build. The repo includes `railway.toml` + `nixpacks.toml` (Node **22**, `npm run build` → `npm run start` serves `dist/` as an SPA). Requires Node ≥ 20.19 locally and on Railway.
+Redeploy after changing variables so Vite bakes them into the build. The repo includes `railway.toml` + `nixpacks.toml` (Node **22**, `npm run build` → `npm run start` runs `server/index.mjs`, which serves `dist/` and `POST /api/chat`). Requires Node ≥ 20.19 locally and on Railway.
+
+For **AI Jailbreak Adventure**, set `OPENAI_API_KEY` (and optional `OPENAI_MODEL`, default `gpt-4o-mini`) on the server — never as `VITE_*`. Local dev: `npm run dev` starts Vite + the API server (port 8787, proxied at `/api/chat`).
 
 ### Vercel
 

@@ -107,8 +107,12 @@ export default function ExperimentCard({ experiment, onBadgeUnlock }) {
       {expanded && (
         <div className="border-t border-slate-100 p-5 bg-slate-50/50 space-y-4">
           <ScienceDashboard metrics={experiment.dashboardMetrics} active accent={accent} />
-          {experiment.id === 'word-gravity' ? (
+          {experiment.id === 'word-gravity' && !experiment.playPath ? (
             <WordGravityDemo onComplete={handleComplete} />
+          ) : experiment.playPath ? (
+            <p className="text-xs text-center text-violet-600">
+              Open the full-screen physics arena with the Play now button above.
+            </p>
           ) : (
             <div className="rounded-xl bg-white border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
               <p className="font-medium text-bingo-dark mb-1">Web build in progress</p>
