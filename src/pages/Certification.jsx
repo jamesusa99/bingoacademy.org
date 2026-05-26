@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import {
+  BINGO_ACADEMY_NAME,
+  CERT_ISSUER,
+  CERT_ISSUING_CENTRES,
+  CERT_PORTAL,
+} from '../config/bingoCert'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 
@@ -53,12 +59,6 @@ const GALLERY_WORKS = [
   { title: 'Bingo Cup AIGC — Special Award', student: 'Student C · AI Skill Acquisition (4–6★)', year: 2024 },
 ]
 
-const ISSUING_CENTRES = [
-  { name: 'China AI Education Association', region: 'National oversight', type: 'Industry Association' },
-  { name: 'Beijing Normal University Continuing Ed', region: 'Beijing / North China', type: 'Academic Institution' },
-  { name: 'East China Regional Education Bureau', region: 'Jiangsu · Zhejiang · Shanghai', type: 'Government Body' },
-  { name: 'AI+Education Industry Alliance', region: 'National', type: 'Industry Alliance' },
-]
 
 const FAQ_ITEMS = [
   { q: 'How much does learner certification cost?', a: 'Fees vary by tier and course bundle. Entry-level certificates start around $198; top-tier innovation certificates around $498. Full pricing is in the certification guide PDF.' },
@@ -118,7 +118,9 @@ function VerifyModal({ onClose }) {
                 <div><span className="font-medium">Holder:</span> Zhang Wei (Z**)</div>
                 <div><span className="font-medium">Cert Level:</span> Synthesis & Innovation (9★) — AI Innovation Certificate</div>
                 <div><span className="font-medium">Issued:</span> Dec 2024 · <span className="font-medium">Valid:</span> Dec 2027</div>
-                <div><span className="font-medium">Issuing Centre:</span> China AI Education Association</div>
+                <div>
+                  <span className="font-medium">{CERT_PORTAL.verifyIssuingOrg}:</span> {BINGO_ACADEMY_NAME}
+                </div>
                 <div><span className="font-medium">Certificate No:</span> BINGO-2024-ZC-00412</div>
               </div>
             </div>
@@ -171,9 +173,9 @@ export default function Certification() {
       {verifyModal && <VerifyModal onClose={() => setVerifyModal(false)} />}
 
       <PageBanner
-        eyebrow="Certify Talent · Verify Skills"
-        title="Bingo AI Certification Centre"
-        subtitle="Nine-star curriculum · Dual-endorsed learner certificates · Teacher credentials for all three product lines."
+        eyebrow={BINGO_ACADEMY_NAME}
+        title={CERT_PORTAL.bannerTitle}
+        subtitle={CERT_ISSUER.tagline}
         gradient="from-emerald-500/15 via-emerald-50 to-cyan-50"
       >
         <div className="flex flex-wrap gap-2 justify-center lg:justify-start text-xs mb-5">
@@ -562,20 +564,22 @@ export default function Certification() {
       {tab === 'issuing' && (
         <div className="space-y-6">
           <div className="card p-5 bg-slate-50 border-slate-200">
-            <h2 className="font-bold text-bingo-dark mb-1">🏛️ Issuing Centre Framework</h2>
-            <p className="text-slate-600 text-sm">Issuing centres are approved third-party bodies — industry associations, universities, and government education offices — that co-endorse Bingo certificates and conduct periodic quality audits. Their endorsement is what makes Bingo certificates externally verifiable and admissions-relevant.</p>
+            <h2 className="font-bold text-bingo-dark mb-1">📜 {CERT_PORTAL.issuingNoticeTitle}</h2>
+            <p className="text-slate-600 text-sm">{CERT_PORTAL.issuingNoticeBody}</p>
           </div>
 
-          {/* Current centres */}
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Current Issuing Centre Partners</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
+              {CERT_PORTAL.issuingCentresLabel}
+            </p>
             <div className="grid sm:grid-cols-2 gap-3">
-              {ISSUING_CENTRES.map((c,i) => (
-                <div key={i} className="card p-4 flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-xl shrink-0">🏛️</div>
+              {CERT_ISSUING_CENTRES.map((c) => (
+                <div key={c.name} className="card p-4 flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-xl shrink-0">🎓</div>
                   <div>
                     <h3 className="font-semibold text-bingo-dark text-sm">{c.name}</h3>
                     <p className="text-xs text-slate-500">{c.type} · {c.region}</p>
+                    {c.desc && <p className="text-xs text-slate-600 mt-2 leading-relaxed">{c.desc}</p>}
                   </div>
                 </div>
               ))}

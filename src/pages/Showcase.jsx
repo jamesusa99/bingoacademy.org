@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
+import StudentPortfolioGallery from '../components/StudentPortfolioGallery'
+import { SHOWCASE_PORTAL } from '../config/showcasePortal'
 
 // ─── Data ──────────────────────────────────────────────────────────
 
@@ -203,7 +205,7 @@ export default function Showcase() {
       <PageBanner
         eyebrow="Real Outcomes · Verified Results"
         title="Achievements"
-        subtitle="1,000+ student success stories · IOAI competition results · K12 classroom outcomes"
+        subtitle={SHOWCASE_PORTAL.bannerSubtitle}
         gradient="from-amber-500/15 via-amber-50 to-orange-50"
       >
         <div className="bg-red-50 border border-red-200/60 rounded-xl px-4 py-3 mb-5 max-w-xl mx-auto lg:mx-0 text-left sm:text-center">
@@ -218,6 +220,11 @@ export default function Showcase() {
       </PageBanner>
 
       <PageContent className="py-6 sm:py-8">
+      {/* ── Student portfolio (visual-first) ── */}
+      <section className="mb-10">
+        <StudentPortfolioGallery />
+      </section>
+
       {/* ── Stats ── */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-8">
         {STATS.map((s,i) => (

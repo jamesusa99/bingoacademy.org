@@ -565,7 +565,7 @@ export default function Research() {
           <div className="card p-4 bg-primary/5 border-primary/20 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-700">Not sure which programme is right? Take the free AI Assessment to get matched.</p>
             <div className="flex gap-2">
-              <Link to="/ai-test" className="btn-primary text-xs px-4 py-2">Free Assessment</Link>
+              <Link to="/assessment" className="btn-primary text-xs px-4 py-2">Free Assessment</Link>
               <button onClick={() => setConsultModal(true)} className="border border-primary text-primary text-xs px-4 py-2 rounded-xl hover:bg-primary/5 transition">Ask an Advisor</button>
             </div>
           </div>
@@ -761,7 +761,7 @@ export default function Research() {
           <p className="text-xs text-slate-500 mt-0.5">Take the free AI Assessment · Get matched · Register today</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Link to="/ai-test" className="btn-primary text-sm px-4 py-2">🧠 Free AI Assessment</Link>
+          <Link to="/assessment" className="btn-primary text-sm px-4 py-2">🧠 Free AI Assessment</Link>
           <button onClick={() => setRegisterModal('')} className="border border-primary text-primary text-sm px-4 py-2 rounded-xl hover:bg-primary/5 transition">Register Now</button>
           <button onClick={() => setConsultModal(true)} className="border border-slate-300 text-slate-600 text-sm px-4 py-2 rounded-xl hover:bg-slate-50 transition">Free Consultation</button>
         </div>

@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 import { Routes, Route, Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
+import AdminGuard from './components/admin/AdminGuard'
 import AdminLayout from './components/AdminLayout'
+import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminCourses from './pages/admin/AdminCourses'
 import AdminEvents from './pages/admin/AdminEvents'
@@ -14,6 +16,10 @@ import AdminCert from './pages/admin/AdminCert'
 import AdminMallProducts from './pages/admin/AdminMallProducts'
 import AdminCharity from './pages/admin/AdminCharity'
 import AdminMentors from './pages/admin/AdminMentors'
+import AdminVideo from './pages/admin/AdminVideo'
+import AdminPayments from './pages/admin/AdminPayments'
+import AdminUsers from './pages/admin/AdminUsers'
+import AdminSettings from './pages/admin/AdminSettings'
 import Home from './pages/Home'
 import Showcase from './pages/Showcase'
 import ShowcaseCase from './pages/ShowcaseCase'
@@ -37,6 +43,9 @@ import ProfileWorks from './pages/ProfileWorks'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
+import AuthCallback from './pages/AuthCallback'
+import AIAssessment from './pages/AIAssessment'
+import Community from './pages/Community'
 
 function HashRedirect() {
   const navigate = useNavigate()
@@ -58,9 +67,18 @@ export default function App() {
     <>
       <HashRedirect />
       <Routes>
-      {/* Admin routes - path="/admin/*" ensures /admin and /admin/xxx are never matched by path="/" */}
-      <Route path="/admin/*" element={<AdminLayout />}>
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route
+        path="/admin/*"
+        element={
+          <AdminGuard>
+            <AdminLayout />
+          </AdminGuard>
+        }
+      >
         <Route index element={<AdminDashboard />} />
+        <Route path="settings" element={<AdminSettings />} />
         <Route path="home" element={<AdminHome />} />
         <Route path="showcase" element={<AdminShowcase />} />
         <Route path="courses" element={<AdminCourses />} />
@@ -72,6 +90,9 @@ export default function App() {
         <Route path="mall-products" element={<AdminMallProducts />} />
         <Route path="charity" element={<AdminCharity />} />
         <Route path="forum" element={<AdminForum />} />
+        <Route path="video" element={<AdminVideo />} />
+        <Route path="payments" element={<AdminPayments />} />
+        <Route path="users" element={<AdminUsers />} />
       </Route>
       {/* Main site routes */}
       <Route path="/" element={<Layout><Outlet /></Layout>}>
@@ -83,8 +104,10 @@ export default function App() {
         <Route path="showcase/materials" element={<ShowcaseMaterials />} />
         <Route path="showcase/venture/:id" element={<ShowcaseCase />} />
         <Route path="showcase/award/:id" element={<ShowcaseCase />} />
+        <Route path="assessment" element={<AIAssessment />} />
         <Route path="courses" element={<Courses />} />
         <Route path="lab" element={<AILab />} />
+        <Route path="community" element={<Community />} />
         <Route path="lab/hide-and-seek" element={<AIHideAndSeekPage />} />
         <Route path="lab/virtual-conductor" element={<AIVirtualConductorPage />} />
         <Route path="lab/word-gravity" element={<WordGravityPage />} />
@@ -103,12 +126,11 @@ export default function App() {
         {/* Legacy routes → new product structure */}
         <Route path="research" element={<Navigate to="/courses?line=ioai" replace />} />
         <Route path="events" element={<Navigate to="/courses?line=ioai" replace />} />
-        <Route path="community" element={<Navigate to="/" replace />} />
         <Route path="career" element={<Navigate to="/courses?line=k12" replace />} />
         <Route path="charity" element={<Navigate to="/" replace />} />
         <Route path="tools" element={<Navigate to="/mall" replace />} />
         <Route path="tools/detail/:id" element={<Navigate to="/mall" replace />} />
-        <Route path="ai-test" element={<Navigate to="/courses" replace />} />
+        <Route path="ai-test" element={<Navigate to="/assessment" replace />} />
         <Route path="mall/materials" element={<Navigate to="/mall" replace />} />
       </Route>
     </Routes>

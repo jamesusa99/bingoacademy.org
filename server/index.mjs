@@ -7,6 +7,10 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { handleChatRequest } from '../lib/guardChat.js'
+import { verifyAdminUser } from './lib/supabaseAdmin.mjs'
+import { registerAdminRoutes } from './routes/admin.mjs'
+import { registerStripeWebhook } from './routes/stripe.mjs'
+import { registerUserAdminRoutes } from './routes/users.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.PORT) || 8787
@@ -14,7 +18,13 @@ const distPath = path.join(__dirname, '../dist')
 const hasDist = fs.existsSync(path.join(distPath, 'index.html'))
 
 const app = express()
+
+registerStripeWebhook(app)
+
 app.use(express.json({ limit: '1mb' }))
+
+registerAdminRoutes(app, { verifyAdminUser })
+registerUserAdminRoutes(app, { verifyAdminUser })
 
 app.post('/api/chat', async (req, res) => {
   try {
@@ -53,6 +63,6 @@ if (hasDist) {
 
 app.listen(PORT, () => {
   console.log(`[server] listening on http://localhost:${PORT}`)
-  if (hasDist) console.log('[server] serving dist/ + /api/chat')
+  if (hasDist) console.log('[server] serving dist/ + API')
   else console.log('[server] API only — run Vite separately for the UI')
 })

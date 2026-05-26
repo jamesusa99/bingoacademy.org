@@ -1,92 +1,146 @@
 import { Link, useParams } from 'react-router-dom'
-import { COURSE_CATALOG, getProductLine, subcategoryLabel } from '../config/products'
+import { getCourseById, getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/products'
+import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
+import { COURSES_PORTAL } from '../config/coursesPortal'
+import CourseComingSoon from '../components/CourseComingSoon'
 import PageContent from '../components/PageContent'
-
-const LESSONS_BY_ID = {
-  i1: [
-    { n: 1, title: 'My AI Companion', status: 'continue' },
-    { n: 2, title: 'AI Idiom Story Picture Book', status: 'start' },
-  ],
-  g1: [
-    { n: 1, title: 'What is AI?', status: 'start' },
-    { n: 2, title: 'AI in daily life', status: 'start' },
-  ],
-}
 
 export default function CourseDetail() {
   const { id } = useParams()
-  const item = COURSE_CATALOG.find((c) => c.id === id) ?? COURSE_CATALOG[0]
-  const line = getProductLine(item.line)
-  const lessons = LESSONS_BY_ID[item.id] ?? [
-    { n: 1, title: 'Lesson 1 — Introduction', status: 'start' },
-    { n: 2, title: 'Lesson 2 — Practice', status: 'start' },
-  ]
-  const totalLessons = lessons.length
-  const completed = 0
+  const item = getCourseById(id)
+  const line = getProductLine(item?.line ?? 'general')
+
+  if (!item) {
+    return (
+      <PageContent className="py-12 text-center">
+        <p className="text-slate-600 mb-4">{COURSES_PORTAL.notFound}</p>
+        <Link to="/courses" className="btn-primary text-sm px-5 py-2">
+          {COURSES_PORTAL.backToCourses}
+        </Link>
+      </PageContent>
+    )
+  }
+
+  const comingSoon = isCourseComingSoon(item)
+  const linkedLabs = (item.labSlugs ?? [])
+    .map((slug) => EXPLORATION_EXPERIMENTS.find((e) => e.id === slug))
+    .filter(Boolean)
 
   return (
     <PageContent className="py-6 sm:py-8 max-w-4xl mx-auto">
-      <Link to={`/courses?line=${item.line}`} className="text-primary text-sm hover:underline">← Back to {line.name}</Link>
+      <Link to={`/courses?line=${item.line}`} className="text-primary text-sm hover:underline">
+        ← {COURSES_PORTAL.backTo} {line.name}
+      </Link>
 
       <div className="card p-5 mt-4 mb-6">
-        <div className="flex gap-4">
-          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary/20 to-cyan-100 flex items-center justify-center text-3xl shrink-0">
+        <div className="flex gap-4 flex-wrap">
+          <div
+            className={`w-20 h-20 rounded-xl bg-gradient-to-br ${line.gradient} flex items-center justify-center text-3xl shrink-0 border ${line.border}`}
+          >
             {line.icon}
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">{item.badge}</span>
-            <h1 className="text-xl font-bold text-bingo-dark mt-1">{item.name}</h1>
-            <p className="text-xs text-slate-500 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                {item.badge}
+              </span>
+              {comingSoon ? (
+                <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                  {COURSES_PORTAL.statusComingSoon}
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                  {COURSES_PORTAL.statusEnrolling}
+                </span>
+              )}
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-bingo-dark">{item.name}</h1>
+            {item.nameEn && item.nameEn !== item.name && (
+              <p className="text-xs text-slate-500 mt-0.5">{item.nameEn}</p>
+            )}
+            <p className="text-xs text-slate-500 mt-2">
               {subcategoryLabel(item.line, item.sub)} · {item.hours} · {item.price}
             </p>
-            <div className="mt-3">
-              <div className="flex justify-between text-xs text-slate-500 mb-1">
-                <span>Learning progress {Math.round((completed / totalLessons) * 100)}% · {completed}/{totalLessons} lessons</span>
-              </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(completed / totalLessons) * 100}%` }} />
-              </div>
-              <p className="text-xs text-slate-400 mt-1">Last studied: —</p>
-            </div>
           </div>
         </div>
       </div>
 
-      <p className="text-sm text-slate-600 mb-4">{item.desc}</p>
+      {comingSoon ? (
+        <CourseComingSoon course={item} line={line} />
+      ) : (
+        <>
+          <p className="text-sm text-slate-700 leading-relaxed mb-6">{item.desc}</p>
 
-      <section className="card overflow-hidden mb-6">
-        <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark text-sm">Course content</div>
-        <ul className="divide-y divide-slate-100">
-          {lessons.map((lesson) => (
-            <li key={lesson.n} className="p-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center shrink-0">{lesson.n}</span>
-                <span className="text-sm text-slate-800 truncate">{lesson.title}</span>
-                {lesson.status === 'continue' && (
-                  <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0">Continue</span>
-                )}
+          {item.audience && (
+            <section className="card p-5 mb-4">
+              <h2 className="font-bold text-bingo-dark text-sm mb-2">{COURSES_PORTAL.audience}</h2>
+              <p className="text-sm text-slate-600">{item.audience}</p>
+            </section>
+          )}
+
+          {item.outcomes?.length > 0 && (
+            <section className="card p-5 mb-4">
+              <h2 className="font-bold text-bingo-dark text-sm mb-3">{COURSES_PORTAL.outcomes}</h2>
+              <ul className="space-y-2">
+                {item.outcomes.map((o) => (
+                  <li key={o} className="text-sm text-slate-600 flex gap-2">
+                    <span className="text-emerald-500 shrink-0">✓</span>
+                    {o}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {item.syllabus?.length > 0 && (
+            <section className="card overflow-hidden mb-6">
+              <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark text-sm">
+                {COURSES_PORTAL.syllabus}
               </div>
-              <button type="button" className="btn-primary text-xs px-3 py-1.5 shrink-0">
-                {lesson.status === 'continue' ? 'Continue' : 'Start'}
-              </button>
-            </li>
-          ))}
-        </ul>
-        <div className="p-4 bg-slate-50 text-xs text-slate-500 flex items-center gap-2 border-t border-slate-100">
-          <span>📄</span>
-          <span>Course summary — available after completing all {totalLessons} lessons</span>
-        </div>
-      </section>
+              <ol className="divide-y divide-slate-100">
+                {item.syllabus.map((unit, i) => (
+                  <li key={unit} className="p-4 flex gap-3 text-sm text-slate-700">
+                    <span className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">
+                      {i + 1}
+                    </span>
+                    {unit}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
 
-      <p className="text-xs text-slate-500 mb-4 text-center">
-        Complete all lessons and pass the assessment to receive your certificate.
-      </p>
+          {linkedLabs.length > 0 && (
+            <section className="card p-5 mb-6 border-violet-200/60 bg-violet-50/30">
+              <h2 className="font-bold text-bingo-dark text-sm mb-2">{COURSES_PORTAL.linkedLabs}</h2>
+              <p className="text-xs text-slate-600 mb-3">{COURSES_PORTAL.linkedLabsDesc}</p>
+              <div className="flex flex-wrap gap-2">
+                {linkedLabs.map((lab) => (
+                  <Link
+                    key={lab.id}
+                    to={lab.playPath ?? '/lab'}
+                    className="text-xs font-semibold px-3 py-2 rounded-xl bg-white border border-violet-200 text-violet-800 hover:border-violet-400 transition"
+                  >
+                    {lab.emoji} {lab.title}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
-      <div className="flex flex-wrap gap-3 justify-center mb-8">
-        <Link to="/profile/study" className="btn-primary text-sm px-5 py-2.5">Continue learning</Link>
-        <Link to="/cert" className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50">Certification</Link>
-        <Link to="/mall" className="text-sm px-5 py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5">Materials in Mall</Link>
-      </div>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link to="/profile/study" className="btn-primary text-sm px-5 py-2.5">
+              {COURSES_PORTAL.enrollCta}
+            </Link>
+            <Link to="/assessment" className="text-sm px-5 py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5">
+              {COURSES_PORTAL.freeAssessment}
+            </Link>
+            <Link to="/mall" className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50">
+              {COURSES_PORTAL.materialsCta}
+            </Link>
+          </div>
+        </>
+      )}
     </PageContent>
   )
 }

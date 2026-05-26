@@ -30,8 +30,35 @@ function createStubQuery() {
   return query
 }
 
+const authNotConfigured = { message: '[BingoAcademy] Supabase auth is not configured.' }
+
+const stubAuth = {
+  signInWithPassword: async () => ({
+    data: { user: null, session: null },
+    error: authNotConfigured,
+  }),
+  signUp: async () => ({
+    data: { user: null, session: null },
+    error: authNotConfigured,
+  }),
+  signInWithOAuth: async () => ({
+    data: { provider: null, url: null },
+    error: authNotConfigured,
+  }),
+  resetPasswordForEmail: async () => ({
+    data: {},
+    error: authNotConfigured,
+  }),
+  getSession: async () => ({ data: { session: null }, error: null }),
+  signOut: async () => ({ error: null }),
+  onAuthStateChange: () => ({
+    data: { subscription: { unsubscribe: () => {} } },
+  }),
+}
+
 const stubClient = {
   from: () => createStubQuery(),
+  auth: stubAuth,
 }
 
 export const supabase = isSupabaseConfigured

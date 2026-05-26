@@ -1,0 +1,36 @@
+/** Copy for /courses page */
+
+export const COURSES_PORTAL = {
+  bannerEyebrow: 'AI Course Center',
+  browseCourses: 'Browse courses',
+  assessmentChip: 'Assessment · Find your path',
+  labChip: 'AI Lab · Free trials',
+  ioaiFeaturedLabel: 'IOAI Featured',
+  ioaiFeaturedTitle: 'Whitelist competition training · Enrolling now',
+  ioaiFeaturedDesc:
+    'Video courses, training camps, and mock defence workshops are live. Self-study and classroom packs are in preparation — detail pages show “Coming soon”.',
+  comingSoonHint:
+    'Self-study / classroom items marked “Coming soon” — try AI Lab free or book a consultation.',
+  allTypes: 'All types',
+  courseCount: (n) => `${n} course${n === 1 ? '' : 's'}`,
+  emptyCategory: 'No courses in this category yet. Check back soon.',
+  comingSoonBadge: 'Coming soon',
+  viewDetails: 'View details',
+  materialsMall: 'Materials store',
+  certTitle: 'Bingo AI Academy Certification',
+  certDesc: 'Earn capability certificates after courses and Lab tasks — verifiable on the official site.',
+  certCta: 'Certification center →',
+  notFound: 'Course not found',
+  backToCourses: 'Back to course center',
+  backTo: 'Back to',
+  statusComingSoon: 'Coming soon',
+  statusEnrolling: 'Enrolling now',
+  audience: 'Who it\'s for',
+  outcomes: 'Learning outcomes',
+  syllabus: 'Syllabus',
+  linkedLabs: 'Linked AI Lab experiments',
+  linkedLabsDesc: 'Game-like labs aligned with this course — runs in the browser, no install',
+  enrollCta: 'Enquire / enrol',
+  freeAssessment: 'Free placement assessment',
+  materialsCta: 'Materials & lab kits',
+}

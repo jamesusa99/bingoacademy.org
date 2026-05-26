@@ -1,26 +1,60 @@
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { PRODUCT_LINES, getProductLine, subcategoryLabel, COURSE_CATALOG } from '../config/products'
+import {
+  PRODUCT_LINES,
+  getProductLine,
+  subcategoryLabel,
+  COURSE_CATALOG,
+  isCourseComingSoon,
+  coursesByLine,
+} from '../config/products'
+import { COURSES_PORTAL } from '../config/coursesPortal'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 
-const CATALOG = COURSE_CATALOG
-
 function CourseCard({ item }) {
+  const soon = isCourseComingSoon(item)
+
   return (
-    <div className="card p-5 flex flex-col hover:shadow-md hover:border-primary/30 transition h-full">
+    <div
+      className={`card p-5 flex flex-col transition h-full ${
+        soon ? 'opacity-95 border-amber-200/80 bg-amber-50/20' : 'hover:shadow-md hover:border-primary/30'
+      }`}
+    >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded">{item.badge}</span>
-        <span className="font-bold text-primary text-sm shrink-0">{item.price}</span>
+        <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded">
+          {item.badge}
+        </span>
+        {soon ? (
+          <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full shrink-0">
+            {COURSES_PORTAL.comingSoonBadge}
+          </span>
+        ) : (
+          <span className="font-bold text-primary text-sm shrink-0">{item.price}</span>
+        )}
       </div>
       <h3 className="font-semibold text-bingo-dark text-sm leading-snug mb-1">{item.name}</h3>
       <p className="text-[10px] text-slate-400 mb-2">
         {subcategoryLabel(item.line, item.sub)} · {item.hours}
       </p>
-      <p className="text-xs text-slate-600 leading-relaxed flex-1 mb-4">{item.desc}</p>
+      <p className="text-xs text-slate-600 leading-relaxed flex-1 mb-4 line-clamp-3">{item.desc}</p>
       <div className="flex gap-2 flex-wrap">
-        <Link to={`/courses/detail/${item.id}`} className="btn-primary text-xs px-3 py-1.5">View Details</Link>
-        <Link to="/mall" className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Materials in Mall</Link>
+        <Link
+          to={`/courses/detail/${item.id}`}
+          className={`text-xs px-3 py-1.5 rounded-lg font-semibold min-h-[40px] inline-flex items-center ${
+            soon ? 'border border-amber-400 text-amber-800 hover:bg-amber-50' : 'btn-primary'
+          }`}
+        >
+          {COURSES_PORTAL.viewDetails}
+        </Link>
+        {!soon && (
+          <Link
+            to="/mall"
+            className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition min-h-[40px] inline-flex items-center"
+          >
+            {COURSES_PORTAL.materialsMall}
+          </Link>
+        )}
       </div>
     </div>
   )
@@ -28,24 +62,26 @@ function CourseCard({ item }) {
 
 export default function Courses() {
   const [params, setParams] = useSearchParams()
-  const lineId = params.get('line') || 'general'
+  const lineId = params.get('line') || 'ioai'
   const subId = params.get('sub') || ''
   const line = getProductLine(lineId)
 
   const filtered = useMemo(() => {
-    let list = CATALOG.filter((c) => c.line === line.id)
+    let list = COURSE_CATALOG.filter((c) => c.line === line.id)
     if (subId) list = list.filter((c) => c.sub === subId)
     return list
   }, [line.id, subId])
+
+  const ioaiFeatured = coursesByLine('ioai', { featuredOnly: true })
 
   const bannerSlides = PRODUCT_LINES.map((pl) => ({
     id: pl.id,
     gradient: pl.gradient,
     icon: pl.icon,
-    eyebrow: 'AI Courses',
+    eyebrow: COURSES_PORTAL.bannerEyebrow,
     title: pl.name,
     subtitle: pl.tagline,
-    ctaLabel: 'View courses',
+    ctaLabel: COURSES_PORTAL.browseCourses,
     href: `/courses?line=${pl.id}`,
   }))
 
@@ -54,95 +90,139 @@ export default function Courses() {
       <PageBanner slides={bannerSlides} autoPlayMs={8000} />
 
       <PageContent className="py-6 sm:py-8">
-      {/* Product line tabs — scroll on mobile */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
-        {PRODUCT_LINES.map((pl) => (
-          <button
-            key={pl.id}
-            type="button"
-            onClick={() => setParams({ line: pl.id })}
-            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition shrink-0 min-h-[44px] ${
-              line.id === pl.id ? 'bg-primary text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Link
+            to="/assessment"
+            className="text-xs font-semibold px-3 py-2 rounded-full bg-violet-100 text-violet-800 hover:bg-violet-200 transition"
           >
-            {pl.icon} {pl.name}
-          </button>
-        ))}
-      </div>
+            🧠 {COURSES_PORTAL.assessmentChip}
+          </Link>
+          <Link
+            to="/lab"
+            className="text-xs font-semibold px-3 py-2 rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition"
+          >
+            🧪 {COURSES_PORTAL.labChip}
+          </Link>
+        </div>
 
-      {/* Active line intro */}
-      <div className={`card p-5 mb-6 border-2 ${line.border} bg-gradient-to-r ${line.gradient}`}>
-        <h2 className="font-bold text-bingo-dark text-lg">{line.name}</h2>
-        <p className="text-sm text-slate-600 mt-1">{line.tagline}</p>
-      </div>
+        {lineId === 'ioai' && (
+          <section className="mb-8 card p-5 sm:p-6 border-2 border-amber-300/60 bg-gradient-to-r from-amber-50 to-orange-50">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800 mb-1">
+              {COURSES_PORTAL.ioaiFeaturedLabel}
+            </p>
+            <h2 className="text-lg font-black text-bingo-dark mb-2">{COURSES_PORTAL.ioaiFeaturedTitle}</h2>
+            <p className="text-sm text-slate-600 mb-4">{COURSES_PORTAL.ioaiFeaturedDesc}</p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {ioaiFeatured.map((c) => (
+                <Link
+                  key={c.id}
+                  to={`/courses/detail/${c.id}`}
+                  className="rounded-xl border border-amber-200 bg-white p-4 hover:shadow-md transition"
+                >
+                  <span className="text-[10px] font-bold text-amber-700">{c.badge}</span>
+                  <p className="font-semibold text-sm text-bingo-dark mt-1">{c.name}</p>
+                  <p className="text-xs text-slate-500 mt-1">{c.price}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* Subcategory filters */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <button
-          type="button"
-          onClick={() => setParams({ line: line.id })}
+        <div
+          className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {PRODUCT_LINES.map((pl) => (
+            <button
+              key={pl.id}
+              type="button"
+              onClick={() => setParams({ line: pl.id })}
+              className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition shrink-0 min-h-[44px] ${
+                line.id === pl.id ? 'bg-primary text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {pl.icon} {pl.name}
+            </button>
+          ))}
+        </div>
+
+        <div className={`card p-5 mb-6 border-2 ${line.border} bg-gradient-to-r ${line.gradient}`}>
+          <h2 className="font-bold text-bingo-dark text-lg">{line.name}</h2>
+          <p className="text-sm text-slate-600 mt-1">{line.tagline}</p>
+          {(line.id === 'general' || line.id === 'k12') && (
+            <p className="text-xs text-amber-700 mt-2 font-medium">{COURSES_PORTAL.comingSoonHint}</p>
+          )}
+        </div>
+
+        <div
+          className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          <button
+            type="button"
+            onClick={() => setParams({ line: line.id })}
             className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] ${
               !subId ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            All types
+            {COURSES_PORTAL.allTypes}
           </button>
-        {line.subcategories.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => setParams({ line: line.id, sub: s.id })}
-            className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] ${
-              subId === s.id ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            {s.icon} {s.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Subcategory legend when showing all */}
-      {!subId && (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
           {line.subcategories.map((s) => (
             <button
               key={s.id}
               type="button"
               onClick={() => setParams({ line: line.id, sub: s.id })}
-              className="card p-4 text-left hover:border-primary/40 hover:shadow-sm transition"
+              className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] ${
+                subId === s.id ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
             >
-              <span className="text-lg">{s.icon}</span>
-              <p className="font-semibold text-bingo-dark text-sm mt-1">{s.name}</p>
-              <p className="text-xs text-slate-500">{s.desc}</p>
+              {s.icon} {s.name}
             </button>
           ))}
         </div>
-      )}
 
-      {/* Course grid */}
-      <section>
-        <h3 className="text-sm font-semibold text-slate-500 mb-4">
-          {filtered.length} item{filtered.length !== 1 ? 's' : ''}
-          {subId ? ` · ${subcategoryLabel(line.id, subId)}` : ''}
-        </h3>
-        {filtered.length === 0 ? (
-          <div className="card p-10 text-center text-slate-500 text-sm">No courses in this category yet. Check back soon.</div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-            {filtered.map((item) => (
-              <CourseCard key={item.id} item={item} />
+        {!subId && (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
+            {line.subcategories.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setParams({ line: line.id, sub: s.id })}
+                className="card p-4 text-left hover:border-primary/40 hover:shadow-sm transition"
+              >
+                <span className="text-lg">{s.icon}</span>
+                <p className="font-semibold text-bingo-dark text-sm mt-1">{s.name}</p>
+                <p className="text-xs text-slate-500">{s.desc}</p>
+              </button>
             ))}
           </div>
         )}
-      </section>
 
-      <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h3 className="font-semibold text-bingo-dark">Earn a certificate</h3>
-          <p className="text-sm text-slate-600 mt-1">Complete courses and labs, then apply for Bingo AI certification.</p>
-        </div>
-        <Link to="/cert" className="btn-primary px-5 py-2.5 text-sm min-h-[44px] inline-flex items-center">Certification →</Link>
-      </section>
+        <section>
+          <h3 className="text-sm font-semibold text-slate-500 mb-4">
+            {COURSES_PORTAL.courseCount(filtered.length)}
+            {subId ? ` · ${subcategoryLabel(line.id, subId)}` : ''}
+          </h3>
+          {filtered.length === 0 ? (
+            <div className="card p-10 text-center text-slate-500 text-sm">{COURSES_PORTAL.emptyCategory}</div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+              {filtered.map((item) => (
+                <CourseCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-bingo-dark">{COURSES_PORTAL.certTitle}</h3>
+            <p className="text-sm text-slate-600 mt-1">{COURSES_PORTAL.certDesc}</p>
+          </div>
+          <Link to="/cert" className="btn-primary px-5 py-2.5 text-sm min-h-[44px] inline-flex items-center">
+            {COURSES_PORTAL.certCta}
+          </Link>
+        </section>
       </PageContent>
     </div>
   )

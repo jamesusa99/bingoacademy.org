@@ -66,18 +66,10 @@ export function subcategoryLabel(lineId, subId) {
   return SUBCATEGORY_LABELS[`${lineId}:${subId}`] ?? subId
 }
 
-/** Course catalogue (frontend; extend DB with product_line + subcategory) */
-export const COURSE_CATALOG = [
-  { id: 'g1', line: 'general', sub: 'course', name: 'AI Literacy Foundations', desc: 'Core AI concepts, ethics, and creative thinking for self-paced learners.', price: '$299', hours: '12 sessions', badge: 'General' },
-  { id: 'g2', line: 'general', sub: 'online-lab', name: 'Cloud AI Exploration Lab', desc: 'Guided online experiments with auto-graded tasks.', price: '$199', hours: '8 labs', badge: 'Online Lab' },
-  { id: 'g3', line: 'general', sub: 'materials-pack', name: 'Home Experiment Materials Pack', desc: 'Digital guides + consumables for general AI labs.', price: '$128', hours: 'Kit', badge: 'Materials' },
-  { id: 'i1', line: 'ioai', sub: 'video', name: 'AIGC Whitelist Competition Course', desc: 'IOAI-oriented video lessons with lesson progress and certificate path.', price: '$890', hours: '2 lessons + more', badge: 'IOAI' },
-  { id: 'i2', line: 'ioai', sub: 'video', name: 'Competition Sprint Video Series', desc: 'Topic selection, project build, and presentation skills.', price: '$999', hours: '16 sessions', badge: 'Video' },
-  { id: 'i3', line: 'ioai', sub: 'online-lab', name: 'IOAI Competition Training Camp', desc: 'Intensive camp sessions with simulated whitelist competition tasks.', price: '$490', hours: '10 sessions', badge: 'Training Camp' },
-  { id: 'k1', line: 'k12', sub: 'books', name: 'AI Literacy Textbook Series (Grades 3–9)', desc: 'Aligned classroom textbooks — digital and print.', price: '$128', hours: '7 volumes', badge: 'Books' },
-  { id: 'k2', line: 'k12', sub: 'course', name: 'K12 Classroom AI Course Pack', desc: 'Teacher slides, student worksheets, and term plans.', price: 'Quote', hours: 'Full term', badge: 'Course' },
-  { id: 'k3', line: 'k12', sub: 'online-lab', name: 'Classroom Online Lab License', desc: 'Whole-class cloud lab with teacher dashboard.', price: '$12,800/yr', hours: 'School', badge: 'Online Lab' },
-  { id: 'k4', line: 'k12', sub: 'materials-pack', name: 'Class Lab Materials Pack (30 students)', desc: 'Per-class consumables and digital resource bundle.', price: '$2,980', hours: 'Bulk', badge: 'Materials' },
-  { id: 'k5', line: 'k12', sub: 'offline-lab', name: 'Offline AI Lab Setup', desc: 'Hardware layout, safety guide, and lesson integration.', price: 'Quote', hours: 'On-site', badge: 'Offline Lab' },
-  { id: 'k6', line: 'k12', sub: 'school-kit', name: 'Institution Offline Lab Kits', desc: 'Bulk offline lab kits for recurring classroom sessions.', price: 'Quote', hours: 'Bulk', badge: 'Offline Lab Kits' },
-]
+export {
+  COURSE_CATALOG,
+  COURSE_STATUS,
+  getCourseById,
+  isCourseComingSoon,
+  coursesByLine,
+} from './coursesCatalog.js'

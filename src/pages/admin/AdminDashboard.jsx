@@ -9,7 +9,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [c, e, t, sc, rc, cj, ct, mp, cr, cm] = await Promise.all([
+        const [c, e, t, sc, rc, cj, ct, mp, cr, cm, vid, ord, prof] = await Promise.all([
           supabase.from('courses').select('id', { count: 'exact', head: true }),
           supabase.from('events').select('id', { count: 'exact', head: true }),
           supabase.from('forum_threads').select('id', { count: 'exact', head: true }),
@@ -20,6 +20,9 @@ export default function AdminDashboard() {
           supabase.from('mall_products').select('id', { count: 'exact', head: true }),
           supabase.from('charity_reports').select('id', { count: 'exact', head: true }),
           supabase.from('community_mentors').select('id', { count: 'exact', head: true }),
+          supabase.from('video_assets').select('id', { count: 'exact', head: true }),
+          supabase.from('orders').select('id', { count: 'exact', head: true }),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
         ])
         setStats({
           courses: c.count ?? 0,
@@ -32,6 +35,9 @@ export default function AdminDashboard() {
           mallProducts: mp.count ?? 0,
           charity: cr.count ?? 0,
           mentors: cm.count ?? 0,
+          videos: vid.count ?? 0,
+          orders: ord.count ?? 0,
+          users: prof.count ?? 0,
         })
       } catch (err) {
         console.error('Failed to fetch stats:', err)
@@ -54,6 +60,10 @@ export default function AdminDashboard() {
     { label: 'AI Mall Products', value: stats.mallProducts ?? 0, to: '/admin/mall-products', icon: '🛒', color: 'bg-orange-50 border-orange-200/60' },
     { label: 'Honors & Charity', value: stats.charity ?? 0, to: '/admin/charity', icon: '🎗️', color: 'bg-rose-50 border-rose-200/60' },
     { label: 'Forum', value: stats.threads ?? 0, to: '/admin/forum', icon: '💬', color: 'bg-green-50 border-green-200/60' },
+    { label: 'Video assets', value: stats.videos ?? 0, to: '/admin/video', icon: '🎬', color: 'bg-indigo-50 border-indigo-200/60' },
+    { label: 'Orders', value: stats.orders ?? 0, to: '/admin/payments', icon: '💳', color: 'bg-violet-50 border-violet-200/60' },
+    { label: 'Users', value: stats.users ?? 0, to: '/admin/users', icon: '👥', color: 'bg-slate-100 border-slate-200' },
+    { label: 'Platform', value: '—', to: '/admin/settings', icon: '⚙️', color: 'bg-slate-100 border-slate-200' },
   ]
 
   return (
@@ -93,6 +103,10 @@ export default function AdminDashboard() {
           <Link to="/admin/mall-products" className="px-4 py-2 rounded-xl bg-orange-100 text-orange-700 text-sm font-medium">Mall Products</Link>
           <Link to="/admin/charity" className="px-4 py-2 rounded-xl bg-rose-100 text-rose-700 text-sm font-medium">Charity</Link>
           <Link to="/admin/forum" className="px-4 py-2 rounded-xl bg-green-100 text-green-700 text-sm font-medium">Forum</Link>
+          <Link to="/admin/video" className="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 text-sm font-medium">Video</Link>
+          <Link to="/admin/payments" className="px-4 py-2 rounded-xl bg-violet-100 text-violet-700 text-sm font-medium">Payments</Link>
+          <Link to="/admin/users" className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-medium">Users</Link>
+          <Link to="/admin/settings" className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-medium">Settings</Link>
           <Link to="/" className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-sm">View Site</Link>
         </div>
       </div>

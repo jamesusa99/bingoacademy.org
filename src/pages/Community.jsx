@@ -438,7 +438,7 @@ function LeadModal({ title, onClose }) {
         <div className="text-4xl mb-2">✅</div>
         <p className="font-semibold text-bingo-dark mb-1">Request Received!</p>
         <p className="text-slate-500 text-sm mb-4">We'll reach you within 24 hours.</p>
-        <Link to="/ai-test" onClick={onClose} className="btn-primary text-sm px-5 py-2">Take Free AI Assessment →</Link>
+        <Link to="/assessment" onClick={onClose} className="btn-primary text-sm px-5 py-2">Take Free AI Assessment →</Link>
       </div>
     </div>
   )
@@ -723,7 +723,7 @@ export default function Community() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => setScholarModal(true)} className="bg-amber-500 text-white text-sm px-4 py-2 rounded-xl font-medium hover:bg-amber-600 transition">Apply Now →</button>
-              <Link to="/ai-test" className="border border-amber-400 text-amber-700 text-sm px-4 py-2 rounded-xl hover:bg-amber-50 transition">Free Assessment</Link>
+              <Link to="/assessment" className="border border-amber-400 text-amber-700 text-sm px-4 py-2 rounded-xl hover:bg-amber-50 transition">Free Assessment</Link>
             </div>
           </div>
         </div>
@@ -779,7 +779,7 @@ export default function Community() {
               <p className="font-medium text-bingo-dark text-sm">Want a personalised mentor match?</p>
               <p className="text-xs text-slate-500 mt-0.5">Take the free AI assessment to get matched to the right mentor for your goals</p>
             </div>
-            <Link to="/ai-test" className="btn-primary text-sm px-4 py-2">Take Assessment to Get Matched →</Link>
+            <Link to="/assessment" className="btn-primary text-sm px-4 py-2">Take Assessment to Get Matched →</Link>
           </div>
         </div>
       )}
@@ -933,7 +933,7 @@ export default function Community() {
               <p className="font-medium text-bingo-dark text-sm">Not sure which certification is right for you?</p>
               <p className="text-xs text-slate-500 mt-0.5">Take the free 3-minute AI assessment for an instant recommendation</p>
             </div>
-            <Link to="/ai-test" className="btn-primary text-sm px-5 py-2">Free Assessment →</Link>
+            <Link to="/assessment" className="btn-primary text-sm px-5 py-2">Free Assessment →</Link>
           </div>
         </div>
       )}
@@ -977,7 +977,7 @@ export default function Community() {
           <p className="text-xs text-slate-500 mt-0.5">Join free · take the assessment · get your Scholar path</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Link to="/ai-test" className="btn-primary text-sm px-4 py-2">🧠 Free AI Assessment</Link>
+          <Link to="/assessment" className="btn-primary text-sm px-4 py-2">🧠 Free AI Assessment</Link>
           <button onClick={() => setScholarModal(true)} className="bg-amber-500 text-white text-sm px-4 py-2 rounded-xl font-medium hover:bg-amber-600 transition">⭐ Apply for Scholar</button>
           <button onClick={() => setLeadModal('Book a Free Consultation')} className="border border-primary text-primary text-sm px-4 py-2 rounded-xl hover:bg-primary/5 transition">Free Consultation</button>
         </div>

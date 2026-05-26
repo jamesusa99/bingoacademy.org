@@ -143,7 +143,7 @@ function EventDetailModal({ event, onClose }) {
             {registered
               ? <span className="flex-1 text-center bg-green-100 text-green-700 text-sm px-4 py-2.5 rounded-xl font-medium">✅ Registered!</span>
               : <button onClick={() => setRegistered(true)} className="flex-1 btn-primary text-sm py-2.5">Register Now</button>}
-            <Link to="/ai-test" onClick={onClose} className="border border-primary text-primary text-sm px-4 py-2.5 rounded-xl hover:bg-primary/5 transition">AI Assessment</Link>
+            <Link to="/assessment" onClick={onClose} className="border border-primary text-primary text-sm px-4 py-2.5 rounded-xl hover:bg-primary/5 transition">AI Assessment</Link>
             <button onClick={onClose} className="border border-slate-200 text-slate-600 text-sm px-3 py-2.5 rounded-xl hover:bg-slate-50">Close</button>
           </div>
         </div>
@@ -324,7 +324,7 @@ export default function Events() {
           <div className="card p-4 bg-primary/5 border-primary/20 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-700">Not sure which competition to enter? Take the free AI Assessment first.</p>
             <div className="flex gap-2">
-              <Link to="/ai-test" className="btn-primary text-xs px-4 py-2">Free AI Assessment</Link>
+              <Link to="/assessment" className="btn-primary text-xs px-4 py-2">Free AI Assessment</Link>
               <button onClick={() => setLeadModal({ title: 'Competition Guidance Consultation', subtitle: 'Free 1-on-1 · personalised competition recommendation' })} className="border border-primary text-primary text-xs px-4 py-2 rounded-xl hover:bg-primary/5 transition">Free Consultation</button>
             </div>
           </div>
@@ -354,7 +354,7 @@ export default function Events() {
                 <p className="text-xs font-medium text-primary">{w.award}</p>
                 <div className="flex gap-2 mt-3">
                   <button className="text-xs text-primary hover:underline">View Details →</button>
-                  <Link to="/ai-test" className="text-xs text-slate-400 hover:text-primary transition">AI Assessment →</Link>
+                  <Link to="/assessment" className="text-xs text-slate-400 hover:text-primary transition">AI Assessment →</Link>
                 </div>
               </div>
             ))}
@@ -576,7 +576,7 @@ export default function Events() {
                 <p className="text-xs text-slate-600 flex-1 mb-3">{a.desc}</p>
                 <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100">
                   <span className={`font-bold text-sm ${a.price === 'Free' ? 'text-green-600' : 'text-primary'}`}>{a.price}</span>
-                  <Link to="/ai-test" className="btn-primary text-xs px-3 py-1.5">Start Assessment</Link>
+                  <Link to="/assessment" className="btn-primary text-xs px-3 py-1.5">Start Assessment</Link>
                 </div>
               </div>
             ))}
@@ -594,7 +594,7 @@ export default function Events() {
 
           <div className="card p-4 bg-purple-50/20 border-purple-200/60 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-700">Ready to see your AI ability baseline?</p>
-            <Link to="/ai-test" className="btn-primary text-sm px-5 py-2">Take Free Assessment →</Link>
+            <Link to="/assessment" className="btn-primary text-sm px-5 py-2">Take Free Assessment →</Link>
           </div>
         </div>
       )}
@@ -716,7 +716,7 @@ export default function Events() {
           <p className="text-xs text-slate-500 mt-0.5">Free AI assessment · personalised competition plan · 2-hour hosting enquiry response</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Link to="/ai-test" className="btn-primary text-sm px-4 py-2">🧠 Free AI Assessment</Link>
+          <Link to="/assessment" className="btn-primary text-sm px-4 py-2">🧠 Free AI Assessment</Link>
           <button onClick={() => setTab('events')} className="border border-primary text-primary text-sm px-4 py-2 rounded-xl hover:bg-primary/5 transition">View Competitions</button>
           <button onClick={() => setHostModal(true)} className="bg-amber-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-amber-600 transition">Host a Competition</button>
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import ExperimentCard from '../components/lab/ExperimentCard'
+import { Link } from 'react-router-dom'
 import {
   LAB_STANDALONE_INTRO,
   LAB_VALUE_PROPS,
@@ -12,6 +13,8 @@ import {
   BADGE_STORAGE_KEY,
   getExperimentsByCategory,
 } from '../config/explorationLab'
+import { LAB_COURSE_ALIGNMENT } from '../config/labCourseMap'
+import { LAB_PORTAL } from '../config/labPortal'
 
 function scrollToExperiments() {
   document.getElementById('experiments')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -61,6 +64,7 @@ export default function AILab() {
             title: 'Gamified Web Experiments — Play to Understand AI',
             subtitle:
               'Zero setup. Instant play on PC, Mac, and iPad. Canvas, WebGL, and in-browser ML — no installs, no course enrollment.',
+            wideSubtitle: true,
             ctaLabel: 'Start experimenting',
             onCta: scrollToExperiments,
             secondaryLabel: 'How it works',
@@ -72,53 +76,61 @@ export default function AILab() {
 
       <PageContent className="py-6 sm:py-10">
         {/* Standalone positioning */}
-        <section className="mb-8 card p-5 sm:p-6 border-violet-200/60 bg-violet-50/40">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600 mb-1">
-            Independent module
-          </p>
-          <h2 className="font-bold text-bingo-dark text-lg mb-2">{LAB_STANDALONE_INTRO.title}</h2>
-          <p className="text-sm text-slate-600 leading-relaxed max-w-3xl">{LAB_STANDALONE_INTRO.desc}</p>
-        </section>
-
-        {/* Value props */}
-        <section className="mb-10">
-          <div className="grid sm:grid-cols-3 gap-4">
-            {LAB_VALUE_PROPS.map((p) => (
-              <div
-                key={p.id}
-                className="card p-5 text-center bg-gradient-to-b from-white to-cyan-50/30 border-cyan-200/40"
-              >
-                <div className="text-3xl mb-2">{p.icon}</div>
-                <h2 className="font-bold text-bingo-dark text-sm">{p.title}</h2>
-                <p className="text-xs text-slate-600 mt-2 leading-relaxed">{p.desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2 justify-center">
-            {LAB_TECH_STACK.map((t) => (
-              <span
-                key={t}
-                className="text-[10px] font-mono bg-slate-900 text-cyan-300 px-2.5 py-1 rounded-full"
-              >
-                {t}
-              </span>
-            ))}
+        <section className="mb-8 card p-5 sm:p-6 border-violet-200/60 bg-violet-50/40 w-full">
+          <div className="w-full flex flex-col gap-3 lg:flex-row lg:items-baseline lg:gap-8">
+            <div className="shrink-0 lg:max-w-[16rem]">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600 mb-1">
+                {LAB_PORTAL.standaloneEyebrow}
+              </p>
+              <h2 className="font-bold text-bingo-dark text-lg">{LAB_STANDALONE_INTRO.title}</h2>
+            </div>
+            <p className="flex-1 min-w-0 w-full text-sm text-slate-600 leading-relaxed lg:text-base">
+              {LAB_STANDALONE_INTRO.desc}
+            </p>
           </div>
         </section>
 
-        {/* Gamification UX */}
-        <section className="mb-10 card p-6 sm:p-8 bg-gradient-to-r from-bingo-dark to-slate-800 text-white border-0">
-          <h2 className="text-lg font-bold mb-1">Cross-platform game design</h2>
-          <p className="text-sm text-slate-300 mb-6 max-w-2xl">
-            Built for overseas families and young explorers: touch-first on iPad, precise on desktop, and
-            science dashboards that connect every move to the math underneath.
-          </p>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {LAB_UX_PRINCIPLES.map((u) => (
-              <div key={u.title} className="rounded-xl bg-white/5 border border-white/10 p-4">
-                <div className="text-2xl mb-2">{u.icon}</div>
-                <p className="font-semibold text-sm">{u.title}</p>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{u.desc}</p>
+        <section className="mb-10 card p-6 border-cyan-200/50">
+          <h2 className="font-bold text-bingo-dark text-lg mb-1">{LAB_COURSE_ALIGNMENT.title}</h2>
+          <p className="text-sm text-slate-600 mb-6">{LAB_COURSE_ALIGNMENT.subtitle}</p>
+          <div className="space-y-6">
+            {LAB_COURSE_ALIGNMENT.tracks.map((track) => (
+              <div key={track.line}>
+                <Link
+                  to={track.href}
+                  className="text-sm font-bold text-primary hover:underline mb-3 inline-block"
+                >
+                  {track.lineLabel} →
+                </Link>
+                <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {track.pairs.map(({ labId, courseId, note }) => {
+                    const lab = EXPLORATION_EXPERIMENTS.find((e) => e.id === labId)
+                    return (
+                      <li
+                        key={`${labId}-${courseId}`}
+                        className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs"
+                      >
+                        <div className="font-semibold text-bingo-dark">
+                          {lab?.emoji} {lab?.title ?? labId}
+                        </div>
+                        <p className="text-slate-500 mt-1">{note}</p>
+                        <div className="flex gap-2 mt-2">
+                          {lab?.playPath && (
+                            <Link to={lab.playPath} className="text-primary font-medium hover:underline">
+                              {LAB_PORTAL.playExperiment}
+                            </Link>
+                          )}
+                          <Link
+                            to={`/courses/detail/${courseId}`}
+                            className="text-slate-600 hover:text-primary"
+                          >
+                            {LAB_PORTAL.matchedCourse}
+                          </Link>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
               </div>
             ))}
           </div>
@@ -251,6 +263,49 @@ export default function AILab() {
           >
             Jump to experiments →
           </button>
+        </section>
+
+        {/* Value props + tech stack + cross-platform UX (page footer) */}
+        <section className="mt-10 pt-10 border-t border-slate-200/80">
+          <div className="grid sm:grid-cols-3 gap-4 mb-4">
+            {LAB_VALUE_PROPS.map((p) => (
+              <div
+                key={p.id}
+                className="card p-5 text-center bg-gradient-to-b from-white to-cyan-50/30 border-cyan-200/40"
+              >
+                <div className="text-3xl mb-2">{p.icon}</div>
+                <h2 className="font-bold text-bingo-dark text-sm">{p.title}</h2>
+                <p className="text-xs text-slate-600 mt-2 leading-relaxed">{p.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mb-10 flex flex-wrap gap-2 justify-center">
+            {LAB_TECH_STACK.map((t) => (
+              <span
+                key={t}
+                className="text-[10px] font-mono bg-slate-900 text-cyan-300 px-2.5 py-1 rounded-full"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+
+          <section className="card p-6 sm:p-8 bg-gradient-to-r from-bingo-dark to-slate-800 text-white border-0">
+            <h2 className="text-lg font-bold mb-1">Cross-platform game design</h2>
+            <p className="text-sm text-slate-300 mb-6 max-w-2xl">
+              Built for overseas families and young explorers: touch-first on iPad, precise on desktop, and
+              science dashboards that connect every move to the math underneath.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {LAB_UX_PRINCIPLES.map((u) => (
+                <div key={u.title} className="rounded-xl bg-white/5 border border-white/10 p-4">
+                  <div className="text-2xl mb-2">{u.icon}</div>
+                  <p className="font-semibold text-sm">{u.title}</p>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">{u.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         </section>
       </PageContent>
     </div>

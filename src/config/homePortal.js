@@ -77,12 +77,12 @@ export const PORTAL_MISSION = {
 
 /** Core entry grid — mirrors classic bingoacademy.cn homepage business tiles */
 export const PORTAL_CORE_ENTRIES = [
-  { icon: '📘', title: 'AI Literacy Courses', desc: 'General self-study & thinking skills', to: '/courses?line=general', accent: 'cyan' },
-  { icon: '🎬', title: 'Competition Video Courses', desc: 'IOAI sprint & whitelist prep', to: '/courses?line=ioai', accent: 'amber' },
-  { icon: '🎓', title: 'K12 Classroom Packs', desc: 'School books, courses & labs', to: '/courses?line=k12', accent: 'violet' },
-  { icon: '🛒', title: 'AI Mall', desc: 'Books, kits & materials packs', to: '/mall', accent: 'slate' },
-  { icon: '🏅', title: 'Student Achievements', desc: 'Works, awards & school cases', to: '/showcase', accent: 'rose' },
-  { icon: '📜', title: 'Certification', desc: 'Tiered ability certificates', to: '/cert', accent: 'emerald' },
+  { icon: '🧠', title: 'Assessment', desc: 'Quick AI placement · matched course path', to: '/assessment', accent: 'violet' },
+  { icon: '🏆', title: 'IOAI 竞赛培训', desc: '白名单备赛 · 视频课与集训营已开放', to: '/courses?line=ioai', accent: 'amber' },
+  { icon: '🧪', title: 'AI Exploration Lab', desc: 'Gamified experiments · synced with courses', to: '/lab', accent: 'cyan' },
+  { icon: '📘', title: '素养自学 / 课堂课', desc: '自学课与课堂课筹备中', to: '/courses?line=general', accent: 'slate' },
+  { icon: '🏅', title: 'Achievements', desc: 'Student portfolio · awards & admissions', to: '/showcase', accent: 'rose' },
+  { icon: '💬', title: 'Community', desc: 'Discussions, resources & AI tools', to: '/community', accent: 'emerald' },
 ]
 
 export const PORTAL_LEARNING_PATH = [
@@ -118,7 +118,7 @@ export const PORTAL_COMPETITIONS = [
 
 /** Highlight courses shown on portal (subset of catalogue) */
 export const PORTAL_FEATURED_COURSES = COURSE_CATALOG.filter((c) =>
-  ['g1', 'i1', 'i3', 'k1', 'k2', 'k3'].includes(c.id)
+  ['ioai-whitelist', 'ioai-aigc-sprint', 'ioai-camp', 'g1', 'k1', 'k3'].includes(c.id)
 )
 
 export const PORTAL_TRUST_STATS_FALLBACK = [
