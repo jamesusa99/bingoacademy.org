@@ -1,6 +1,21 @@
 /** Bingo AI Academy · Three product lines */
 export const PRODUCT_LINES = [
   {
+    id: 'ioai',
+    name: 'IOAI Competition Training',
+    nameEn: 'IOAI Competition Training',
+    tagline: 'Video courses and training camps for IOAI whitelist competitions',
+    color: 'amber',
+    gradient: 'from-amber-500/15 to-orange-50',
+    border: 'border-amber-200/60',
+    icon: '🏆',
+    to: '/courses?line=ioai',
+    subcategories: [
+      { id: 'video', name: 'AI Video Courses', icon: '🎬', desc: 'Competition-focused video lessons with progress tracking' },
+      { id: 'online-lab', name: 'Training Camp', icon: '🏕️', desc: 'Intensive competition training camps with mock assessments' },
+    ],
+  },
+  {
     id: 'general',
     name: 'Foundations of AI Program',
     nameEn: 'Foundations of AI Program',
@@ -14,21 +29,6 @@ export const PRODUCT_LINES = [
       { id: 'course', name: 'AI Video Courses', icon: '📘', desc: 'Self-paced AI video lessons with progress tracking' },
       { id: 'online-lab', name: 'Online Labs', icon: '🧪', desc: 'Cloud-based interactive experiments and projects' },
       { id: 'materials-pack', name: 'Online Lab Kits', icon: '📦', desc: 'Home experiment kits and digital resource bundles' },
-    ],
-  },
-  {
-    id: 'ioai',
-    name: 'IOAI Competition Training',
-    nameEn: 'IOAI Competition Training',
-    tagline: 'Video courses and training camps for IOAI whitelist competitions',
-    color: 'amber',
-    gradient: 'from-amber-500/15 to-orange-50',
-    border: 'border-amber-200/60',
-    icon: '🏆',
-    to: '/courses?line=ioai',
-    subcategories: [
-      { id: 'video', name: 'AI Video Courses', icon: '🎬', desc: 'Competition-focused video lessons with progress tracking' },
-      { id: 'online-lab', name: 'Training Camp', icon: '🏕️', desc: 'Intensive competition training camps with mock assessments' },
     ],
   },
   {

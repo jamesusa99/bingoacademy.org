@@ -14,10 +14,23 @@ export async function fetchAdminUser(id) {
   return adminFetch(`/api/admin/users/${id}`)
 }
 
+export async function createAdminUser(payload) {
+  return adminFetch('/api/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
 export async function updateAdminUser(id, payload) {
   return adminFetch(`/api/admin/users/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteAdminUser(id) {
+  return adminFetch(`/api/admin/users/${id}`, {
+    method: 'DELETE',
   })
 }
 

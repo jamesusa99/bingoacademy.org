@@ -3,8 +3,9 @@ import { supabase } from '../../lib/supabase'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import AdminUserDetail from '../../components/admin/AdminUserDetail'
+import AdminUserCreate from '../../components/admin/AdminUserCreate'
 import { useAdminAuth } from '../../hooks/useAdminAuth'
-import { fetchAdminUsers, syncAdminUsers } from '../../lib/admin/users'
+import { fetchAdminUsers, syncAdminUsers, deleteAdminUser } from '../../lib/admin/users'
 import { logAdminAction } from '../../lib/admin/auth'
 
 const ROLES = ['', 'user', 'editor', 'admin']
@@ -48,7 +49,7 @@ async function fetchProfilesFallback({ q, role, status, page, perPage }) {
 }
 
 export default function AdminUsers() {
-  const { profile: currentProfile } = useAdminAuth()
+  const { user: currentUser, profile: currentProfile } = useAdminAuth()
   const [users, setUsers] = useState([])
   const [pagination, setPagination] = useState({ page: 1, perPage: 25, total: 0, totalPages: 0 })
   const [loading, setLoading] = useState(true)
@@ -56,6 +57,8 @@ export default function AdminUsers() {
   const [apiFallback, setApiFallback] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
+  const [showCreate, setShowCreate] = useState(false)
+  const [success, setSuccess] = useState(null)
 
   const [q, setQ] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
@@ -110,7 +113,34 @@ export default function AdminUsers() {
 
   const handleUserSaved = async (updated) => {
     setUsers((list) => list.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)))
+    setSuccess('User updated.')
     await logAdminAction('update', 'profiles', updated.id)
+  }
+
+  const handleUserCreated = async (created) => {
+    setSuccess(`User ${created.email} created.`)
+    setPage(1)
+    await loadUsers()
+  }
+
+  const handleUserDeleted = async (id) => {
+    setUsers((list) => list.filter((u) => u.id !== id))
+    setSuccess('User deleted.')
+    await logAdminAction('delete', 'profiles', id)
+  }
+
+  const handleDeleteRow = async (row) => {
+    if (row.id === currentUser?.id) {
+      setError('You cannot delete your own account while signed in.')
+      return
+    }
+    if (!confirm(`Delete user ${row.email}? This cannot be undone.`)) return
+    try {
+      await deleteAdminUser(row.id)
+      await handleUserDeleted(row.id)
+    } catch (err) {
+      setError(err.status === 503 ? 'Add SUPABASE_SERVICE_ROLE_KEY and restart npm run dev to delete users.' : err.message)
+    }
   }
 
   const handleSync = async () => {
@@ -134,18 +164,33 @@ export default function AdminUsers() {
     <div>
       <AdminPageHeader
         title="User management"
-        description="Manage all registered users: search, edit profiles, roles, membership, and notes. Lists every Supabase Auth account when the admin API is configured."
+        description="Add, edit, or delete users. Creates Supabase Auth accounts plus profiles. Requires SUPABASE_SERVICE_ROLE_KEY and npm run dev (API on :8787)."
         actions={
-          <button
-            type="button"
-            onClick={handleSync}
-            disabled={syncing || loading}
-            className="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
-          >
-            {syncing ? 'Syncing…' : 'Sync from Auth'}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCreate(true)}
+              className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium"
+            >
+              + Add user
+            </button>
+            <button
+              type="button"
+              onClick={handleSync}
+              disabled={syncing || loading}
+              className="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
+            >
+              {syncing ? 'Syncing…' : 'Sync from Auth'}
+            </button>
+          </div>
         }
       />
+
+      {success ? (
+        <AdminAlert type="success" onDismiss={() => setSuccess(null)}>
+          {success}
+        </AdminAlert>
+      ) : null}
 
       {error ? (
         <AdminAlert type={apiFallback ? 'warning' : 'error'} onDismiss={() => setError(null)}>
@@ -231,7 +276,7 @@ export default function AdminUsers() {
                   <th className="p-3">Role</th>
                   <th className="p-3">Status</th>
                   <th className="p-3">Last sign-in</th>
-                  <th className="p-3 w-20" />
+                  <th className="p-3 w-28" />
                 </tr>
               </thead>
               <tbody>
@@ -266,14 +311,23 @@ export default function AdminUsers() {
                         ? new Date(row.auth.last_sign_in_at).toLocaleDateString()
                         : '—'}
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       <button
                         type="button"
                         onClick={() => setSelectedId(row.id)}
-                        className="text-primary text-xs font-medium hover:underline"
+                        className="text-primary text-xs font-medium hover:underline mr-3"
                       >
                         Edit
                       </button>
+                      {row.id !== currentUser?.id ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRow(row)}
+                          className="text-red-600 text-xs font-medium hover:underline"
+                        >
+                          Delete
+                        </button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -315,8 +369,18 @@ export default function AdminUsers() {
         ) : null}
       </div>
 
+      {showCreate ? (
+        <AdminUserCreate onClose={() => setShowCreate(false)} onCreated={handleUserCreated} />
+      ) : null}
+
       {selectedId ? (
-        <AdminUserDetail userId={selectedId} onClose={() => setSelectedId(null)} onSaved={handleUserSaved} />
+        <AdminUserDetail
+          userId={selectedId}
+          currentUserId={currentUser?.id}
+          onClose={() => setSelectedId(null)}
+          onSaved={handleUserSaved}
+          onDeleted={handleUserDeleted}
+        />
       ) : null}
     </div>
   )

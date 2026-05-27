@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchAdminUser, updateAdminUser, syncAdminUsers } from '../../lib/admin/users'
+import { fetchAdminUser, updateAdminUser, deleteAdminUser } from '../../lib/admin/users'
 import { supabase } from '../../lib/supabase'
 import { logAdminAction } from '../../lib/admin/auth'
 import AdminAlert from './AdminAlert'
@@ -9,6 +9,7 @@ const STATUSES = ['active', 'suspended', 'pending']
 const MEMBER_TIERS = ['free', 'monthly', 'quarterly', 'annual']
 
 const EMPTY = {
+  email: '',
   full_name: '',
   phone: '',
   role: 'user',
@@ -40,9 +41,10 @@ function parseTags(str) {
     .filter(Boolean)
 }
 
-export default function AdminUserDetail({ userId, onClose, onSaved }) {
+export default function AdminUserDetail({ userId, currentUserId, onClose, onSaved, onDeleted }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState(null)
   const [user, setUser] = useState(null)
   const [orders, setOrders] = useState([])
@@ -57,6 +59,7 @@ export default function AdminUserDetail({ userId, onClose, onSaved }) {
       setUser(dataUser)
       setOrders(dataOrders)
       setForm({
+        email: dataUser.email || dataUser.auth?.email || '',
         full_name: dataUser.full_name || '',
         phone: dataUser.phone || '',
         role: dataUser.role || 'user',
@@ -98,6 +101,28 @@ export default function AdminUserDetail({ userId, onClose, onSaved }) {
       mounted = false
     }
   }, [userId])
+
+  const handleDelete = async () => {
+    if (userId === currentUserId) {
+      setError('You cannot delete your own account while signed in.')
+      return
+    }
+    if (!confirm(`Permanently delete user ${user?.email || userId}? This removes their Auth account and profile.`)) {
+      return
+    }
+    setDeleting(true)
+    setError(null)
+    try {
+      await deleteAdminUser(userId)
+      await logAdminAction('delete', 'profiles', userId)
+      onDeleted?.(userId)
+      onClose()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -178,6 +203,15 @@ export default function AdminUserDetail({ userId, onClose, onSaved }) {
 
               <h3 className="text-sm font-semibold text-bingo-dark mb-3">Profile</h3>
               <div className="grid gap-3 mb-6">
+                <label className="block text-xs font-medium text-slate-600">
+                  Email
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => set('email', e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  />
+                </label>
                 <label className="block text-xs font-medium text-slate-600">
                   Full name
                   <input
@@ -322,18 +356,30 @@ export default function AdminUserDetail({ userId, onClose, onSaved }) {
           ) : null}
         </div>
 
-        <div className="sticky bottom-0 border-t border-slate-200 bg-white p-4 flex gap-2">
-          <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-300 text-sm font-medium">
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={loading || saving}
-            className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-medium disabled:opacity-60"
-          >
-            {saving ? 'Saving…' : 'Save changes'}
-          </button>
+        <div className="sticky bottom-0 border-t border-slate-200 bg-white p-4 space-y-2">
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-300 text-sm font-medium">
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={loading || saving || deleting}
+              className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-medium disabled:opacity-60"
+            >
+              {saving ? 'Saving…' : 'Save changes'}
+            </button>
+          </div>
+          {userId !== currentUserId ? (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={loading || saving || deleting}
+              className="w-full py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 disabled:opacity-60"
+            >
+              {deleting ? 'Deleting…' : 'Delete user'}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

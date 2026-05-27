@@ -78,9 +78,9 @@ export const PORTAL_MISSION = {
 /** Core entry grid — mirrors classic bingoacademy.cn homepage business tiles */
 export const PORTAL_CORE_ENTRIES = [
   { icon: '🧠', title: 'Assessment', desc: 'Quick AI placement · matched course path', to: '/assessment', accent: 'violet' },
-  { icon: '🏆', title: 'IOAI 竞赛培训', desc: '白名单备赛 · 视频课与集训营已开放', to: '/courses?line=ioai', accent: 'amber' },
+  { icon: '🏆', title: 'IOAI Competition Training', desc: 'Whitelist prep · video courses & training camps open', to: '/courses?line=ioai', accent: 'amber' },
   { icon: '🧪', title: 'AI Exploration Lab', desc: 'Gamified experiments · synced with courses', to: '/lab', accent: 'cyan' },
-  { icon: '📘', title: '素养自学 / 课堂课', desc: '自学课与课堂课筹备中', to: '/courses?line=general', accent: 'slate' },
+  { icon: '📘', title: 'Self-Study & Classroom', desc: 'Literacy courses and school packs — rolling out', to: '/courses?line=general', accent: 'slate' },
   { icon: '🏅', title: 'Achievements', desc: 'Student portfolio · awards & admissions', to: '/showcase', accent: 'rose' },
   { icon: '💬', title: 'Community', desc: 'Discussions, resources & AI tools', to: '/community', accent: 'emerald' },
 ]

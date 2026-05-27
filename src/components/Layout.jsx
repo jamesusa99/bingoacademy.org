@@ -11,7 +11,7 @@ export default function Layout({ children }) {
       <header className="sticky top-0 z-50 bg-bingo-dark text-white shadow-lg border-b border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b] pt-[env(safe-area-inset-top)]">
         <div className="w-full px-4 sm:px-6">
           <div className="flex items-center gap-2 lg:gap-4 min-h-14">
-            <Link to="/" className="shrink-0 flex items-center" aria-label="BingoAcademy 首页">
+            <Link to="/" className="shrink-0 flex items-center" aria-label="BingoAcademy home">
               <img
                 src="/logo.png"
                 alt="BingoAcademy"
@@ -114,8 +114,8 @@ export default function Layout({ children }) {
             </div>
             <div>
               <div className="text-white font-medium mb-2">Products</div>
-              <Link to="/courses?line=general" className="block hover:text-white">Foundations of AI Program</Link>
               <Link to="/courses?line=ioai" className="block hover:text-white">IOAI Competition Training</Link>
+              <Link to="/courses?line=general" className="block hover:text-white">Foundations of AI Program</Link>
               <Link to="/courses?line=k12" className="block hover:text-white">K12 Classroom Edition</Link>
               <Link to="/admin" className="block hover:text-white text-slate-500 mt-2">Admin</Link>
             </div>
