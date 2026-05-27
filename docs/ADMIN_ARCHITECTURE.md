@@ -19,7 +19,8 @@ This document maps the **target stack** to the **current repository** (Vite + Re
 | `/admin/login` | Admin sign-in (Supabase Auth) |
 | `/admin` | Operations dashboard |
 | `/admin/home` | Home portal CMS |
-| `/admin/courses` | Course catalog (DB) |
+| `/admin/courses` | Courses catalogue (`courses_catalog`) |
+| `/admin/mall` | Mall listings (`courses` table) |
 | `/admin/showcase` | Achievements cases |
 | `/admin/events` | Events |
 | `/admin/forum` | Community forum moderation |

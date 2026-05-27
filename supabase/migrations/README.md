@@ -13,7 +13,7 @@ Run **once** on a new project, in order. All files are safe to **re-run** (idemp
 | `007_courses_catalog_portfolio.sql` | courses_catalog, portfolio_works | Tables exist |
 | `008_courses_catalog_list_fields.sql` | category, level, lessons, rating, students, thumbnail | Columns exist |
 
-**Admin:** `/admin/courses-catalog` — add/edit/delete courses (powers `/courses` and video list UI).
+**Admin:** `/admin/courses` — add/edit/delete courses (powers `/courses` and video list UI).
 
 Then import data:
 

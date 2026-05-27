@@ -82,8 +82,9 @@ export default function App() {
         <Route path="settings" element={<AdminSettings />} />
         <Route path="home" element={<AdminHome />} />
         <Route path="showcase" element={<AdminShowcase />} />
-        <Route path="courses" element={<AdminCourses />} />
-        <Route path="courses-catalog" element={<AdminCoursesCatalog />} />
+        <Route path="courses" element={<AdminCoursesCatalog />} />
+        <Route path="courses-catalog" element={<Navigate to="/admin/courses" replace />} />
+        <Route path="mall" element={<AdminCourses />} />
         <Route path="research" element={<AdminResearch />} />
         <Route path="events" element={<AdminEvents />} />
         <Route path="mentors" element={<AdminMentors />} />

@@ -10,7 +10,7 @@ export default function AdminDashboard() {
     async function fetchStats() {
       try {
         const [c, e, t, sc, rc, cj, ct, mp, cr, cm, vid, ord, prof] = await Promise.all([
-          supabase.from('courses').select('id', { count: 'exact', head: true }),
+          supabase.from('courses_catalog').select('id', { count: 'exact', head: true }),
           supabase.from('events').select('id', { count: 'exact', head: true }),
           supabase.from('forum_threads').select('id', { count: 'exact', head: true }),
           supabase.from('showcase_cases').select('id', { count: 'exact', head: true }),
@@ -51,7 +51,7 @@ export default function AdminDashboard() {
   const cards = [
     { label: 'Home Portal', value: '—', to: '/admin/home', icon: '🏠', color: 'bg-slate-100 border-slate-200' },
     { label: 'Achievements', value: stats.showcase ?? 0, to: '/admin/showcase', icon: '🏅', color: 'bg-amber-50 border-amber-200/60' },
-    { label: 'AI Courses', value: stats.courses ?? 0, to: '/admin/courses', icon: '📚', color: 'bg-primary/10 border-primary/20' },
+    { label: 'Courses', value: stats.courses ?? 0, to: '/admin/courses', icon: '📚', color: 'bg-primary/10 border-primary/20' },
     { label: 'AI Camp', value: stats.research ?? 0, to: '/admin/research', icon: '⛺', color: 'bg-green-50 border-green-200/60' },
     { label: 'Events Center', value: stats.events ?? 0, to: '/admin/events', icon: '🏆', color: 'bg-amber-50 border-amber-200/60' },
     { label: 'AI Community', value: stats.mentors ?? 0, to: '/admin/mentors', icon: '👥', color: 'bg-violet-50 border-violet-200/60' },
@@ -94,7 +94,8 @@ export default function AdminDashboard() {
         <div className="flex flex-wrap gap-2">
           <Link to="/admin/home" className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium">Home Portal</Link>
           <Link to="/admin/showcase" className="px-4 py-2 rounded-xl bg-amber-100 text-amber-700 text-sm font-medium">Achievements</Link>
-          <Link to="/admin/courses" className="px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium">AI Courses</Link>
+          <Link to="/admin/courses" className="px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium">Courses</Link>
+          <Link to="/admin/mall" className="px-4 py-2 rounded-xl bg-cyan-100 text-cyan-800 text-sm font-medium">Mall</Link>
           <Link to="/admin/research" className="px-4 py-2 rounded-xl bg-green-100 text-green-700 text-sm font-medium">AI Camp</Link>
           <Link to="/admin/events" className="px-4 py-2 rounded-xl bg-amber-100 text-amber-700 text-sm font-medium">Events</Link>
           <Link to="/admin/mentors" className="px-4 py-2 rounded-xl bg-violet-100 text-violet-700 text-sm font-medium">Mentors</Link>
