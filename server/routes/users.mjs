@@ -206,6 +206,74 @@ export function registerUserAdminRoutes(app, { verifyAdminUser }) {
     }
   })
 
+  app.post('/api/admin/users', async (req, res) => {
+    const auth = await verifyAdminUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const admin = getSupabaseAdmin()
+    if (!admin) return adminNotConfigured(res)
+
+    const body = req.body || {}
+    const email = (body.email || '').trim().toLowerCase()
+    const password = body.password || ''
+
+    if (!email) return res.status(400).json({ error: 'Email is required' })
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' })
+    }
+
+    try {
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: body.email_confirm !== false,
+        user_metadata: {
+          full_name: body.full_name?.trim() || '',
+        },
+      })
+      if (createErr) return res.status(400).json({ error: createErr.message })
+
+      const userId = created.user.id
+      await ensureProfile(admin, created.user)
+
+      const profilePatch = {}
+      for (const key of [
+        'full_name',
+        'avatar_url',
+        'role',
+        'phone',
+        'status',
+        'member_tier',
+        'locale',
+        'country',
+        'school',
+        'grade',
+        'parent_email',
+        'internal_notes',
+        'tags',
+      ]) {
+        if (body[key] !== undefined && body[key] !== '') profilePatch[key] = body[key]
+      }
+      if (body.tags !== undefined) {
+        profilePatch.tags = Array.isArray(body.tags) ? body.tags : []
+      }
+      profilePatch.email = email
+      profilePatch.updated_at = new Date().toISOString()
+
+      const { data: profile, error: profileErr } = await admin
+        .from('profiles')
+        .update(profilePatch)
+        .eq('id', userId)
+        .select()
+        .single()
+      if (profileErr) return res.status(500).json({ error: profileErr.message })
+
+      res.status(201).json({ user: mergeUser(profile, created.user) })
+    } catch (err) {
+      res.status(500).json({ error: err.message })
+    }
+  })
+
   app.get('/api/admin/users/:id', async (req, res) => {
     const auth = await verifyAdminUser(req)
     if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
@@ -288,74 +356,6 @@ export function registerUserAdminRoutes(app, { verifyAdminUser }) {
 
     const { data: refreshed } = await admin.auth.admin.getUserById(id)
     res.json({ user: mergeUser(data, refreshed?.user || authData.user) })
-  })
-
-  app.post('/api/admin/users', async (req, res) => {
-    const auth = await verifyAdminUser(req)
-    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
-
-    const admin = getSupabaseAdmin()
-    if (!admin) return adminNotConfigured(res)
-
-    const body = req.body || {}
-    const email = (body.email || '').trim().toLowerCase()
-    const password = body.password || ''
-
-    if (!email) return res.status(400).json({ error: 'Email is required' })
-    if (!password || password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' })
-    }
-
-    try {
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: body.email_confirm !== false,
-        user_metadata: {
-          full_name: body.full_name?.trim() || '',
-        },
-      })
-      if (createErr) return res.status(400).json({ error: createErr.message })
-
-      const userId = created.user.id
-      await ensureProfile(admin, created.user)
-
-      const profilePatch = {}
-      for (const key of [
-        'full_name',
-        'avatar_url',
-        'role',
-        'phone',
-        'status',
-        'member_tier',
-        'locale',
-        'country',
-        'school',
-        'grade',
-        'parent_email',
-        'internal_notes',
-        'tags',
-      ]) {
-        if (body[key] !== undefined && body[key] !== '') profilePatch[key] = body[key]
-      }
-      if (body.tags !== undefined) {
-        profilePatch.tags = Array.isArray(body.tags) ? body.tags : []
-      }
-      profilePatch.email = email
-      profilePatch.updated_at = new Date().toISOString()
-
-      const { data: profile, error: profileErr } = await admin
-        .from('profiles')
-        .update(profilePatch)
-        .eq('id', userId)
-        .select()
-        .single()
-      if (profileErr) return res.status(500).json({ error: profileErr.message })
-
-      res.status(201).json({ user: mergeUser(profile, created.user) })
-    } catch (err) {
-      res.status(500).json({ error: err.message })
-    }
   })
 
   app.delete('/api/admin/users/:id', async (req, res) => {

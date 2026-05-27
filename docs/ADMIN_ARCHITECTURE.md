@@ -10,7 +10,7 @@ This document maps the **target stack** to the **current repository** (Vite + Re
 | Data & auth | Supabase (PostgreSQL) | `supabase/schema.sql` + `supabase/migrations/002_admin_platform.sql` |
 | Video | Cloudflare Stream | `video_assets` table + `POST /api/admin/stream/upload-url` |
 | Payments | Stripe | `orders`, `stripe_products` + `POST /api/webhooks/stripe` |
-| Heavy compute | Railway (Node.js) | `server/index.mjs` (Express) — chat, admin APIs, webhooks |
+| Heavy compute | Railway or Vercel serverless | `server/index.mjs` (local/Railway) · `api/server.js` (Vercel `/api/admin/*`) |
 
 ## Admin routes (SPA)
 

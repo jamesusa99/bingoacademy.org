@@ -30,7 +30,12 @@ export async function adminFetch(path, options = {}) {
   }
 
   if (!res.ok) {
-    const err = new Error(body?.error || body?.message || `Request failed (${res.status})`)
+    let message = body?.error || body?.message || `Request failed (${res.status})`
+    if (res.status === 405) {
+      message =
+        'Admin API is not available for this request (405). Run npm run dev locally, or deploy with api/server.js and set SUPABASE_SERVICE_ROLE_KEY on Vercel.'
+    }
+    const err = new Error(message)
     err.status = res.status
     err.body = body
     throw err
