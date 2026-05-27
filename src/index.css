@@ -204,3 +204,90 @@
 .animate-doodle-wiggle {
   animation: doodle-wiggle 0.55s ease-in-out infinite;
 }
+
+/* AI Video Courses list — design spec dark theme */
+.courses-page-dark {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 40%, #0f172a 100%);
+  margin-left: calc(-1 * max(1rem, env(safe-area-inset-left, 0px)));
+  margin-right: calc(-1 * max(1rem, env(safe-area-inset-right, 0px)));
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
+}
+
+.courses-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid #334155;
+}
+
+.course-card-dark {
+  background: #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #334155;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.course-card-dark:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+}
+
+.course-card-dark__thumb {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.course-card-dark:hover .course-card-dark__thumb {
+  transform: scale(1.02);
+}
+
+.course-grid-dark {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .course-grid-dark {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .course-grid-dark {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .course-grid-dark {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.course-pagination__btn {
+  background: #1e293b;
+  color: #ffffff;
+  border: 1px solid #334155;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.course-pagination__btn:hover:not(:disabled) {
+  background: #334155;
+}
+
+.course-pagination__btn--active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.course-pagination__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

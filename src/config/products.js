@@ -11,9 +11,9 @@ export const PRODUCT_LINES = [
     icon: '🌐',
     to: '/courses?line=general',
     subcategories: [
-      { id: 'course', name: 'AI Literacy Courses', icon: '📘', desc: 'Structured AI literacy and thinking skills' },
+      { id: 'course', name: 'AI Video Courses', icon: '📘', desc: 'Self-paced AI video lessons with progress tracking' },
       { id: 'online-lab', name: 'Online Labs', icon: '🧪', desc: 'Cloud-based interactive experiments and projects' },
-      { id: 'materials-pack', name: 'Online Lab Materials Pack', icon: '📦', desc: 'Consumables and digital resource bundles' },
+      { id: 'materials-pack', name: 'Online Lab Kits', icon: '📦', desc: 'Home experiment kits and digital resource bundles' },
     ],
   },
   {
@@ -43,7 +43,7 @@ export const PRODUCT_LINES = [
     to: '/courses?line=k12',
     subcategories: [
       { id: 'books', name: 'Books', icon: '📚', desc: 'Textbooks and supplements — digital and print' },
-      { id: 'course', name: 'Courses', icon: '🎓', desc: 'Classroom teaching and school course packs' },
+      { id: 'course', name: 'AI Video Courses', icon: '🎓', desc: 'Classroom video courses and school course packs' },
       { id: 'online-lab', name: 'Online Labs', icon: '🧪', desc: 'Class demos and student computer-lab sessions' },
       { id: 'materials-pack', name: 'Online Lab Kits', icon: '📦', desc: 'Class consumables and resource bundles' },
       { id: 'offline-lab', name: 'Offline Labs', icon: '🔬', desc: 'Lab hardware and on-site activity plans' },

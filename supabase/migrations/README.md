@@ -11,6 +11,9 @@ Run **once** on a new project, in order. All files are safe to **re-run** (idemp
 | `005_profiles_admin_policies.sql` | Admin RLS on profiles | — |
 | `006_fix_profiles_rls_recursion.sql` | Remove bad policy + confirm admin RLS | User mgmt works |
 | `007_courses_catalog_portfolio.sql` | courses_catalog, portfolio_works | Tables exist |
+| `008_courses_catalog_list_fields.sql` | category, level, lessons, rating, students, thumbnail | Columns exist |
+
+**Admin:** `/admin/courses-catalog` — add/edit/delete courses (powers `/courses` and video list UI).
 
 Then import data:
 

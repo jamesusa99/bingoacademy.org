@@ -11,6 +11,7 @@ import { registerStripeWebhook } from './routes/stripe.mjs'
 import { registerUserAdminRoutes } from './routes/users.mjs'
 import { registerSeedRoutes } from './routes/seed.mjs'
 import { registerCmsRoutes } from './routes/cms.mjs'
+import { registerCatalogRoutes } from './routes/catalog.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.PORT) || 8787
@@ -29,6 +30,7 @@ registerAdminRoutes(app, { verifyAdminUser })
 registerUserAdminRoutes(app, { verifyAdminUser })
 registerSeedRoutes(app, { verifyAdminUser })
 registerCmsRoutes(app, { verifyAdminUser })
+registerCatalogRoutes(app, { verifyAdminUser })
 
 app.post('/api/chat', async (req, res) => {
   try {

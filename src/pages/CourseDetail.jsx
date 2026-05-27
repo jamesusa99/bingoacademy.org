@@ -1,14 +1,23 @@
 import { Link, useParams } from 'react-router-dom'
-import { getCourseById, getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/products'
+import { getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/products'
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
 import { COURSES_PORTAL } from '../config/coursesPortal'
+import { useCourseCatalog } from '../hooks/useCourseCatalog'
+import { findCourseInList } from '../lib/catalogCourse'
 import CourseComingSoon from '../components/CourseComingSoon'
 import PageContent from '../components/PageContent'
 
 export default function CourseDetail() {
   const { id } = useParams()
-  const item = getCourseById(id)
+  const { courses, loading } = useCourseCatalog()
+  const item = findCourseInList(courses, id)
   const line = getProductLine(item?.line ?? 'general')
+
+  if (loading) {
+    return (
+      <PageContent className="py-12 text-center text-slate-500 text-sm">Loading course…</PageContent>
+    )
+  }
 
   if (!item) {
     return (
@@ -28,16 +37,20 @@ export default function CourseDetail() {
 
   return (
     <PageContent className="py-6 sm:py-8 max-w-4xl mx-auto">
-      <Link to={`/courses?line=${item.line}`} className="text-primary text-sm hover:underline">
+      <Link to={`/courses?line=${item.line}&sub=${item.sub}`} className="text-primary text-sm hover:underline">
         ← {COURSES_PORTAL.backTo} {line.name}
       </Link>
 
       <div className="card p-5 mt-4 mb-6">
         <div className="flex gap-4 flex-wrap">
           <div
-            className={`w-20 h-20 rounded-xl bg-gradient-to-br ${line.gradient} flex items-center justify-center text-3xl shrink-0 border ${line.border}`}
+            className={`w-20 h-20 rounded-xl bg-gradient-to-br ${line.gradient} flex items-center justify-center text-3xl shrink-0 border ${line.border} overflow-hidden`}
           >
-            {line.icon}
+            {item.thumbnail ? (
+              <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+            ) : (
+              line.icon
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">

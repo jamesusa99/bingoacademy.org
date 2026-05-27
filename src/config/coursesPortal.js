@@ -33,4 +33,24 @@ export const COURSES_PORTAL = {
   enrollCta: 'Enquire / enrol',
   freeAssessment: 'Free placement assessment',
   materialsCta: 'Materials & lab kits',
+  enrollNow: 'Enroll Now',
+  searchPlaceholder: 'Search courses…',
+  sortLabel: 'Sort:',
+  filterCategory: 'Topic',
+  filterLevel: 'Level',
+  filterPrice: 'Price',
+  emptyFilterTitle: 'No courses match your filters',
+  emptyFilterDesc: 'Try clearing filters or search with different keywords.',
+  clearFilters: 'Clear all filters',
+  statCourses: 'Courses',
+  statStudents: 'Students',
+  statRating: 'Avg. rating',
+  videoListSubtitle: (lineId) => {
+    const map = {
+      general: 'Explore self-paced AI video courses — literacy, tools, and creative projects for independent learners.',
+      ioai: 'Competition-focused video lessons with progress tracking for IOAI whitelist preparation.',
+      k12: 'Classroom-ready AI video courses for schools — aligned packs with teacher support.',
+    }
+    return map[lineId] || map.general
+  },
 }

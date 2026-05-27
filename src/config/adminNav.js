@@ -12,7 +12,7 @@ export const ADMIN_NAV_GROUPS = [
     items: [
       { path: '/admin/home', label: 'Home Portal', icon: '🏠' },
       { path: '/admin/courses', label: 'Mall courses', icon: '📚' },
-      { path: '/admin/courses-catalog', label: 'Course catalogue', icon: '📋' },
+      { path: '/admin/courses-catalog', label: 'Course catalogue (site)', icon: '📋' },
       { path: '/admin/showcase', label: 'Achievements', icon: '🏅' },
       { path: '/admin/research', label: 'AI Camp', icon: '⛺' },
       { path: '/admin/events', label: 'Events', icon: '🏆' },

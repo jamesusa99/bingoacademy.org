@@ -307,26 +307,35 @@ export async function runSiteSeed(admin, { force = false } = {}) {
 
   // courses_catalog (slug upsert)
   {
-    const rows = COURSE_CATALOG.map((c, i) => ({
-      slug: c.id,
-      line: c.line,
-      sub: c.sub,
-      status: c.status,
-      delivery_type: c.deliveryType,
-      featured: !!c.featured,
-      name: c.name,
-      name_en: c.nameEn || c.name,
-      description: c.desc,
-      price: c.price,
-      hours: c.hours,
-      badge: c.badge,
-      audience: c.audience,
-      outcomes: c.outcomes || [],
-      syllabus: c.syllabus || [],
-      lab_slugs: c.labSlugs || [],
-      sort_order: i,
-      updated_at: new Date().toISOString(),
-    }))
+    const { COURSE_LIST_META } = await import('../../src/lib/courseListUtils.js')
+    const rows = COURSE_CATALOG.map((c, i) => {
+      const meta = COURSE_LIST_META[c.id] || {}
+      return {
+        slug: c.id,
+        line: c.line,
+        sub: c.sub,
+        status: c.status,
+        delivery_type: c.deliveryType,
+        featured: !!c.featured,
+        name: c.name,
+        name_en: c.nameEn || c.name,
+        description: c.desc,
+        price: c.price,
+        hours: c.hours,
+        badge: c.badge,
+        audience: c.audience,
+        outcomes: c.outcomes || [],
+        syllabus: c.syllabus || [],
+        lab_slugs: c.labSlugs || [],
+        sort_order: i,
+        category: meta.category || 'ai-fundamentals',
+        level: meta.level || 'beginner',
+        lessons: meta.lessons ?? 12,
+        rating: meta.rating ?? 4.8,
+        students: meta.students ?? 800,
+        updated_at: new Date().toISOString(),
+      }
+    })
     const { error } = await admin.from('courses_catalog').upsert(rows, { onConflict: 'slug' })
     if (error && !error.message.includes('does not exist')) {
       throw new Error(`courses_catalog: ${error.message}`)

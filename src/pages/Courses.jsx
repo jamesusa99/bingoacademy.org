@@ -4,13 +4,14 @@ import {
   PRODUCT_LINES,
   getProductLine,
   subcategoryLabel,
-  COURSE_CATALOG,
   isCourseComingSoon,
-  coursesByLine,
 } from '../config/products'
+import { isVideoCoursesSub } from '../config/courseListFilters'
 import { COURSES_PORTAL } from '../config/coursesPortal'
+import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
+import CourseListView from '../components/courses/CourseListView'
 
 function CourseCard({ item }) {
   const soon = isCourseComingSoon(item)
@@ -65,14 +66,19 @@ export default function Courses() {
   const lineId = params.get('line') || 'ioai'
   const subId = params.get('sub') || ''
   const line = getProductLine(lineId)
+  const videoListMode = isVideoCoursesSub(line.id, subId)
+  const { courses, loading: catalogLoading } = useCourseCatalog()
 
   const filtered = useMemo(() => {
-    let list = COURSE_CATALOG.filter((c) => c.line === line.id)
+    let list = courses.filter((c) => c.line === line.id)
     if (subId) list = list.filter((c) => c.sub === subId)
     return list
-  }, [line.id, subId])
+  }, [courses, line.id, subId])
 
-  const ioaiFeatured = coursesByLine('ioai', { featuredOnly: true })
+  const ioaiFeatured = useMemo(
+    () => courses.filter((c) => c.line === 'ioai' && c.featured),
+    [courses]
+  )
 
   const bannerSlides = PRODUCT_LINES.map((pl) => ({
     id: pl.id,
@@ -84,6 +90,29 @@ export default function Courses() {
     ctaLabel: COURSES_PORTAL.browseCourses,
     href: `/courses?line=${pl.id}`,
   }))
+
+  if (videoListMode) {
+    return (
+      <div className="w-full">
+        {catalogLoading ? (
+          <div className="courses-page-dark py-16 text-center text-slate-400 text-sm">Loading courses…</div>
+        ) : (
+          <CourseListView line={line} subId={subId} courses={courses} />
+        )}
+        <PageContent className="py-8">
+          <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-bingo-dark">{COURSES_PORTAL.certTitle}</h3>
+              <p className="text-sm text-slate-600 mt-1">{COURSES_PORTAL.certDesc}</p>
+            </div>
+            <Link to="/cert" className="btn-primary px-5 py-2.5 text-sm min-h-[44px] inline-flex items-center">
+              {COURSES_PORTAL.certCta}
+            </Link>
+          </section>
+        </PageContent>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full">
@@ -203,7 +232,9 @@ export default function Courses() {
             {COURSES_PORTAL.courseCount(filtered.length)}
             {subId ? ` · ${subcategoryLabel(line.id, subId)}` : ''}
           </h3>
-          {filtered.length === 0 ? (
+          {catalogLoading ? (
+            <div className="card p-10 text-center text-slate-500 text-sm">Loading courses…</div>
+          ) : filtered.length === 0 ? (
             <div className="card p-10 text-center text-slate-500 text-sm">{COURSES_PORTAL.emptyCategory}</div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
