@@ -11,7 +11,8 @@ export const ADMIN_NAV_GROUPS = [
     title: 'Content',
     items: [
       { path: '/admin/home', label: 'Home Portal', icon: '🏠' },
-      { path: '/admin/courses', label: 'Courses', icon: '📚' },
+      { path: '/admin/courses', label: 'Mall courses', icon: '📚' },
+      { path: '/admin/courses-catalog', label: 'Course catalogue', icon: '📋' },
       { path: '/admin/showcase', label: 'Achievements', icon: '🏅' },
       { path: '/admin/research', label: 'AI Camp', icon: '⛺' },
       { path: '/admin/events', label: 'Events', icon: '🏆' },
@@ -30,11 +31,12 @@ export const ADMIN_NAV_GROUPS = [
     ],
   },
   {
-    title: 'Media & platform',
-    items: [
-      { path: '/admin/video', label: 'Video (Stream)', icon: '🎬' },
-      { path: '/admin/users', label: 'User management', icon: '👥' },
-    ],
+    title: 'Users',
+    items: [{ path: '/admin/users', label: 'User management', icon: '👥' }],
+  },
+  {
+    title: 'Media',
+    items: [{ path: '/admin/video', label: 'Video (Stream)', icon: '🎬' }],
   },
 ]
 

@@ -1,11 +1,12 @@
-import { getSupabaseAdmin } from '../lib/supabaseAdmin.mjs'
+import { getSupabaseAdmin, getSupabaseConfig } from '../lib/supabaseAdmin.mjs'
 
 export function getAdminHealth() {
+  const cfg = getSupabaseConfig()
   return {
     apiReachable: true,
-    supabase: Boolean(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL),
+    supabase: Boolean(cfg.url),
     adminEmails: Boolean(process.env.VITE_ADMIN_EMAILS || process.env.ADMIN_EMAILS),
-    serviceRole: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+    serviceRole: cfg.ready,
     stripe: Boolean(process.env.STRIPE_SECRET_KEY),
     cloudflare: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN),
     openai: Boolean(process.env.OPENAI_API_KEY),

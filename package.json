@@ -10,9 +10,11 @@
   "scripts": {
     "dev": "concurrently -k -n web,api -c cyan,green \"npm run dev:web\" \"npm run dev:api\"",
     "dev:web": "vite",
-    "dev:api": "node server/index.mjs",
+    "dev:api": "API_SERVE_STATIC=0 node server/index.mjs",
     "build": "vite build",
     "start": "node server/index.mjs",
+    "seed": "node scripts/seed-supabase.mjs",
+    "seed:force": "node scripts/seed-supabase.mjs -- --force",
     "lint": "eslint .",
     "preview": "vite preview"
   },

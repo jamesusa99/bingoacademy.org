@@ -49,3 +49,10 @@ export async function createStreamUploadUrl(payload) {
     body: JSON.stringify(payload),
   })
 }
+
+export async function importSiteData({ force = false } = {}) {
+  return adminFetch('/api/admin/seed', {
+    method: 'POST',
+    body: JSON.stringify({ force }),
+  })
+}

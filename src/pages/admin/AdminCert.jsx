@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 
 const fields = ['tier_id','stars','name','chinese','color','bg','border','inst','teacher','learner','weeks','criteria','sort_order']
 
@@ -31,14 +32,43 @@ export default function AdminCert() {
     benefits: form.benefits ? JSON.parse(form.benefits) : [],
   })
 
+  const emptyForm = () =>
+    Object.fromEntries([...fields.map((k) => [k, k === 'sort_order' ? 0 : '']), ['courses', '[]'], ['benefits', '[]']])
+
   const save = async () => {
     setError(null)
-    let payload; try { payload = toPayload() } catch (e) { setError('courses/benefits must be JSON arrays'); return }
-    if (editing) { const { error: e } = await supabase.from('cert_tiers').update(payload).eq('id', editing.id); setError(e?.message); if (!e) { setEditing(null); setForm(Object.fromEntries([...fields.map((k) => [k, k === 'sort_order' ? 0 : '']), ['courses', '[]'], ['benefits', '[]']])); fetchItems() } }
-    else { const { error: e } = await supabase.from('cert_tiers').insert(payload); setError(e?.message); if (!e) { setForm(Object.fromEntries([...fields.map((k) => [k, k === 'sort_order' ? 0 : '']), ['courses', '[]'], ['benefits', '[]']])); fetchItems() } }
+    let payload
+    try {
+      payload = toPayload()
+    } catch {
+      setError('courses/benefits must be JSON arrays')
+      return
+    }
+    try {
+      if (editing) {
+        await adminUpdate('cert_tiers', editing.id, payload)
+        setEditing(null)
+        setForm(emptyForm())
+      } else {
+        await adminInsert('cert_tiers', payload)
+        setForm(emptyForm())
+      }
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
   }
   const startEdit = (r) => { setEditing(r); setForm({ ...Object.fromEntries(fields.map((k) => [k, r[k] ?? (k === 'sort_order' ? 0 : '')])), courses: JSON.stringify(r.courses || [], null, 2), benefits: JSON.stringify(r.benefits || [], null, 2) }) }
-  const del = async (id) => { if (!confirm('Delete?')) return; await supabase.from('cert_tiers').delete().eq('id', id); fetchItems() }
+  const del = async (id) => {
+    if (!confirm('Delete?')) return
+    setError(null)
+    try {
+      await adminDelete('cert_tiers', id)
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
 
   return (
     <div>

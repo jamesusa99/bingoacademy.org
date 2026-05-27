@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 
 export default function AdminCharity() {
   const [tab, setTab] = useState('reports')
@@ -18,15 +19,61 @@ export default function AdminCharity() {
 
   const saveReport = async () => {
     setError(null)
-    const payload = { ...formReport, sort_order: parseInt(formReport.sort_order) || 0 }
-    if (editingReport) { const { error: e } = await supabase.from('charity_reports').update(payload).eq('id', editingReport.id); setError(e?.message); if (!e) { setEditingReport(null); setFormReport({ type: 'Trending', text: '', report_date: '', sort_order: 0 }); fetchReports() } }
-    else { const { error: e } = await supabase.from('charity_reports').insert(payload); setError(e?.message); if (!e) { setFormReport({ type: 'Trending', text: '', report_date: '', sort_order: 0 }); fetchReports() } }
+    const payload = { ...formReport, sort_order: parseInt(formReport.sort_order, 10) || 0 }
+    const empty = { type: 'Trending', text: '', report_date: '', sort_order: 0 }
+    try {
+      if (editingReport) {
+        await adminUpdate('charity_reports', editingReport.id, payload)
+        setEditingReport(null)
+        setFormReport(empty)
+      } else {
+        await adminInsert('charity_reports', payload)
+        setFormReport(empty)
+      }
+      fetchReports()
+    } catch (e) {
+      setError(e.message)
+    }
   }
   const saveProject = async () => {
     setError(null)
-    const payload = { ...formProject, sort_order: parseInt(formProject.sort_order) || 0 }
-    if (editingProject) { const { error: e } = await supabase.from('charity_projects').update(payload).eq('id', editingProject.id); setError(e?.message); if (!e) { setEditingProject(null); setFormProject({ title: '', desc: '', sort_order: 0 }); fetchProjects() } }
-    else { const { error: e } = await supabase.from('charity_projects').insert(payload); setError(e?.message); if (!e) { setFormProject({ title: '', desc: '', sort_order: 0 }); fetchProjects() } }
+    const payload = { ...formProject, sort_order: parseInt(formProject.sort_order, 10) || 0 }
+    const empty = { title: '', desc: '', sort_order: 0 }
+    try {
+      if (editingProject) {
+        await adminUpdate('charity_projects', editingProject.id, payload)
+        setEditingProject(null)
+        setFormProject(empty)
+      } else {
+        await adminInsert('charity_projects', payload)
+        setFormProject(empty)
+      }
+      fetchProjects()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  const deleteReport = async (id) => {
+    if (!confirm('Delete?')) return
+    setError(null)
+    try {
+      await adminDelete('charity_reports', id)
+      fetchReports()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  const deleteProject = async (id) => {
+    if (!confirm('Delete?')) return
+    setError(null)
+    try {
+      await adminDelete('charity_projects', id)
+      fetchProjects()
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   return (
@@ -54,7 +101,7 @@ export default function AdminCharity() {
           </div>
           <div className="card overflow-hidden">
             <div className="p-4 border-b font-semibold">Reports List</div>
-            {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : <ul className="divide-y">{reports.map((r) => (<li key={r.id} className="p-4 flex justify-between"><span><span className="text-xs px-2 py-0.5 rounded bg-slate-100">{r.type}</span> {r.text}</span><span><button onClick={() => { setEditingReport(r); setFormReport({ type: r.type || 'Trending', text: r.text || '', report_date: r.report_date || '', sort_order: r.sort_order || 0 }) }} className="text-primary mr-2">Edit</button><button onClick={async () => { if (confirm('Delete?')) await supabase.from('charity_reports').delete().eq('id', r.id); fetchReports() }} className="text-red-600">Delete</button></span></li>))}</ul>}
+            {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : <ul className="divide-y">{reports.map((r) => (<li key={r.id} className="p-4 flex justify-between"><span><span className="text-xs px-2 py-0.5 rounded bg-slate-100">{r.type}</span> {r.text}</span><span><button onClick={() => { setEditingReport(r); setFormReport({ type: r.type || 'Trending', text: r.text || '', report_date: r.report_date || '', sort_order: r.sort_order || 0 }) }} className="text-primary mr-2">Edit</button><button type="button" onClick={() => deleteReport(r.id)} className="text-red-600">Delete</button></span></li>))}</ul>}
           </div>
         </div>
       )}
@@ -74,7 +121,7 @@ export default function AdminCharity() {
           </div>
           <div className="card overflow-hidden">
             <div className="p-4 border-b font-semibold">Projects List</div>
-            {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : <ul className="divide-y">{projects.map((p) => (<li key={p.id} className="p-4 flex justify-between"><span><strong>{p.title}</strong> — {p.desc}</span><span><button onClick={() => { setEditingProject(p); setFormProject({ title: p.title || '', desc: p.desc || '', sort_order: p.sort_order || 0 }) }} className="text-primary mr-2">Edit</button><button onClick={async () => { if (confirm('Delete?')) await supabase.from('charity_projects').delete().eq('id', p.id); fetchProjects() }} className="text-red-600">Delete</button></span></li>))}</ul>}
+            {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : <ul className="divide-y">{projects.map((p) => (<li key={p.id} className="p-4 flex justify-between"><span><strong>{p.title}</strong> — {p.desc}</span><span><button onClick={() => { setEditingProject(p); setFormProject({ title: p.title || '', desc: p.desc || '', sort_order: p.sort_order || 0 }) }} className="text-primary mr-2">Edit</button><button type="button" onClick={() => deleteProject(p.id)} className="text-red-600">Delete</button></span></li>))}</ul>}
           </div>
         </div>
       )}

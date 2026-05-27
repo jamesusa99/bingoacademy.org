@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 
 function toDb(row) {
   return {
@@ -58,30 +59,30 @@ export default function AdminCourses() {
   const handleSave = async () => {
     setError(null)
     const payload = toDb(form)
-    if (editing) {
-      const { error: e } = await supabase.from('courses').update(payload).eq('id', editing.id)
-      setError(e?.message)
-      if (!e) {
+    try {
+      if (editing) {
+        await adminUpdate('courses', editing.id, payload)
         setEditing(null)
         setForm(INIT)
-        fetchCourses()
-      }
-    } else {
-      const { error: e } = await supabase.from('courses').insert(payload)
-      setError(e?.message)
-      if (!e) {
+      } else {
+        await adminInsert('courses', payload)
         setForm(INIT)
-        fetchCourses()
       }
+      fetchCourses()
+    } catch (e) {
+      setError(e.message)
     }
   }
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this course?')) return
     setError(null)
-    const { error: e } = await supabase.from('courses').delete().eq('id', id)
-    setError(e?.message)
-    if (!e) fetchCourses()
+    try {
+      await adminDelete('courses', id)
+      fetchCourses()
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   const startEdit = (item) => {

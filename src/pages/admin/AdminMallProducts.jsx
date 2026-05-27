@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 
 const TYPES = ['event','cert','material','lab','training']
 const fields = ['name','type','tag','price','b_price','desc','deadline','sort_order']
@@ -14,14 +15,36 @@ export default function AdminMallProducts() {
   const fetchItems = async () => { setLoading(true); const { data } = await supabase.from('mall_products').select('*').order('sort_order'); setItems(data || []); setLoading(false) }
   useEffect(() => { fetchItems() }, [])
 
+  const emptyForm = () => Object.fromEntries(fields.map((k) => [k, k === 'sort_order' ? 0 : k === 'type' ? 'cert' : '']))
+
   const save = async () => {
     setError(null)
-    const payload = { ...form, price: form.price ? parseFloat(form.price) : null, sort_order: parseInt(form.sort_order) || 0 }
-    if (editing) { const { error: e } = await supabase.from('mall_products').update(payload).eq('id', editing.id); setError(e?.message); if (!e) { setEditing(null); setForm(Object.fromEntries(fields.map((k) => [k, k === 'sort_order' ? 0 : k === 'type' ? 'cert' : '']))); fetchItems() } }
-    else { const { error: e } = await supabase.from('mall_products').insert(payload); setError(e?.message); if (!e) { setForm(Object.fromEntries(fields.map((k) => [k, k === 'sort_order' ? 0 : k === 'type' ? 'cert' : '']))); fetchItems() } }
+    const payload = { ...form, price: form.price ? parseFloat(form.price) : null, sort_order: parseInt(form.sort_order, 10) || 0 }
+    try {
+      if (editing) {
+        await adminUpdate('mall_products', editing.id, payload)
+        setEditing(null)
+        setForm(emptyForm())
+      } else {
+        await adminInsert('mall_products', payload)
+        setForm(emptyForm())
+      }
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
   }
   const startEdit = (r) => { setEditing(r); setForm(Object.fromEntries(fields.map((k) => [k, r[k] ?? (k === 'sort_order' ? 0 : k === 'type' ? 'cert' : '')]))) }
-  const del = async (id) => { if (!confirm('Delete?')) return; await supabase.from('mall_products').delete().eq('id', id); fetchItems() }
+  const del = async (id) => {
+    if (!confirm('Delete?')) return
+    setError(null)
+    try {
+      await adminDelete('mall_products', id)
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
 
   return (
     <div>

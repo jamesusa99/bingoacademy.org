@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 
 const campFields = ['title','age','icon','direction','core','highlight','outcome','ratio','competition','price','weeks','sort_order']
 const facultyFields = ['name','team','area','exp','philosophy','type','sort_order']
@@ -19,17 +20,64 @@ export default function AdminResearch() {
   const fetchFaculty = async () => { const { data } = await supabase.from('research_faculty').select('*').order('sort_order'); setFaculty(data || []) }
   useEffect(() => { setLoading(true); Promise.all([fetchCamps(), fetchFaculty()]).finally(() => setLoading(false)) }, [])
 
+  const emptyCamp = () => Object.fromEntries(campFields.map((k) => [k, k === 'sort_order' ? 0 : '']))
+  const emptyFaculty = () => Object.fromEntries(facultyFields.map((k) => [k, k === 'sort_order' ? 0 : '']))
+
   const saveCamp = async () => {
     setError(null)
-    const payload = { ...formCamp, sort_order: parseInt(formCamp.sort_order) || 0 }
-    if (editingCamp) { const { error: e } = await supabase.from('research_camps').update(payload).eq('id', editingCamp.id); setError(e?.message); if (!e) { setEditingCamp(null); setFormCamp(Object.fromEntries(campFields.map((k) => [k, k === 'sort_order' ? 0 : '']))); fetchCamps() } }
-    else { const { error: e } = await supabase.from('research_camps').insert(payload); setError(e?.message); if (!e) { setFormCamp(Object.fromEntries(campFields.map((k) => [k, k === 'sort_order' ? 0 : '']))); fetchCamps() } }
+    const payload = { ...formCamp, sort_order: parseInt(formCamp.sort_order, 10) || 0 }
+    try {
+      if (editingCamp) {
+        await adminUpdate('research_camps', editingCamp.id, payload)
+        setEditingCamp(null)
+        setFormCamp(emptyCamp())
+      } else {
+        await adminInsert('research_camps', payload)
+        setFormCamp(emptyCamp())
+      }
+      fetchCamps()
+    } catch (e) {
+      setError(e.message)
+    }
   }
   const saveFaculty = async () => {
     setError(null)
-    const payload = { ...formFaculty, sort_order: parseInt(formFaculty.sort_order) || 0 }
-    if (editingFaculty) { const { error: e } = await supabase.from('research_faculty').update(payload).eq('id', editingFaculty.id); setError(e?.message); if (!e) { setEditingFaculty(null); setFormFaculty(Object.fromEntries(facultyFields.map((k) => [k, k === 'sort_order' ? 0 : '']))); fetchFaculty() } }
-    else { const { error: e } = await supabase.from('research_faculty').insert(payload); setError(e?.message); if (!e) { setFormFaculty(Object.fromEntries(facultyFields.map((k) => [k, k === 'sort_order' ? 0 : '']))); fetchFaculty() } }
+    const payload = { ...formFaculty, sort_order: parseInt(formFaculty.sort_order, 10) || 0 }
+    try {
+      if (editingFaculty) {
+        await adminUpdate('research_faculty', editingFaculty.id, payload)
+        setEditingFaculty(null)
+        setFormFaculty(emptyFaculty())
+      } else {
+        await adminInsert('research_faculty', payload)
+        setFormFaculty(emptyFaculty())
+      }
+      fetchFaculty()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  const deleteCamp = async (id) => {
+    if (!confirm('Delete this item?')) return
+    setError(null)
+    try {
+      await adminDelete('research_camps', id)
+      fetchCamps()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  const deleteFaculty = async (id) => {
+    if (!confirm('Delete this item?')) return
+    setError(null)
+    try {
+      await adminDelete('research_faculty', id)
+      fetchFaculty()
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   return (
@@ -60,7 +108,7 @@ export default function AdminResearch() {
           </div>
           <div className="card overflow-hidden">
             <div className="p-4 border-b font-semibold">Series Programme List</div>
-            {loading ? <div className="p-8 text-center text-slate-500">Loading…</div> : <ul className="divide-y">{camps.map((c) => (<li key={c.id} className="p-4 flex justify-between"><span>{c.icon} {c.title} · {c.age}</span><span><button onClick={() => { setEditingCamp(c); setFormCamp(Object.fromEntries(campFields.map((k) => [k, c[k] ?? (k === 'sort_order' ? 0 : '')]))) }} className="text-primary mr-2">Edit</button><button onClick={async () => { if (confirm('Delete this item?')) await supabase.from('research_camps').delete().eq('id', c.id); fetchCamps() }} className="text-red-600">Delete</button></span></li>))}</ul>}
+            {loading ? <div className="p-8 text-center text-slate-500">Loading…</div> : <ul className="divide-y">{camps.map((c) => (<li key={c.id} className="p-4 flex justify-between"><span>{c.icon} {c.title} · {c.age}</span><span><button onClick={() => { setEditingCamp(c); setFormCamp(Object.fromEntries(campFields.map((k) => [k, c[k] ?? (k === 'sort_order' ? 0 : '')]))) }} className="text-primary mr-2">Edit</button><button type="button" onClick={() => deleteCamp(c.id)} className="text-red-600">Delete</button></span></li>))}</ul>}
           </div>
         </div>
       )}
@@ -83,7 +131,7 @@ export default function AdminResearch() {
           </div>
           <div className="card overflow-hidden">
             <div className="p-4 border-b font-semibold">Faculty List</div>
-            {loading ? <div className="p-8 text-center text-slate-500">Loading…</div> : <ul className="divide-y">{faculty.map((f) => (<li key={f.id} className="p-4 flex justify-between"><span>{f.name} · {f.team}</span><span><button onClick={() => { setEditingFaculty(f); setFormFaculty(Object.fromEntries(facultyFields.map((k) => [k, f[k] ?? (k === 'sort_order' ? 0 : '')]))) }} className="text-primary mr-2">Edit</button><button onClick={async () => { if (confirm('Delete this item?')) await supabase.from('research_faculty').delete().eq('id', f.id); fetchFaculty() }} className="text-red-600">Delete</button></span></li>))}</ul>}
+            {loading ? <div className="p-8 text-center text-slate-500">Loading…</div> : <ul className="divide-y">{faculty.map((f) => (<li key={f.id} className="p-4 flex justify-between"><span>{f.name} · {f.team}</span><span><button onClick={() => { setEditingFaculty(f); setFormFaculty(Object.fromEntries(facultyFields.map((k) => [k, f[k] ?? (k === 'sort_order' ? 0 : '')]))) }} className="text-primary mr-2">Edit</button><button type="button" onClick={() => deleteFaculty(f.id)} className="text-red-600">Delete</button></span></li>))}</ul>}
           </div>
         </div>
       )}

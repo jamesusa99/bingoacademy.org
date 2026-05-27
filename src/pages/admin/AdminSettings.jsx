@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
-import { fetchAdminHealth } from '../../lib/admin/api'
+import { fetchAdminHealth, importSiteData } from '../../lib/admin/api'
 import { isSupabaseConfigured } from '../../lib/supabase'
 
 const CHECKLIST = [
@@ -17,6 +17,8 @@ export default function AdminSettings() {
   const [health, setHealth] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [seeding, setSeeding] = useState(false)
+  const [seedResult, setSeedResult] = useState(null)
 
   useEffect(() => {
     let mounted = true
@@ -88,6 +90,64 @@ export default function AdminSettings() {
             </li>
           </ul>
         )}
+      </div>
+
+      <div className="card p-6 mb-6">
+        <h2 className="font-semibold text-bingo-dark mb-2">Import site data</h2>
+        <p className="text-sm text-slate-600 mb-4">
+          Copy all frontend fallback content (home stats, courses, events, showcase, forum, etc.) into Supabase so each Admin module can manage it.
+        </p>
+        {seedResult ? (
+          <AdminAlert type="success" onDismiss={() => setSeedResult(null)}>
+            Import complete. Check Home, Courses, Events, Showcase, and other admin pages.
+            <pre className="mt-2 text-xs overflow-auto max-h-40 bg-white/50 p-2 rounded">
+              {JSON.stringify(seedResult.summary, null, 2)}
+            </pre>
+          </AdminAlert>
+        ) : null}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={seeding || !health?.serviceRole}
+            onClick={async () => {
+              setSeeding(true)
+              setSeedResult(null)
+              try {
+                const data = await importSiteData({ force: false })
+                setSeedResult(data)
+              } catch (err) {
+                setError(err.message)
+              } finally {
+                setSeeding(false)
+              }
+            }}
+            className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium disabled:opacity-60"
+          >
+            {seeding ? 'Importing…' : 'Import site data'}
+          </button>
+          <button
+            type="button"
+            disabled={seeding || !health?.serviceRole}
+            onClick={async () => {
+              if (!window.confirm('Re-import and replace seedable tables? Existing seed rows may be duplicated or cleared.')) return
+              setSeeding(true)
+              try {
+                const data = await importSiteData({ force: true })
+                setSeedResult(data)
+              } catch (err) {
+                setError(err.message)
+              } finally {
+                setSeeding(false)
+              }
+            }}
+            className="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium disabled:opacity-60"
+          >
+            Force re-import
+          </button>
+        </div>
+        <p className="text-xs text-slate-500 mt-3">
+          Or run <code className="bg-slate-100 px-1 rounded">npm run seed</code> in the project root (requires service role in .env.local).
+        </p>
       </div>
 
       <div className="card p-6">

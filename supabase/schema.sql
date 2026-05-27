@@ -1,5 +1,6 @@
 -- Bingo Academy Admin Backend Schema
--- Run this in Supabase SQL Editor: https://app.supabase.com → SQL Editor → New query
+-- Run in Supabase SQL Editor. Safe to re-run: uses IF NOT EXISTS + DROP POLICY IF EXISTS.
+-- If you already ran this once, you only need migrations 002–007 (not the full file again).
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -289,6 +290,18 @@ ALTER TABLE mall_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE charity_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE charity_projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE community_mentors ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "home_stats_all" ON home_stats;
+DROP POLICY IF EXISTS "home_testimonials_all" ON home_testimonials;
+DROP POLICY IF EXISTS "showcase_cases_all" ON showcase_cases;
+DROP POLICY IF EXISTS "research_camps_all" ON research_camps;
+DROP POLICY IF EXISTS "research_faculty_all" ON research_faculty;
+DROP POLICY IF EXISTS "career_jobs_all" ON career_jobs;
+DROP POLICY IF EXISTS "cert_tiers_all" ON cert_tiers;
+DROP POLICY IF EXISTS "mall_products_all" ON mall_products;
+DROP POLICY IF EXISTS "charity_reports_all" ON charity_reports;
+DROP POLICY IF EXISTS "charity_projects_all" ON charity_projects;
+DROP POLICY IF EXISTS "community_mentors_all" ON community_mentors;
 
 CREATE POLICY "home_stats_all" ON home_stats FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "home_testimonials_all" ON home_testimonials FOR ALL USING (true) WITH CHECK (true);

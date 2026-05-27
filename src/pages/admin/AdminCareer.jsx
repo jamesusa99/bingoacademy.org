@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 
 const fields = ['title','company','level','salary','location','skill','course_linked','sort_order']
 
@@ -15,12 +16,33 @@ export default function AdminCareer() {
 
   const save = async () => {
     setError(null)
-    const payload = { ...form, course_linked: !!form.course_linked, sort_order: parseInt(form.sort_order) || 0 }
-    if (editing) { const { error: e } = await supabase.from('career_jobs').update(payload).eq('id', editing.id); setError(e?.message); if (!e) { setEditing(null); setForm(Object.fromEntries(fields.map((k) => [k, k === 'course_linked' ? false : k === 'sort_order' ? 0 : '']))); fetchItems() } }
-    else { const { error: e } = await supabase.from('career_jobs').insert(payload); setError(e?.message); if (!e) { setForm(Object.fromEntries(fields.map((k) => [k, k === 'course_linked' ? false : k === 'sort_order' ? 0 : '']))); fetchItems() } }
+    const payload = { ...form, course_linked: !!form.course_linked, sort_order: parseInt(form.sort_order, 10) || 0 }
+    const empty = Object.fromEntries(fields.map((k) => [k, k === 'course_linked' ? false : k === 'sort_order' ? 0 : '']))
+    try {
+      if (editing) {
+        await adminUpdate('career_jobs', editing.id, payload)
+        setEditing(null)
+        setForm(empty)
+      } else {
+        await adminInsert('career_jobs', payload)
+        setForm(empty)
+      }
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
   }
   const startEdit = (r) => { setEditing(r); setForm(Object.fromEntries(fields.map((k) => [k, r[k] ?? (k === 'course_linked' ? false : k === 'sort_order' ? 0 : '')]))) }
-  const del = async (id) => { if (!confirm('Delete?')) return; await supabase.from('career_jobs').delete().eq('id', id); fetchItems() }
+  const del = async (id) => {
+    if (!confirm('Delete?')) return
+    setError(null)
+    try {
+      await adminDelete('career_jobs', id)
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
 
   return (
     <div>

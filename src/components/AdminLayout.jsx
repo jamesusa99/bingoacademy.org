@@ -40,11 +40,11 @@ export default function AdminLayout() {
           </Link>
           <div className="mt-3 text-xs font-medium">
             {dbConnected === null ? (
-              <span className="text-slate-400">Checking…</span>
+              <span className="text-slate-400">Checking...</span>
             ) : dbConnected ? (
-              <span className="text-green-400">✓ Database</span>
+              <span className="text-green-400">Supabase Database</span>
             ) : (
-              <span className="text-red-400">✗ Database</span>
+              <span className="text-red-400">Supabase Database</span>
             )}
           </div>
           {user ? (

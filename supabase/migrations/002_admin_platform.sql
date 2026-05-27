@@ -1,5 +1,6 @@
 -- Admin platform extension: profiles, video, payments, audit
--- Run after schema.sql in Supabase SQL Editor
+-- Run after schema.sql. Safe to re-run (IF NOT EXISTS + DROP POLICY IF EXISTS).
+-- If profiles / video_assets tables already exist, you can skip this file and run 003–007 only.
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -112,24 +113,37 @@ ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_audit_log ENABLE ROW LEVEL SECURITY;
 
 -- Dev-friendly policies (tighten before production)
+DROP POLICY IF EXISTS "profiles_select_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_select_admin" ON profiles;
+DROP POLICY IF EXISTS "profiles_all_dev" ON profiles;
 CREATE POLICY "profiles_select_own" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "profiles_update_own" ON profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "profiles_select_admin" ON profiles FOR SELECT USING (
-  EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role IN ('admin', 'editor'))
-);
+-- Do NOT add inline "SELECT FROM profiles" admin policy here — causes infinite RLS recursion.
+-- Use migration 005 + 006 (is_admin_or_editor SECURITY DEFINER) instead.
 CREATE POLICY "profiles_all_dev" ON profiles FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "video_assets_read" ON video_assets;
+DROP POLICY IF EXISTS "video_assets_write" ON video_assets;
 CREATE POLICY "video_assets_read" ON video_assets FOR SELECT USING (true);
 CREATE POLICY "video_assets_write" ON video_assets FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "stripe_products_read" ON stripe_products;
+DROP POLICY IF EXISTS "stripe_products_write" ON stripe_products;
 CREATE POLICY "stripe_products_read" ON stripe_products FOR SELECT USING (true);
 CREATE POLICY "stripe_products_write" ON stripe_products FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "orders_read_own" ON orders;
+DROP POLICY IF EXISTS "orders_write" ON orders;
 CREATE POLICY "orders_read_own" ON orders FOR SELECT USING (auth.uid() = user_id OR true);
 CREATE POLICY "orders_write" ON orders FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "platform_settings_read" ON platform_settings;
+DROP POLICY IF EXISTS "platform_settings_write" ON platform_settings;
 CREATE POLICY "platform_settings_read" ON platform_settings FOR SELECT USING (true);
 CREATE POLICY "platform_settings_write" ON platform_settings FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "admin_audit_read" ON admin_audit_log;
+DROP POLICY IF EXISTS "admin_audit_insert" ON admin_audit_log;
 CREATE POLICY "admin_audit_read" ON admin_audit_log FOR SELECT USING (true);
 CREATE POLICY "admin_audit_insert" ON admin_audit_log FOR INSERT WITH CHECK (true);

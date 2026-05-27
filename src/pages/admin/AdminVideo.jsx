@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { createStreamUploadUrl } from '../../lib/admin/api'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 import { logAdminAction } from '../../lib/admin/auth'
 
 const INIT = { title: '', description: '', status: 'pending' }
@@ -33,8 +34,10 @@ export default function AdminVideo() {
       setError('Title is required')
       return
     }
-    const { data, error: e } = await supabase.from('video_assets').insert(form).select().single()
-    if (e) {
+    let data
+    try {
+      data = await adminInsert('video_assets', form)
+    } catch (e) {
       setError(e.message)
       return
     }
@@ -45,11 +48,12 @@ export default function AdminVideo() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this video record? (Does not remove from Cloudflare.)')) return
-    const { error: e } = await supabase.from('video_assets').delete().eq('id', id)
-    if (e) setError(e.message)
-    else {
+    try {
+      await adminDelete('video_assets', id)
       await logAdminAction('delete', 'video_assets', id)
       fetchItems()
+    } catch (e) {
+      setError(e.message)
     }
   }
 
@@ -67,18 +71,12 @@ export default function AdminVideo() {
         maxDurationSeconds: 3600,
       })
 
-      const { data: row, error: insertErr } = await supabase
-        .from('video_assets')
-        .insert({
-          title: form.title,
-          description: form.description,
-          cloudflare_uid: uid,
-          status: 'processing',
-        })
-        .select()
-        .single()
-
-      if (insertErr) throw new Error(insertErr.message)
+      const row = await adminInsert('video_assets', {
+        title: form.title,
+        description: form.description,
+        cloudflare_uid: uid,
+        status: 'processing',
+      })
 
       const input = document.createElement('input')
       input.type = 'file'
@@ -91,10 +89,7 @@ export default function AdminVideo() {
         fd.append('file', file)
         const up = await fetch(uploadURL, { method: 'POST', body: fd })
         if (!up.ok) throw new Error('Upload to Cloudflare failed')
-        await supabase
-          .from('video_assets')
-          .update({ status: 'ready' })
-          .eq('id', row.id)
+        await adminUpdate('video_assets', row.id, { status: 'ready' })
         await logAdminAction('upload', 'video_assets', row.id, { uid })
         setInfo('Upload complete. Playback URL sync can be added via Stream webhooks.')
         setForm(INIT)

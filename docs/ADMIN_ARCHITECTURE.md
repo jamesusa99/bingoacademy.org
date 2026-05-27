@@ -78,8 +78,9 @@ OPENAI_API_KEY=            # existing chat
 
 ## Next steps (recommended)
 
-1. Run `supabase/migrations/002_admin_platform.sql` and `003_user_profiles_extend.sql` in Supabase SQL Editor.
-2. Set your user `profiles.role = 'admin'` after first login.
-3. Configure Cloudflare Stream + Stripe; verify `/admin/settings` shows green checks.
-4. Replace permissive RLS with role-based policies before production.
-5. Optionally split admin UI into Next.js App Router while keeping this API.
+1. Run `supabase/schema.sql`, then migrations `002`–`007` in Supabase SQL Editor.
+2. Import frontend data: `npm run seed` or Admin → Platform → **Import site data**.
+3. Set your user `profiles.role = 'admin'` after first login.
+4. Configure Cloudflare Stream + Stripe; verify `/admin/settings` shows green checks.
+5. Replace permissive RLS with role-based policies before production.
+6. Optionally split admin UI into Next.js App Router while keeping this API.

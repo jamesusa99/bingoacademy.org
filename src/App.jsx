@@ -6,6 +6,7 @@ import AdminLayout from './components/AdminLayout'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminCourses from './pages/admin/AdminCourses'
+import AdminCoursesCatalog from './pages/admin/AdminCoursesCatalog'
 import AdminEvents from './pages/admin/AdminEvents'
 import AdminForum from './pages/admin/AdminForum'
 import AdminHome from './pages/admin/AdminHome'
@@ -82,6 +83,7 @@ export default function App() {
         <Route path="home" element={<AdminHome />} />
         <Route path="showcase" element={<AdminShowcase />} />
         <Route path="courses" element={<AdminCourses />} />
+        <Route path="courses-catalog" element={<AdminCoursesCatalog />} />
         <Route path="research" element={<AdminResearch />} />
         <Route path="events" element={<AdminEvents />} />
         <Route path="mentors" element={<AdminMentors />} />

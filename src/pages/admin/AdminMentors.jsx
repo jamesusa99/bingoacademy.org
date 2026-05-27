@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 
 const fields = ['name','title','photo','tag','intro','awards','type','sort_order']
 const fieldLabels = { name:'Name', title:'Title', photo:'Photo URL', tag:'Tag', intro:'Bio', awards:'Awards', type:'Type', sort_order:'Sort order' }
@@ -16,12 +17,33 @@ export default function AdminMentors() {
 
   const save = async () => {
     setError(null)
-    const payload = { ...form, sort_order: parseInt(form.sort_order) || 0 }
-    if (editing) { const { error: e } = await supabase.from('community_mentors').update(payload).eq('id', editing.id); setError(e?.message); if (!e) { setEditing(null); setForm(Object.fromEntries(fields.map((k) => [k, k === 'sort_order' ? 0 : '']))); fetchItems() } }
-    else { const { error: e } = await supabase.from('community_mentors').insert(payload); setError(e?.message); if (!e) { setForm(Object.fromEntries(fields.map((k) => [k, k === 'sort_order' ? 0 : '']))); fetchItems() } }
+    const payload = { ...form, sort_order: parseInt(form.sort_order, 10) || 0 }
+    const empty = Object.fromEntries(fields.map((k) => [k, k === 'sort_order' ? 0 : '']))
+    try {
+      if (editing) {
+        await adminUpdate('community_mentors', editing.id, payload)
+        setEditing(null)
+        setForm(empty)
+      } else {
+        await adminInsert('community_mentors', payload)
+        setForm(empty)
+      }
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
   }
   const startEdit = (r) => { setEditing(r); setForm(Object.fromEntries(fields.map((k) => [k, r[k] ?? (k === 'sort_order' ? 0 : '')]))) }
-  const del = async (id) => { if (!confirm('Delete this instructor?')) return; await supabase.from('community_mentors').delete().eq('id', id); fetchItems() }
+  const del = async (id) => {
+    if (!confirm('Delete this instructor?')) return
+    setError(null)
+    try {
+      await adminDelete('community_mentors', id)
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
 
   return (
     <div>

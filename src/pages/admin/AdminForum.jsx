@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 
 function toDbThread(row) {
   return {
@@ -60,30 +61,30 @@ export default function AdminForum() {
   const handleSave = async () => {
     setError(null)
     const payload = toDbThread(form)
-    if (editing) {
-      const { error: e } = await supabase.from('forum_threads').update(payload).eq('id', editing.id)
-      setError(e?.message)
-      if (!e) {
+    try {
+      if (editing) {
+        await adminUpdate('forum_threads', editing.id, payload)
         setEditing(null)
         setForm(INIT)
-        fetchThreads()
-      }
-    } else {
-      const { error: e } = await supabase.from('forum_threads').insert(payload)
-      setError(e?.message)
-      if (!e) {
+      } else {
+        await adminInsert('forum_threads', payload)
         setForm(INIT)
-        fetchThreads()
       }
+      fetchThreads()
+    } catch (e) {
+      setError(e.message)
     }
   }
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this thread and all replies?')) return
     setError(null)
-    const { error: e } = await supabase.from('forum_threads').delete().eq('id', id)
-    setError(e?.message)
-    if (!e) fetchThreads()
+    try {
+      await adminDelete('forum_threads', id)
+      fetchThreads()
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   const startEdit = (t) => {

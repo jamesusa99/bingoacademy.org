@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 
 const AWARD_FIELDS = [
   { key: 'student', label: 'Student name', placeholder: 'e.g. Student A', textarea: false },
@@ -53,14 +54,18 @@ export default function AdminShowcase() {
   const handleSaveAward = async () => {
     setError(null)
     const payload = toAwardPayload()
-    if (editing) {
-      const { error: e } = await supabase.from('showcase_cases').update(payload).eq('id', editing.id)
-      setError(e?.message)
-      if (!e) { setEditing(null); resetAwardForm(); fetchItems() }
-    } else {
-      const { error: e } = await supabase.from('showcase_cases').insert(payload)
-      setError(e?.message)
-      if (!e) { resetAwardForm(); fetchItems() }
+    try {
+      if (editing) {
+        await adminUpdate('showcase_cases', editing.id, payload)
+        setEditing(null)
+        resetAwardForm()
+      } else {
+        await adminInsert('showcase_cases', payload)
+        resetAwardForm()
+      }
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
     }
   }
 
@@ -88,7 +93,16 @@ export default function AdminShowcase() {
       sort_order: r.sort_order ?? 0,
     })
   }
-  const handleDelete = async (id) => { if (!confirm('Delete this case?')) return; await supabase.from('showcase_cases').delete().eq('id', id); fetchItems() }
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this case?')) return
+    setError(null)
+    try {
+      await adminDelete('showcase_cases', id)
+      fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
 
   return (
     <div>

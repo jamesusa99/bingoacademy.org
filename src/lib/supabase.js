@@ -5,26 +5,49 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
 
-/** Resolves like Supabase queries so existing `.then()` chains keep working without env vars. */
-const emptyResponse = Promise.resolve({ data: [], error: null, count: 0 })
+const stubWriteError = {
+  message:
+    '[BingoAcademy] Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local, then restart npm run dev.',
+}
 
+/** Resolves like Supabase queries so existing `.then()` chains keep working without env vars. */
 function createStubQuery() {
+  let operation = 'select'
   const query = {
-    select: () => query,
-    insert: () => query,
-    update: () => query,
-    delete: () => query,
-    upsert: () => query,
+    select: () => {
+      operation = 'select'
+      return query
+    },
+    insert: () => {
+      operation = 'write'
+      return query
+    },
+    update: () => {
+      operation = 'write'
+      return query
+    },
+    delete: () => {
+      operation = 'write'
+      return query
+    },
+    upsert: () => {
+      operation = 'write'
+      return query
+    },
     eq: () => query,
     order: () => query,
     limit: () => query,
     single: () => query,
     maybeSingle: () => query,
     then(onFulfilled, onRejected) {
-      return emptyResponse.then(onFulfilled, onRejected)
+      const response =
+        operation === 'select'
+          ? { data: [], error: null, count: 0 }
+          : { data: null, error: stubWriteError, count: null }
+      return Promise.resolve(response).then(onFulfilled, onRejected)
     },
     catch(onRejected) {
-      return emptyResponse.catch(onRejected)
+      return this.then(undefined, onRejected)
     },
   }
   return query

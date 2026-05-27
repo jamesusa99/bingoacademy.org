@@ -1,7 +1,16 @@
+import './loadEnv.mjs'
 import { createClient } from '@supabase/supabase-js'
 
 const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+export function getSupabaseConfig() {
+  return {
+    url: url || null,
+    hasServiceRole: Boolean(serviceKey),
+    ready: Boolean(url && serviceKey),
+  }
+}
 
 export function getSupabaseAdmin() {
   if (!url || !serviceKey) return null
@@ -13,7 +22,15 @@ export function getSupabaseAdmin() {
 export async function verifyAdminUser(req) {
   const admin = getSupabaseAdmin()
   if (!admin) {
-    return { ok: false, status: 503, error: 'Supabase service role not configured' }
+    const cfg = getSupabaseConfig()
+    const missing = []
+    if (!cfg.url) missing.push('SUPABASE_URL or VITE_SUPABASE_URL')
+    if (!cfg.hasServiceRole) missing.push('SUPABASE_SERVICE_ROLE_KEY')
+    return {
+      ok: false,
+      status: 503,
+      error: `Supabase admin not configured (missing: ${missing.join(', ')}). Add to .env.local and restart npm run dev.`,
+    }
   }
 
   const secret = process.env.ADMIN_API_SECRET

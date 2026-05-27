@@ -4,7 +4,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import AdminUserDetail from '../../components/admin/AdminUserDetail'
 import { useAdminAuth } from '../../hooks/useAdminAuth'
-import { fetchAdminUsers } from '../../lib/admin/users'
+import { fetchAdminUsers, syncAdminUsers } from '../../lib/admin/users'
 import { logAdminAction } from '../../lib/admin/auth'
 
 const ROLES = ['', 'user', 'editor', 'admin']
@@ -28,20 +28,21 @@ function TierBadge({ tier }) {
   return <span className="text-xs text-slate-600">{labels[tier] || tier || '—'}</span>
 }
 
-/** Fallback when API server is offline — profiles table only */
-async function fetchProfilesFallback({ q, role, page, perPage }) {
+/** Fallback when API server is offline — all profiles (admin RLS) */
+async function fetchProfilesFallback({ q, role, status, page, perPage }) {
   let query = supabase.from('profiles').select('*', { count: 'exact' })
   if (q) {
     const safe = q.replace(/%/g, '')
-    query = query.or(`email.ilike.%${safe}%,full_name.ilike.%${safe}%`)
+    query = query.or(`email.ilike.%${safe}%,full_name.ilike.%${safe}%,phone.ilike.%${safe}%,school.ilike.%${safe}%`)
   }
   if (role) query = query.eq('role', role)
+  if (status) query = query.eq('status', status)
   const from = (page - 1) * perPage
   const { data, error, count } = await query.order('created_at', { ascending: false }).range(from, from + perPage - 1)
   if (error) throw new Error(error.message)
   return {
     users: (data || []).map((p) => ({ ...p, order_count: 0, auth: null })),
-    pagination: { page, perPage, total: count ?? 0, totalPages: Math.ceil((count ?? 0) / perPage) },
+    pagination: { page, perPage, total: count ?? 0, totalPages: Math.ceil((count ?? 0) / perPage) || 1 },
     fallback: true,
   }
 }
@@ -53,6 +54,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [apiFallback, setApiFallback] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
 
   const [q, setQ] = useState('')
@@ -76,14 +78,16 @@ export default function AdminUsers() {
       setApiFallback(false)
     } catch (err) {
       try {
-        const data = await fetchProfilesFallback({ q, role: roleFilter, page, perPage: 25 })
+        const data = await fetchProfilesFallback({ q, role: roleFilter, status: statusFilter, page, perPage: 25 })
         setUsers(data.users)
         setPagination(data.pagination)
         setApiFallback(true)
         setError(
           err.status === 503
-            ? 'API: configure SUPABASE_SERVICE_ROLE_KEY on the server for full user management (auth metadata, orders). Showing profiles only.'
-            : `API unavailable (${err.message}). Showing profiles only — run npm run dev for the API.`
+            ? `${err.message} Showing profiles only.`
+            : err.status === 401
+              ? 'Sign in to admin again (session expired). Showing profiles only.'
+              : `API unavailable (${err.message}). Run npm run dev (Vite + API on :8787). Showing profiles only.`
         )
       } catch (fallbackErr) {
         setError(fallbackErr.message)
@@ -109,11 +113,38 @@ export default function AdminUsers() {
     await logAdminAction('update', 'profiles', updated.id)
   }
 
+  const handleSync = async () => {
+    setSyncing(true)
+    try {
+      const result = await syncAdminUsers()
+      await loadUsers()
+      window.alert(`Synced ${result.synced} registered user(s) from Supabase Auth.`)
+    } catch (err) {
+      setError(
+        err.status === 503
+          ? 'Add SUPABASE_SERVICE_ROLE_KEY to .env.local (server-side) to sync all registered users.'
+          : err.message
+      )
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   return (
     <div>
       <AdminPageHeader
         title="User management"
-        description="Search and edit registered users: profile, membership tier, school info, roles, and internal notes. Requires the admin API with Supabase service role for auth metadata and orders."
+        description="Manage all registered users: search, edit profiles, roles, membership, and notes. Lists every Supabase Auth account when the admin API is configured."
+        actions={
+          <button
+            type="button"
+            onClick={handleSync}
+            disabled={syncing || loading}
+            className="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
+          >
+            {syncing ? 'Syncing…' : 'Sync from Auth'}
+          </button>
+        }
       />
 
       {error ? (
@@ -185,7 +216,9 @@ export default function AdminUsers() {
         {loading ? (
           <p className="p-6 text-slate-500 text-sm">Loading users…</p>
         ) : users.length === 0 ? (
-          <p className="p-6 text-slate-500 text-sm">No users found. Profiles are created when users register.</p>
+          <p className="p-6 text-slate-500 text-sm">
+            No users yet. Run migrations 002–004 in Supabase, register on the site, or click &quot;Sync from Auth&quot;.
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[800px]">
@@ -248,6 +281,12 @@ export default function AdminUsers() {
             </table>
           </div>
         )}
+
+        {!loading && pagination.total > 0 && pagination.totalPages <= 1 ? (
+          <div className="border-t border-slate-100 px-4 py-3 text-sm text-slate-500">
+            {pagination.total} registered user{pagination.total === 1 ? '' : 's'}
+          </div>
+        ) : null}
 
         {!loading && pagination.totalPages > 1 ? (
           <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-sm">

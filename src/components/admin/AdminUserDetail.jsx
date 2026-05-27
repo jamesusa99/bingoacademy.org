@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { fetchAdminUser, updateAdminUser } from '../../lib/admin/users'
+import { fetchAdminUser, updateAdminUser, syncAdminUsers } from '../../lib/admin/users'
+import { supabase } from '../../lib/supabase'
 import { logAdminAction } from '../../lib/admin/auth'
 import AdminAlert from './AdminAlert'
 
@@ -51,35 +52,47 @@ export default function AdminUserDetail({ userId, onClose, onSaved }) {
   useEffect(() => {
     if (!userId) return
     let mounted = true
+
+    function applyUser(dataUser, dataOrders) {
+      setUser(dataUser)
+      setOrders(dataOrders)
+      setForm({
+        full_name: dataUser.full_name || '',
+        phone: dataUser.phone || '',
+        role: dataUser.role || 'user',
+        status: dataUser.status || 'active',
+        member_tier: dataUser.member_tier || 'free',
+        locale: dataUser.locale || 'en',
+        country: dataUser.country || '',
+        school: dataUser.school || '',
+        grade: dataUser.grade || '',
+        parent_email: dataUser.parent_email || '',
+        internal_notes: dataUser.internal_notes || '',
+        tags: dataUser.tags || [],
+      })
+      setTagsInput(tagsToString(dataUser.tags))
+    }
+
     async function load() {
       setLoading(true)
       setError(null)
       try {
         const data = await fetchAdminUser(userId)
         if (!mounted) return
-        setUser(data.user)
-        setOrders(data.orders || [])
-        setForm({
-          full_name: data.user.full_name || '',
-          phone: data.user.phone || '',
-          role: data.user.role || 'user',
-          status: data.user.status || 'active',
-          member_tier: data.user.member_tier || 'free',
-          locale: data.user.locale || 'en',
-          country: data.user.country || '',
-          school: data.user.school || '',
-          grade: data.user.grade || '',
-          parent_email: data.user.parent_email || '',
-          internal_notes: data.user.internal_notes || '',
-          tags: data.user.tags || [],
-        })
-        setTagsInput(tagsToString(data.user.tags))
+        applyUser(data.user, data.orders || [])
       } catch (err) {
-        if (mounted) setError(err.message)
+        const { data: profile, error: profileErr } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+        if (!mounted) return
+        if (profileErr || !profile) {
+          setError(err.message || profileErr?.message || 'User not found')
+        } else {
+          applyUser({ ...profile, auth: null, order_count: 0 }, [])
+        }
       } finally {
         if (mounted) setLoading(false)
       }
     }
+
     load()
     return () => {
       mounted = false
@@ -89,14 +102,22 @@ export default function AdminUserDetail({ userId, onClose, onSaved }) {
   const handleSave = async () => {
     setSaving(true)
     setError(null)
+    const payload = { ...form, tags: parseTags(tagsInput), updated_at: new Date().toISOString() }
     try {
-      const payload = { ...form, tags: parseTags(tagsInput) }
       const { user: updated } = await updateAdminUser(userId, payload)
       await logAdminAction('update', 'profiles', userId, { fields: Object.keys(payload) })
       setUser(updated)
       onSaved?.(updated)
     } catch (err) {
-      setError(err.message)
+      const { data, error: saveErr } = await supabase.from('profiles').update(payload).eq('id', userId).select().single()
+      if (saveErr) {
+        setError(err.message || saveErr.message)
+      } else {
+        const updated = { ...user, ...data, auth: user?.auth }
+        await logAdminAction('update', 'profiles', userId, { fields: Object.keys(payload) })
+        setUser(updated)
+        onSaved?.(updated)
+      }
     } finally {
       setSaving(false)
     }

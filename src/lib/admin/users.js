@@ -20,3 +20,7 @@ export async function updateAdminUser(id, payload) {
     body: JSON.stringify(payload),
   })
 }
+
+export async function syncAdminUsers() {
+  return adminFetch('/api/admin/users/sync', { method: 'POST' })
+}
