@@ -109,8 +109,8 @@ export default function AdminCourses() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-2">Course Management</h1>
-      <p className="text-slate-600 text-sm mb-6">Manage course listings and categories for the public site</p>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-2">Mall Management</h1>
+      <p className="text-slate-600 text-sm mb-6">Manage Mall listings and categories for the users</p>
 
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
 

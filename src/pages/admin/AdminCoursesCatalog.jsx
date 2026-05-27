@@ -109,7 +109,7 @@ export default function AdminCoursesCatalog() {
   return (
     <div>
       <AdminPageHeader
-        title="Course catalogue"
+        title="Course Management"
         description="Manage all courses shown on /courses (product lines, video list, detail pages). Changes appear on the site after save. Run migration 008 for list fields (category, level, rating)."
       />
 

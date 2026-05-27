@@ -11,7 +11,7 @@ export const ADMIN_NAV_GROUPS = [
     title: 'Content',
     items: [
       { path: '/admin/home', label: 'Home Portal', icon: '🏠' },
-      { path: '/admin/courses-catalog', label: 'Course catalogue (site)', icon: '📋' },
+      { path: '/admin/courses-catalog', label: 'Course Management', icon: '📋' },
       { path: '/admin/showcase', label: 'Achievements', icon: '🏅' },
       { path: '/admin/research', label: 'AI Camp', icon: '⛺' },
       { path: '/admin/events', label: 'Events', icon: '🏆' },
