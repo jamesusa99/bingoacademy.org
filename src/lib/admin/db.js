@@ -47,6 +47,11 @@ export async function adminInsert(table, payload) {
     const result = await cmsRequest(table, { action: 'insert', payload })
     return result.row
   } catch (err) {
+    if (err.status === 403) {
+      throw new Error(
+        'Your account needs profiles.role = admin or editor to save changes. Ask an administrator to update your role.'
+      )
+    }
     if (!err.status || err.status === 503 || err.status === 502) {
       return clientInsert(table, payload)
     }
@@ -62,6 +67,11 @@ export async function adminUpdate(table, id, payload) {
     const result = await cmsRequest(table, { action: 'update', id, payload })
     return result.row
   } catch (err) {
+    if (err.status === 403) {
+      throw new Error(
+        'Your account needs profiles.role = admin or editor to save changes. Ask an administrator to update your role.'
+      )
+    }
     if (!err.status || err.status === 503 || err.status === 502) {
       return clientUpdate(table, id, payload)
     }
@@ -77,6 +87,11 @@ export async function adminDelete(table, id) {
     const result = await cmsRequest(table, { action: 'delete', id })
     return result.row
   } catch (err) {
+    if (err.status === 403) {
+      throw new Error(
+        'Your account needs profiles.role = admin or editor to delete records. Ask an administrator to update your role.'
+      )
+    }
     if (!err.status || err.status === 503 || err.status === 502) {
       return clientDelete(table, id)
     }

@@ -59,7 +59,7 @@ export async function verifyAdminUser(req) {
     .filter(Boolean)
 
   const email = (user.email || '').toLowerCase()
-  const roleOk = profile && ['admin', 'editor'].includes(profile.role)
+  const roleOk = profile && (profile.role === 'admin' || profile.role === 'editor')
   const allowOk = allowlist.length > 0 && allowlist.includes(email)
 
   if (!roleOk && !allowOk) {

@@ -1,6 +1,7 @@
 import { supabase } from '../supabase'
+import { isStaffRole, STAFF_ROLES } from './roles'
 
-const ADMIN_ROLES = new Set(['admin', 'editor'])
+export { STAFF_ROLES, isStaffRole }
 
 function parseAllowlist() {
   const raw = import.meta.env.VITE_ADMIN_EMAILS || ''
@@ -25,7 +26,7 @@ export async function resolveAdminAccess(user) {
     .eq('id', user.id)
     .maybeSingle()
 
-  if (!error && profile && ADMIN_ROLES.has(profile.role)) {
+  if (!error && profile && isStaffRole(profile.role)) {
     return { isAdmin: true, profile, via: 'role' }
   }
 

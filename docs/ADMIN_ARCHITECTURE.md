@@ -40,7 +40,9 @@ This document maps the **target stack** to the **current repository** (Vite + Re
 1. Users sign in via Supabase Auth (email or Google).
 2. Row in `profiles` with `role` ∈ `admin` | `editor` | `user`.
 3. `AdminGuard` allows `/admin/*` only when `role` is `admin` or `editor`.
-4. Fallback: `VITE_ADMIN_EMAILS` (comma-separated) for bootstrap before profiles exist.
+4. **`profiles.role`** must be `admin` or `editor` for normal access (recommended for all staff).
+5. Fallback: `VITE_ADMIN_EMAILS` (comma-separated) only for bootstrap before roles are assigned.
+6. Run migration **`009_staff_admin_rls.sql`** so CMS tables accept writes from staff JWTs (and block self role escalation).
 
 **Production:** tighten RLS so content tables are read-public, write-admin-only (service role or `auth.jwt()` role claim).
 

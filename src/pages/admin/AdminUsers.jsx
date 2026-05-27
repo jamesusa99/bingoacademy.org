@@ -164,7 +164,7 @@ export default function AdminUsers() {
     <div>
       <AdminPageHeader
         title="User management"
-        description="Add, edit, or delete users. Creates Supabase Auth accounts plus profiles. Requires SUPABASE_SERVICE_ROLE_KEY and npm run dev (API on :8787)."
+        description="Users with role admin or editor can sign in to this console and edit site content. Assign roles here; run migration 009 in Supabase for staff-only CMS writes. Add user requires SUPABASE_SERVICE_ROLE_KEY and the admin API (npm run dev or Vercel api/server)."
         actions={
           <div className="flex flex-wrap gap-2">
             <button
@@ -202,7 +202,15 @@ export default function AdminUsers() {
 
       {currentProfile?.via === 'allowlist' ? (
         <AdminAlert type="info">
-          Signed in via <strong>VITE_ADMIN_EMAILS</strong>. Assign <code className="text-xs bg-white/50 px-1 rounded">profiles.role = admin</code> in production.
+          Signed in via <strong>VITE_ADMIN_EMAILS</strong> (bootstrap only). Set{' '}
+          <code className="text-xs bg-white/50 px-1 rounded">profiles.role</code> to{' '}
+          <code className="text-xs bg-white/50 px-1 rounded">admin</code> or{' '}
+          <code className="text-xs bg-white/50 px-1 rounded">editor</code> so access does not depend on env allowlist.
+        </AdminAlert>
+      ) : currentProfile?.role ? (
+        <AdminAlert type="info">
+          Signed in as staff (<strong>{currentProfile.role}</strong>). You can edit all admin modules; database writes use
+          your session when the API is offline, or the service role via <code className="text-xs bg-white/50 px-1 rounded">/api/admin/cms</code>.
         </AdminAlert>
       ) : null}
 

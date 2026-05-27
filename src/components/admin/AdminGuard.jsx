@@ -38,10 +38,11 @@ export default function AdminGuard({ children }) {
         <div className="card max-w-md p-6 text-center">
           <h1 className="text-lg font-semibold text-bingo-dark mb-2">Access denied</h1>
           <p className="text-sm text-slate-600 mb-4">
-            Signed in as <strong>{user.email}</strong>. This account does not have admin or editor access.
-            Ask an administrator to set <code className="text-xs bg-slate-100 px-1 rounded">profiles.role</code> to{' '}
-            <code className="text-xs bg-slate-100 px-1 rounded">admin</code>, or add your email to{' '}
-            <code className="text-xs bg-slate-100 px-1 rounded">VITE_ADMIN_EMAILS</code>.
+            Signed in as <strong>{user.email}</strong>. Admin access requires{' '}
+            <code className="text-xs bg-slate-100 px-1 rounded">profiles.role</code> to be{' '}
+            <code className="text-xs bg-slate-100 px-1 rounded">admin</code> or{' '}
+            <code className="text-xs bg-slate-100 px-1 rounded">editor</code> (set in User management by an existing
+            admin, or via Supabase SQL). Optional bootstrap: <code className="text-xs bg-slate-100 px-1 rounded">VITE_ADMIN_EMAILS</code>.
           </p>
           <a href="/" className="text-sm text-primary hover:underline">← Back to site</a>
         </div>
