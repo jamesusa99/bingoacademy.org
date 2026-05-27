@@ -11,7 +11,6 @@ export const ADMIN_NAV_GROUPS = [
     title: 'Content',
     items: [
       { path: '/admin/home', label: 'Home Portal', icon: '🏠' },
-      { path: '/admin/courses', label: 'Mall courses', icon: '📚' },
       { path: '/admin/courses-catalog', label: 'Course catalogue (site)', icon: '📋' },
       { path: '/admin/showcase', label: 'Achievements', icon: '🏅' },
       { path: '/admin/research', label: 'AI Camp', icon: '⛺' },
@@ -21,6 +20,7 @@ export const ADMIN_NAV_GROUPS = [
       { path: '/admin/cert', label: 'Certification', icon: '📜' },
       { path: '/admin/charity', label: 'Honors & Charity', icon: '🎗️' },
       { path: '/admin/forum', label: 'Forum', icon: '💬' },
+      { path: '/admin/courses', label: 'Mall', icon: '🛒' },
     ],
   },
   {
