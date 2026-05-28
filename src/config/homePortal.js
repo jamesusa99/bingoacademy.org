@@ -79,7 +79,7 @@ export const PORTAL_MISSION = {
 export const PORTAL_CORE_ENTRIES = [
   { icon: '🧠', title: 'Assessment', desc: 'Quick AI placement · matched course path', to: '/assessment', accent: 'violet' },
   { icon: '🏆', title: 'IOAI Competition Training', desc: 'Whitelist prep · video courses & training camps open', to: '/courses?line=ioai', accent: 'amber' },
-  { icon: '🧪', title: 'AI Exploration Lab', desc: 'Gamified experiments · synced with courses', to: '/lab', accent: 'cyan' },
+  { icon: '🧪', title: 'AI Exploration Lab', desc: 'Free experiments · no sign-up', to: '/exploration', accent: 'cyan' },
   { icon: '📘', title: 'Self-Study & Classroom', desc: 'Literacy courses and school packs — rolling out', to: '/courses?line=general', accent: 'slate' },
   { icon: '🏅', title: 'Achievements', desc: 'Student portfolio · awards & admissions', to: '/showcase', accent: 'rose' },
   { icon: '💬', title: 'Community', desc: 'Discussions, resources & AI tools', to: '/community', accent: 'emerald' },

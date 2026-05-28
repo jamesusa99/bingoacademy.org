@@ -9,7 +9,7 @@ export const PRODUCT_LINES = [
     gradient: 'from-amber-500/15 to-orange-50',
     border: 'border-amber-200/60',
     icon: '🏆',
-    to: '/courses?line=ioai',
+    to: '/programs/ioai',
     subcategories: [
       { id: 'video', name: 'AI Video Courses', icon: '🎬', desc: 'Competition-focused video lessons with progress tracking' },
       { id: 'online-lab', name: 'Training Camp', icon: '🏕️', desc: 'Intensive competition training camps with mock assessments' },
@@ -24,7 +24,7 @@ export const PRODUCT_LINES = [
     gradient: 'from-cyan-500/15 to-sky-50',
     border: 'border-cyan-200/60',
     icon: '🌐',
-    to: '/courses?line=general',
+    to: '/programs/foundations',
     subcategories: [
       { id: 'course', name: 'AI Video Courses', icon: '📘', desc: 'Self-paced AI video lessons with progress tracking' },
       { id: 'online-lab', name: 'Online Labs', icon: '🧪', desc: 'Cloud-based interactive experiments and projects' },
@@ -40,7 +40,7 @@ export const PRODUCT_LINES = [
     gradient: 'from-violet-500/15 to-purple-50',
     border: 'border-violet-200/60',
     icon: '🏫',
-    to: '/courses?line=k12',
+    to: '/programs/k12',
     subcategories: [
       { id: 'books', name: 'Books', icon: '📚', desc: 'Textbooks and supplements — digital and print' },
       { id: 'course', name: 'AI Video Courses', icon: '🎓', desc: 'Classroom video courses and school course packs' },

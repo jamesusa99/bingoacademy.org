@@ -1,10 +1,25 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { mainNavGroups, authNav, mainNav } from '../config/nav'
+import { mainNavPrimary, mainNavSecondary, authNav } from '../config/nav'
+import NavProgramsDropdown from './layout/NavProgramsDropdown'
 import ChatWidget from './ChatWidget'
+
+function navLinkClass(active, highlight) {
+  if (active) return 'bg-cyan-500 text-white'
+  if (highlight) return 'text-violet-300 hover:text-white hover:bg-violet-500/30'
+  return 'text-slate-300 hover:text-white hover:bg-white/10'
+}
 
 export default function Layout({ children }) {
   const loc = useLocation()
+  const [moreOpen, setMoreOpen] = useState(false)
+
+  const isActive = (path) => {
+    if (path === '/') return loc.pathname === '/'
+    if (path === '/lab') return loc.pathname === '/lab' || loc.pathname.startsWith('/lab/')
+    if (path === '/exploration') return loc.pathname === '/exploration'
+    return loc.pathname === path || loc.pathname.startsWith(`${path}/`)
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -12,78 +27,98 @@ export default function Layout({ children }) {
         <div className="w-full px-4 sm:px-6">
           <div className="flex items-center gap-2 lg:gap-4 min-h-14">
             <Link to="/" className="shrink-0 flex items-center" aria-label="BingoAcademy home">
-              <img
-                src="/logo.png"
-                alt="BingoAcademy"
-                className="h-9 sm:h-10 w-auto"
-                width={895}
-                height={209}
-              />
+              <img src="/logo.png" alt="BingoAcademy" className="h-9 sm:h-10 w-auto" width={895} height={209} />
             </Link>
+
             <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 min-w-0">
-              {mainNavGroups.map((group, gi) => (
-                <React.Fragment key={gi}>
-                  {gi > 0 && <span className="w-0.5 h-5 bg-cyan-400/80 shrink-0 rounded-full" aria-hidden />}
-                  <div className="flex items-center gap-1 shrink-0">
-                    {group.map(({ path, label }) => (
-                      <Link
-                        key={path}
-                        to={path}
-                        className={`px-2 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
-                          loc.pathname === path || (path === '/profile' && loc.pathname.startsWith('/profile')) ? 'bg-cyan-500 text-white' : 'text-slate-300 hover:text-white hover:bg-white/10'
-                        }`}
-                      >
-                        {label}
-                      </Link>
-                    ))}
-                  </div>
-                </React.Fragment>
-              ))}
-            </nav>
-            <div className="hidden lg:flex items-center gap-1 shrink-0">
-              {authNav.map(({ path, label }) => (
+              <NavProgramsDropdown />
+              {mainNavPrimary
+                .filter((n) => !n.items)
+                .map(({ path, label, highlight }) => (
+                  <Link
+                    key={path}
+                    to={path}
+                    className={`px-2 py-2 rounded-lg text-sm whitespace-nowrap transition-colors min-h-[44px] inline-flex items-center ${navLinkClass(isActive(path), highlight)}`}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              <span className="w-0.5 h-5 bg-cyan-400/80 shrink-0 rounded-full mx-1" aria-hidden />
+              {mainNavSecondary.map(({ path, label }) => (
                 <Link
                   key={path}
                   to={path}
-                  className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
-                    loc.pathname === path ? 'bg-cyan-500 text-white' : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
+                  className={`px-2 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${navLinkClass(isActive(path))}`}
                 >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="hidden lg:flex items-center gap-1 shrink-0">
+              <Link
+                to="/profile"
+                className={`px-2 py-2 rounded-lg text-sm ${navLinkClass(loc.pathname.startsWith('/profile'))}`}
+              >
+                Profile
+              </Link>
+              {authNav.map(({ path, label }) => (
+                <Link key={path} to={path} className={`px-3 py-2 rounded-lg text-sm ${navLinkClass(isActive(path))}`}>
                   {label}
                 </Link>
               ))}
             </div>
           </div>
-          {/* Mobile nav — horizontal scroll, 44px touch targets */}
-          <nav className="lg:hidden nav-scroll-mobile" aria-label="Mobile navigation">
-            {mainNavGroups.map((group, gi) => (
-              <React.Fragment key={gi}>
-                {gi > 0 && <span className="w-0.5 h-5 bg-cyan-400/60 shrink-0 rounded-full self-center" aria-hidden />}
-                {group.map(({ path, label }) => (
-                  <Link
-                    key={path}
-                    to={path}
-                    className={`px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 ${
-                      loc.pathname === path || (path === '/profile' && loc.pathname.startsWith('/profile')) ? 'bg-cyan-500 text-white' : 'bg-white/10 text-slate-200'
-                    }`}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </React.Fragment>
-            ))}
+
+          <nav className="lg:hidden nav-scroll-mobile pb-2" aria-label="Mobile navigation">
+            <NavProgramsDropdown />
+            {mainNavPrimary
+              .filter((n) => !n.items)
+              .map(({ path, label, highlight }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  className={`px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 ${
+                    isActive(path) ? 'bg-cyan-500 text-white' : highlight ? 'bg-violet-500/40 text-violet-100' : 'bg-white/10 text-slate-200'
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+            <button
+              type="button"
+              onClick={() => setMoreOpen((o) => !o)}
+              className="px-3 py-2 text-xs rounded-lg bg-white/10 text-slate-200 shrink-0"
+            >
+              More ▾
+            </button>
             {authNav.map(({ path, label }) => (
               <Link
                 key={path}
                 to={path}
-                className={`px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap ${
-                  loc.pathname === path ? 'bg-cyan-500 text-white' : 'bg-white/10 text-slate-200'
-                }`}
+                className={`px-3 py-2 text-xs rounded-lg whitespace-nowrap ${isActive(path) ? 'bg-cyan-500 text-white' : 'bg-white/10 text-slate-200'}`}
               >
                 {label}
               </Link>
             ))}
           </nav>
+          {moreOpen ? (
+            <div className="lg:hidden flex flex-wrap gap-2 pb-3">
+              {mainNavSecondary.map(({ path, label }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  onClick={() => setMoreOpen(false)}
+                  className="px-3 py-1.5 text-xs rounded-lg bg-white/10 text-slate-200"
+                >
+                  {label}
+                </Link>
+              ))}
+              <Link to="/compare" onClick={() => setMoreOpen(false)} className="px-3 py-1.5 text-xs rounded-lg bg-white/10 text-slate-200">
+                Compare
+              </Link>
+            </div>
+          ) : null}
         </div>
       </header>
       <main className="flex-1">{children}</main>
@@ -99,25 +134,25 @@ export default function Layout({ children }) {
                 height={209}
               />
             </Link>
-            <p className="mt-2 text-slate-500">Foundations of AI · IOAI Training · K12 Classroom</p>
+            <p className="mt-2 text-xs">AI courses, labs & certification</p>
           </div>
-          <div className="flex gap-8">
+          <div className="flex flex-wrap gap-8">
+            <div>
+              <div className="text-white font-medium mb-2">Programs</div>
+              <Link to="/programs/ioai" className="block hover:text-white">IOAI Competition Training</Link>
+              <Link to="/programs/foundations" className="block hover:text-white">Foundations of AI Program</Link>
+              <Link to="/programs/k12" className="block hover:text-white">K12 Classroom Edition</Link>
+              <Link to="/compare" className="block hover:text-white mt-2">Compare programs</Link>
+            </div>
             <div>
               <div className="text-white font-medium mb-2">Explore</div>
-              <Link to="/" className="block hover:text-white">AI Era Portal</Link>
-              <Link to="/courses" className="block hover:text-white">AI Courses</Link>
-              <Link to="/lab" className="block hover:text-white">AI Exploration Lab</Link>
+              <Link to="/courses" className="block hover:text-white">Courses</Link>
+              <Link to="/exploration" className="block hover:text-white">AI Exploration Lab</Link>
+              <Link to="/lab" className="block hover:text-white">Labs</Link>
               <Link to="/showcase" className="block hover:text-white">Achievements</Link>
               <Link to="/cert" className="block hover:text-white">Certification</Link>
               <Link to="/mall" className="block hover:text-white">AI Mall</Link>
-              <Link to="/profile" className="block hover:text-white">Profile</Link>
-            </div>
-            <div>
-              <div className="text-white font-medium mb-2">Products</div>
-              <Link to="/courses?line=ioai" className="block hover:text-white">IOAI Competition Training</Link>
-              <Link to="/courses?line=general" className="block hover:text-white">Foundations of AI Program</Link>
-              <Link to="/courses?line=k12" className="block hover:text-white">K12 Classroom Edition</Link>
-              <Link to="/admin" className="block hover:text-white text-slate-500 mt-2">Admin</Link>
+              <Link to="/pricing" className="block hover:text-white">Pricing</Link>
             </div>
           </div>
         </div>

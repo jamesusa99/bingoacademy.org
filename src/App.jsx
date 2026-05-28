@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import AdminGuard from './components/admin/AdminGuard'
@@ -47,6 +47,15 @@ import ForgotPassword from './pages/ForgotPassword'
 import AuthCallback from './pages/AuthCallback'
 import AIAssessment from './pages/AIAssessment'
 import Community from './pages/Community'
+
+const ProgramPage = lazy(() => import('./pages/programs/ProgramPage'))
+const Compare = lazy(() => import('./pages/Compare'))
+const Exploration = lazy(() => import('./pages/Exploration'))
+const Pricing = lazy(() => import('./pages/Pricing'))
+
+function PageFallback() {
+  return <div className="page-content py-20 text-center text-slate-500 text-sm">Loading…</div>
+}
 
 function HashRedirect() {
   const navigate = useNavigate()
@@ -109,6 +118,39 @@ export default function App() {
         <Route path="showcase/award/:id" element={<ShowcaseCase />} />
         <Route path="assessment" element={<AIAssessment />} />
         <Route path="courses" element={<Courses />} />
+        <Route
+          path="programs/:slug"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <ProgramPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="compare"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <Compare />
+            </Suspense>
+          }
+        />
+        <Route
+          path="exploration"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <Exploration />
+            </Suspense>
+          }
+        />
+        <Route
+          path="pricing"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <Pricing />
+            </Suspense>
+          }
+        />
+        <Route path="labs" element={<Navigate to="/lab" replace />} />
         <Route path="lab" element={<AILab />} />
         <Route path="community" element={<Community />} />
         <Route path="lab/hide-and-seek" element={<AIHideAndSeekPage />} />

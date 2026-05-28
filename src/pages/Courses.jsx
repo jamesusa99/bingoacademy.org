@@ -12,6 +12,9 @@ import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import CourseListView from '../components/courses/CourseListView'
+import { ProgramBadge, ModuleBadge, UseCaseTag } from '../components/courses/ProgramBadges'
+import PageMeta from '../components/PageMeta'
+import { PAGE_SEO } from '../config/programs'
 
 function CourseCard({ item }) {
   const soon = isCourseComingSoon(item)
@@ -22,6 +25,11 @@ function CourseCard({ item }) {
         soon ? 'opacity-95 border-amber-200/80 bg-amber-50/20' : 'hover:shadow-md hover:border-primary/30'
       }`}
     >
+      <div className="flex flex-wrap items-center gap-1.5 mb-2">
+        <ProgramBadge lineId={item.line} />
+        <ModuleBadge lineId={item.line} subId={item.sub} />
+        <UseCaseTag lineId={item.line} />
+      </div>
       <div className="flex items-start justify-between gap-2 mb-2">
         <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded">
           {item.badge}
@@ -75,6 +83,14 @@ export default function Courses() {
     return list
   }, [courses, line.id, subId])
 
+  const subCounts = useMemo(() => {
+    const counts = {}
+    for (const c of courses.filter((x) => x.line === line.id)) {
+      counts[c.sub] = (counts[c.sub] || 0) + 1
+    }
+    return counts
+  }, [courses, line.id])
+
   const ioaiFeatured = useMemo(
     () => courses.filter((c) => c.line === 'ioai' && c.featured),
     [courses]
@@ -116,6 +132,7 @@ export default function Courses() {
 
   return (
     <div className="w-full">
+      <PageMeta title={PAGE_SEO.courses.title} description={PAGE_SEO.courses.description} />
       <PageBanner slides={bannerSlides} autoPlayMs={8000} />
 
       <PageContent className="py-6 sm:py-8">
@@ -219,7 +236,12 @@ export default function Courses() {
                 onClick={() => setParams({ line: line.id, sub: s.id })}
                 className="card p-4 text-left hover:border-primary/40 hover:shadow-sm transition"
               >
-                <span className="text-lg">{s.icon}</span>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-lg">{s.icon}</span>
+                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    {subCounts[s.id] ?? 0} items
+                  </span>
+                </div>
                 <p className="font-semibold text-bingo-dark text-sm mt-1">{s.name}</p>
                 <p className="text-xs text-slate-500">{s.desc}</p>
               </button>
