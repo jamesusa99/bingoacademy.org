@@ -3,15 +3,22 @@ import { getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
 import { COURSES_PORTAL } from '../config/coursesPortal'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
+import { useCourseAccess } from '../hooks/useCourseAccess'
+import { useAuth } from '../contexts/AuthContext'
 import { findCourseInList } from '../lib/catalogCourse'
+import { isVideoCourse } from '../lib/courseAccess'
 import CourseComingSoon from '../components/CourseComingSoon'
+import CourseVideoPlayer from '../components/courses/CourseVideoPlayer'
+import CoursePurchasePanel from '../components/courses/CoursePurchasePanel'
 import PageContent from '../components/PageContent'
 
 export default function CourseDetail() {
   const { id } = useParams()
   const { courses, loading } = useCourseCatalog()
+  const { isAuthenticated } = useAuth()
   const item = findCourseInList(courses, id)
   const line = getProductLine(item?.line ?? 'general')
+  const { hasAccess, hasTrack, unlockLesson, unlockTrack } = useCourseAccess(item?.id)
 
   if (loading) {
     return (
@@ -31,6 +38,7 @@ export default function CourseDetail() {
   }
 
   const comingSoon = isCourseComingSoon(item)
+  const showVideo = isVideoCourse(item) && !comingSoon
   const linkedLabs = (item.labSlugs ?? [])
     .map((slug) => EXPLORATION_EXPERIMENTS.find((e) => e.id === slug))
     .filter(Boolean)
@@ -61,6 +69,10 @@ export default function CourseDetail() {
                 <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
                   {COURSES_PORTAL.statusComingSoon}
                 </span>
+              ) : hasAccess ? (
+                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                  {COURSES_PORTAL.videoFullBadge}
+                </span>
               ) : (
                 <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
                   {COURSES_PORTAL.statusEnrolling}
@@ -82,6 +94,17 @@ export default function CourseDetail() {
         <CourseComingSoon course={item} line={line} />
       ) : (
         <>
+          {showVideo ? (
+            <CourseVideoPlayer
+              course={item}
+              hasAccess={hasAccess}
+              hasTrack={hasTrack}
+              onUnlockLesson={unlockLesson}
+              onUnlockTrack={unlockTrack}
+              isAuthenticated={isAuthenticated}
+            />
+          ) : null}
+
           <p className="text-sm text-slate-700 leading-relaxed mb-6">{item.desc}</p>
 
           {item.audience && (
@@ -141,15 +164,38 @@ export default function CourseDetail() {
             </section>
           )}
 
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Link to="/profile/study" className="btn-primary text-sm px-5 py-2.5">
-              {COURSES_PORTAL.enrollCta}
-            </Link>
-            <Link to="/assessment" className="text-sm px-5 py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5">
+          {!showVideo ? (
+            <CoursePurchasePanel
+              course={item}
+              hasAccess={hasAccess}
+              hasTrack={hasTrack}
+              onUnlockLesson={unlockLesson}
+              onUnlockTrack={unlockTrack}
+              isAuthenticated={isAuthenticated}
+            />
+          ) : null}
+
+          <div className="flex flex-wrap gap-3 justify-center mt-6">
+            {hasAccess ? (
+              <Link to="/profile/study" className="btn-primary text-sm px-5 py-2.5">
+                {COURSES_PORTAL.continueLearning}
+              </Link>
+            ) : (
+              <button type="button" onClick={unlockLesson} className="btn-primary text-sm px-5 py-2.5">
+                {COURSES_PORTAL.enrollCta}
+              </button>
+            )}
+            <Link
+              to="/assessment"
+              className="text-sm px-5 py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5"
+            >
               {COURSES_PORTAL.freeAssessment}
             </Link>
-            <Link to="/mall" className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50">
-              {COURSES_PORTAL.materialsCta}
+            <Link
+              to="/cert"
+              className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
+            >
+              {COURSES_PORTAL.contactSales}
             </Link>
           </div>
         </>

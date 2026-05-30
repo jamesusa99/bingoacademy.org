@@ -3,6 +3,8 @@
  * Generates courses_catalog entries for /courses?line=ioai&sub=video
  */
 
+import { DEFAULT_LESSON_VIDEO, DEFAULT_LESSON_POSTER } from './courseVideo.js'
+
 export const IOAI_COURSE_SYSTEM = {
   title: 'IOAI Competition Course System',
   summary: '4 stages · 11 modules · 110 lessons',
@@ -260,6 +262,9 @@ export function buildIOAIVideoCatalogEntries() {
     syllabus: fullSyllabus,
     labSlugs: [],
     sortOrder: 0,
+    videoUrl: DEFAULT_LESSON_VIDEO,
+    videoPoster: DEFAULT_LESSON_POSTER,
+    previewSeconds: 120,
   })
 
   let sortOrder = 1
@@ -290,6 +295,9 @@ export function buildIOAIVideoCatalogEntries() {
         syllabus: [lessonTitle, `Module ${mod.number}: ${mod.title}`, stage.label],
         labSlugs: [],
         sortOrder: sortOrder++,
+        videoUrl: DEFAULT_LESSON_VIDEO,
+        videoPoster: DEFAULT_LESSON_POSTER,
+        previewSeconds: 90,
       })
     })
   }

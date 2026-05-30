@@ -27,6 +27,9 @@ export function rowToCatalogCourse(row) {
     students: row.students ?? 800,
     thumbnail: row.thumbnail_url || null,
     sortOrder: row.sort_order ?? 0,
+    videoUrl: row.video_url || null,
+    videoPoster: row.video_poster || null,
+    previewSeconds: row.preview_seconds ?? 90,
   }
 }
 
