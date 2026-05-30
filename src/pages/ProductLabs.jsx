@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import PageMeta from '../components/PageMeta'
+import IOAITrainingLabHub from './labs/IOAITrainingLabHub'
 import { getProductLine, subcategoryLabel, isCourseComingSoon } from '../config/products'
 import { getProductLabTracks, PRODUCT_LABS_INTRO, labsPath } from '../config/productLabs'
 import { PRODUCT_LABS_PORTAL } from '../config/productLabsPortal'
@@ -29,7 +30,11 @@ export default function ProductLabs() {
   }, [courses, subParam, activeTrack])
 
   const setLine = (lineId) => {
-    setParams(subParam ? { line: lineId, sub: subParam } : { line: lineId })
+    setParams(subParam && !(lineParam === 'ioai' && subParam === 'online-lab') ? { line: lineId, sub: subParam } : { line: lineId })
+  }
+
+  if (lineParam === 'ioai' && subParam === 'online-lab') {
+    return <IOAITrainingLabHub />
   }
 
   useEffect(() => {

@@ -30,6 +30,7 @@ import ShowcaseMaterials from './pages/ShowcaseMaterials'
 import Courses from './pages/Courses'
 import ProductLabs from './pages/ProductLabs'
 import AIExploration from './pages/AIExploration'
+import IOAITrainingLabSession from './pages/labs/IOAITrainingLabSession'
 import AIHideAndSeekPage from './pages/lab/AIHideAndSeekPage'
 import AIVirtualConductorPage from './pages/lab/AIVirtualConductorPage'
 import WordGravityPage from './pages/lab/WordGravityPage'
@@ -76,6 +77,7 @@ export default function App() {
     <>
       <HashRedirect />
       <Routes>
+      <Route path="/labs/ioai/training-lab/:labId" element={<IOAITrainingLabSession />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route
