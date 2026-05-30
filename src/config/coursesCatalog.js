@@ -4,13 +4,23 @@
  * @typedef {'video' | 'camp' | 'self-study' | 'classroom' | 'lab' | 'materials' | 'books'} DeliveryType
  */
 
+import { buildIOAIVideoCatalogEntries } from './ioaiCourseSystem'
+
 export const COURSE_STATUS = {
   LIVE: 'live',
   COMING_SOON: 'coming-soon',
 }
 
-/** @type {Array<object>} */
-export const COURSE_CATALOG = [
+/** Legacy IOAI video slugs replaced by the 110-lesson competition system */
+const REPLACED_IOAI_VIDEO_IDS = new Set([
+  'ioai-whitelist',
+  'ioai-aigc-sprint',
+  'ioai-mock',
+  'i1',
+  'i2',
+])
+
+const LEGACY_COURSE_CATALOG = [
   {
     id: 'ioai-whitelist',
     line: 'ioai',
@@ -347,6 +357,16 @@ export const COURSE_CATALOG = [
     syllabus: ['Kit deployment'],
     labSlugs: [],
   },
+]
+
+export const IOAI_VIDEO_COURSES = buildIOAIVideoCatalogEntries()
+
+/** @type {Array<object>} */
+export const COURSE_CATALOG = [
+  ...IOAI_VIDEO_COURSES,
+  ...LEGACY_COURSE_CATALOG.filter(
+    (c) => !(c.line === 'ioai' && c.sub === 'video' && REPLACED_IOAI_VIDEO_IDS.has(c.id))
+  ),
 ]
 
 export function getCourseById(id) {

@@ -9,7 +9,7 @@ export const COURSES_PORTAL = {
   ioaiFeaturedLabel: 'IOAI Featured',
   ioaiFeaturedTitle: 'Whitelist competition training · Enrolling now',
   ioaiFeaturedDesc:
-    'Video courses, training camps, and mock defence workshops are live. Self-study and classroom packs are in preparation — detail pages show “Coming soon”.',
+    'The IOAI Competition Course System (11 modules · 110 lessons) is live — foundation, core ML/DL, CV/NLP/RL tracks, and national-team sprint prep.',
   comingSoonHint:
     'Self-study / classroom items marked “Coming soon” — try AI Exploration free or browse product labs.',
   allTypes: 'All types',
@@ -49,7 +49,7 @@ export const COURSES_PORTAL = {
   videoListSubtitle: (lineId) => {
     const map = {
       general: 'Explore self-paced AI video courses — literacy, tools, and creative projects for independent learners.',
-      ioai: 'Competition-focused video lessons with progress tracking for IOAI whitelist preparation.',
+      ioai: 'IOAI Competition Course System — 11 modules · 110 video lessons from foundations to national-team selection prep.',
       k12: 'Classroom-ready AI video courses for schools — aligned packs with teacher support.',
     }
     return map[lineId] || map.general

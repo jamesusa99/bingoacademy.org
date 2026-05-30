@@ -327,12 +327,12 @@ export async function runSiteSeed(admin, { force = false } = {}) {
         outcomes: c.outcomes || [],
         syllabus: c.syllabus || [],
         lab_slugs: c.labSlugs || [],
-        sort_order: i,
-        category: meta.category || 'ai-fundamentals',
-        level: meta.level || 'beginner',
-        lessons: meta.lessons ?? 12,
-        rating: meta.rating ?? 4.8,
-        students: meta.students ?? 800,
+        sort_order: c.sortOrder ?? i,
+        category: c.category || meta.category || 'ai-fundamentals',
+        level: c.level || meta.level || 'beginner',
+        lessons: c.lessons ?? meta.lessons ?? 12,
+        rating: c.rating ?? meta.rating ?? 4.8,
+        students: c.students ?? meta.students ?? 800,
         updated_at: new Date().toISOString(),
       }
     })

@@ -1,12 +1,11 @@
 import { isCourseComingSoon } from '../config/coursesCatalog'
+import { buildIOAICourseListMeta } from '../config/ioaiCourseSystem'
+
+const IOAI_LIST_META = buildIOAICourseListMeta()
 
 /** Per-course list metadata (category, level, engagement) — also used by seed */
 export const COURSE_LIST_META = {
-  'ioai-whitelist': { category: 'ai-fundamentals', level: 'advanced', lessons: 32, rating: 4.9, students: 2400 },
-  'ioai-aigc-sprint': { category: 'deep-learning', level: 'intermediate', lessons: 16, rating: 4.8, students: 1800 },
-  'ioai-mock': { category: 'ai-fundamentals', level: 'intermediate', lessons: 8, rating: 4.7, students: 920 },
-  'i1': { category: 'deep-learning', level: 'intermediate', lessons: 18, rating: 4.7, students: 1100 },
-  'i2': { category: 'ai-fundamentals', level: 'intermediate', lessons: 16, rating: 4.8, students: 1350 },
+  ...IOAI_LIST_META,
   'g-literacy': { category: 'ai-fundamentals', level: 'beginner', lessons: 36, rating: 4.7, students: 3200 },
   'g1': { category: 'ai-fundamentals', level: 'beginner', lessons: 12, rating: 4.8, students: 1840 },
   'k-classroom': { category: 'ai-fundamentals', level: 'beginner', lessons: 24, rating: 4.6, students: 680 },
