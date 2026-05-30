@@ -401,7 +401,7 @@ export default function WordGravityField() {
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div>
             <Link
-              to="/lab"
+              to="/exploration"
               className="text-xs text-violet-400/90 hover:text-violet-300 font-medium inline-flex items-center gap-1 mb-1"
             >
               ← AI Exploration Lab

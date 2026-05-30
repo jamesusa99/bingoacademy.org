@@ -28,7 +28,8 @@ import ShowcaseWorks from './pages/ShowcaseWorks'
 import ShowcaseAwards from './pages/ShowcaseAwards'
 import ShowcaseMaterials from './pages/ShowcaseMaterials'
 import Courses from './pages/Courses'
-import AILab from './pages/AILab'
+import ProductLabs from './pages/ProductLabs'
+import AIExploration from './pages/AIExploration'
 import AIHideAndSeekPage from './pages/lab/AIHideAndSeekPage'
 import AIVirtualConductorPage from './pages/lab/AIVirtualConductorPage'
 import WordGravityPage from './pages/lab/WordGravityPage'
@@ -50,11 +51,9 @@ import Community from './pages/Community'
 
 const ProgramPage = lazy(() => import('./pages/programs/ProgramPage'))
 const Compare = lazy(() => import('./pages/Compare'))
-const Exploration = lazy(() => import('./pages/Exploration'))
-const Pricing = lazy(() => import('./pages/Pricing'))
 
 function PageFallback() {
-  return <div className="page-content py-20 text-center text-slate-500 text-sm">Loading…</div>
+  return <div className="min-h-[40vh] flex items-center justify-center text-slate-500 text-sm">Loading…</div>
 }
 
 function HashRedirect() {
@@ -118,6 +117,22 @@ export default function App() {
         <Route path="showcase/award/:id" element={<ShowcaseCase />} />
         <Route path="assessment" element={<AIAssessment />} />
         <Route path="courses" element={<Courses />} />
+        <Route path="labs" element={<ProductLabs />} />
+        <Route path="exploration" element={<AIExploration />} />
+        <Route path="exploration/hide-and-seek" element={<AIHideAndSeekPage />} />
+        <Route path="exploration/virtual-conductor" element={<AIVirtualConductorPage />} />
+        <Route path="exploration/word-gravity" element={<WordGravityPage />} />
+        <Route path="exploration/jailbreak-adventure" element={<AIJailbreakAdventurePage />} />
+        <Route path="exploration/evolve-car" element={<EvolveAICarPage />} />
+        <Route path="exploration/doodle-monsters" element={<DoodleMonsterPage />} />
+        <Route path="lab" element={<Navigate to="/labs" replace />} />
+        <Route path="lab/hide-and-seek" element={<Navigate to="/exploration/hide-and-seek" replace />} />
+        <Route path="lab/virtual-conductor" element={<Navigate to="/exploration/virtual-conductor" replace />} />
+        <Route path="lab/word-gravity" element={<Navigate to="/exploration/word-gravity" replace />} />
+        <Route path="lab/jailbreak-adventure" element={<Navigate to="/exploration/jailbreak-adventure" replace />} />
+        <Route path="lab/evolve-car" element={<Navigate to="/exploration/evolve-car" replace />} />
+        <Route path="lab/doodle-monsters" element={<Navigate to="/exploration/doodle-monsters" replace />} />
+        <Route path="pricing" element={<Navigate to="/cert" replace />} />
         <Route
           path="programs/:slug"
           element={
@@ -134,31 +149,7 @@ export default function App() {
             </Suspense>
           }
         />
-        <Route
-          path="exploration"
-          element={
-            <Suspense fallback={<PageFallback />}>
-              <Exploration />
-            </Suspense>
-          }
-        />
-        <Route
-          path="pricing"
-          element={
-            <Suspense fallback={<PageFallback />}>
-              <Pricing />
-            </Suspense>
-          }
-        />
-        <Route path="labs" element={<Navigate to="/lab" replace />} />
-        <Route path="lab" element={<AILab />} />
         <Route path="community" element={<Community />} />
-        <Route path="lab/hide-and-seek" element={<AIHideAndSeekPage />} />
-        <Route path="lab/virtual-conductor" element={<AIVirtualConductorPage />} />
-        <Route path="lab/word-gravity" element={<WordGravityPage />} />
-        <Route path="lab/jailbreak-adventure" element={<AIJailbreakAdventurePage />} />
-        <Route path="lab/evolve-car" element={<EvolveAICarPage />} />
-        <Route path="lab/doodle-monsters" element={<DoodleMonsterPage />} />
         <Route path="courses/detail/:id" element={<CourseDetail />} />
         <Route path="cert" element={<Certification />} />
         <Route path="mall" element={<Mall />} />
@@ -169,9 +160,9 @@ export default function App() {
         <Route path="register" element={<Register />} />
         <Route path="forgot-password" element={<ForgotPassword />} />
         {/* Legacy routes → new product structure */}
-        <Route path="research" element={<Navigate to="/courses?line=ioai" replace />} />
-        <Route path="events" element={<Navigate to="/courses?line=ioai" replace />} />
-        <Route path="career" element={<Navigate to="/courses?line=k12" replace />} />
+        <Route path="research" element={<Navigate to="/programs/ioai" replace />} />
+        <Route path="events" element={<Navigate to="/programs/ioai" replace />} />
+        <Route path="career" element={<Navigate to="/programs/k12" replace />} />
         <Route path="charity" element={<Navigate to="/" replace />} />
         <Route path="tools" element={<Navigate to="/mall" replace />} />
         <Route path="tools/detail/:id" element={<Navigate to="/mall" replace />} />

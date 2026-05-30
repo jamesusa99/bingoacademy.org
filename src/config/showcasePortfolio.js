@@ -59,7 +59,7 @@ export const STUDENT_PORTFOLIO = [
     emoji: '🤖',
     tags: ['Robotics', 'RL concepts', 'Team event'],
     blurb: 'Physical maze challenge inspired by Lab Evolve! AI Car.',
-    link: '/lab/evolve-car',
+    link: '/exploration/evolve-car',
   },
   {
     id: 'p5',

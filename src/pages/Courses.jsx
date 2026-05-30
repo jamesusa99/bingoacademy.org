@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, Navigate } from 'react-router-dom'
 import {
   PRODUCT_LINES,
   getProductLine,
@@ -12,9 +12,10 @@ import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import CourseListView from '../components/courses/CourseListView'
-import { ProgramBadge, ModuleBadge, UseCaseTag } from '../components/courses/ProgramBadges'
 import PageMeta from '../components/PageMeta'
+import { ProgramBadge, ModuleBadge, UseCaseTag } from '../components/courses/ProgramBadges'
 import { PAGE_SEO } from '../config/programs'
+import { isProductLabSub, labsPath } from '../config/productLabs'
 
 function CourseCard({ item }) {
   const soon = isCourseComingSoon(item)
@@ -25,15 +26,11 @@ function CourseCard({ item }) {
         soon ? 'opacity-95 border-amber-200/80 bg-amber-50/20' : 'hover:shadow-md hover:border-primary/30'
       }`}
     >
-      <div className="flex flex-wrap items-center gap-1.5 mb-2">
-        <ProgramBadge lineId={item.line} />
-        <ModuleBadge lineId={item.line} subId={item.sub} />
-        <UseCaseTag lineId={item.line} />
-      </div>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded">
-          {item.badge}
-        </span>
+      <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
+        <div className="flex flex-wrap gap-1.5 items-center">
+          <ProgramBadge lineId={item.line} />
+          <ModuleBadge lineId={item.line} subId={item.sub} />
+        </div>
         {soon ? (
           <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full shrink-0">
             {COURSES_PORTAL.comingSoonBadge}
@@ -43,7 +40,9 @@ function CourseCard({ item }) {
         )}
       </div>
       <h3 className="font-semibold text-bingo-dark text-sm leading-snug mb-1">{item.name}</h3>
+      <UseCaseTag lineId={item.line} className="block mb-2" />
       <p className="text-[10px] text-slate-400 mb-2">
+        {item.badge && <span className="mr-2">{item.badge}</span>}
         {subcategoryLabel(item.line, item.sub)} · {item.hours}
       </p>
       <p className="text-xs text-slate-600 leading-relaxed flex-1 mb-4 line-clamp-3">{item.desc}</p>
@@ -83,14 +82,6 @@ export default function Courses() {
     return list
   }, [courses, line.id, subId])
 
-  const subCounts = useMemo(() => {
-    const counts = {}
-    for (const c of courses.filter((x) => x.line === line.id)) {
-      counts[c.sub] = (counts[c.sub] || 0) + 1
-    }
-    return counts
-  }, [courses, line.id])
-
   const ioaiFeatured = useMemo(
     () => courses.filter((c) => c.line === 'ioai' && c.featured),
     [courses]
@@ -107,9 +98,22 @@ export default function Courses() {
     href: `/courses?line=${pl.id}`,
   }))
 
+  const subCounts = useMemo(() => {
+    const counts = {}
+    for (const s of line.subcategories) {
+      counts[s.id] = courses.filter((c) => c.line === line.id && c.sub === s.id).length
+    }
+    return counts
+  }, [courses, line.id, line.subcategories])
+
+  if (subId && isProductLabSub(lineId, subId)) {
+    return <Navigate to={labsPath(lineId, subId)} replace />
+  }
+
   if (videoListMode) {
     return (
       <div className="w-full">
+        <PageMeta title={PAGE_SEO.courses.title} description={PAGE_SEO.courses.description} />
         {catalogLoading ? (
           <div className="courses-page-dark py-16 text-center text-slate-400 text-sm">Loading courses…</div>
         ) : (
@@ -144,10 +148,16 @@ export default function Courses() {
             🧠 {COURSES_PORTAL.assessmentChip}
           </Link>
           <Link
-            to="/lab"
+            to="/labs"
             className="text-xs font-semibold px-3 py-2 rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition"
           >
             🧪 {COURSES_PORTAL.labChip}
+          </Link>
+          <Link
+            to="/exploration"
+            className="text-xs font-semibold px-3 py-2 rounded-full bg-violet-100 text-violet-800 hover:bg-violet-200 transition"
+          >
+            🧭 {COURSES_PORTAL.explorationChip}
           </Link>
         </div>
 
@@ -213,39 +223,73 @@ export default function Courses() {
           >
             {COURSES_PORTAL.allTypes}
           </button>
-          {line.subcategories.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setParams({ line: line.id, sub: s.id })}
-              className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] ${
-                subId === s.id ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {s.icon} {s.name}
-            </button>
-          ))}
-        </div>
-
-        {!subId && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
-            {line.subcategories.map((s) => (
+          {line.subcategories.map((s) =>
+            isProductLabSub(line.id, s.id) ? (
+              <Link
+                key={s.id}
+                to={labsPath(line.id, s.id)}
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] inline-flex items-center ${
+                  subId === s.id ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {s.icon} {s.name}
+              </Link>
+            ) : (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => setParams({ line: line.id, sub: s.id })}
-                className="card p-4 text-left hover:border-primary/40 hover:shadow-sm transition"
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] ${
+                  subId === s.id ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-lg">{s.icon}</span>
-                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                    {subCounts[s.id] ?? 0} items
-                  </span>
-                </div>
-                <p className="font-semibold text-bingo-dark text-sm mt-1">{s.name}</p>
-                <p className="text-xs text-slate-500">{s.desc}</p>
+                {s.icon} {s.name}
               </button>
-            ))}
+            )
+          )}
+        </div>
+
+        {!subId && (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
+            {line.subcategories.map((s) =>
+              isProductLabSub(line.id, s.id) ? (
+                <Link
+                  key={s.id}
+                  to={labsPath(line.id, s.id)}
+                  className="card p-4 text-left hover:border-primary/40 hover:shadow-sm transition block"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-lg">{s.icon}</span>
+                    {subCounts[s.id] > 0 ? (
+                      <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        {subCounts[s.id]}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="font-semibold text-bingo-dark text-sm mt-1">{s.name}</p>
+                  <p className="text-xs text-slate-500">{s.desc}</p>
+                  <span className="text-[10px] text-primary font-medium mt-2 inline-block">View in Labs →</span>
+                </Link>
+              ) : (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setParams({ line: line.id, sub: s.id })}
+                  className="card p-4 text-left hover:border-primary/40 hover:shadow-sm transition"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-lg">{s.icon}</span>
+                    {subCounts[s.id] > 0 ? (
+                      <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        {subCounts[s.id]}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="font-semibold text-bingo-dark text-sm mt-1">{s.name}</p>
+                  <p className="text-xs text-slate-500">{s.desc}</p>
+                </button>
+              )
+            )}
           </div>
         )}
 

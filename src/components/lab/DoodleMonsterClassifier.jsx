@@ -223,7 +223,7 @@ export default function DoodleMonsterClassifier() {
     <div className="min-h-[100dvh] flex flex-col bg-gradient-to-br from-amber-50 via-violet-50 to-sky-50 text-slate-800">
       <header className="shrink-0 border-b border-violet-200/80 bg-white/90 backdrop-blur px-4 py-3 shadow-sm">
         <Link
-          to="/lab"
+          to="/exploration"
           className="text-xs font-semibold text-violet-600 hover:text-violet-800 inline-flex items-center gap-1"
         >
           ← AI Exploration Lab

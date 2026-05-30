@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import LevelBadge from './LevelBadge'
 import PriceTag from './PriceTag'
-import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { ProgramBadge, ModuleBadge, UseCaseTag } from './ProgramBadges'
+import { COURSES_PORTAL } from '../../config/coursesPortal'
 
 const CATEGORY_LABELS = {
   'ai-fundamentals': 'AI Fundamentals',
@@ -38,13 +38,13 @@ export default function CatalogCourseCard({ course }) {
           <ProgramBadge lineId={course.line} />
           <ModuleBadge lineId={course.line} subId={course.sub} />
         </div>
-        <UseCaseTag lineId={course.line} className="block mb-2" />
         <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{categoryLabel}</span>
         <Link to={`/courses/detail/${course.id}`}>
           <h3 className="text-lg font-semibold text-white mt-1 mb-2 group-hover:text-cyan-300 transition line-clamp-2">
             {course.name}
           </h3>
         </Link>
+        <UseCaseTag lineId={course.line} className="mb-2" />
         <p className="text-sm text-slate-400 leading-relaxed line-clamp-2 flex-1">{course.desc}</p>
 
         <div className="flex flex-wrap gap-3 text-xs text-slate-500 mt-3">

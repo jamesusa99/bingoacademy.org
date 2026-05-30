@@ -254,7 +254,7 @@ export default function AIJailbreakAdventure() {
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
           <div>
             <Link
-              to="/lab"
+              to="/exploration"
               className="text-[10px] text-emerald-600 hover:text-emerald-400 transition-colors inline-flex items-center gap-1 mb-1"
             >
               ← AI Exploration Lab

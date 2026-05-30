@@ -409,7 +409,7 @@ export default function AIVirtualConductor() {
       <header className="relative shrink-0 border-b border-violet-500/20 bg-slate-950/90 backdrop-blur px-4 sm:px-6 py-4">
         <div className="max-w-6xl mx-auto w-full">
           <Link
-            to="/lab"
+            to="/exploration"
             className="text-xs text-violet-400/90 hover:text-violet-300 font-medium min-h-[44px] inline-flex items-center mb-3 transition-colors"
           >
             ← AI Exploration Lab

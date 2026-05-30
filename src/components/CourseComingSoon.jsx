@@ -29,8 +29,8 @@ export default function CourseComingSoon({ course, line }) {
         <Link to="/courses?line=ioai" className="btn-primary text-sm px-5 py-2.5">
           View live IOAI courses
         </Link>
-        <Link to="/lab" className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-white">
-          Try AI Lab free
+        <Link to="/exploration" className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-white">
+          Try AI Exploration free
         </Link>
         <Link
           to={`/courses?line=${line?.id ?? 'general'}`}

@@ -512,7 +512,7 @@ export default function EvolveAICar() {
     <div className="fixed inset-0 z-50 flex flex-col bg-[#0a0f1a] text-sky-100 font-mono overflow-hidden">
       <header className="shrink-0 border-b border-sky-500/20 bg-[#0c1222]/95 backdrop-blur px-4 py-3">
         <Link
-          to="/lab"
+          to="/exploration"
           className="text-[10px] text-sky-500 hover:text-sky-300 inline-flex items-center gap-1 mb-2"
         >
           ← AI Exploration Lab

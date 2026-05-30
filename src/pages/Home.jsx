@@ -6,9 +6,8 @@ import HomeHero from '../components/home/HomeHero'
 import PageMeta from '../components/PageMeta'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
-import { PAGE_SEO } from '../config/programs'
+import { ORG_JSON_LD, PAGE_SEO } from '../config/programs'
 import {
-  PORTAL_BANNER_SLIDES,
   PORTAL_MISSION,
   PORTAL_CORE_ENTRIES,
   PORTAL_LEARNING_PATH,
@@ -43,9 +42,8 @@ export default function Home() {
 
   return (
     <div className="w-full">
-      <PageMeta title={PAGE_SEO.home.title} description={PAGE_SEO.home.description} />
+      <PageMeta title={PAGE_SEO.home.title} description={PAGE_SEO.home.description} jsonLd={ORG_JSON_LD} />
       <HomeHero />
-      <PageBanner slides={PORTAL_BANNER_SLIDES} autoPlayMs={6500} />
 
       {/* Mission — brand positioning (bingoacademy.cn hero follow-up) */}
       <section className="w-full border-b border-cyan-500/10 bg-white/80 backdrop-blur-sm">

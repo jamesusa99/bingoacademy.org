@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PRODUCT_LINES, subcategoryLabel } from '../../config/products'
+import { isProductLabSub, labsPath } from '../../config/productLabs'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
 import { filterAndSortCourses, paginateCourses } from '../../lib/courseListUtils'
 import { useCourseFilters } from '../../hooks/useCourseFilters'
@@ -80,19 +81,29 @@ export default function CourseListView({ line, subId, courses = [] }) {
           >
             {COURSES_PORTAL.allTypes}
           </Link>
-          {line.subcategories.map((s) => (
-            <Link
-              key={s.id}
-              to={`/courses?line=${line.id}&sub=${s.id}`}
-              className={`px-3 py-2 rounded-lg text-xs font-medium shrink-0 min-h-[40px] inline-flex items-center transition ${
-                subId === s.id
-                  ? 'bg-white text-slate-900'
-                  : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-500'
-              }`}
-            >
-              {s.icon} {s.name}
-            </Link>
-          ))}
+          {line.subcategories.map((s) =>
+            isProductLabSub(line.id, s.id) ? (
+              <Link
+                key={s.id}
+                to={labsPath(line.id, s.id)}
+                className="px-3 py-2 rounded-lg text-xs font-medium shrink-0 min-h-[40px] inline-flex items-center transition bg-slate-800 text-slate-300 border border-slate-700 hover:border-cyan-500/50"
+              >
+                {s.icon} {s.name}
+              </Link>
+            ) : (
+              <Link
+                key={s.id}
+                to={`/courses?line=${line.id}&sub=${s.id}`}
+                className={`px-3 py-2 rounded-lg text-xs font-medium shrink-0 min-h-[40px] inline-flex items-center transition ${
+                  subId === s.id
+                    ? 'bg-white text-slate-900'
+                    : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-500'
+                }`}
+              >
+                {s.icon} {s.name}
+              </Link>
+            )
+          )}
         </div>
 
         <CoursesHero

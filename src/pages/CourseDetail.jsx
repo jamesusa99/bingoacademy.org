@@ -131,7 +131,7 @@ export default function CourseDetail() {
                 {linkedLabs.map((lab) => (
                   <Link
                     key={lab.id}
-                    to={lab.playPath ?? '/lab'}
+                    to={lab.playPath ?? '/exploration'}
                     className="text-xs font-semibold px-3 py-2 rounded-xl bg-white border border-violet-200 text-violet-800 hover:border-violet-400 transition"
                   >
                     {lab.emoji} {lab.title}

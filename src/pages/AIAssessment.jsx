@@ -301,7 +301,7 @@ export default function AIAssessment() {
             {ASSESSMENT_PORTAL.community}
           </Link>
           <Link
-            to="/lab"
+            to="/exploration"
             className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition"
           >
             {ASSESSMENT_PORTAL.lab}

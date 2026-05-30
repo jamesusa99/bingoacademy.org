@@ -76,7 +76,7 @@ export const EXPLORATION_EXPERIMENTS = [
     difficulty: 'Beginner',
     duration: '10–15 min',
     status: 'live',
-    playPath: '/lab/hide-and-seek',
+    playPath: '/exploration/hide-and-seek',
     dashboardMetrics: ['confidence', 'iou', 'fps'],
   },
   {
@@ -95,7 +95,7 @@ export const EXPLORATION_EXPERIMENTS = [
     difficulty: 'Beginner',
     duration: '12–18 min',
     status: 'live',
-    playPath: '/lab/virtual-conductor',
+    playPath: '/exploration/virtual-conductor',
     dashboardMetrics: ['keypoints', 'latency', 'joint-angle'],
   },
   {
@@ -114,7 +114,7 @@ export const EXPLORATION_EXPERIMENTS = [
     difficulty: 'Intermediate',
     duration: '8–12 min',
     status: 'live',
-    playPath: '/lab/word-gravity',
+    playPath: '/exploration/word-gravity',
     dashboardMetrics: ['cosine-sim', 'vector-dim', 'pull-force'],
   },
   {
@@ -133,7 +133,7 @@ export const EXPLORATION_EXPERIMENTS = [
     difficulty: 'Intermediate',
     duration: '15–20 min',
     status: 'live',
-    playPath: '/lab/jailbreak-adventure',
+    playPath: '/exploration/jailbreak-adventure',
     dashboardMetrics: ['tokens', 'safety-score', 'turn-count'],
   },
   {
@@ -152,7 +152,7 @@ export const EXPLORATION_EXPERIMENTS = [
     difficulty: 'Advanced',
     duration: '20–30 min',
     status: 'live',
-    playPath: '/lab/evolve-car',
+    playPath: '/exploration/evolve-car',
     dashboardMetrics: ['reward', 'generation', 'crash-rate'],
   },
   {
@@ -171,7 +171,7 @@ export const EXPLORATION_EXPERIMENTS = [
     difficulty: 'Beginner',
     duration: '10–15 min',
     status: 'live',
-    playPath: '/lab/doodle-monsters',
+    playPath: '/exploration/doodle-monsters',
     dashboardMetrics: ['accuracy', 'train-size', 'margin'],
   },
 ]

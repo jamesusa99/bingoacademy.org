@@ -304,7 +304,7 @@ export default function AIHideAndSeek() {
       <header className="shrink-0 border-b border-cyan-500/20 bg-slate-900/95 backdrop-blur px-4 sm:px-6 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3 max-w-6xl mx-auto w-full">
           <Link
-            to="/lab"
+            to="/exploration"
             className="text-xs text-cyan-400/90 hover:text-cyan-300 font-medium min-h-[44px] inline-flex items-center transition-colors"
           >
             ← AI Exploration Lab

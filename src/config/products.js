@@ -12,7 +12,7 @@ export const PRODUCT_LINES = [
     to: '/programs/ioai',
     subcategories: [
       { id: 'video', name: 'AI Video Courses', icon: '🎬', desc: 'Competition-focused video lessons with progress tracking' },
-      { id: 'online-lab', name: 'Training Camp', icon: '🏕️', desc: 'Intensive competition training camps with mock assessments' },
+      { id: 'online-lab', name: 'Training Lab', icon: '🏕️', desc: 'Intensive competition training labs with mock assessments' },
     ],
   },
   {
