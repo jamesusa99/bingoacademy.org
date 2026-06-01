@@ -4,7 +4,7 @@
  * @typedef {'video' | 'camp' | 'self-study' | 'classroom' | 'lab' | 'materials' | 'books'} DeliveryType
  */
 
-import { buildIOAIVideoCatalogEntries } from './ioaiCourseSystem'
+import { buildIOAIVideoCatalogEntries } from './ioaiCourseSystem.js'
 
 export const COURSE_STATUS = {
   LIVE: 'live',
