@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { getSession } from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
+import { safeRedirectPath, consumePostLoginRedirect } from '../lib/authRedirect'
 import AuthAlert from '../components/auth/AuthAlert'
 
 export default function AuthCallback() {
@@ -31,8 +32,8 @@ export default function AuthCallback() {
         return
       }
       if (data.session) {
-        const next = params.get('next') || '/profile'
-        navigate(next.startsWith('/') ? next : '/profile', { replace: true })
+        const next = safeRedirectPath(params.get('next'), '') || consumePostLoginRedirect('/profile')
+        navigate(next, { replace: true })
         return
       }
       setError('Sign-in could not be completed. Please try again.')

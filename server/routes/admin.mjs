@@ -41,6 +41,7 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
         },
         body: JSON.stringify({
           maxDurationSeconds,
+          requireSignedURLs: false,
           meta: { title: title || 'Bingo Academy upload' },
         }),
       }

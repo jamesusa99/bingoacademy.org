@@ -1,20 +1,163 @@
-import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
+import { Link, Navigate } from 'react-router-dom'
+import { PlayCircle } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { getCourseById } from '../config/coursesCatalog'
+import {
+  getPurchasedSlugs,
+  hasFullIOAITrack,
+  IOAI_FULL_TRACK_SLUG,
+} from '../lib/courseAccess'
+import { authLink } from '../lib/authRedirect'
+import { hasClaimedFreeTrial } from '../lib/freeTrial'
+import {
+  getAllIOAILessonIds,
+  isIOAITrackId,
+} from '../lib/ioaiCourseStructure'
+import { getTrackProgressStats, getLessonProgress, getContinueLessonId } from '../lib/learningProgress'
+
+function ProgressBar({ percent }) {
+  return (
+    <div className="h-1.5 rounded-full bg-slate-200 overflow-hidden mt-2">
+      <div
+        className="h-full bg-primary transition-all"
+        style={{ width: `${percent}%` }}
+      />
+    </div>
+  )
+}
+
+function buildStudyCourses(slugs) {
+  const fullTrack = hasFullIOAITrack(slugs)
+  const items = []
+
+  if (fullTrack) {
+    const track = getCourseById(IOAI_FULL_TRACK_SLUG)
+    if (track) items.push({ ...track, accessType: 'full-track' })
+  }
+
+  for (const slug of slugs) {
+    if (slug === IOAI_FULL_TRACK_SLUG || slug === 'ioai-track') continue
+    const course = getCourseById(slug)
+    if (course) items.push({ ...course, accessType: 'lesson' })
+  }
+
+  return items
+}
+
+function courseContinueHref(course) {
+  if (isIOAITrackId(course.id)) {
+    const lessonId = getContinueLessonId(getAllIOAILessonIds())
+    return lessonId ? `/courses/detail/${lessonId}` : `/courses/detail/${IOAI_FULL_TRACK_SLUG}`
+  }
+  return `/courses/detail/${course.id}`
+}
+
+function courseProgressLabel(course) {
+  if (isIOAITrackId(course.id)) {
+    const stats = getTrackProgressStats(getAllIOAILessonIds())
+    return `${stats.percent}% · ${stats.completed}/${stats.total} lessons`
+  }
+  const p = getLessonProgress(course.id)
+  if (p.completed) return 'Completed'
+  if (p.lastVisitedAt) return 'In progress'
+  return 'Not started'
+}
 
 export default function Study() {
+  const { isAuthenticated, loading } = useAuth()
+  const slugs = useMemo(() => getPurchasedSlugs(), [])
+  const courses = useMemo(() => buildStudyCourses(slugs), [slugs])
+  const trialActive = hasClaimedFreeTrial()
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-500 text-sm">Loading…</div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to={authLink('/login', '/profile/study')} replace />
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-6">
         <Link to="/profile" className="text-slate-500 hover:text-primary text-sm">← Profile</Link>
       </div>
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Study Center</h1>
-      <p className="text-slate-600 mb-8">Add courses to your study center; learn, take notes, submit work, track progress and certificates</p>
+      <p className="text-slate-600 mb-8">
+        Your enrolled courses — watch lessons, take notes, and track progress.
+      </p>
 
       <section className="mb-10">
         <h2 className="section-title">My Courses</h2>
-        <p className="text-slate-600 text-sm mb-4">Purchased or added courses appear here; click to start learning</p>
-        <div className="card p-6 border-primary/20">
-          <p className="text-slate-500 text-sm">No courses yet. Go to <Link to="/courses" className="text-primary hover:underline">AI Courses</Link> to enroll</p>
-        </div>
+        <p className="text-slate-600 text-sm mb-4">
+          {courses.length
+            ? `${courses.length} course${courses.length === 1 ? '' : 's'} unlocked — pick up where you left off`
+            : 'Unlock a lesson or purchase a track to start learning'}
+        </p>
+
+        {courses.length > 0 ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {courses.map((course) => {
+              const href = courseContinueHref(course)
+              const progressText = courseProgressLabel(course)
+              const trackStats = isIOAITrackId(course.id)
+                ? getTrackProgressStats(getAllIOAILessonIds())
+                : null
+
+              return (
+                <Link
+                  key={course.id}
+                  to={href}
+                  className="card p-5 hover:shadow-md hover:border-primary/30 transition group flex flex-col"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-primary">
+                      {course.accessType === 'full-track' ? 'Full track' : course.badge || 'Lesson'}
+                    </span>
+                    <PlayCircle className="w-4 h-4 text-slate-400 group-hover:text-primary shrink-0" aria-hidden />
+                  </div>
+                  <h3 className="font-semibold text-bingo-dark text-sm group-hover:text-primary transition flex-1">
+                    {course.nameEn || course.name}
+                  </h3>
+                  {course.hours ? (
+                    <p className="text-xs text-slate-500 mt-2">{course.hours}</p>
+                  ) : null}
+                  <p className="text-xs text-slate-600 mt-2">{progressText}</p>
+                  {trackStats ? <ProgressBar percent={trackStats.percent} /> : null}
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary mt-4">
+                    Continue learning <span aria-hidden>→</span>
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="card p-6 border-primary/20 space-y-3">
+            <p className="text-slate-500 text-sm">
+              No courses yet. Claim your free IOAI trial lesson or browse the catalogue to enroll.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {!trialActive ? (
+                <Link to="/#get-started" className="btn-primary text-sm px-4 py-2">
+                  Claim free trial
+                </Link>
+              ) : (
+                <Link to="/courses/detail/ioai-1-1" className="btn-primary text-sm px-4 py-2">
+                  Open free trial lesson
+                </Link>
+              )}
+              <Link
+                to="/courses?line=ioai&sub=video"
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                Browse IOAI courses
+              </Link>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="mb-10">
@@ -43,20 +186,11 @@ export default function Study() {
         </ul>
       </section>
 
-      <section className="mb-10">
-        <h2 className="section-title">Progress</h2>
-        <div className="card p-6 bg-cyan-50/50 border-primary/20">
-          <ul className="text-sm text-slate-700 space-y-2">
-            <li><strong>Completed/Pending</strong>: Mark lessons/chapters as done; filter by status</li>
-            <li><strong>Completion rate</strong>: Auto-calculated by chapter and lesson; view in reports</li>
-            <li><strong>Certificate</strong>: Complete all lessons and pass assessment to earn certificate; view in Certification Center</li>
-          </ul>
-        </div>
-      </section>
-
       <div className="flex flex-wrap gap-3">
         <Link to="/courses" className="btn-primary">Browse Courses</Link>
-        <Link to="/profile" className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Back to Profile</Link>
+        <Link to="/profile" className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+          Back to Profile
+        </Link>
       </div>
     </div>
   )

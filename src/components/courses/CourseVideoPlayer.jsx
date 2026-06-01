@@ -3,6 +3,7 @@ import { Lock, Play, RotateCcw } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { getCourseVideo } from '../../config/courseVideo'
 import CoursePurchasePanel from './CoursePurchasePanel'
+import CourseStreamVideo from './CourseStreamVideo'
 
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60)
@@ -19,7 +20,7 @@ export default function CourseVideoPlayer({
   isAuthenticated,
 }) {
   const videoRef = useRef(null)
-  const { url, poster, previewSeconds } = getCourseVideo(course)
+  const { url, poster, previewSeconds, isStream, hasCustomVideo } = getCourseVideo(course)
   const [playing, setPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [previewEnded, setPreviewEnded] = useState(false)
@@ -96,12 +97,16 @@ export default function CourseVideoPlayer({
             <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-black/60 text-slate-300 backdrop-blur">
               {COURSES_PORTAL.previewLength(previewSeconds)}
             </span>
+          ) : isStream && hasCustomVideo ? (
+            <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-black/60 text-slate-300 backdrop-blur">
+              Cloudflare Stream
+            </span>
           ) : null}
         </div>
 
         <div className="relative aspect-video bg-slate-950">
-          <video
-            ref={videoRef}
+          <CourseStreamVideo
+            videoRef={videoRef}
             src={url}
             poster={poster}
             className="w-full h-full object-contain"

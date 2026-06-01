@@ -55,6 +55,20 @@ export async function createStreamUploadUrl(payload) {
   })
 }
 
+export async function syncStreamVideo(payload) {
+  return adminFetch('/api/admin/stream/sync', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function assignStreamToCourse(payload) {
+  return adminFetch('/api/admin/stream/assign', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
 export async function importSiteData({ force = false } = {}) {
   return adminFetch('/api/admin/seed', {
     method: 'POST',

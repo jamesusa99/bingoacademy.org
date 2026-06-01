@@ -3,12 +3,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { signInWithEmail, signInWithGoogle } from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { safeRedirectPath, authLink, storePostLoginRedirect } from '../lib/authRedirect'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import AuthAlert from '../components/auth/AuthAlert'
 
 export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const redirectTo = safeRedirectPath(searchParams.get('redirect'), '/profile')
   const { isAuthenticated, loading: authLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,9 +33,9 @@ export default function Login() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate('/profile', { replace: true })
+      navigate(redirectTo, { replace: true })
     }
-  }, [authLoading, isAuthenticated, navigate])
+  }, [authLoading, isAuthenticated, navigate, redirectTo])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -47,7 +49,7 @@ export default function Login() {
       return
     }
     if (data.session) {
-      navigate('/profile', { replace: true })
+      navigate(redirectTo, { replace: true })
     }
   }
 
@@ -55,6 +57,7 @@ export default function Login() {
     setError('')
     setInfo('')
     setGoogleLoading(true)
+    storePostLoginRedirect(redirectTo)
     const { error: oauthError } = await signInWithGoogle()
     setGoogleLoading(false)
     if (oauthError) {
@@ -158,7 +161,7 @@ export default function Login() {
 
       <p className="mt-6 text-center text-slate-600 text-sm">
         No account?{' '}
-        <Link to="/register" className="text-primary font-medium hover:underline">
+        <Link to={authLink('/register', redirectTo)} className="text-primary font-medium hover:underline">
           Register
         </Link>
       </p>

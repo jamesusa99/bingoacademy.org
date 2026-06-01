@@ -7,9 +7,20 @@ export const DEFAULT_LESSON_POSTER =
   'https://peach.blender.org/wp-content/uploads/title_anouncement.jpg?x11217'
 
 export function getCourseVideo(course) {
+  const url = course?.videoUrl || null
+  const poster = course?.videoPoster || DEFAULT_LESSON_POSTER
+  const previewSeconds = course?.previewSeconds ?? 90
+  const isStream = Boolean(
+    course?.cloudflareUid ||
+      (url && (url.includes('.m3u8') || url.includes('cloudflarestream.com')))
+  )
+
   return {
-    url: course?.videoUrl || DEFAULT_LESSON_VIDEO,
-    poster: course?.videoPoster || DEFAULT_LESSON_POSTER,
-    previewSeconds: course?.previewSeconds ?? 90,
+    url: url || DEFAULT_LESSON_VIDEO,
+    poster: course?.videoPoster || (isStream ? null : DEFAULT_LESSON_POSTER),
+    previewSeconds,
+    isStream,
+    cloudflareUid: course?.cloudflareUid || null,
+    hasCustomVideo: Boolean(url),
   }
 }

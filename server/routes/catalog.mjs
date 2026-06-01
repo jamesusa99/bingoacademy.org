@@ -26,6 +26,15 @@ function pickCatalogPayload(body) {
     rating: p.rating != null ? Number(p.rating) : 4.8,
     students: parseInt(p.students, 10) || 0,
     thumbnail_url: p.thumbnail_url || p.thumbnail || null,
+    video_url: p.video_url || p.videoUrl || null,
+    video_poster: p.video_poster || p.videoPoster || null,
+    preview_seconds:
+      p.preview_seconds != null
+        ? parseInt(p.preview_seconds, 10) || 90
+        : p.previewSeconds != null
+          ? parseInt(p.previewSeconds, 10) || 90
+          : 90,
+    cloudflare_uid: p.cloudflare_uid || p.cloudflareUid || null,
     updated_at: new Date().toISOString(),
   }
 }

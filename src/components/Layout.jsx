@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { mainNav, authNav } from '../config/nav'
 import { programPath } from '../config/programs'
+import { useAuth } from '../contexts/AuthContext'
 import NavDropdown from './NavDropdown'
 import ChatWidget from './ChatWidget'
 
@@ -12,6 +13,7 @@ function navLinkClass(active) {
 
 function isNavActive(loc, path) {
   if (path === '/profile') return loc.pathname.startsWith('/profile')
+  if (path === '/profile/study') return loc.pathname.startsWith('/profile/study')
   if (path === '/labs') return loc.pathname === '/labs' || loc.pathname === '/lab'
   if (path === '/exploration') {
     return loc.pathname === '/exploration' || loc.pathname.startsWith('/exploration/')
@@ -22,6 +24,14 @@ function isNavActive(loc, path) {
 
 export default function Layout({ children }) {
   const loc = useLocation()
+  const { isAuthenticated } = useAuth()
+
+  const headerAuthLinks = isAuthenticated
+    ? [
+        { path: '/profile/study', label: 'Study Center' },
+        { path: '/profile', label: 'Profile' },
+      ]
+    : authNav
 
   const desktopItems = [
     { type: 'link', path: '/', label: 'Home' },
@@ -68,7 +78,7 @@ export default function Layout({ children }) {
               })}
             </nav>
             <div className="hidden lg:flex items-center gap-1 shrink-0">
-              {authNav.map(({ path, label }) => (
+              {headerAuthLinks.map(({ path, label }) => (
                 <Link
                   key={path}
                   to={path}
@@ -91,7 +101,7 @@ export default function Layout({ children }) {
                 {label}
               </Link>
             ))}
-            {authNav.map(({ path, label }) => (
+            {headerAuthLinks.map(({ path, label }) => (
               <Link
                 key={path}
                 to={path}

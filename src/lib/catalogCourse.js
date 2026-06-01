@@ -30,6 +30,7 @@ export function rowToCatalogCourse(row) {
     videoUrl: row.video_url || null,
     videoPoster: row.video_poster || null,
     previewSeconds: row.preview_seconds ?? 90,
+    cloudflareUid: row.cloudflare_uid || null,
   }
 }
 
@@ -72,6 +73,10 @@ export function formToCatalogPayload(form) {
     rating: form.rating !== '' ? Number(form.rating) : 4.8,
     students: parseInt(form.students, 10) || 0,
     thumbnail_url: form.thumbnail_url?.trim() || null,
+    video_url: form.video_url?.trim() || null,
+    video_poster: form.video_poster?.trim() || null,
+    preview_seconds: form.preview_seconds !== '' ? parseInt(form.preview_seconds, 10) || 90 : 90,
+    cloudflare_uid: form.cloudflare_uid?.trim() || null,
   }
 }
 
@@ -101,6 +106,10 @@ export function catalogRowToForm(row) {
     rating: row.rating ?? 4.8,
     students: row.students ?? 800,
     thumbnail_url: row.thumbnail_url || '',
+    video_url: row.video_url || '',
+    video_poster: row.video_poster || '',
+    preview_seconds: row.preview_seconds ?? 90,
+    cloudflare_uid: row.cloudflare_uid || '',
   }
 }
 
@@ -128,6 +137,10 @@ const EMPTY_FORM = {
   rating: 4.8,
   students: 800,
   thumbnail_url: '',
+  video_url: '',
+  video_poster: '',
+  preview_seconds: 90,
+  cloudflare_uid: '',
 }
 
 export { EMPTY_FORM as CATALOG_FORM_EMPTY }

@@ -7,9 +7,19 @@ import { useCourseAccess } from '../hooks/useCourseAccess'
 import { useAuth } from '../contexts/AuthContext'
 import { findCourseInList } from '../lib/catalogCourse'
 import { isVideoCourse } from '../lib/courseAccess'
+import {
+  isIOAILessonId,
+  isIOAITrackId,
+  isIOAIVideoCourse,
+  getAllIOAILessonIds,
+} from '../lib/ioaiCourseStructure'
+import { getContinueLessonId } from '../lib/learningProgress'
 import CourseComingSoon from '../components/CourseComingSoon'
 import CourseVideoPlayer from '../components/courses/CourseVideoPlayer'
 import CoursePurchasePanel from '../components/courses/CoursePurchasePanel'
+import SegmentPlayer from '../components/courses/SegmentPlayer'
+import CourseLessonList from '../components/courses/CourseLessonList'
+import CourseTrackOverview from '../components/courses/CourseTrackOverview'
 import PageContent from '../components/PageContent'
 
 export default function CourseDetail() {
@@ -18,7 +28,7 @@ export default function CourseDetail() {
   const { isAuthenticated } = useAuth()
   const item = findCourseInList(courses, id)
   const line = getProductLine(item?.line ?? 'general')
-  const { hasAccess, hasTrack, unlockLesson, unlockTrack } = useCourseAccess(item?.id)
+  const { hasAccess, hasTrack, purchased, unlockLesson, unlockTrack } = useCourseAccess(item?.id)
 
   if (loading) {
     return (
@@ -38,13 +48,20 @@ export default function CourseDetail() {
   }
 
   const comingSoon = isCourseComingSoon(item)
-  const showVideo = isVideoCourse(item) && !comingSoon
+  const isIOAI = isIOAIVideoCourse(item.id)
+  const isTrack = isIOAITrackId(item.id)
+  const isLesson = isIOAILessonId(item.id)
+  const showSegmentLearning = isLesson && isVideoCourse(item) && !comingSoon
+  const showTrackOverview = isTrack && !comingSoon
+  const showLegacyVideo = isVideoCourse(item) && !comingSoon && !isIOAI
   const linkedLabs = (item.labSlugs ?? [])
     .map((slug) => EXPLORATION_EXPERIMENTS.find((e) => e.id === slug))
     .filter(Boolean)
 
+  const pageWidth = isIOAI ? 'max-w-6xl' : 'max-w-4xl'
+
   return (
-    <PageContent className="py-6 sm:py-8 max-w-4xl mx-auto">
+    <PageContent className={`py-6 sm:py-8 ${pageWidth} mx-auto`}>
       <Link to={`/courses?line=${item.line}&sub=${item.sub}`} className="text-primary text-sm hover:underline">
         ← {COURSES_PORTAL.backTo} {line.name}
       </Link>
@@ -94,7 +111,48 @@ export default function CourseDetail() {
         <CourseComingSoon course={item} line={line} />
       ) : (
         <>
-          {showVideo ? (
+          {showTrackOverview ? (
+            <>
+              {!hasAccess ? (
+                <CoursePurchasePanel
+                  course={item}
+                  hasAccess={hasAccess}
+                  hasTrack={hasTrack}
+                  onUnlockLesson={unlockLesson}
+                  onUnlockTrack={unlockTrack}
+                  isAuthenticated={isAuthenticated}
+                />
+              ) : null}
+              <CourseTrackOverview
+                track={item}
+                purchasedSlugs={purchased}
+                hasAccess={hasAccess}
+              />
+            </>
+          ) : null}
+
+          {showSegmentLearning ? (
+            <div className="grid lg:grid-cols-5 gap-6 mb-6">
+              <div className="lg:col-span-3">
+                <SegmentPlayer
+                  course={item}
+                  hasAccess={hasAccess}
+                  hasTrack={hasTrack}
+                  onUnlockLesson={unlockLesson}
+                  onUnlockTrack={unlockTrack}
+                  isAuthenticated={isAuthenticated}
+                />
+              </div>
+              <div className="lg:col-span-2">
+                <CourseLessonList
+                  activeLessonId={item.id}
+                  purchasedSlugs={purchased}
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {showLegacyVideo ? (
             <CourseVideoPlayer
               course={item}
               hasAccess={hasAccess}
@@ -105,16 +163,18 @@ export default function CourseDetail() {
             />
           ) : null}
 
-          <p className="text-sm text-slate-700 leading-relaxed mb-6">{item.desc}</p>
+          {!showTrackOverview && !showSegmentLearning ? (
+            <p className="text-sm text-slate-700 leading-relaxed mb-6">{item.desc}</p>
+          ) : null}
 
-          {item.audience && (
+          {!isIOAI && item.audience ? (
             <section className="card p-5 mb-4">
               <h2 className="font-bold text-bingo-dark text-sm mb-2">{COURSES_PORTAL.audience}</h2>
               <p className="text-sm text-slate-600">{item.audience}</p>
             </section>
-          )}
+          ) : null}
 
-          {item.outcomes?.length > 0 && (
+          {!isIOAI && item.outcomes?.length > 0 ? (
             <section className="card p-5 mb-4">
               <h2 className="font-bold text-bingo-dark text-sm mb-3">{COURSES_PORTAL.outcomes}</h2>
               <ul className="space-y-2">
@@ -126,9 +186,9 @@ export default function CourseDetail() {
                 ))}
               </ul>
             </section>
-          )}
+          ) : null}
 
-          {item.syllabus?.length > 0 && (
+          {!isIOAI && item.syllabus?.length > 0 ? (
             <section className="card overflow-hidden mb-6">
               <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark text-sm">
                 {COURSES_PORTAL.syllabus}
@@ -144,7 +204,7 @@ export default function CourseDetail() {
                 ))}
               </ol>
             </section>
-          )}
+          ) : null}
 
           {linkedLabs.length > 0 && (
             <section className="card p-5 mb-6 border-violet-200/60 bg-violet-50/30">
@@ -164,7 +224,7 @@ export default function CourseDetail() {
             </section>
           )}
 
-          {!showVideo ? (
+          {!showTrackOverview && !showSegmentLearning && !showLegacyVideo ? (
             <CoursePurchasePanel
               course={item}
               hasAccess={hasAccess}
@@ -177,7 +237,14 @@ export default function CourseDetail() {
 
           <div className="flex flex-wrap gap-3 justify-center mt-6">
             {hasAccess ? (
-              <Link to="/profile/study" className="btn-primary text-sm px-5 py-2.5">
+              <Link
+                to={
+                  isTrack
+                    ? `/courses/detail/${getContinueLessonId(getAllIOAILessonIds()) ?? 'ioai-1-1'}`
+                    : '/profile/study'
+                }
+                className="btn-primary text-sm px-5 py-2.5"
+              >
                 {COURSES_PORTAL.continueLearning}
               </Link>
             ) : (
@@ -185,17 +252,19 @@ export default function CourseDetail() {
                 {COURSES_PORTAL.enrollCta}
               </button>
             )}
+            {isTrack ? (
+              <Link
+                to="/courses?line=ioai&sub=video"
+                className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                Browse all lessons
+              </Link>
+            ) : null}
             <Link
               to="/assessment"
               className="text-sm px-5 py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5"
             >
               {COURSES_PORTAL.freeAssessment}
-            </Link>
-            <Link
-              to="/cert"
-              className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
-            >
-              {COURSES_PORTAL.contactSales}
             </Link>
           </div>
         </>

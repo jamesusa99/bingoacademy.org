@@ -9,6 +9,7 @@ import {
   formToCatalogPayload,
 } from '../../lib/catalogCourse'
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
+import { assignStreamToCourse } from '../../lib/admin/api'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 
@@ -34,6 +35,7 @@ export default function AdminCoursesCatalog() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [syncingVideo, setSyncingVideo] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [editingSlug, setEditingSlug] = useState(null)
@@ -67,6 +69,36 @@ export default function AdminCoursesCatalog() {
     setForm(catalogRowToForm(row))
     setSuccess(null)
     setError(null)
+  }
+
+  const handleStreamSync = async () => {
+    if (!form.cloudflare_uid?.trim()) {
+      setError('Enter a Cloudflare UID or assign via Admin → Video library.')
+      return
+    }
+    if (!form.slug?.trim()) {
+      setError('Save the course slug first.')
+      return
+    }
+    setError(null)
+    setSuccess(null)
+    setSyncingVideo(true)
+    try {
+      const result = await assignStreamToCourse({
+        uid: form.cloudflare_uid.trim(),
+        catalogSlug: form.slug.trim(),
+      })
+      const course = result.course
+      if (course) {
+        setForm(catalogRowToForm(course))
+      }
+      setSuccess(result.message || 'Video synced from Cloudflare Stream.')
+      await fetchItems()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSyncingVideo(false)
+    }
   }
 
   const handleSave = async () => {
@@ -294,6 +326,75 @@ export default function AdminCoursesCatalog() {
               className={`${inputClass} font-mono text-xs`}
             />
           </Field>
+
+          {form.delivery_type === 'video' ? (
+            <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-cyan-200 bg-cyan-50/50 p-4 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-semibold text-bingo-dark text-sm">Cloudflare Stream video</h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Upload at <a href="/admin/video" className="text-primary hover:underline">Admin → Video library</a>, or paste a Stream UID and sync.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleStreamSync}
+                  disabled={syncingVideo || !form.cloudflare_uid}
+                  className="text-xs px-3 py-2 rounded-lg bg-primary text-white font-medium disabled:opacity-50"
+                >
+                  {syncingVideo ? 'Syncing…' : 'Sync from Stream'}
+                </button>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Field label="Cloudflare Stream UID">
+                  <input
+                    value={form.cloudflare_uid}
+                    onChange={(e) => set('cloudflare_uid', e.target.value)}
+                    placeholder="Stream video UID"
+                    className={`${inputClass} font-mono text-xs`}
+                  />
+                </Field>
+                <Field label="Preview seconds (freemium)">
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.preview_seconds}
+                    onChange={(e) => set('preview_seconds', e.target.value)}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Video URL (HLS — auto-filled on sync)" className="sm:col-span-2">
+                  <input
+                    value={form.video_url}
+                    onChange={(e) => set('video_url', e.target.value)}
+                    placeholder="https://customer-….cloudflarestream.com/…/manifest/video.m3u8"
+                    className={`${inputClass} font-mono text-xs`}
+                  />
+                </Field>
+                <Field label="Poster / thumbnail URL" className="sm:col-span-2">
+                  <input
+                    value={form.video_poster}
+                    onChange={(e) => set('video_poster', e.target.value)}
+                    placeholder="https://…"
+                    className={`${inputClass} font-mono text-xs`}
+                  />
+                </Field>
+              </div>
+              {form.video_url ? (
+                <p className="text-xs text-emerald-700">
+                  ✓ Video configured — preview at{' '}
+                  <a
+                    href={`/courses/detail/${form.slug || 'ioai-1-1'}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline"
+                  >
+                    course detail page
+                  </a>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex gap-2 mt-6">
@@ -342,6 +443,7 @@ export default function AdminCoursesCatalog() {
                   <th className="p-3">Level</th>
                   <th className="p-3">Price</th>
                   <th className="p-3">Slug</th>
+                  <th className="p-3">Video</th>
                   <th className="p-3" />
                 </tr>
               </thead>
@@ -359,6 +461,15 @@ export default function AdminCoursesCatalog() {
                     <td className="p-3 capitalize">{row.level || '—'}</td>
                     <td className="p-3 text-slate-600">{row.price || '—'}</td>
                     <td className="p-3 text-xs font-mono text-slate-400">{row.slug}</td>
+                    <td className="p-3 text-xs">
+                      {row.video_url ? (
+                        <span className="text-emerald-600 font-medium">Stream ✓</span>
+                      ) : row.delivery_type === 'video' ? (
+                        <span className="text-amber-600">No video</span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td className="p-3 whitespace-nowrap">
                       <button type="button" onClick={() => startEdit(row)} className="text-primary mr-2">
                         Edit

@@ -119,7 +119,7 @@ export const PORTAL_COMPETITIONS = [
 
 /** Highlight courses shown on portal (subset of catalogue) */
 export const PORTAL_FEATURED_COURSES = COURSE_CATALOG.filter((c) =>
-  ['ioai-whitelist', 'ioai-aigc-sprint', 'ioai-camp', 'g1', 'k1', 'k3'].includes(c.id)
+  ['ioai-competition-system', 'ioai-1-1', 'ioai-camp', 'g1', 'k1', 'k3'].includes(c.id)
 )
 
 export const PORTAL_TRUST_STATS_FALLBACK = [

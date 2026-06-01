@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { PROGRAMS, programPath } from '../../config/programs'
+import HomeUserEntry from './HomeUserEntry'
 
 function PathCard({ program }) {
   const accent =
@@ -26,7 +27,7 @@ function PathCard({ program }) {
 
 export default function HomeHero() {
   return (
-    <section className="relative w-full overflow-hidden border-b border-cyan-500/10 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
+    <section id="get-started" className="relative w-full overflow-hidden border-b border-cyan-500/10 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
       <div className="absolute inset-0 opacity-30 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-transparent" />
       <div className="page-content relative py-12 sm:py-16 lg:py-20">
         <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
@@ -44,7 +45,11 @@ export default function HomeHero() {
           ))}
         </div>
 
-        <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-8 sm:mt-10">
+          <HomeUserEntry />
+        </div>
+
+        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             to="/exploration"
             className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-100 hover:bg-cyan-500/30 transition text-sm font-semibold min-h-[44px]"

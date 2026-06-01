@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { signUpWithEmail, signInWithGoogle } from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { safeRedirectPath, authLink, storePostLoginRedirect } from '../lib/authRedirect'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import AuthAlert from '../components/auth/AuthAlert'
 
 export default function Register() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectTo = safeRedirectPath(searchParams.get('redirect'), '/profile')
   const { isAuthenticated, loading: authLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,9 +23,9 @@ export default function Register() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate('/profile', { replace: true })
+      navigate(redirectTo, { replace: true })
     }
-  }, [authLoading, isAuthenticated, navigate])
+  }, [authLoading, isAuthenticated, navigate, redirectTo])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -48,20 +51,21 @@ export default function Register() {
     }
 
     if (data.session) {
-      navigate('/profile', { replace: true })
+      navigate(redirectTo, { replace: true })
       return
     }
 
     setSuccess(
       'Account created. Check your email for a confirmation link if required, then sign in.'
     )
-    setTimeout(() => navigate('/login?registered=1'), 2500)
+    setTimeout(() => navigate(authLink('/login', redirectTo) + '&registered=1'), 2500)
   }
 
   const handleGoogle = async () => {
     setError('')
     setSuccess('')
     setGoogleLoading(true)
+    storePostLoginRedirect(redirectTo)
     const { error: oauthError } = await signInWithGoogle()
     setGoogleLoading(false)
     if (oauthError) {
@@ -197,7 +201,7 @@ export default function Register() {
 
       <p className="mt-6 text-center text-slate-600 text-sm">
         Already have an account?{' '}
-        <Link to="/login" className="text-primary font-medium hover:underline">
+        <Link to={authLink('/login', redirectTo)} className="text-primary font-medium hover:underline">
           Login
         </Link>
       </p>
