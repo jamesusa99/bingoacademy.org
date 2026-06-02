@@ -18,6 +18,9 @@ export default function CourseVideoPlayer({
   onUnlockLesson,
   onUnlockTrack,
   isAuthenticated,
+  stripeCheckout,
+  checkoutLoading,
+  setCheckoutLoading,
 }) {
   const videoRef = useRef(null)
   const { url, poster, previewSeconds, isStream, hasCustomVideo } = getCourseVideo(course)
@@ -192,6 +195,9 @@ export default function CourseVideoPlayer({
           onUnlockLesson={onUnlockLesson}
           onUnlockTrack={onUnlockTrack}
           isAuthenticated={isAuthenticated}
+          stripeCheckout={stripeCheckout}
+          checkoutLoading={checkoutLoading}
+          setCheckoutLoading={setCheckoutLoading}
         />
       </div>
     </section>

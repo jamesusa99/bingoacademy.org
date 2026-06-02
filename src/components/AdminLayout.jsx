@@ -3,13 +3,16 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useAdminAuth } from '../hooks/useAdminAuth'
+import { useAdminLocale } from '../contexts/AdminLocaleContext'
 import { ADMIN_NAV_GROUPS, isAdminNavActive } from '../config/adminNav'
+import AdminLanguageSwitcher from './admin/AdminLanguageSwitcher'
 
 export default function AdminLayout() {
   const loc = useLocation()
   const navigate = useNavigate()
   const { signOut } = useAuth()
   const { user, profile } = useAdminAuth()
+  const { t } = useAdminLocale()
   const [dbConnected, setDbConnected] = useState(null)
 
   useEffect(() => {
@@ -34,17 +37,20 @@ export default function AdminLayout() {
     <div className="min-h-screen flex bg-slate-100">
       <aside className="w-60 bg-bingo-dark flex flex-col shrink-0">
         <div className="p-4 border-b border-cyan-500/20">
-          <Link to="/admin" className="flex items-center gap-2 min-w-0">
-            <img src="/logo-icon.png" alt="" className="h-8 w-auto shrink-0" width={340} height={209} aria-hidden />
-            <span className="text-white/90 text-sm font-medium truncate">Admin</span>
-          </Link>
-          <div className="mt-3 text-xs font-medium">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <Link to="/admin" className="flex items-center gap-2 min-w-0 flex-1">
+              <img src="/logo-icon.png" alt="" className="h-8 w-auto shrink-0" width={340} height={209} aria-hidden />
+              <span className="text-white/90 text-sm font-medium truncate">{t('layout.title')}</span>
+            </Link>
+            <AdminLanguageSwitcher />
+          </div>
+          <div className="text-xs font-medium">
             {dbConnected === null ? (
-              <span className="text-slate-400">Checking...</span>
+              <span className="text-slate-400">{t('layout.checking')}</span>
             ) : dbConnected ? (
-              <span className="text-green-400">Supabase Database</span>
+              <span className="text-green-400">{t('layout.dbConnected')}</span>
             ) : (
-              <span className="text-red-400">Supabase Database</span>
+              <span className="text-red-400">{t('layout.dbDisconnected')}</span>
             )}
           </div>
           {user ? (
@@ -57,9 +63,11 @@ export default function AdminLayout() {
 
         <nav className="flex-1 p-2 overflow-y-auto">
           {ADMIN_NAV_GROUPS.map((group) => (
-            <div key={group.title} className="mb-4">
-              <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">{group.title}</p>
-              {group.items.map(({ path, label, icon, end }) => {
+            <div key={group.titleKey} className="mb-4">
+              <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+                {t(group.titleKey)}
+              </p>
+              {group.items.map(({ path, labelKey, icon, end }) => {
                 const active = isAdminNavActive(loc.pathname, path, end)
                 return (
                   <Link
@@ -70,7 +78,7 @@ export default function AdminLayout() {
                     }`}
                   >
                     <span>{icon}</span>
-                    {label}
+                    {t(labelKey)}
                   </Link>
                 )
               })}
@@ -84,14 +92,14 @@ export default function AdminLayout() {
             onClick={() => navigate('/')}
             className="w-full text-left px-3 py-2 text-xs text-slate-400 hover:text-white transition"
           >
-            ← Back to Site
+            {t('layout.backToSite')}
           </button>
           <button
             type="button"
             onClick={handleSignOut}
             className="w-full text-left px-3 py-2 text-xs text-slate-400 hover:text-white transition"
           >
-            Sign out
+            {t('layout.signOut')}
           </button>
         </div>
       </aside>

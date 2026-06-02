@@ -1,4 +1,5 @@
 import { getSupabaseAdmin, getSupabaseConfig } from '../lib/supabaseAdmin.mjs'
+import { grantCourseEntitlements } from '../lib/courseEntitlements.mjs'
 
 export function getAdminHealth() {
   const cfg = getSupabaseConfig()
@@ -8,6 +9,7 @@ export function getAdminHealth() {
     adminEmails: Boolean(process.env.VITE_ADMIN_EMAILS || process.env.ADMIN_EMAILS),
     serviceRole: cfg.ready,
     stripe: Boolean(process.env.STRIPE_SECRET_KEY),
+    stripeWebhook: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
     cloudflare: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN),
     openai: Boolean(process.env.OPENAI_API_KEY),
   }
@@ -68,18 +70,35 @@ export async function upsertOrderFromStripe(session) {
   const amount = session.amount_total
   const currency = session.currency || 'usd'
   const email = session.customer_details?.email || session.customer_email
+  const userId = session.metadata?.user_id || null
+  const metadata = session.metadata || {}
 
-  await admin.from('orders').upsert(
-    {
-      stripe_checkout_session_id: session.id,
-      status: session.payment_status === 'paid' ? 'paid' : 'pending',
-      amount_cents: amount,
-      currency,
-      customer_email: email,
-      product_name: session.metadata?.product_name || session.line_items?.data?.[0]?.description,
-      metadata: session.metadata || {},
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'stripe_checkout_session_id' }
-  )
+  const { data: orderRow } = await admin
+    .from('orders')
+    .upsert(
+      {
+        user_id: userId,
+        stripe_checkout_session_id: session.id,
+        stripe_payment_intent_id: session.payment_intent || null,
+        status: session.payment_status === 'paid' ? 'paid' : 'pending',
+        amount_cents: amount,
+        currency,
+        customer_email: email,
+        product_name: metadata.product_name || session.line_items?.data?.[0]?.description,
+        metadata,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'stripe_checkout_session_id' }
+    )
+    .select('id')
+    .maybeSingle()
+
+  if (session.payment_status === 'paid' && userId) {
+    await grantCourseEntitlements(admin, {
+      userId,
+      purchaseType: metadata.purchase_type || 'lesson',
+      courseSlug: metadata.course_slug,
+      orderId: orderRow?.id ?? null,
+    })
+  }
 }

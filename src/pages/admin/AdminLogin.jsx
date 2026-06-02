@@ -4,6 +4,8 @@ import { signInWithEmail } from '../../lib/auth'
 import { isSupabaseConfigured } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { useAdminAuth } from '../../hooks/useAdminAuth'
+import { useAdminLocale } from '../../contexts/AdminLocaleContext'
+import AdminLanguageSwitcher from '../../components/admin/AdminLanguageSwitcher'
 import AuthAlert from '../../components/auth/AuthAlert'
 
 export default function AdminLogin() {
@@ -12,6 +14,7 @@ export default function AdminLogin() {
   const from = location.state?.from || '/admin'
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { isAdmin, loading: adminLoading } = useAdminAuth()
+  const { t } = useAdminLocale()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -22,6 +25,11 @@ export default function AdminLogin() {
       navigate(from, { replace: true })
     }
   }, [authLoading, adminLoading, isAuthenticated, isAdmin, navigate, from])
+
+  useEffect(() => {
+    if (authLoading || adminLoading || !isAuthenticated || isAdmin) return
+    setError(t('login.noAdminAccess'))
+  }, [authLoading, adminLoading, isAuthenticated, isAdmin, t])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -37,10 +45,15 @@ export default function AdminLogin() {
   if (!isSupabaseConfigured) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 p-6">
-        <div className="card max-w-md w-full p-8">
-          <h1 className="text-xl font-bold text-bingo-dark mb-2">Admin sign-in</h1>
-          <AuthAlert type="warning">Supabase is not configured. Add VITE_SUPABASE_* to .env.local.</AuthAlert>
-          <Link to="/" className="text-sm text-primary hover:underline mt-4 inline-block">← Back to site</Link>
+        <div className="card max-w-md w-full p-8 relative">
+          <div className="absolute top-4 right-4">
+            <AdminLanguageSwitcher className="[&_button]:text-slate-600 [&_button:hover]:bg-slate-100" />
+          </div>
+          <h1 className="text-xl font-bold text-bingo-dark mb-2">{t('login.notConfiguredTitle')}</h1>
+          <AuthAlert type="warning">{t('login.notConfiguredBody')}</AuthAlert>
+          <Link to="/" className="text-sm text-primary hover:underline mt-4 inline-block">
+            {t('login.backToSite')}
+          </Link>
         </div>
       </div>
     )
@@ -48,20 +61,24 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-6">
-      <div className="card max-w-md w-full p-8">
-        <div className="flex items-center gap-2 mb-6">
-          <img src="/logo-icon.png" alt="" className="h-8 w-auto" width={340} height={209} />
-          <span className="font-semibold text-bingo-dark">Bingo Academy Admin</span>
+      <div className="card max-w-md w-full p-8 relative">
+        <div className="absolute top-4 right-4">
+          <AdminLanguageSwitcher className="[&_button]:text-slate-600 [&_button:hover]:bg-slate-100 [&_button.bg-cyan-500]:text-white" />
         </div>
-        <h1 className="text-lg font-bold text-bingo-dark mb-1">Sign in</h1>
-        <p className="text-sm text-slate-500 mb-6">Admin or editor accounts only.</p>
+
+        <div className="flex items-center gap-2 mb-6 pr-20">
+          <img src="/logo-icon.png" alt="" className="h-8 w-auto" width={340} height={209} />
+          <span className="font-semibold text-bingo-dark text-sm leading-tight">{t('login.brand')}</span>
+        </div>
+        <h1 className="text-lg font-bold text-bingo-dark mb-1">{t('login.title')}</h1>
+        <p className="text-sm text-slate-500 mb-6">{t('login.subtitle')}</p>
 
         {error ? <AuthAlert type="error">{error}</AuthAlert> : null}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="admin-email" className="block text-sm font-medium text-slate-700 mb-1">
-              Email
+              {t('login.email')}
             </label>
             <input
               id="admin-email"
@@ -75,7 +92,7 @@ export default function AdminLogin() {
           </div>
           <div>
             <label htmlFor="admin-password" className="block text-sm font-medium text-slate-700 mb-1">
-              Password
+              {t('login.password')}
             </label>
             <input
               id="admin-password"
@@ -92,15 +109,14 @@ export default function AdminLogin() {
             disabled={loading || authLoading}
             className="w-full btn-primary py-2.5 text-sm font-medium disabled:opacity-60"
           >
-            {loading ? 'Signing in…' : 'Sign in to admin'}
+            {loading ? t('login.submitting') : t('login.submit')}
           </button>
         </form>
 
-        <p className="text-xs text-slate-500 mt-6">
-          Need access? Set <code className="bg-slate-100 px-1 rounded">profiles.role = admin</code> in Supabase, or add your email to{' '}
-          <code className="bg-slate-100 px-1 rounded">VITE_ADMIN_EMAILS</code>.
-        </p>
-        <Link to="/" className="text-sm text-primary hover:underline mt-4 inline-block">← Back to site</Link>
+        <p className="text-xs text-slate-500 mt-6">{t('login.needAccess')}</p>
+        <Link to="/" className="text-sm text-primary hover:underline mt-4 inline-block">
+          {t('login.backToSite')}
+        </Link>
       </div>
     </div>
   )

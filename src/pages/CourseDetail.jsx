@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/products'
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
 import { COURSES_PORTAL } from '../config/coursesPortal'
@@ -21,14 +22,59 @@ import SegmentPlayer from '../components/courses/SegmentPlayer'
 import CourseLessonList from '../components/courses/CourseLessonList'
 import CourseTrackOverview from '../components/courses/CourseTrackOverview'
 import PageContent from '../components/PageContent'
+import { confirmCheckoutSession } from '../lib/checkout'
 
 export default function CourseDetail() {
   const { id } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [checkoutMessage, setCheckoutMessage] = useState(null)
   const { courses, loading } = useCourseCatalog()
   const { isAuthenticated } = useAuth()
   const item = findCourseInList(courses, id)
   const line = getProductLine(item?.line ?? 'general')
-  const { hasAccess, hasTrack, purchased, unlockLesson, unlockTrack } = useCourseAccess(item?.id)
+  const {
+    hasAccess,
+    hasTrack,
+    purchased,
+    unlockLesson,
+    unlockTrack,
+    refresh,
+    stripeCheckout,
+    checkoutLoading,
+    setCheckoutLoading,
+  } = useCourseAccess(item?.id)
+
+  useEffect(() => {
+    const status = searchParams.get('checkout')
+    const sessionId = searchParams.get('session_id')
+    if (status === 'success' && sessionId && isAuthenticated) {
+      confirmCheckoutSession(sessionId)
+        .then(() => {
+          setCheckoutMessage('Payment successful — your course is unlocked!')
+          refresh()
+        })
+        .catch(() => {
+          setCheckoutMessage('Payment received — refreshing access…')
+          refresh()
+        })
+        .finally(() => {
+          searchParams.delete('checkout')
+          searchParams.delete('session_id')
+          setSearchParams(searchParams, { replace: true })
+        })
+    } else if (status === 'canceled') {
+      setCheckoutMessage('Checkout canceled.')
+      searchParams.delete('checkout')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams, isAuthenticated, refresh])
+
+  const purchaseProps = {
+    stripeCheckout,
+    checkoutLoading,
+    setCheckoutLoading,
+    isAuthenticated,
+  }
 
   if (loading) {
     return (
@@ -107,6 +153,12 @@ export default function CourseDetail() {
         </div>
       </div>
 
+      {checkoutMessage ? (
+        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {checkoutMessage}
+        </div>
+      ) : null}
+
       {comingSoon ? (
         <CourseComingSoon course={item} line={line} />
       ) : (
@@ -120,7 +172,7 @@ export default function CourseDetail() {
                   hasTrack={hasTrack}
                   onUnlockLesson={unlockLesson}
                   onUnlockTrack={unlockTrack}
-                  isAuthenticated={isAuthenticated}
+                  {...purchaseProps}
                 />
               ) : null}
               <CourseTrackOverview
@@ -140,7 +192,7 @@ export default function CourseDetail() {
                   hasTrack={hasTrack}
                   onUnlockLesson={unlockLesson}
                   onUnlockTrack={unlockTrack}
-                  isAuthenticated={isAuthenticated}
+                  {...purchaseProps}
                 />
               </div>
               <div className="lg:col-span-2">
@@ -159,7 +211,7 @@ export default function CourseDetail() {
               hasTrack={hasTrack}
               onUnlockLesson={unlockLesson}
               onUnlockTrack={unlockTrack}
-              isAuthenticated={isAuthenticated}
+              {...purchaseProps}
             />
           ) : null}
 
@@ -231,7 +283,7 @@ export default function CourseDetail() {
               hasTrack={hasTrack}
               onUnlockLesson={unlockLesson}
               onUnlockTrack={unlockTrack}
-              isAuthenticated={isAuthenticated}
+              {...purchaseProps}
             />
           ) : null}
 

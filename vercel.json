@@ -2,6 +2,9 @@
   "rewrites": [
     { "source": "/api/admin/:path*", "destination": "/api/server" },
     { "source": "/api/webhooks/:path*", "destination": "/api/server" },
+    { "source": "/api/payments/:path*", "destination": "/api/server" },
+    { "source": "/api/checkout/:path*", "destination": "/api/server" },
+    { "source": "/api/me/:path*", "destination": "/api/server" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

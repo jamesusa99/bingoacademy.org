@@ -7,6 +7,7 @@ import { registerSeedRoutes } from './routes/seed.mjs'
 import { registerCmsRoutes } from './routes/cms.mjs'
 import { registerCatalogRoutes } from './routes/catalog.mjs'
 import { registerStreamRoutes } from './routes/stream.mjs'
+import { registerPaymentRoutes } from './routes/payments.mjs'
 
 /** Express app for /api/* (admin, webhooks). Used by local server and Vercel serverless. */
 export function createApiApp() {
@@ -22,6 +23,7 @@ export function createApiApp() {
   registerCmsRoutes(app, { verifyAdminUser })
   registerCatalogRoutes(app, { verifyAdminUser })
   registerStreamRoutes(app, { verifyAdminUser })
+  registerPaymentRoutes(app)
 
   return app
 }

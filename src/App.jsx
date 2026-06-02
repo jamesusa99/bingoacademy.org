@@ -3,6 +3,7 @@ import { Routes, Route, Outlet, useNavigate, useLocation, Navigate } from 'react
 import Layout from './components/Layout'
 import AdminGuard from './components/admin/AdminGuard'
 import AdminLayout from './components/AdminLayout'
+import { AdminLocaleProvider } from './contexts/AdminLocaleContext'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminCourses from './pages/admin/AdminCourses'
@@ -79,13 +80,22 @@ export default function App() {
       <Routes>
       <Route path="/labs/ioai/training-lab/:labId" element={<IOAITrainingLabSession />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route
+        path="/admin/login"
+        element={
+          <AdminLocaleProvider>
+            <AdminLogin />
+          </AdminLocaleProvider>
+        }
+      />
       <Route
         path="/admin/*"
         element={
-          <AdminGuard>
-            <AdminLayout />
-          </AdminGuard>
+          <AdminLocaleProvider>
+            <AdminGuard>
+              <AdminLayout />
+            </AdminGuard>
+          </AdminLocaleProvider>
         }
       >
         <Route index element={<AdminDashboard />} />

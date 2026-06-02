@@ -73,6 +73,7 @@ export default function AdminUserCreate({ onClose, onCreated }) {
 
           <p className="text-sm text-slate-600">
             Creates a Supabase Auth account and profile. User can sign in with the email and password below.
+            For <strong>Admin console</strong> access, set Role to <strong>admin</strong> or <strong>editor</strong> (not user).
           </p>
 
           <label className="block text-xs font-medium text-slate-600">
@@ -138,6 +139,11 @@ export default function AdminUserCreate({ onClose, onCreated }) {
                   </option>
                 ))}
               </select>
+              {form.role === 'user' ? (
+                <span className="text-[10px] text-amber-600 mt-1 block">
+                  Role &quot;user&quot; cannot access /admin — choose editor or admin for staff.
+                </span>
+              ) : null}
             </label>
             <label className="block text-xs font-medium text-slate-600">
               Status

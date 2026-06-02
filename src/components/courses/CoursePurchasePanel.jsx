@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { PRICING, IOAI_FULL_TRACK_SLUG } from '../../lib/courseAccess'
+import { startCourseCheckout } from '../../lib/checkout'
+import { authLink } from '../../lib/authRedirect'
 
 export default function CoursePurchasePanel({
   course,
@@ -9,8 +11,36 @@ export default function CoursePurchasePanel({
   onUnlockLesson,
   onUnlockTrack,
   isAuthenticated,
+  stripeCheckout = false,
+  checkoutLoading = false,
+  setCheckoutLoading,
   compact = false,
 }) {
+  const navigate = useNavigate()
+
+  const handleStripeCheckout = async (purchaseType) => {
+    if (!isAuthenticated) {
+      navigate(authLink('/login', `/courses/detail/${course.id}`))
+      return
+    }
+    if (!stripeCheckout) {
+      if (purchaseType === 'ioai_track') onUnlockTrack()
+      else onUnlockLesson()
+      return
+    }
+    setCheckoutLoading?.(true)
+    try {
+      const { url } = await startCourseCheckout({
+        courseSlug: course.id,
+        purchaseType,
+      })
+      if (url) window.location.href = url
+    } catch (err) {
+      alert(err.message || 'Checkout failed')
+      setCheckoutLoading?.(false)
+    }
+  }
+
   if (hasAccess) {
     return (
       <div
@@ -50,8 +80,13 @@ export default function CoursePurchasePanel({
             </p>
             <p className="text-2xl font-black text-white mb-1">${PRICING.lesson.price}</p>
             <p className="text-xs text-slate-500 mb-3">{COURSES_PORTAL.singleLessonDesc}</p>
-            <button type="button" onClick={onUnlockLesson} className="w-full btn-primary text-sm py-2">
-              {COURSES_PORTAL.unlockLesson(PRICING.lesson.price)}
+            <button
+              type="button"
+              disabled={checkoutLoading}
+              onClick={() => handleStripeCheckout('lesson')}
+              className="w-full btn-primary text-sm py-2 disabled:opacity-60"
+            >
+              {checkoutLoading ? 'Redirecting…' : COURSES_PORTAL.unlockLesson(PRICING.lesson.price)}
             </button>
           </div>
         ) : null}
@@ -68,11 +103,11 @@ export default function CoursePurchasePanel({
           <p className="text-xs text-slate-500 mb-3">{COURSES_PORTAL.fullTrackDesc}</p>
           <button
             type="button"
-            onClick={onUnlockTrack}
-            disabled={hasTrack}
+            onClick={() => handleStripeCheckout('ioai_track')}
+            disabled={hasTrack || checkoutLoading}
             className="w-full text-sm font-semibold py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 disabled:opacity-50"
           >
-            {hasTrack ? COURSES_PORTAL.trackOwned : COURSES_PORTAL.unlockTrack}
+            {checkoutLoading ? 'Redirecting…' : hasTrack ? COURSES_PORTAL.trackOwned : COURSES_PORTAL.unlockTrack}
           </button>
         </div>
       </div>
@@ -80,14 +115,15 @@ export default function CoursePurchasePanel({
       {!isAuthenticated ? (
         <p className="text-xs text-slate-500">
           {COURSES_PORTAL.signInHint}{' '}
-          <Link to="/login" className="text-cyan-400 hover:underline">
+          <Link to={authLink('/login', `/courses/detail/${course.id}`)} className="text-cyan-400 hover:underline">
             {COURSES_PORTAL.signIn}
-          </Link>{' '}
-          {COURSES_PORTAL.signInHintSuffix}
+          </Link>
         </p>
       ) : null}
 
-      <p className="text-[10px] text-slate-600 mt-3">{COURSES_PORTAL.demoPurchaseNote}</p>
+      <p className="text-[10px] text-slate-600 mt-3">
+        {stripeCheckout ? COURSES_PORTAL.stripeCheckoutNote : COURSES_PORTAL.demoPurchaseNote}
+      </p>
     </div>
   )
 }

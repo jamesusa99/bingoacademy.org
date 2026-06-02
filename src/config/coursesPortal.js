@@ -66,6 +66,7 @@ export const COURSES_PORTAL = {
   signIn: 'Sign in',
   signInHintSuffix: '(Demo unlock works without payment.)',
   demoPurchaseNote: 'Demo mode: purchases unlock instantly. Stripe checkout coming soon.',
+  stripeCheckoutNote: 'Secure payment via Stripe Checkout. Access unlocks automatically after payment.',
   searchPlaceholder: 'Search courses…',
   sortLabel: 'Sort:',
   filterCategory: 'Topic',

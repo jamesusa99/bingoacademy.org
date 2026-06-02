@@ -174,6 +174,9 @@ export default function SegmentPlayer({
   onUnlockLesson,
   onUnlockTrack,
   isAuthenticated,
+  stripeCheckout,
+  checkoutLoading,
+  setCheckoutLoading,
 }) {
   const videoRef = useRef(null)
   const { url, poster, previewSeconds, isStream, hasCustomVideo } = getCourseVideo(course)
@@ -399,6 +402,9 @@ export default function SegmentPlayer({
             onUnlockLesson={onUnlockLesson}
             onUnlockTrack={onUnlockTrack}
             isAuthenticated={isAuthenticated}
+            stripeCheckout={stripeCheckout}
+            checkoutLoading={checkoutLoading}
+            setCheckoutLoading={setCheckoutLoading}
           />
         </div>
       ) : null}

@@ -8,7 +8,8 @@ const CHECKLIST = [
   { key: 'supabase', label: 'Supabase (VITE_SUPABASE_*)', env: 'Frontend' },
   { key: 'adminEmails', label: 'Admin bootstrap (VITE_ADMIN_EMAILS)', env: 'Frontend' },
   { key: 'serviceRole', label: 'Supabase service role', env: 'Railway / server' },
-  { key: 'stripe', label: 'Stripe (STRIPE_SECRET_KEY, webhook)', env: 'Railway / server' },
+  { key: 'stripe', label: 'Stripe secret key (STRIPE_SECRET_KEY)', env: 'Railway / server' },
+  { key: 'stripeWebhook', label: 'Stripe webhook (STRIPE_WEBHOOK_SECRET)', env: 'Railway / server' },
   { key: 'cloudflare', label: 'Cloudflare Stream', env: 'Railway / server' },
   { key: 'openai', label: 'OpenAI (AI Lab chat)', env: 'Railway / server' },
 ]
@@ -36,6 +37,7 @@ export default function AdminSettings() {
             adminEmails: Boolean(import.meta.env.VITE_ADMIN_EMAILS),
             serviceRole: false,
             stripe: false,
+            stripeWebhook: false,
             cloudflare: false,
             openai: false,
             apiReachable: false,
