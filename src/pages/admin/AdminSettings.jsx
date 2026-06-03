@@ -65,6 +65,22 @@ export default function AdminSettings() {
         </AdminAlert>
       ) : null}
 
+      {!loading && health && !health.stripe ? (
+        <AdminAlert type="info">
+          {health.platform === 'vercel'
+            ? c.t('pages.settings.stripeMissingVercel')
+            : health.platform === 'railway'
+              ? c.t('pages.settings.stripeMissingRailway')
+              : c.t('pages.settings.stripeMissingLocal')}
+        </AdminAlert>
+      ) : null}
+
+      {!loading && health?.platform ? (
+        <p className="text-xs text-slate-500 mb-4">
+          {c.t('pages.settings.apiPlatform', { platform: health.platform })}
+        </p>
+      ) : null}
+
       <div className="card p-6 mb-6">
         <h2 className="font-semibold text-bingo-dark mb-4">{c.t('pages.settings.integrationStatus')}</h2>
         {loading ? (

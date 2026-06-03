@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/products'
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
@@ -8,6 +8,8 @@ import { useCourseAccess } from '../hooks/useCourseAccess'
 import { useAuth } from '../contexts/AuthContext'
 import { findCourseInList } from '../lib/catalogCourse'
 import { isVideoCourse } from '../lib/courseAccess'
+import { isPurchasableCourse, resolvePurchaseType, getCheckoutPriceLabel } from '../lib/coursePricing'
+import { initiateCoursePurchase } from '../lib/coursePurchase'
 import {
   isIOAILessonId,
   isIOAITrackId,
@@ -21,11 +23,13 @@ import CoursePurchasePanel from '../components/courses/CoursePurchasePanel'
 import SegmentPlayer from '../components/courses/SegmentPlayer'
 import CourseLessonList from '../components/courses/CourseLessonList'
 import CourseTrackOverview from '../components/courses/CourseTrackOverview'
+import CoursePreviewBar from '../components/courses/CoursePreviewBar'
 import PageContent from '../components/PageContent'
 import { confirmCheckoutSession } from '../lib/checkout'
 
 export default function CourseDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutMessage, setCheckoutMessage] = useState(null)
   const { courses, loading } = useCourseCatalog()
@@ -69,11 +73,28 @@ export default function CourseDetail() {
     }
   }, [searchParams, setSearchParams, isAuthenticated, refresh])
 
+  const previewMode = searchParams.get('preview') === '1'
+  const fromAdmin = searchParams.get('from') === 'admin' || previewMode
+
   const purchaseProps = {
     stripeCheckout,
     checkoutLoading,
     setCheckoutLoading,
     isAuthenticated,
+    previewMode,
+  }
+
+  const handleEnrollClick = () => {
+    if (!item) return
+    initiateCoursePurchase({
+      course: item,
+      purchaseType: resolvePurchaseType(item),
+      stripeCheckout,
+      isAuthenticated,
+      navigate,
+      setCheckoutLoading,
+      onDemoUnlock: { lesson: unlockLesson, track: unlockTrack },
+    })
   }
 
   if (loading) {
@@ -108,9 +129,13 @@ export default function CourseDetail() {
 
   return (
     <PageContent className={`py-6 sm:py-8 ${pageWidth} mx-auto`}>
-      <Link to={`/courses?line=${item.line}&sub=${item.sub}`} className="text-primary text-sm hover:underline">
-        ← {COURSES_PORTAL.backTo} {line.name}
-      </Link>
+      {previewMode ? <CoursePreviewBar course={item} fromAdmin={fromAdmin} /> : null}
+
+      {!previewMode ? (
+        <Link to={`/courses?line=${item.line}&sub=${item.sub}`} className="text-primary text-sm hover:underline">
+          ← {COURSES_PORTAL.backTo} {line.name}
+        </Link>
+      ) : null}
 
       <div className="card p-5 mt-4 mb-6">
         <div className="flex gap-4 flex-wrap">
@@ -179,6 +204,7 @@ export default function CourseDetail() {
                 track={item}
                 purchasedSlugs={purchased}
                 hasAccess={hasAccess}
+                courses={courses}
               />
             </>
           ) : null}
@@ -192,6 +218,7 @@ export default function CourseDetail() {
                   hasTrack={hasTrack}
                   onUnlockLesson={unlockLesson}
                   onUnlockTrack={unlockTrack}
+                  courses={courses}
                   {...purchaseProps}
                 />
               </div>
@@ -199,6 +226,7 @@ export default function CourseDetail() {
                 <CourseLessonList
                   activeLessonId={item.id}
                   purchasedSlugs={purchased}
+                  courses={courses}
                 />
               </div>
             </div>
@@ -292,17 +320,30 @@ export default function CourseDetail() {
               <Link
                 to={
                   isTrack
-                    ? `/courses/detail/${getContinueLessonId(getAllIOAILessonIds()) ?? 'ioai-1-1'}`
+                    ? `/courses/detail/${getContinueLessonId(getAllIOAILessonIds(courses)) ?? 'ioai-1-1'}`
                     : '/profile/study'
                 }
                 className="btn-primary text-sm px-5 py-2.5"
               >
                 {COURSES_PORTAL.continueLearning}
               </Link>
-            ) : (
-              <button type="button" onClick={unlockLesson} className="btn-primary text-sm px-5 py-2.5">
-                {COURSES_PORTAL.enrollCta}
+            ) : isPurchasableCourse(item) ? (
+              <button
+                type="button"
+                onClick={handleEnrollClick}
+                disabled={checkoutLoading}
+                className="btn-primary text-sm px-5 py-2.5 disabled:opacity-60"
+              >
+                {checkoutLoading
+                  ? 'Redirecting…'
+                  : stripeCheckout
+                    ? COURSES_PORTAL.purchaseCourse(getCheckoutPriceLabel(item, resolvePurchaseType(item)))
+                    : COURSES_PORTAL.enrollCta}
               </button>
+            ) : (
+              <Link to="/contact" className="btn-primary text-sm px-5 py-2.5">
+                {COURSES_PORTAL.contactSales}
+              </Link>
             )}
             {isTrack ? (
               <Link

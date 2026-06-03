@@ -3,10 +3,17 @@ import { verifyAuthUser } from '../lib/supabaseAuth.mjs'
 import { getStripeClient, isStripeConfigured } from '../lib/stripeClient.mjs'
 import {
   CHECKOUT_PRICING,
-  IOAI_FULL_TRACK_SLUG,
   grantCourseEntitlements,
   listEnrollmentSlugs,
 } from '../lib/courseEntitlements.mjs'
+import {
+  getCatalogCourseBySlug,
+  isCatalogCoursePurchasable,
+  resolveCheckoutQuote,
+  resolveCoursePriceCents,
+} from '../lib/coursePricing.mjs'
+import { resolveMallCartLineItems } from '../lib/mallCheckout.mjs'
+import { upsertOrderFromStripe } from './admin.mjs'
 
 function siteOrigin(req) {
   return (
@@ -28,6 +35,26 @@ export function registerPaymentRoutes(app) {
     })
   })
 
+  app.get('/api/payments/course/:slug', async (req, res) => {
+    const slug = req.params.slug?.trim()
+    if (!slug) return res.status(400).json({ error: 'slug is required' })
+
+    const admin = getSupabaseAdmin()
+    const course = admin ? await getCatalogCourseBySlug(admin, slug) : null
+    const priceCents = resolveCoursePriceCents(course)
+    const purchasable = isCatalogCoursePurchasable(course, priceCents)
+
+    return res.json({
+      slug,
+      stripeCheckout: isStripeConfigured(),
+      purchasable,
+      priceCents,
+      currency: course?.currency || 'usd',
+      displayPrice: course?.price || null,
+      status: course?.status || null,
+    })
+  })
+
   app.get('/api/me/enrollments', async (req, res) => {
     const auth = await verifyAuthUser(req)
     if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
@@ -45,21 +72,23 @@ export function registerPaymentRoutes(app) {
       return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
     }
 
-    const { courseSlug, purchaseType = 'lesson' } = req.body || {}
+    const { courseSlug, purchaseType = 'course' } = req.body || {}
     if (!courseSlug?.trim()) {
       return res.status(400).json({ error: 'courseSlug is required' })
     }
 
-    const isTrack = purchaseType === 'ioai_track'
-    const pricing = isTrack ? CHECKOUT_PRICING.ioai_track : CHECKOUT_PRICING.lesson
-    const productName = isTrack
-      ? pricing.label
-      : `IOAI Lesson — ${courseSlug.trim()}`
+    const admin = getSupabaseAdmin()
+    const course = admin ? await getCatalogCourseBySlug(admin, courseSlug.trim()) : null
+    const quote = resolveCheckoutQuote({ courseSlug, purchaseType, course })
+    if (quote.error) {
+      return res.status(quote.error === 'Course not found in catalog' ? 404 : 400).json({
+        error: quote.error,
+      })
+    }
 
     const origin = siteOrigin(req)
-    const returnSlug = isTrack ? IOAI_FULL_TRACK_SLUG : courseSlug.trim()
-    const successUrl = `${origin}/courses/detail/${returnSlug}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
-    const cancelUrl = `${origin}/courses/detail/${returnSlug}?checkout=canceled`
+    const successUrl = `${origin}/courses/detail/${quote.returnSlug}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+    const cancelUrl = `${origin}/courses/detail/${quote.returnSlug}?checkout=canceled`
 
     try {
       const session = await stripe.checkout.sessions.create({
@@ -69,13 +98,13 @@ export function registerPaymentRoutes(app) {
           {
             quantity: 1,
             price_data: {
-              currency: pricing.currency,
-              unit_amount: pricing.amountCents,
+              currency: quote.currency,
+              unit_amount: quote.amountCents,
               product_data: {
-                name: productName,
+                name: quote.productName,
                 metadata: {
                   course_slug: courseSlug.trim(),
-                  purchase_type: purchaseType,
+                  purchase_type: quote.purchaseType,
                 },
               },
             },
@@ -84,9 +113,9 @@ export function registerPaymentRoutes(app) {
         success_url: successUrl,
         cancel_url: cancelUrl,
         metadata: {
-          product_name: productName,
+          product_name: quote.productName,
           course_slug: courseSlug.trim(),
-          purchase_type: purchaseType,
+          purchase_type: quote.purchaseType,
           user_id: auth.user.id,
         },
       })
@@ -94,6 +123,48 @@ export function registerPaymentRoutes(app) {
       return res.json({ url: session.url, sessionId: session.id })
     } catch (err) {
       console.error('[checkout]', err)
+      return res.status(502).json({ error: err.message || 'Stripe checkout failed' })
+    }
+  })
+
+  app.post('/api/checkout/mall', async (req, res) => {
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const stripe = await getStripeClient()
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
+    }
+
+    const { items } = req.body || {}
+    const admin = getSupabaseAdmin()
+    const quote = await resolveMallCartLineItems(admin, items)
+    if (quote.error) {
+      return res.status(400).json({ error: quote.error })
+    }
+
+    const origin = siteOrigin(req)
+    const successUrl = `${origin}/mall?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+    const cancelUrl = `${origin}/mall?checkout=canceled`
+
+    try {
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer_email: auth.user.email || undefined,
+        line_items: quote.lineItems,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: {
+          product_name: quote.productName,
+          purchase_type: 'mall',
+          user_id: auth.user.id,
+          mall_items: JSON.stringify(quote.metaItems),
+        },
+      })
+
+      return res.json({ url: session.url, sessionId: session.id })
+    } catch (err) {
+      console.error('[checkout/mall]', err)
       return res.status(502).json({ error: err.message || 'Stripe checkout failed' })
     }
   })
@@ -119,14 +190,22 @@ export function registerPaymentRoutes(app) {
       }
 
       const admin = getSupabaseAdmin()
+      const purchaseType = session.metadata?.purchase_type || 'course'
+
+      await upsertOrderFromStripe(session)
+
+      if (purchaseType === 'mall') {
+        return res.json({ ok: true, type: 'mall' })
+      }
+
       const { granted } = await grantCourseEntitlements(admin, {
         userId: auth.user.id,
-        purchaseType: session.metadata?.purchase_type || 'lesson',
+        purchaseType,
         courseSlug: session.metadata?.course_slug,
       })
 
       const slugs = await listEnrollmentSlugs(admin, auth.user.id)
-      return res.json({ ok: true, granted, slugs })
+      return res.json({ ok: true, granted, slugs, type: 'course' })
     } catch (err) {
       console.error('[checkout/confirm]', err)
       return res.status(502).json({ error: err.message })

@@ -9,6 +9,7 @@ import {
   formToCatalogPayload,
 } from '../../lib/catalogCourse'
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
+import DraggableCatalogList from '../../components/admin/DraggableCatalogList'
 import { assignStreamToCourse } from '../../lib/admin/api'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
@@ -45,6 +46,8 @@ export default function AdminCoursesCatalog() {
   const [success, setSuccess] = useState(null)
   const [editingSlug, setEditingSlug] = useState(null)
   const [form, setForm] = useState(CATALOG_FORM_EMPTY)
+  const [lineFilter, setLineFilter] = useState('all')
+  const [groupedIOAI, setGroupedIOAI] = useState(true)
 
   const lineDef = PRODUCT_LINES.find((p) => p.id === form.line) || PRODUCT_LINES[0]
 
@@ -235,8 +238,35 @@ export default function AdminCoursesCatalog() {
           <Field label="Badge">
             <input value={form.badge} onChange={(e) => set('badge', e.target.value)} className={inputClass} />
           </Field>
-          <Field label="Price">
+          <Field label="Price (display)">
             <input value={form.price} onChange={(e) => set('price', e.target.value)} placeholder="$299" className={inputClass} />
+          </Field>
+          <Field label="Stripe price (cents)">
+            <input
+              type="number"
+              value={form.price_cents}
+              onChange={(e) => set('price_cents', e.target.value)}
+              placeholder="29900"
+              className={inputClass}
+            />
+            <p className="text-[10px] text-slate-500 mt-1">Optional — overrides parsed display price for checkout (e.g. 29900 = $299)</p>
+          </Field>
+          <Field label="Currency">
+            <input value={form.currency} onChange={(e) => set('currency', e.target.value)} placeholder="usd" className={inputClass} />
+          </Field>
+          <Field label="Online purchasable">
+            <select
+              value={form.purchasable === '' ? '' : form.purchasable ? 'yes' : 'no'}
+              onChange={(e) => {
+                const v = e.target.value
+                set('purchasable', v === '' ? '' : v === 'yes')
+              }}
+              className={inputClass}
+            >
+              <option value="">Auto (from price)</option>
+              <option value="yes">Yes — enable Stripe checkout</option>
+              <option value="no">No — contact sales only</option>
+            </select>
           </Field>
           <Field label="Hours / duration label">
             <input value={form.hours} onChange={(e) => set('hours', e.target.value)} className={inputClass} />
@@ -388,7 +418,7 @@ export default function AdminCoursesCatalog() {
                 <p className="text-xs text-emerald-700">
                   {c.t('pages.coursesCatalog.videoConfigured')}{' '}
                   <a
-                    href={`/courses/detail/${form.slug || 'ioai-1-1'}`}
+                    href={`/courses/detail/${form.slug || 'ioai-1-1'}?preview=1&from=admin`}
                     target="_blank"
                     rel="noreferrer"
                     className="underline"
@@ -426,67 +456,73 @@ export default function AdminCoursesCatalog() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b font-semibold flex justify-between items-center">
-          <span>{c.t('pages.coursesCatalog.allCourses', { count: String(items.length) })}</span>
-          <a href="/courses?line=general&sub=course" target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
-            {c.previewOnSite}
-          </a>
+        <div className="p-4 border-b flex flex-wrap justify-between items-center gap-3">
+          <span className="font-semibold">{c.t('pages.coursesCatalog.allCourses', { count: String(items.length) })}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={lineFilter}
+              onChange={(e) => setLineFilter(e.target.value)}
+              className="text-xs rounded-lg border border-slate-200 px-2 py-1.5"
+            >
+              <option value="all">{c.t('pages.coursesCatalog.filterAllLines')}</option>
+              {PRODUCT_LINES.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            {lineFilter === 'ioai' ? (
+              <label className="inline-flex items-center gap-1.5 text-xs text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={groupedIOAI}
+                  onChange={(e) => setGroupedIOAI(e.target.checked)}
+                />
+                {c.t('pages.coursesCatalog.groupIOAI')}
+              </label>
+            ) : null}
+            <a
+              href="/courses?line=general&sub=course"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-primary hover:underline"
+            >
+              {c.previewOnSite}
+            </a>
+          </div>
         </div>
         {loading ? (
           <p className="p-6 text-sm text-slate-500">{c.loading}</p>
         ) : items.length === 0 ? (
           <p className="p-6 text-sm text-slate-500">{c.t('pages.coursesCatalog.noCourses')}</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-slate-600">
-                <tr>
-                  <th className="p-3">{c.name}</th>
-                  <th className="p-3">Line / Sub</th>
-                  <th className="p-3">{c.status}</th>
-                  <th className="p-3">Level</th>
-                  <th className="p-3">{c.price}</th>
-                  <th className="p-3">Slug</th>
-                  <th className="p-3">Video</th>
-                  <th className="p-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((row) => (
-                  <tr key={row.slug} className="border-t border-slate-100">
-                    <td className="p-3 font-medium">
-                      {row.name}
-                      {row.featured ? <span className="ml-1 text-xs text-amber-600">★</span> : null}
-                    </td>
-                    <td className="p-3 text-xs capitalize">
-                      {row.line} / {row.sub}
-                    </td>
-                    <td className="p-3">{row.status}</td>
-                    <td className="p-3 capitalize">{row.level || '—'}</td>
-                    <td className="p-3 text-slate-600">{row.price || '—'}</td>
-                    <td className="p-3 text-xs font-mono text-slate-400">{row.slug}</td>
-                    <td className="p-3 text-xs">
-                      {row.video_url ? (
-                        <span className="text-emerald-600 font-medium">{c.t('pages.coursesCatalog.streamOk')}</span>
-                      ) : row.delivery_type === 'video' ? (
-                        <span className="text-amber-600">{c.t('pages.coursesCatalog.noVideo')}</span>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="p-3 whitespace-nowrap">
-                      <button type="button" onClick={() => startEdit(row)} className="text-primary mr-2">
-                        {c.edit}
-                      </button>
-                      <button type="button" onClick={() => handleDelete(row.slug)} className="text-red-600">
-                        {c.delete}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DraggableCatalogList
+            items={items}
+            lineFilter={lineFilter}
+            groupedIOAI={groupedIOAI}
+            onEdit={startEdit}
+            onDelete={handleDelete}
+            onReorderComplete={fetchItems}
+            labels={{
+              name: c.name,
+              status: c.status,
+              price: c.price,
+              video: c.t('pages.coursesCatalog.streamSection'),
+              edit: c.edit,
+              delete: c.delete,
+              dragHint: c.t('pages.coursesCatalog.dragHint'),
+              dragModule: c.t('pages.coursesCatalog.dragModule'),
+              dragLesson: c.t('pages.coursesCatalog.dragLesson'),
+              savingOrder: c.t('pages.coursesCatalog.savingOrder'),
+              ioaiDragHint: c.t('pages.coursesCatalog.ioaiDragHint'),
+              coursePackage: c.t('pages.coursesCatalog.coursePackage'),
+              module: c.t('pages.coursesCatalog.module'),
+              lessons: c.t('pages.coursesCatalog.lessons'),
+              streamOk: c.t('pages.coursesCatalog.streamOk'),
+              noVideo: c.t('pages.coursesCatalog.noVideo'),
+              noCourses: c.t('pages.coursesCatalog.noCourses'),
+            }}
+          />
         )}
       </div>
     </div>

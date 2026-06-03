@@ -79,6 +79,16 @@ export const adminPagesZh = {
       courseDetail: '课程详情页',
       noVideo: '无视频',
       streamOk: 'Stream ✓',
+      filterAllLines: '全部产品线',
+      groupIOAI: '按模块分组（IOAI）',
+      dragHint: '拖动排序',
+      dragModule: '拖动模块顺序',
+      dragLesson: '拖动课时顺序',
+      savingOrder: '正在保存排序…',
+      ioaiDragHint: '可拖动课程包、模块标题或课时行来调整前台展示顺序。',
+      coursePackage: '课程包',
+      module: '模块',
+      lessons: '课时',
     },
     mall: {
       title: '商城课程',
@@ -316,6 +326,13 @@ export const adminPagesZh = {
       boot2: '登录一次后，在 Supabase 将 profiles.role 设为 admin。',
       boot3: '在 Railway 配置服务端密钥；Stripe Webhook 指向 /api/webhooks/stripe。',
       boot4: '上线前收紧 RLS 策略（替换开发环境的 allow all）。',
+      stripeMissingVercel:
+        '当前 API 运行在 Vercel。STRIPE_SECRET_KEY 须配置在 Vercel → Project → Settings → Environment Variables（仅写在 .env.local 或 Railway 不会在 www.bingoacademy.org 生效）。添加后 Redeploy。',
+      stripeMissingRailway:
+        '当前 API 运行在 Railway。请在 Railway Service → Variables 添加 STRIPE_SECRET_KEY 与 STRIPE_WEBHOOK_SECRET，然后 Redeploy。',
+      stripeMissingLocal:
+        '本地 API 未检测到 STRIPE_SECRET_KEY。请写入 .env.local 并用 npm run dev 启动（需同时跑 Express 8787 端口）。',
+      apiPlatform: 'API 运行环境：{{platform}}',
     },
   },
 }
@@ -399,6 +416,16 @@ export const adminPagesEn = {
       courseDetail: 'course detail page',
       noVideo: 'No video',
       streamOk: 'Stream ✓',
+      filterAllLines: 'All product lines',
+      groupIOAI: 'Group by module (IOAI)',
+      dragHint: 'Drag to reorder',
+      dragModule: 'Drag module order',
+      dragLesson: 'Drag lesson order',
+      savingOrder: 'Saving order…',
+      ioaiDragHint: 'Drag the course package, module headers, or lesson rows to change site order.',
+      coursePackage: 'Course package',
+      module: 'Module',
+      lessons: 'lessons',
     },
     mall: {
       title: 'Mall Management',
@@ -635,6 +662,13 @@ export const adminPagesEn = {
       boot2: 'Sign in once, then set profiles.role = admin for your user.',
       boot3: 'Add server secrets on Railway; point Stripe webhook to /api/webhooks/stripe.',
       boot4: 'Tighten RLS policies before production (replace dev allow-all).',
+      stripeMissingVercel:
+        'API runs on Vercel. Add STRIPE_SECRET_KEY in Vercel → Project → Settings → Environment Variables (.env.local or Railway alone will not apply on www.bingoacademy.org). Redeploy after saving.',
+      stripeMissingRailway:
+        'API runs on Railway. Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET under Railway Service → Variables, then redeploy.',
+      stripeMissingLocal:
+        'Local API does not see STRIPE_SECRET_KEY. Add it to .env.local and run npm run dev (Express on port 8787).',
+      apiPlatform: 'API platform: {{platform}}',
     },
   },
 }

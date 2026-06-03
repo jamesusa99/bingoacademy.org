@@ -349,7 +349,7 @@ export default function AdminVideo() {
                       <td className="p-3">
                         {row.catalog_slug ? (
                           <a
-                            href={`/courses/detail/${row.catalog_slug}`}
+                            href={`/courses/detail/${row.catalog_slug}?preview=1&from=admin`}
                             target="_blank"
                             rel="noreferrer"
                             className="text-xs text-primary hover:underline font-mono"

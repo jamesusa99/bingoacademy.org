@@ -35,8 +35,20 @@ function pickCatalogPayload(body) {
           ? parseInt(p.previewSeconds, 10) || 90
           : 90,
     cloudflare_uid: p.cloudflare_uid || p.cloudflareUid || null,
+    price_cents: p.price_cents != null ? parseInt(p.price_cents, 10) || null : null,
+    currency: p.currency || 'usd',
+    purchasable: p.purchasable === undefined || p.purchasable === null ? null : !!p.purchasable,
     updated_at: new Date().toISOString(),
   }
+}
+
+async function persistCatalogOrder(admin, orderedSlugs) {
+  const updates = orderedSlugs.map((slug, sort_order) =>
+    admin.from('courses_catalog').update({ sort_order, updated_at: new Date().toISOString() }).eq('slug', slug)
+  )
+  const results = await Promise.all(updates)
+  const failed = results.find((r) => r.error)
+  if (failed?.error) throw failed.error
 }
 
 export function registerCatalogRoutes(app, { verifyAdminUser }) {
@@ -71,5 +83,30 @@ export function registerCatalogRoutes(app, { verifyAdminUser }) {
     if (error) return res.status(400).json({ error: error.message })
     if (!data?.length) return res.status(404).json({ error: 'Course not found' })
     return res.json({ row: data[0] })
+  })
+
+  app.post('/api/admin/courses-catalog/reorder', async (req, res) => {
+    const auth = await verifyAdminUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Supabase service role not configured' })
+
+    const items = req.body?.items
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'items array is required' })
+    }
+
+    try {
+      const slugs = items.map((item, i) => {
+        const slug = item?.slug?.trim()
+        if (!slug) throw new Error(`items[${i}].slug is required`)
+        return slug
+      })
+      await persistCatalogOrder(admin, slugs)
+      return res.json({ ok: true, count: slugs.length })
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Reorder failed' })
+    }
   })
 }

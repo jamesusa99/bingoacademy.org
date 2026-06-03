@@ -13,6 +13,17 @@ Run **once** on a new project, in order. All files are safe to **re-run** (idemp
 | `009_staff_admin_rls.sql` | Staff-only CMS writes; drop profiles_all_dev; role guard | Admin/editor can edit site data |
 | `007_courses_catalog_portfolio.sql` | courses_catalog, portfolio_works | Tables exist |
 | `008_courses_catalog_list_fields.sql` | category, level, lessons, rating, students, thumbnail | Columns exist |
+| `010_course_video_stream.sql` | video_url, cloudflare_uid, video_assets | Columns exist |
+| `011_course_enrollments.sql` | course_enrollments (Stripe unlocks) | Table exists |
+| `012_profiles_role_service_bypass.sql` | Service role can update profiles.role | — |
+| `013_course_checkout_pricing.sql` | price_cents, currency, purchasable on courses_catalog | Columns exist |
+
+**After migration 013**, backfill Stripe cents from display prices:
+
+```bash
+npm run backfill:price-cents          # apply
+npm run backfill:price-cents -- --dry-run   # preview only
+```
 
 **Admin:** `/admin/courses` — add/edit/delete courses (powers `/courses` and video list UI).
 

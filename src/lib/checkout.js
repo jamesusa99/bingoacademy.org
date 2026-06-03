@@ -37,6 +37,13 @@ export async function startCourseCheckout({ courseSlug, purchaseType }) {
   })
 }
 
+export async function startMallCheckout({ items }) {
+  return authFetch('/api/checkout/mall', {
+    method: 'POST',
+    body: JSON.stringify({ items }),
+  })
+}
+
 export async function confirmCheckoutSession(sessionId) {
   return authFetch('/api/checkout/confirm', {
     method: 'POST',

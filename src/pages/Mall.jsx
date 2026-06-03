@@ -1,8 +1,18 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import { fetchPaymentsConfig, startMallCheckout, confirmCheckoutSession } from '../lib/checkout'
+import { authLink } from '../lib/authRedirect'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function isDbMallItem(item) {
+  return UUID_RE.test(item?.id) && (item?.source === 'courses' || item?.source === 'mall_products')
+}
 
 // ─── Product data (fallback when Supabase empty) ─────────────────────
 
@@ -23,13 +33,14 @@ function courseFromDb(row) {
     type: row.type || 'course',
     cat: row.cat,
     tag: row.tag,
-    price: row.price,
+    price: row.price != null ? Number(row.price) : null,
     bPrice: row.b_price,
     sold: row.sold ?? 0,
     rating: row.rating,
     desc: row.desc,
     badge: row.badge,
     aiLab: !!row.ai_lab,
+    source: 'courses',
   }
 }
 
@@ -170,25 +181,34 @@ function BookingModal({ title, onClose }) {
   )
 }
 
-function CheckoutModal({ items, onClose }) {
+function CheckoutModal({
+  items,
+  onClose,
+  stripeCheckout,
+  isAuthenticated,
+  onStripePay,
+  checkoutLoading,
+}) {
   const [step, setStep] = useState(1)
-  const total = items.reduce((s,i) => s + (i.price || 0), 0)
+  const total = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0)
+  const allStripeReady = items.length > 0 && items.every(isDbMallItem)
+  const canStripe = stripeCheckout && allStripeReady && isAuthenticated
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={step < 3 ? onClose : undefined}>
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-bingo-dark">Checkout</h3>
-            {step < 3 && <button onClick={onClose} className="text-slate-400 text-xl leading-none">×</button>}
+            {step < 3 && <button type="button" onClick={onClose} className="text-slate-400 text-xl leading-none">×</button>}
           </div>
 
-          {/* Step indicators */}
           <div className="flex gap-1 items-center mb-5 text-xs">
-            {[['1','Order'],['2','Details'],['3','Done']].map(([n,l],i) => (
-              <div key={i} className="flex items-center gap-1">
+            {[['1', 'Order'], ['2', 'Payment'], ['3', 'Done']].map(([n, l], i) => (
+              <div key={l} className="flex items-center gap-1">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${step > i ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500'}`}>{n}</div>
                 <span className={step > i ? 'text-primary font-medium' : 'text-slate-400'}>{l}</span>
-                {i < 2 && <span className="text-slate-300 mx-0.5">→</span>}
+                {i < 2 ? <span className="text-slate-300 mx-0.5">→</span> : null}
               </div>
             ))}
           </div>
@@ -196,48 +216,78 @@ function CheckoutModal({ items, onClose }) {
           {step === 1 && (
             <>
               <div className="space-y-2 mb-4">
-                {items.map((item,i) => (
-                  <div key={i} className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-3">
+                {items.map((item, i) => (
+                  <div key={`${item.id}-${i}`} className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-3">
                     <span className="text-slate-700 flex-1 mr-2">{item.name}</span>
-                    <span className="font-medium text-primary shrink-0">{item.price ? `$${item.price}` : 'Quote'}</span>
+                    <span className="font-medium text-primary shrink-0">{item.price ? `$${item.price * (item.quantity || 1)}` : 'Quote'}</span>
                   </div>
                 ))}
               </div>
-              <div className="flex items-center justify-between mb-1 text-sm">
-                <span className="text-slate-500">Subtotal</span><span className="font-bold text-bingo-dark">${total}</span>
+              <div className="flex items-center justify-between mb-4 text-sm">
+                <span className="text-slate-500">Subtotal</span>
+                <span className="font-bold text-bingo-dark">${total.toFixed(2)}</span>
               </div>
-              <div className="flex items-center justify-between mb-4 text-xs text-green-600">
-                <span>Points discount (if any)</span><span>−$0</span>
-              </div>
-              <button onClick={() => setStep(2)} className="w-full btn-primary py-2.5">Continue to Details</button>
+              {!allStripeReady && stripeCheckout ? (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                  Some items are demo listings only. Import mall data via Admin or run <code className="text-[10px]">npm run seed</code> for live Stripe checkout.
+                </p>
+              ) : null}
+              <button type="button" onClick={() => setStep(2)} className="w-full btn-primary py-2.5">Continue to Payment</button>
             </>
           )}
+
           {step === 2 && (
             <>
-              <div className="space-y-2.5 mb-4">
-                {['Full name *', 'Phone *', 'Email (for digital products)', 'Delivery address (physical items only)'].map((f,i) => (
-                  <input key={i} placeholder={f} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none" />
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {['WeChat Pay', 'Alipay'].map((p,i) => (
-                  <button key={i} className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition ${i===0 ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>{p}</button>
-                ))}
-              </div>
+              {!isAuthenticated ? (
+                <p className="text-sm text-slate-600 mb-4">
+                  <Link to={authLink('/login', '/mall')} className="text-primary font-semibold hover:underline">
+                    Sign in
+                  </Link>{' '}
+                  to complete your purchase.
+                </p>
+              ) : null}
+
+              {canStripe ? (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 mb-4">
+                  <p className="text-sm font-semibold text-bingo-dark mb-1">Secure payment via Stripe</p>
+                  <p className="text-xs text-slate-600 mb-3">You will be redirected to Stripe Checkout to pay ${total.toFixed(2)}.</p>
+                  <button
+                    type="button"
+                    disabled={checkoutLoading}
+                    onClick={() => onStripePay(items)}
+                    className="w-full btn-primary py-2.5 disabled:opacity-60"
+                  >
+                    {checkoutLoading ? 'Redirecting…' : `Pay $${total.toFixed(2)} with Stripe`}
+                  </button>
+                </div>
+              ) : stripeCheckout && allStripeReady && !isAuthenticated ? null : (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 mb-4 text-sm text-slate-600">
+                  {stripeCheckout
+                    ? 'Online payment is unavailable for these items. Contact us for a quote.'
+                    : 'Demo mode — Stripe is not configured on this server.'}
+                </div>
+              )}
+
               <div className="flex items-center justify-between text-sm font-bold mb-4">
-                <span>Total</span><span className="text-primary text-lg">${total}</span>
+                <span>Total</span>
+                <span className="text-primary text-lg">${total.toFixed(2)}</span>
               </div>
-              <button onClick={() => setStep(3)} className="w-full btn-primary py-2.5">Pay ${total}</button>
+
+              {!canStripe ? (
+                <button type="button" onClick={() => setStep(3)} className="w-full border border-slate-300 text-slate-700 py-2.5 rounded-xl text-sm">
+                  Demo: mark order placed
+                </button>
+              ) : null}
             </>
           )}
+
           {step === 3 && (
             <div className="text-center py-4">
               <div className="text-4xl mb-3">🎉</div>
               <p className="font-bold text-bingo-dark text-lg mb-2">Order Placed!</p>
-              <p className="text-sm text-slate-600 mb-1">Your order has been confirmed. Digital products are now accessible in your account.</p>
-              <p className="text-xs text-slate-400 mb-4">Order no: BINGO-{Date.now().toString().slice(-8)}</p>
-              <p className="text-xs text-green-600 mb-4">+{Math.floor(total)} points earned from this purchase</p>
-              <button onClick={onClose} className="btn-primary px-6 py-2">Back to Mall</button>
+              <p className="text-sm text-slate-600 mb-4">Thank you for your purchase. View orders in your profile.</p>
+              <Link to="/profile#orders" className="btn-primary px-6 py-2 inline-block mr-2">My Orders</Link>
+              <button type="button" onClick={onClose} className="text-sm px-4 py-2 rounded-xl border border-slate-300 mt-2">Back to Mall</button>
             </div>
           )}
         </div>
@@ -248,6 +298,9 @@ function CheckoutModal({ items, onClose }) {
 
 // ─── Main Component ────────────────────────────────────────────────
 export default function Mall() {
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { isAuthenticated } = useAuth()
   const [courses, setCourses] = useState(COURSES_FALLBACK)
   const [coursesLoading, setCoursesLoading] = useState(true)
   const [tab, setTab] = useState('home')
@@ -255,6 +308,9 @@ export default function Mall() {
   const [cart, setCart] = useState([])
   const [cartOpen, setCartOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutMessage, setCheckoutMessage] = useState(null)
+  const [stripeCheckout, setStripeCheckout] = useState(false)
   const [bookingModal, setBookingModal] = useState(null)
   const [points] = useState(1280)
   const [certProducts, setCertProducts] = useState(CERT_PRODUCTS)
@@ -263,11 +319,74 @@ export default function Mall() {
   const [trainingProducts, setTrainingProducts] = useState(AI_TRAINING)
   const [eventsProducts, setEventsProducts] = useState(EVENTS_PRODUCTS)
 
-  const addToCart = (item) => setCart(c => [...c, item])
-  const buyNow = (item) => { setCart([item]); setCheckoutOpen(true) }
+  const addToCart = (item) => setCart((c) => [...c, { ...item, quantity: 1 }])
+  const buyNow = (item) => {
+    setCart([{ ...item, quantity: 1 }])
+    setCheckoutOpen(true)
+  }
   const cartCount = cart.length
 
-  const mapMallProduct = (r) => ({ id: r.id, name: r.name, type: r.type, tag: r.tag, price: r.price, bPrice: r.b_price, desc: r.desc, deadline: r.deadline })
+  const mapMallProduct = (r) => ({
+    id: r.id,
+    name: r.name,
+    type: r.type,
+    tag: r.tag,
+    price: r.price != null ? Number(r.price) : null,
+    bPrice: r.b_price,
+    desc: r.desc,
+    deadline: r.deadline,
+    source: 'mall_products',
+  })
+
+  useEffect(() => {
+    fetchPaymentsConfig()
+      .then((cfg) => setStripeCheckout(Boolean(cfg.stripeCheckout)))
+      .catch(() => setStripeCheckout(false))
+  }, [])
+
+  useEffect(() => {
+    const status = searchParams.get('checkout')
+    const sessionId = searchParams.get('session_id')
+    if (status === 'success' && sessionId && isAuthenticated) {
+      confirmCheckoutSession(sessionId)
+        .then(() => {
+          setCheckoutMessage('Payment successful — your order is confirmed!')
+          setCart([])
+        })
+        .catch(() => {
+          setCheckoutMessage('Payment received — your order will appear shortly.')
+        })
+        .finally(() => {
+          searchParams.delete('checkout')
+          searchParams.delete('session_id')
+          setSearchParams(searchParams, { replace: true })
+        })
+    } else if (status === 'canceled') {
+      setCheckoutMessage('Checkout canceled.')
+      searchParams.delete('checkout')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams, isAuthenticated])
+
+  const handleStripePay = async (cartItems) => {
+    if (!isAuthenticated) {
+      navigate(authLink('/login', '/mall'))
+      return
+    }
+    setCheckoutLoading(true)
+    try {
+      const items = cartItems.map((item) => ({
+        id: item.id,
+        source: item.source,
+        quantity: item.quantity || 1,
+      }))
+      const { url } = await startMallCheckout({ items })
+      if (url) window.location.href = url
+    } catch (err) {
+      alert(err.message || 'Checkout failed')
+      setCheckoutLoading(false)
+    }
+  }
 
   useEffect(() => {
     supabase.from('courses').select('*').order('created_at', { ascending: false })
@@ -317,7 +436,25 @@ export default function Mall() {
 
       {selectedProduct && <ProductModal item={selectedProduct} onClose={() => setSelectedProduct(null)} onCart={addToCart} onBuy={buyNow} />}
       {bookingModal && <BookingModal title={bookingModal} onClose={() => setBookingModal(null)} />}
-      {checkoutOpen && <CheckoutModal items={cart} onClose={() => { setCheckoutOpen(false); setCart([]) }} />}
+      {checkoutOpen ? (
+        <CheckoutModal
+          items={cart}
+          onClose={() => {
+            setCheckoutOpen(false)
+            setCart([])
+          }}
+          stripeCheckout={stripeCheckout}
+          isAuthenticated={isAuthenticated}
+          onStripePay={handleStripePay}
+          checkoutLoading={checkoutLoading}
+        />
+      ) : null}
+
+      {checkoutMessage ? (
+        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {checkoutMessage}
+        </div>
+      ) : null}
 
       {/* Cart sidebar trigger */}
       {cartCount > 0 && !checkoutOpen && (

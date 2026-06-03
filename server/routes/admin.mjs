@@ -6,17 +6,29 @@ import {
   STREAM_RECOMMENDED_MAX_FILE_BYTES,
 } from '../lib/cloudflareStream.mjs'
 
+function envFlag(name) {
+  const v = process.env[name]
+  return Boolean(typeof v === 'string' ? v.trim() : v)
+}
+
+function detectDeployPlatform() {
+  if (process.env.VERCEL) return 'vercel'
+  if (process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID) return 'railway'
+  return 'local'
+}
+
 export function getAdminHealth() {
   const cfg = getSupabaseConfig()
   return {
     apiReachable: true,
+    platform: detectDeployPlatform(),
     supabase: Boolean(cfg.url),
-    adminEmails: Boolean(process.env.VITE_ADMIN_EMAILS || process.env.ADMIN_EMAILS),
+    adminEmails: envFlag('VITE_ADMIN_EMAILS') || envFlag('ADMIN_EMAILS'),
     serviceRole: cfg.ready,
-    stripe: Boolean(process.env.STRIPE_SECRET_KEY),
-    stripeWebhook: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
-    cloudflare: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN),
-    openai: Boolean(process.env.OPENAI_API_KEY),
+    stripe: envFlag('STRIPE_SECRET_KEY'),
+    stripeWebhook: envFlag('STRIPE_WEBHOOK_SECRET'),
+    cloudflare: envFlag('CLOUDFLARE_ACCOUNT_ID') && envFlag('CLOUDFLARE_API_TOKEN'),
+    openai: envFlag('OPENAI_API_KEY'),
   }
 }
 
@@ -114,11 +126,14 @@ export async function upsertOrderFromStripe(session) {
     .maybeSingle()
 
   if (session.payment_status === 'paid' && userId) {
-    await grantCourseEntitlements(admin, {
-      userId,
-      purchaseType: metadata.purchase_type || 'lesson',
-      courseSlug: metadata.course_slug,
-      orderId: orderRow?.id ?? null,
-    })
+    const purchaseType = metadata.purchase_type || 'course'
+    if (purchaseType === 'course' || purchaseType === 'lesson' || purchaseType === 'ioai_track') {
+      await grantCourseEntitlements(admin, {
+        userId,
+        purchaseType,
+        courseSlug: metadata.course_slug,
+        orderId: orderRow?.id ?? null,
+      })
+    }
   }
 }

@@ -16,8 +16,8 @@ function ProgressBar({ percent }) {
   )
 }
 
-export default function CourseTrackOverview({ track, purchasedSlugs, hasAccess }) {
-  const lessonIds = getAllIOAILessonIds()
+export default function CourseTrackOverview({ track, purchasedSlugs, hasAccess, courses = null }) {
+  const lessonIds = getAllIOAILessonIds(courses)
   const { stats, continueLessonId } = useTrackProgress(lessonIds)
   const continueCourse = continueLessonId ? `/courses/detail/${continueLessonId}` : null
 
@@ -89,7 +89,7 @@ export default function CourseTrackOverview({ track, purchasedSlugs, hasAccess }
         </div>
 
         <div className="lg:col-span-2">
-          <CourseLessonList purchasedSlugs={purchasedSlugs} compact />
+          <CourseLessonList purchasedSlugs={purchasedSlugs} compact courses={courses} />
         </div>
       </div>
     </div>

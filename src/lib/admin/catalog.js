@@ -12,3 +12,10 @@ export async function deleteCatalogCourse(slug) {
     method: 'DELETE',
   })
 }
+
+export async function reorderCatalogCourses(items) {
+  return adminFetch('/api/admin/courses-catalog/reorder', {
+    method: 'POST',
+    body: JSON.stringify({ items }),
+  })
+}

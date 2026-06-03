@@ -10,16 +10,20 @@ export const CHECKOUT_PRICING = {
   },
 }
 
-/** Grant enrollment rows after successful payment */
+/** Grant enrollment rows after successful payment (purchaseType: lesson | course | ioai_track) */
 export async function grantCourseEntitlements(admin, { userId, purchaseType, courseSlug, orderId = null }) {
   if (!admin || !userId) return { granted: [] }
 
   const slugs =
     purchaseType === 'ioai_track'
       ? [IOAI_FULL_TRACK_SLUG]
-      : courseSlug
-        ? [courseSlug]
-        : []
+      : purchaseType === 'course' || purchaseType === 'lesson'
+        ? courseSlug
+          ? [courseSlug]
+          : []
+        : courseSlug
+          ? [courseSlug]
+          : []
 
   const granted = []
   for (const slug of slugs) {

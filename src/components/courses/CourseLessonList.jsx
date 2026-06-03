@@ -99,8 +99,9 @@ export default function CourseLessonList({
   activeLessonId = null,
   purchasedSlugs = [],
   compact = false,
+  courses = null,
 }) {
-  const curriculum = buildIOAICurriculum()
+  const curriculum = buildIOAICurriculum(courses)
   const activeModule = activeLessonId
     ? curriculum.flatMap((s) => s.modules).find((m) => m.lessons.some((l) => l.id === activeLessonId))
     : null
