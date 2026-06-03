@@ -2,8 +2,7 @@ import { useMemo, useState } from 'react'
 import { GripVertical } from 'lucide-react'
 import { arrayMove } from '../../lib/arrayMove'
 import { reorderCatalogCourses } from '../../lib/admin/catalog'
-import { IOAI_COURSE_SYSTEM } from '../../config/ioaiCourseSystem'
-import { IOAI_TRACK_ID, isIOAILessonId, parseIOAILessonId } from '../../lib/ioaiCourseStructure'
+import { IOAI_TRACK_ID, groupIOAICatalogByCurriculum } from '../../lib/ioaiCourseStructure'
 
 function sortByOrder(rows) {
   return [...rows].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
@@ -143,49 +142,25 @@ function FlatCatalogTable({ items, labels, onReorder, onEdit, onDelete, disabled
   )
 }
 
-function groupIOAICatalog(items) {
-  const sorted = sortByOrder(items)
-  const track = sorted.find((r) => r.slug === IOAI_TRACK_ID) ?? null
-  const lessonRows = sorted.filter((r) => isIOAILessonId(r.slug))
-
-  const moduleMap = new Map()
-  for (const row of lessonRows) {
-    const parsed = parseIOAILessonId(row.slug)
-    if (!parsed) continue
-    if (!moduleMap.has(parsed.module)) moduleMap.set(parsed.module, [])
-    moduleMap.get(parsed.module).push(row)
+function flattenGroupedOrder(grouped) {
+  const list = []
+  if (grouped.track) list.push(grouped.track)
+  for (const level of grouped.levels) {
+    for (const theme of level.themes) {
+      for (const mod of theme.modules) {
+        list.push(...mod.lessons)
+      }
+    }
   }
-
-  const modules = IOAI_COURSE_SYSTEM.modules
-    .filter((mod) => moduleMap.has(mod.number))
-    .map((mod) => ({
-      ...mod,
-      lessons: sortByOrder(moduleMap.get(mod.number) || []),
-    }))
-    .sort((a, b) => {
-      const minA = a.lessons[0]?.sort_order ?? 0
-      const minB = b.lessons[0]?.sort_order ?? 0
-      return minA - minB
-    })
-
-  return { track, modules }
+  list.push(...grouped.unassigned)
+  return list
 }
 
 function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, disabled }) {
-  const grouped = useMemo(() => groupIOAICatalog(items), [items])
-  const [dragKind, setDragKind] = useState(null)
+  const grouped = useMemo(() => groupIOAICatalogByCurriculum(items), [items])
   const [dragKey, setDragKey] = useState(null)
   const [overKey, setOverKey] = useState(null)
   const [saving, setSaving] = useState(false)
-
-  const flatOrder = useMemo(() => {
-    const list = []
-    if (grouped.track) list.push(grouped.track)
-    for (const mod of grouped.modules) {
-      list.push(...mod.lessons)
-    }
-    return list
-  }, [grouped])
 
   const persistFromFlat = async (nextFlat) => {
     setSaving(true)
@@ -196,49 +171,41 @@ function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, di
     }
   }
 
-  const dropModule = async (targetModuleNumber) => {
-    if (!dragKey?.startsWith('module:') || saving) return
-    const fromModule = Number(dragKey.split(':')[1])
-    if (fromModule === targetModuleNumber) return
-
-    const fromIdx = grouped.modules.findIndex((m) => m.number === fromModule)
-    const toIdx = grouped.modules.findIndex((m) => m.number === targetModuleNumber)
-    if (fromIdx < 0 || toIdx < 0) return
-
-    const nextModules = arrayMove(grouped.modules, fromIdx, toIdx)
-    const nextFlat = []
-    if (grouped.track) nextFlat.push(grouped.track)
-    for (const mod of nextModules) nextFlat.push(...mod.lessons)
-    await persistFromFlat(nextFlat)
-  }
-
-  const dropLesson = async (targetSlug, moduleNumber) => {
+  const dropLesson = async (targetSlug, moduleKey) => {
     if (!dragKey?.startsWith('lesson:') || saving) return
     const dragSlug = dragKey.slice('lesson:'.length)
     if (dragSlug === targetSlug) return
 
-    const module = grouped.modules.find((m) => m.number === moduleNumber)
-    if (!module) return
+    const [, levelId, themeId, moduleId] = moduleKey.split(':')
+    const level = grouped.levels.find((l) => l.id === levelId)
+    const theme = level?.themes.find((t) => t.id === themeId)
+    const mod = theme?.modules.find((m) => m.id === moduleId)
+    if (!mod) return
 
-    const slugs = module.lessons.map((l) => l.slug)
+    const slugs = mod.lessons.map((l) => l.slug)
     const from = slugs.indexOf(dragSlug)
     const to = slugs.indexOf(targetSlug)
     if (from < 0 || to < 0) return
 
-    const nextLessons = arrayMove(module.lessons, from, to)
+    const nextLessons = arrayMove(mod.lessons, from, to)
     const nextFlat = []
     if (grouped.track) nextFlat.push(grouped.track)
-    for (const mod of grouped.modules) {
-      if (mod.number === moduleNumber) nextFlat.push(...nextLessons)
-      else nextFlat.push(...mod.lessons)
+    for (const lv of grouped.levels) {
+      for (const th of lv.themes) {
+        for (const m of th.modules) {
+          if (lv.id === levelId && th.id === themeId && m.id === moduleId) {
+            nextFlat.push(...nextLessons)
+          } else {
+            nextFlat.push(...m.lessons)
+          }
+        }
+      }
     }
+    nextFlat.push(...grouped.unassigned)
     await persistFromFlat(nextFlat)
   }
 
-  const dropTrack = async () => {
-    if (dragKind !== 'track' || !grouped.track || saving) return
-    // Track stays first; no-op drop target
-  }
+  const flatOrder = flattenGroupedOrder(grouped)
 
   return (
     <div className="divide-y divide-slate-100">
@@ -248,102 +215,102 @@ function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, di
       <p className="px-4 py-2 text-xs text-slate-500 bg-slate-50">{labels.ioaiDragHint}</p>
 
       {grouped.track ? (
-        <div
-          draggable={!disabled && !saving}
-          onDragStart={() => {
-            setDragKind('track')
-            setDragKey(`track:${grouped.track.slug}`)
-          }}
-          onDragEnd={() => {
-            setDragKind(null)
-            setDragKey(null)
-            setOverKey(null)
-          }}
-          onDragOver={(e) => {
-            e.preventDefault()
-            setOverKey('track')
-          }}
-          onDrop={(e) => {
-            e.preventDefault()
-            dropTrack()
-            setOverKey(null)
-          }}
-          className={`flex items-center gap-3 px-4 py-3 bg-amber-50/60 ${overKey === 'track' ? 'ring-2 ring-inset ring-primary/30' : ''}`}
-        >
+        <div className="flex items-center gap-3 px-4 py-3 bg-amber-50/60">
           <DragHandle label={labels.dragHint} />
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold uppercase text-amber-700">{labels.coursePackage}</p>
             <p className="font-semibold text-bingo-dark truncate">{grouped.track.name}</p>
             <p className="text-xs text-slate-500 font-mono">{grouped.track.slug}</p>
           </div>
-          <div className="flex gap-2 shrink-0">
-            <button type="button" onClick={() => onEdit(grouped.track)} className="text-primary text-xs">
-              {labels.edit}
-            </button>
-          </div>
+          <button type="button" onClick={() => onEdit(grouped.track)} className="text-primary text-xs shrink-0">
+            {labels.edit}
+          </button>
         </div>
       ) : null}
 
-      {grouped.modules.map((mod) => (
-        <div key={mod.number} className="border-t border-slate-100">
-          <div
-            draggable={!disabled && !saving}
-            onDragStart={() => {
-              setDragKind('module')
-              setDragKey(`module:${mod.number}`)
-            }}
-            onDragEnd={() => {
-              setDragKind(null)
-              setDragKey(null)
-              setOverKey(null)
-            }}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setOverKey(`module:${mod.number}`)
-            }}
-            onDrop={(e) => {
-              e.preventDefault()
-              if (dragKind === 'module') dropModule(mod.number)
-              setOverKey(null)
-            }}
-            className={`flex items-center gap-3 px-4 py-3 bg-slate-50 ${overKey === `module:${mod.number}` ? 'ring-2 ring-inset ring-primary/30' : ''}`}
-          >
-            <DragHandle label={labels.dragModule} />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase text-primary">
-                {labels.module} {mod.number}
-              </p>
-              <p className="font-semibold text-bingo-dark">{mod.title}</p>
-              <p className="text-xs text-slate-500">{mod.lessons.length} {labels.lessons}</p>
-            </div>
+      {grouped.levels.map((level) => (
+        <div key={level.id} className="border-t border-slate-200">
+          <div className="px-4 py-2.5 bg-slate-100/90">
+            <p className="text-xs font-bold text-bingo-dark">
+              {level.emoji} {level.title}
+            </p>
           </div>
 
+          {level.themes.map((theme) => (
+            <div key={`${level.id}-${theme.id}`}>
+              <div className="px-4 py-2 bg-white border-b border-slate-100">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">{theme.title}</p>
+              </div>
+
+              {theme.modules.map((mod) => {
+                const moduleKey = `${level.id}:${theme.id}:${mod.id}`
+                return (
+                  <div key={moduleKey} className="border-b border-slate-100">
+                    <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50/80 pl-8">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-bingo-dark">{mod.title}</p>
+                        <p className="text-xs text-slate-500">
+                          {mod.lessons.length} {labels.lessons}
+                        </p>
+                      </div>
+                    </div>
+
+                    <ul className="divide-y divide-slate-100">
+                      {mod.lessons.map((row) => (
+                        <li
+                          key={row.slug}
+                          draggable={!disabled && !saving}
+                          onDragStart={() => setDragKey(`lesson:${row.slug}`)}
+                          onDragEnd={() => {
+                            setDragKey(null)
+                            setOverKey(null)
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            setOverKey(`lesson:${row.slug}`)
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            dropLesson(row.slug, moduleKey)
+                            setOverKey(null)
+                          }}
+                          className={`flex items-center gap-3 px-4 py-2.5 pl-14 ${overKey === `lesson:${row.slug}` ? 'bg-primary/5' : 'hover:bg-slate-50/80'}`}
+                        >
+                          <DragHandle label={labels.dragLesson} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-bingo-dark truncate">{row.name}</p>
+                            <p className="text-[10px] font-mono text-slate-400">{row.slug}</p>
+                          </div>
+                          <div className="flex gap-2 shrink-0 text-xs">
+                            <button type="button" onClick={() => onEdit(row)} className="text-primary">
+                              {labels.edit}
+                            </button>
+                            <button type="button" onClick={() => onDelete(row.slug)} className="text-red-600">
+                              {labels.delete}
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                      {!mod.lessons.length ? (
+                        <li className="px-4 py-3 pl-14 text-xs text-amber-700 bg-amber-50/50">
+                          No catalog rows — run seed or add lesson with slug matching curriculum
+                        </li>
+                      ) : null}
+                    </ul>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {grouped.unassigned.length > 0 ? (
+        <div className="border-t border-amber-200">
+          <p className="px-4 py-2 text-xs font-semibold text-amber-800 bg-amber-50">Unassigned IOAI lessons</p>
           <ul className="divide-y divide-slate-100">
-            {mod.lessons.map((row) => (
-              <li
-                key={row.slug}
-                draggable={!disabled && !saving}
-                onDragStart={() => {
-                  setDragKind('lesson')
-                  setDragKey(`lesson:${row.slug}`)
-                }}
-                onDragEnd={() => {
-                  setDragKind(null)
-                  setDragKey(null)
-                  setOverKey(null)
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setOverKey(`lesson:${row.slug}`)
-                }}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  if (dragKind === 'lesson') dropLesson(row.slug, mod.number)
-                  setOverKey(null)
-                }}
-                className={`flex items-center gap-3 px-4 py-2.5 pl-10 ${overKey === `lesson:${row.slug}` ? 'bg-primary/5' : 'hover:bg-slate-50/80'}`}
-              >
-                <DragHandle label={labels.dragLesson} />
+            {grouped.unassigned.map((row) => (
+              <li key={row.slug} className="flex items-center gap-3 px-4 py-2.5">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-bingo-dark truncate">{row.name}</p>
                   <p className="text-[10px] font-mono text-slate-400">{row.slug}</p>
@@ -360,7 +327,7 @@ function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, di
             ))}
           </ul>
         </div>
-      ))}
+      ) : null}
 
       {flatOrder.length === 0 ? (
         <p className="p-6 text-sm text-slate-500">{labels.noCourses}</p>

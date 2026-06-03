@@ -2,9 +2,13 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.mjs'
 import {
   fetchStreamVideo,
   isStreamConfigured,
+  isStreamSigningConfigured,
+  signStreamToken,
   streamVideoToPlayback,
   syncStreamPlayback,
 } from '../lib/cloudflareStream.mjs'
+import { verifyAuthUser } from '../lib/supabaseAuth.mjs'
+import { listEnrollmentSlugs, userHasIOAIAccess } from '../lib/courseEntitlements.mjs'
 
 async function applyPlaybackToCatalog(admin, catalogSlug, playback) {
   const patch = {
@@ -54,6 +58,41 @@ async function applyPlaybackToAsset(admin, videoAssetId, playback, catalogSlug =
 }
 
 export function registerStreamRoutes(app, { verifyAdminUser }) {
+  /** Signed playback token — requires auth + course access */
+  app.post('/api/video/token', async (req, res) => {
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const { cloudflareVideoId, cloudflare_video_id, lessonSlug } = req.body || {}
+    const videoId = (cloudflareVideoId || cloudflare_video_id || '').trim()
+    if (!videoId) return res.status(400).json({ error: 'cloudflareVideoId is required' })
+
+    const admin = auth.admin
+    const masterclass = await userHasIOAIAccess(admin, auth.user.id)
+    const slugs = await listEnrollmentSlugs(admin, auth.user.id)
+    const slug = lessonSlug?.trim()
+    const hasLesson = slug && slugs.includes(slug)
+    const hasViaTrack = masterclass && slug?.startsWith('ioai-')
+
+    if (!masterclass && !hasLesson && !hasViaTrack) {
+      return res.status(403).json({ error: 'Unlock IOAI Masterclass to watch this lesson' })
+    }
+
+    if (isStreamSigningConfigured()) {
+      const token = signStreamToken(videoId)
+      if (token) {
+        return res.json({ token, videoId, signed: true })
+      }
+    }
+
+    return res.json({
+      token: null,
+      videoId,
+      signed: false,
+      iframeSrc: `https://iframe.cloudflarestream.com/${encodeURIComponent(videoId)}`,
+    })
+  })
+
   app.post('/api/admin/stream/sync', async (req, res) => {
     const auth = await verifyAdminUser(req)
     if (!auth.ok) return res.status(auth.status).json({ error: auth.error })

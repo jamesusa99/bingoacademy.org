@@ -335,6 +335,32 @@
   transform: scale(1.02);
 }
 
+/* IOAI Curriculum explorer — premium dark UI */
+.curriculum-page {
+  color: #e2e8f0;
+}
+
+.curriculum-nav-scroll,
+.curriculum-details-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+.curriculum-nav-scroll::-webkit-scrollbar,
+.curriculum-details-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.curriculum-nav-scroll::-webkit-scrollbar-thumb,
+.curriculum-details-scroll::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 999px;
+}
+
+.curriculum-lesson-card {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
 .course-grid-dark {
   display: grid;
   gap: 24px;

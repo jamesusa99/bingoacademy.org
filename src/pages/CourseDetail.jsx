@@ -16,6 +16,7 @@ import {
   isIOAIVideoCourse,
   getAllIOAILessonIds,
 } from '../lib/ioaiCourseStructure'
+import { FIRST_IOAI_LESSON_ID } from '../config/ioaiCourseSystem'
 import { getContinueLessonId } from '../lib/learningProgress'
 import CourseComingSoon from '../components/CourseComingSoon'
 import CourseVideoPlayer from '../components/courses/CourseVideoPlayer'
@@ -324,7 +325,7 @@ export default function CourseDetail() {
               <Link
                 to={
                   isTrack
-                    ? `/courses/detail/${getContinueLessonId(getAllIOAILessonIds(courses)) ?? 'ioai-1-1'}`
+                    ? `/courses/detail/${getContinueLessonId(getAllIOAILessonIds(courses)) ?? FIRST_IOAI_LESSON_ID}`
                     : '/profile/study'
                 }
                 className="btn-primary text-sm px-5 py-2.5"

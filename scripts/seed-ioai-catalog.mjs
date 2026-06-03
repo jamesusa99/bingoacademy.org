@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Upsert IOAI video course catalog (111 entries: full track + 110 lessons) into Supabase.
+ * Upsert IOAI video course catalog (full track + 34 lessons) into Supabase.
  *
  * Usage:
  *   npm run seed:ioai

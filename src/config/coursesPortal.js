@@ -1,5 +1,9 @@
 /** Copy for /courses page */
 
+import { IOAI_CURRICULUM_SUMMARY } from '../data/ioaiCurriculum.js'
+
+const IOAI_STATS = `${IOAI_CURRICULUM_SUMMARY.modules} modules · ${IOAI_CURRICULUM_SUMMARY.lessons} lessons`
+
 export const COURSES_PORTAL = {
   bannerEyebrow: 'AI Course Center',
   browseCourses: 'Browse courses',
@@ -9,7 +13,7 @@ export const COURSES_PORTAL = {
   ioaiFeaturedLabel: 'IOAI Featured',
   ioaiFeaturedTitle: 'Whitelist competition training · Enrolling now',
   ioaiFeaturedDesc:
-    'The IOAI Competition Course System (11 modules · 110 lessons) is live — foundation, core ML/DL, CV/NLP/RL tracks, and national-team sprint prep.',
+    `The IOAI Competition Course System (${IOAI_STATS}) — intro math/Python/AI, advanced tiers, and competition prep.`,
   comingSoonHint:
     'Self-study / classroom items marked “Coming soon” — try AI Exploration free or browse product labs.',
   allTypes: 'All types',
@@ -58,13 +62,13 @@ export const COURSES_PORTAL = {
   replayPreview: 'Replay preview',
   previewEndedTitle: 'Preview ended',
   previewEndedDesc:
-    'You watched the free sample. Unlock this lesson or get the IOAI Full Track for all 110 lessons.',
+    'You watched the free sample. Unlock this lesson or get the IOAI Full Track for all lessons.',
   unlockTitle: 'Get full access',
   unlockDesc: 'Watch the complete lesson, download notes, and track progress in your Study Center.',
   singleLesson: 'This lesson',
   singleLessonDesc: 'Lifetime access to this video lesson and checkpoints.',
   fullTrack: 'IOAI Full Track',
-  fullTrackDesc: 'All 110 lessons · 11 modules · mock contests & national-team prep.',
+  fullTrackDesc: `All ${IOAI_CURRICULUM_SUMMARY.lessons} lessons · ${IOAI_CURRICULUM_SUMMARY.levels} levels · competition prep.`,
   fromPrice: (n) => `From $${n.toLocaleString()}`,
   unlockLesson: (price) => `Unlock This Lesson — $${price}`,
   unlockLessonShort: 'Unlock full lesson',
@@ -91,7 +95,7 @@ export const COURSES_PORTAL = {
   videoListSubtitle: (lineId) => {
     const map = {
       general: 'Explore self-paced AI video courses — literacy, tools, and creative projects for independent learners.',
-      ioai: 'IOAI Competition Course System — 11 modules · 110 video lessons from foundations to national-team selection prep.',
+      ioai: `IOAI Competition Course System — ${IOAI_STATS} across intro, advanced, and competition levels.`,
       k12: 'Classroom-ready AI video courses for schools — aligned packs with teacher support.',
     }
     return map[lineId] || map.general

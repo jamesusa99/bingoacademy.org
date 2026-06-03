@@ -4,7 +4,9 @@ import { getStripeClient, isStripeConfigured } from '../lib/stripeClient.mjs'
 import {
   CHECKOUT_PRICING,
   grantCourseEntitlements,
+  IOAI_FULL_TRACK_SLUG,
   listEnrollmentSlugs,
+  userHasIOAIAccess,
 } from '../lib/courseEntitlements.mjs'
 import {
   getCatalogCourseBySlug,
@@ -63,6 +65,15 @@ export function registerPaymentRoutes(app) {
     return res.json({ slugs })
   })
 
+  app.get('/api/me/ioai-access', async (req, res) => {
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const hasAccess = await userHasIOAIAccess(auth.admin, auth.user.id)
+    const slugs = await listEnrollmentSlugs(auth.admin, auth.user.id)
+    return res.json({ hasAccess, slugs })
+  })
+
   app.post('/api/checkout/course', async (req, res) => {
     const auth = await verifyAuthUser(req)
     if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
@@ -87,8 +98,9 @@ export function registerPaymentRoutes(app) {
     }
 
     const origin = siteOrigin(req)
-    const successUrl = `${origin}/courses/detail/${quote.returnSlug}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
-    const cancelUrl = `${origin}/courses/detail/${quote.returnSlug}?checkout=canceled`
+    const returnPath = req.body?.returnPath?.trim() || `/courses/detail/${quote.returnSlug}`
+    const successUrl = `${origin}${returnPath}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+    const cancelUrl = `${origin}${returnPath}?checkout=canceled`
 
     try {
       const session = await stripe.checkout.sessions.create({
@@ -123,6 +135,69 @@ export function registerPaymentRoutes(app) {
       return res.json({ url: session.url, sessionId: session.id })
     } catch (err) {
       console.error('[checkout]', err)
+      return res.status(502).json({ error: err.message || 'Stripe checkout failed' })
+    }
+  })
+
+  /** IOAI Masterclass checkout — alias for Stripe from curriculum paywall */
+  app.post('/api/checkout', async (req, res) => {
+    req.body = {
+      courseSlug: IOAI_FULL_TRACK_SLUG,
+      purchaseType: 'ioai_track',
+      returnPath: '/curriculum',
+      ...(req.body || {}),
+    }
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const stripe = await getStripeClient()
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
+    }
+
+    const courseSlug = IOAI_FULL_TRACK_SLUG
+    const purchaseType = 'ioai_track'
+    const admin = getSupabaseAdmin()
+    const course = admin ? await getCatalogCourseBySlug(admin, courseSlug) : null
+    const quote = resolveCheckoutQuote({ courseSlug, purchaseType, course })
+    if (quote.error) {
+      return res.status(400).json({ error: quote.error })
+    }
+
+    const origin = siteOrigin(req)
+    const returnPath = req.body?.returnPath || '/curriculum'
+    const successUrl = `${origin}${returnPath}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+    const cancelUrl = `${origin}${returnPath}?checkout=canceled`
+
+    try {
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer_email: auth.user.email || undefined,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: quote.currency,
+              unit_amount: quote.amountCents,
+              product_data: {
+                name: quote.productName || 'IOAI Masterclass',
+                metadata: { course_slug: courseSlug, purchase_type: purchaseType },
+              },
+            },
+          },
+        ],
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: {
+          product_name: quote.productName,
+          course_slug: courseSlug,
+          purchase_type: purchaseType,
+          user_id: auth.user.id,
+        },
+      })
+      return res.json({ url: session.url, sessionId: session.id })
+    } catch (err) {
+      console.error('[checkout/ioai]', err)
       return res.status(502).json({ error: err.message || 'Stripe checkout failed' })
     }
   })

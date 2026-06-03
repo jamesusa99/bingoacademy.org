@@ -50,6 +50,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import AuthCallback from './pages/AuthCallback'
 import AIAssessment from './pages/AIAssessment'
 import Community from './pages/Community'
+import Curriculum from './pages/Curriculum'
 
 const ProgramPage = lazy(() => import('./pages/programs/ProgramPage'))
 const Compare = lazy(() => import('./pages/Compare'))
@@ -129,6 +130,7 @@ export default function App() {
         <Route path="showcase/award/:id" element={<ShowcaseCase />} />
         <Route path="assessment" element={<AIAssessment />} />
         <Route path="courses" element={<Courses />} />
+        <Route path="curriculum" element={<Curriculum />} />
         <Route path="labs" element={<ProductLabs />} />
         <Route path="exploration" element={<AIExploration />} />
         <Route path="exploration/hide-and-seek" element={<AIHideAndSeekPage />} />

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { FIRST_IOAI_LESSON_ID } from '../config/ioaiCourseSystem'
 import { Link, Navigate } from 'react-router-dom'
 import { PlayCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -147,7 +148,7 @@ export default function Study() {
                   Claim free trial
                 </Link>
               ) : (
-                <Link to="/courses/detail/ioai-1-1" className="btn-primary text-sm px-4 py-2">
+                <Link to={`/courses/detail/${FIRST_IOAI_LESSON_ID}`} className="btn-primary text-sm px-4 py-2">
                   Open free trial lesson
                 </Link>
               )}

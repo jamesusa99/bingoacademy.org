@@ -12,6 +12,7 @@ import {
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
 import DraggableCatalogList from '../../components/admin/DraggableCatalogList'
 import { assignStreamToCourse } from '../../lib/admin/api'
+import { FIRST_IOAI_LESSON_ID } from '../../config/ioaiCourseSystem'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -445,7 +446,7 @@ export default function AdminCoursesCatalog() {
                 <p className="text-xs text-emerald-700">
                   {c.t('pages.coursesCatalog.videoConfigured')}{' '}
                   <a
-                    href={`/courses/detail/${form.slug || 'ioai-1-1'}?preview=1&from=admin`}
+                    href={`/courses/detail/${form.slug || FIRST_IOAI_LESSON_ID}?preview=1&from=admin`}
                     target="_blank"
                     rel="noreferrer"
                     className="underline"

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Play, BookOpen } from 'lucide-react'
-import { IOAI_COURSE_SYSTEM } from '../../config/ioaiCourseSystem'
+import { ioaiCurriculum, IOAI_CURRICULUM_SUMMARY } from '../../data/ioaiCurriculum'
 import { getAllIOAILessonIds } from '../../lib/ioaiCourseStructure'
 import { useTrackProgress } from '../../hooks/useLearningProgress'
 import CourseLessonList from './CourseLessonList'
@@ -27,7 +27,7 @@ export default function CourseTrackOverview({ track, purchasedSlugs, hasAccess, 
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1">
             <p className="text-xs font-bold uppercase tracking-wide text-primary mb-1">
-              {IOAI_COURSE_SYSTEM.summary}
+              {IOAI_CURRICULUM_SUMMARY.summary}
             </p>
             <h2 className="text-lg font-bold text-bingo-dark mb-2">Your learning progress</h2>
             <div className="flex items-center gap-3 mb-2">
@@ -42,7 +42,7 @@ export default function CourseTrackOverview({ track, purchasedSlugs, hasAccess, 
           {hasAccess && continueCourse ? (
             <Link to={continueCourse} className="btn-primary inline-flex items-center gap-2 text-sm px-5 py-3 shrink-0">
               <Play className="w-4 h-4" />
-              {stats.completed > 0 ? 'Continue learning' : 'Start lesson 1.1'}
+              {stats.completed > 0 ? 'Continue learning' : 'Start first lesson'}
             </Link>
           ) : (
             <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -56,16 +56,45 @@ export default function CourseTrackOverview({ track, purchasedSlugs, hasAccess, 
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-4">
           <section className="card p-5">
-            <h3 className="font-bold text-bingo-dark text-sm mb-3">Four stages</h3>
+            <h3 className="font-bold text-bingo-dark text-sm mb-3">Course levels</h3>
             <div className="grid sm:grid-cols-2 gap-3">
-              {IOAI_COURSE_SYSTEM.stages.map((stage) => (
-                <div key={stage.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="text-sm font-semibold text-bingo-dark">
-                    {stage.emoji} {stage.label}
+              {ioaiCurriculum.map((level) => {
+                const modules = level.themes.reduce((n, t) => n + t.modules.length, 0)
+                const lessons = level.themes.reduce(
+                  (n, t) => n + t.modules.reduce((m, mod) => m + mod.lessons.length, 0),
+                  0
+                )
+                return (
+                  <div key={level.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p className="text-sm font-semibold text-bingo-dark">
+                      {level.emoji} {level.title}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {level.themes.length} themes · {modules} modules · {lessons} lessons
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+
+          <section className="card p-5">
+            <h3 className="font-bold text-bingo-dark text-sm mb-3">Themes per level</h3>
+            <div className="space-y-3">
+              {ioaiCurriculum.map((level) => (
+                <div key={level.id} className="text-sm">
+                  <p className="font-semibold text-bingo-dark mb-1">
+                    {level.emoji} {level.title}
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {stage.modules} modules · {stage.lessons} lessons
-                  </p>
+                  <ul className="text-xs text-slate-600 space-y-1 ml-3">
+                    {level.themes.map((theme) => (
+                      <li key={theme.id}>
+                        {theme.title}
+                        {' — '}
+                        {theme.modules.map((m) => m.title).join(', ')}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ))}
             </div>

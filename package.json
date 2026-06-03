@@ -15,6 +15,7 @@
     "start": "node server/index.mjs",
     "seed": "node scripts/seed-supabase.mjs",
     "seed:ioai": "node scripts/seed-ioai-catalog.mjs",
+    "seed:ioai-curriculum": "node scripts/seed-ioai-curriculum.mjs",
     "backfill:price-cents": "node scripts/backfill-price-cents.mjs",
     "seed:force": "node scripts/seed-supabase.mjs -- --force",
     "lint": "eslint .",

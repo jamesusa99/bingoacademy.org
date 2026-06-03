@@ -44,6 +44,24 @@ export async function startMallCheckout({ items }) {
   })
 }
 
+export async function startIOAIMasterclassCheckout() {
+  return authFetch('/api/checkout', {
+    method: 'POST',
+    body: JSON.stringify({
+      courseSlug: 'ioai-competition-system',
+      purchaseType: 'ioai_track',
+      returnPath: '/curriculum',
+    }),
+  })
+}
+
+export async function fetchVideoStreamToken({ cloudflareVideoId, lessonSlug }) {
+  return authFetch('/api/video/token', {
+    method: 'POST',
+    body: JSON.stringify({ cloudflareVideoId, lessonSlug }),
+  })
+}
+
 export async function confirmCheckoutSession(sessionId) {
   return authFetch('/api/checkout/confirm', {
     method: 'POST',

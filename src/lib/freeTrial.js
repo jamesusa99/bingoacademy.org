@@ -1,8 +1,10 @@
 import { purchaseLesson } from './courseAccess'
 
+import { FIRST_IOAI_LESSON_ID } from '../config/ioaiCourseSystem'
+
 export const FREE_TRIAL_STORAGE_KEY = 'bingo-free-trial-claimed'
 /** First IOAI lesson unlocked on free trial */
-export const FREE_TRIAL_LESSON_ID = 'ioai-1-1'
+export const FREE_TRIAL_LESSON_ID = FIRST_IOAI_LESSON_ID
 export const FREE_TRIAL_COURSE_HREF = `/courses/detail/${FREE_TRIAL_LESSON_ID}`
 
 export function getFreeTrialState() {
