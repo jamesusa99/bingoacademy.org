@@ -1,5 +1,10 @@
 import { getSupabaseAdmin, getSupabaseConfig } from '../lib/supabaseAdmin.mjs'
 import { grantCourseEntitlements } from '../lib/courseEntitlements.mjs'
+import {
+  STREAM_DEFAULT_MAX_DURATION_SECONDS,
+  STREAM_MAX_FILE_BYTES,
+  STREAM_RECOMMENDED_MAX_FILE_BYTES,
+} from '../lib/cloudflareStream.mjs'
 
 export function getAdminHealth() {
   const cfg = getSupabaseConfig()
@@ -20,6 +25,16 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
     res.json(getAdminHealth())
   })
 
+  app.get('/api/admin/stream/limits', (_req, res) => {
+    res.json({
+      maxFileBytes: STREAM_MAX_FILE_BYTES,
+      recommendedMaxFileBytes: STREAM_RECOMMENDED_MAX_FILE_BYTES,
+      maxDurationSeconds: STREAM_DEFAULT_MAX_DURATION_SECONDS,
+      maxFileGb: 30,
+      recommendedMaxFileGb: 4,
+    })
+  })
+
   app.post('/api/admin/stream/upload-url', async (req, res) => {
     const auth = await verifyAdminUser(req)
     if (!auth.ok) {
@@ -32,7 +47,7 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
       return res.status(503).json({ error: 'Cloudflare Stream not configured' })
     }
 
-    const { title, maxDurationSeconds = 3600 } = req.body || {}
+    const { title, maxDurationSeconds = STREAM_DEFAULT_MAX_DURATION_SECONDS } = req.body || {}
     const cfRes = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/stream/direct_upload`,
       {
@@ -59,6 +74,11 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
     res.json({
       uploadURL: result.uploadURL,
       uid: result.uid,
+      limits: {
+        maxFileBytes: STREAM_MAX_FILE_BYTES,
+        recommendedMaxFileBytes: STREAM_RECOMMENDED_MAX_FILE_BYTES,
+        maxDurationSeconds: maxDurationSeconds,
+      },
     })
   })
 }

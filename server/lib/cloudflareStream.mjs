@@ -1,7 +1,53 @@
 /** Cloudflare Stream API helpers (server-only) */
 
+/** Cloudflare direct upload: up to 30 GB per file (browser uploads: stay under ~4 GB). */
+export const STREAM_MAX_FILE_BYTES = 30 * 1024 * 1024 * 1024
+/** Practical limit for browser POST uploads (memory / timeouts). */
+export const STREAM_RECOMMENDED_MAX_FILE_BYTES = 4 * 1024 * 1024 * 1024
+/** Default maxDurationSeconds on direct_upload (6 h). Override per request if needed. */
+export const STREAM_DEFAULT_MAX_DURATION_SECONDS = 21_600
+
 export function isStreamConfigured() {
   return Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN)
+}
+
+/**
+ * Normalize CLOUDFLARE_STREAM_CUSTOMER_CODE — accept either:
+ * - `uoz4rj725ijgv17s`
+ * - `customer-uoz4rj725ijgv17s`
+ * - `customer-uoz4rj725ijgv17s.cloudflarestream.com` (full host; fixes double-prefix bugs)
+ * @returns {string|null} e.g. customer-xxx.cloudflarestream.com
+ */
+export function normalizeStreamCustomerHost() {
+  const raw = process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE?.trim()
+  if (!raw) return null
+
+  let host = raw.replace(/^https?:\/\//i, '').replace(/\/+$/, '')
+  if (host.includes('.cloudflarestream.com')) {
+    return host
+  }
+
+  const id = host.replace(/^customer-/, '')
+  if (!id) return null
+  return `customer-${id}.cloudflarestream.com`
+}
+
+export function buildStreamManifestUrl(uid) {
+  const host = normalizeStreamCustomerHost()
+  if (!host || !uid?.trim()) return null
+  return `https://${host}/${encodeURIComponent(uid.trim())}/manifest/video.m3u8`
+}
+
+export function buildStreamThumbnailUrl(uid) {
+  const host = normalizeStreamCustomerHost()
+  if (!host || !uid?.trim()) return null
+  return `https://${host}/${encodeURIComponent(uid.trim())}/thumbnails/thumbnail.jpg`
+}
+
+export function buildStreamWatchUrl(uid) {
+  const host = normalizeStreamCustomerHost()
+  if (!host || !uid?.trim()) return null
+  return `https://${host}/${encodeURIComponent(uid.trim())}/watch`
 }
 
 function streamHeaders() {
@@ -51,15 +97,13 @@ export function streamVideoToPlayback(video) {
   const dash = video?.playback?.dash || null
 
   let thumbnailUrl = typeof video?.thumbnail === 'string' ? video.thumbnail : null
-  if (!thumbnailUrl && uid && process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE) {
-    const code = process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE
-    thumbnailUrl = `https://customer-${code}.cloudflarestream.com/${uid}/thumbnails/thumbnail.jpg`
+  if (!thumbnailUrl && uid) {
+    thumbnailUrl = buildStreamThumbnailUrl(uid)
   }
 
-  let hlsUrl = hls
-  if (!hlsUrl && uid && process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE) {
-    const code = process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE
-    hlsUrl = `https://customer-${code}.cloudflarestream.com/${uid}/manifest/video.m3u8`
+  let hlsUrl = hls || null
+  if (!hlsUrl && uid) {
+    hlsUrl = buildStreamManifestUrl(uid)
   }
 
   const durationSeconds = video?.duration != null ? Math.round(Number(video.duration)) : null
@@ -72,12 +116,13 @@ export function streamVideoToPlayback(video) {
     hlsUrl,
     dashUrl: dash,
     thumbnailUrl,
+    watchUrl: buildStreamWatchUrl(uid),
     durationSeconds,
     title: video?.meta?.name || video?.meta?.title || null,
   }
 }
 
-export async function syncStreamPlayback(uid, { maxAttempts = 8, delayMs = 1500 } = {}) {
+export async function syncStreamPlayback(uid, { maxAttempts = 24, delayMs = 2500 } = {}) {
   let lastPlayback = null
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
@@ -86,7 +131,7 @@ export async function syncStreamPlayback(uid, { maxAttempts = 8, delayMs = 1500 
 
     lastPlayback = streamVideoToPlayback(video)
     if (lastPlayback.ready && lastPlayback.hlsUrl) {
-      return { ok: true, playback: lastPlayback, video }
+      return { ok: true, playback: lastPlayback, video, pending: false }
     }
 
     if (lastPlayback.state === 'error') {

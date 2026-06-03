@@ -9,9 +9,11 @@ import {
 async function applyPlaybackToCatalog(admin, catalogSlug, playback) {
   const patch = {
     cloudflare_uid: playback.uid,
-    video_url: playback.hlsUrl,
-    video_poster: playback.thumbnailUrl,
     updated_at: new Date().toISOString(),
+  }
+  if (playback.ready && playback.hlsUrl) {
+    patch.video_url = playback.hlsUrl
+    patch.video_poster = playback.thumbnailUrl
   }
 
   const { data, error } = await admin
@@ -29,11 +31,13 @@ async function applyPlaybackToCatalog(admin, catalogSlug, playback) {
 async function applyPlaybackToAsset(admin, videoAssetId, playback, catalogSlug = null) {
   const patch = {
     cloudflare_uid: playback.uid,
-    playback_url: playback.hlsUrl,
-    thumbnail_url: playback.thumbnailUrl,
     duration_seconds: playback.durationSeconds,
-    status: playback.ready ? 'ready' : 'processing',
+    status: playback.ready ? 'ready' : playback.state === 'error' ? 'error' : 'processing',
     updated_at: new Date().toISOString(),
+  }
+  if (playback.ready && playback.hlsUrl) {
+    patch.playback_url = playback.hlsUrl
+    patch.thumbnail_url = playback.thumbnailUrl
   }
   if (catalogSlug) patch.catalog_slug = catalogSlug
 

@@ -44,13 +44,25 @@ export default function CourseStreamVideo({
     const useHls = isHlsSource(src)
 
     if (useHls && Hls.isSupported()) {
-      const hls = new Hls({ enableWorker: true })
+      const hls = new Hls({
+        enableWorker: true,
+        startLevel: -1,
+        capLevelToPlayerSize: false,
+      })
       hlsRef.current = hls
       hls.loadSource(src)
       hls.attachMedia(video)
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        hls.currentLevel = -1
+      })
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (data.fatal) {
-          console.warn('[CourseStreamVideo] HLS fatal error', data.type)
+          console.warn('[CourseStreamVideo] HLS fatal error', data.type, data.details)
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            hls.startLoad()
+          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            hls.recoverMediaError()
+          }
         }
       })
       return () => {

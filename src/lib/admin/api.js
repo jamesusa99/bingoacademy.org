@@ -48,6 +48,10 @@ export async function fetchAdminHealth() {
   return adminFetch('/api/admin/health')
 }
 
+export async function fetchStreamUploadLimits() {
+  return adminFetch('/api/admin/stream/limits')
+}
+
 export async function createStreamUploadUrl(payload) {
   return adminFetch('/api/admin/stream/upload-url', {
     method: 'POST',

@@ -2,11 +2,28 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
-import { createStreamUploadUrl, syncStreamVideo, assignStreamToCourse } from '../../lib/admin/api'
+import {
+  createStreamUploadUrl,
+  fetchStreamUploadLimits,
+  syncStreamVideo,
+  assignStreamToCourse,
+} from '../../lib/admin/api'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 import { logAdminAction } from '../../lib/admin/auth'
+import { formatBytes, uploadFileToStream } from '../../lib/streamUpload'
 
 const INIT = { title: '', description: '', catalog_slug: '' }
+
+const DEFAULT_LIMITS = {
+  maxFileBytes: 30 * 1024 * 1024 * 1024,
+  recommendedMaxFileBytes: 4 * 1024 * 1024 * 1024,
+  maxDurationSeconds: 21_600,
+}
+
+function streamPreviewUrl(uid) {
+  if (!uid) return null
+  return `https://iframe.cloudflarestream.com/${uid}`
+}
 
 export default function AdminVideo() {
   const [items, setItems] = useState([])
@@ -16,8 +33,10 @@ export default function AdminVideo() {
   const [info, setInfo] = useState(null)
   const [form, setForm] = useState(INIT)
   const [uploading, setUploading] = useState(false)
+  const [uploadPct, setUploadPct] = useState(null)
   const [syncingId, setSyncingId] = useState(null)
   const [assignSlug, setAssignSlug] = useState({})
+  const [limits, setLimits] = useState(DEFAULT_LIMITS)
 
   const fetchItems = async () => {
     setLoading(true)
@@ -33,6 +52,9 @@ export default function AdminVideo() {
 
   useEffect(() => {
     fetchItems()
+    fetchStreamUploadLimits()
+      .then(setLimits)
+      .catch(() => setLimits(DEFAULT_LIMITS))
   }, [])
 
   const videoCourses = courses.filter((c) => c.delivery_type === 'video')
@@ -43,7 +65,11 @@ export default function AdminVideo() {
     setSyncingId(row.id)
     try {
       const result = await syncStreamVideo({ videoAssetId: row.id, wait: true })
-      setInfo(result.message || 'Playback URLs synced from Cloudflare Stream.')
+      if (result.pending) {
+        setInfo(result.message || 'Still encoding on Cloudflare — click Sync again in a minute.')
+      } else {
+        setInfo(result.message || 'Playback URLs synced from Cloudflare Stream.')
+      }
       await fetchItems()
     } catch (err) {
       setError(err.message)
@@ -63,7 +89,14 @@ export default function AdminVideo() {
     setSyncingId(row.id)
     try {
       const result = await assignStreamToCourse({ videoAssetId: row.id, catalogSlug: slug })
-      setInfo(result.message || `Assigned to ${slug}. Course page will play this video.`)
+      if (result.pending) {
+        setInfo(
+          result.message ||
+            `Assigned to ${slug}, but video is still encoding. Sync again when status is ready.`
+        )
+      } else {
+        setInfo(result.message || `Assigned to ${slug}. Course page will play this video.`)
+      }
       await logAdminAction('assign', 'video_assets', row.id, { catalogSlug: slug })
       await fetchItems()
     } catch (err) {
@@ -84,81 +117,129 @@ export default function AdminVideo() {
     }
   }
 
-  const handleDirectUpload = async () => {
+  const pickFileAndUpload = () => {
     setError(null)
     setInfo(null)
     if (!form.title.trim()) {
-      setError('Enter a title before requesting an upload URL')
+      setError('Enter a title before uploading')
       return
     }
-    setUploading(true)
-    try {
-      const { uploadURL, uid } = await createStreamUploadUrl({
-        title: form.title,
-        maxDurationSeconds: 3600,
-      })
 
-      const row = await adminInsert('video_assets', {
-        title: form.title,
-        description: form.description,
-        cloudflare_uid: uid,
-        catalog_slug: form.catalog_slug || null,
-        status: 'processing',
-      })
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'video/*'
+    input.onchange = async () => {
+      const file = input.files?.[0]
+      if (!file) return
 
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.accept = 'video/*'
-      input.onchange = async () => {
-        const file = input.files?.[0]
-        if (!file) return
-        setUploading(true)
-        setInfo('Uploading to Cloudflare Stream…')
-        try {
-          const fd = new FormData()
-          fd.append('file', file)
-          const up = await fetch(uploadURL, { method: 'POST', body: fd })
-          if (!up.ok) throw new Error('Upload to Cloudflare failed')
-
-          setInfo('Upload complete — syncing playback URLs…')
-          const syncResult = await syncStreamVideo({ videoAssetId: row.id, wait: true })
-
-          if (form.catalog_slug) {
-            await assignStreamToCourse({ videoAssetId: row.id, catalogSlug: form.catalog_slug })
-            setInfo(`Video uploaded and assigned to ${form.catalog_slug}.`)
-          } else {
-            setInfo(syncResult.message || 'Upload complete. Assign to a course below.')
-          }
-
-          await logAdminAction('upload', 'video_assets', row.id, { uid })
-          setForm(INIT)
-          fetchItems()
-        } catch (err) {
-          setError(err.message)
-        } finally {
-          setUploading(false)
-        }
+      if (file.size > limits.maxFileBytes) {
+        setError(
+          `File is ${formatBytes(file.size)} — Cloudflare Stream maximum is ${formatBytes(limits.maxFileBytes)} (30 GB).`
+        )
+        return
       }
-      input.click()
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setUploading(false)
+      if (file.size > limits.recommendedMaxFileBytes) {
+        const ok = confirm(
+          `This file is ${formatBytes(file.size)}. Browser uploads work best under ${formatBytes(limits.recommendedMaxFileBytes)} (~4 GB). Continue anyway?`
+        )
+        if (!ok) return
+      }
+
+      setUploading(true)
+      setUploadPct(0)
+      let rowId = null
+
+      try {
+        const { uploadURL, uid } = await createStreamUploadUrl({
+          title: form.title,
+          maxDurationSeconds: limits.maxDurationSeconds,
+        })
+
+        const row = await adminInsert('video_assets', {
+          title: form.title,
+          description: form.description,
+          cloudflare_uid: uid,
+          catalog_slug: form.catalog_slug || null,
+          status: 'processing',
+        })
+        rowId = row.id
+
+        setInfo(`Uploading ${file.name} (${formatBytes(file.size)})…`)
+        await uploadFileToStream(uploadURL, file, {
+          onProgress: (pct) => setUploadPct(pct),
+        })
+
+        setUploadPct(null)
+        setInfo('Upload complete — waiting for Cloudflare to encode (may take several minutes)…')
+        const syncResult = await syncStreamVideo({ videoAssetId: row.id, wait: true })
+
+        if (form.catalog_slug) {
+          await assignStreamToCourse({ videoAssetId: row.id, catalogSlug: form.catalog_slug })
+        }
+
+        if (syncResult.pending) {
+          setInfo(
+            syncResult.message ||
+              'Upload finished. Encoding still in progress — click Sync on this row in 1–3 minutes, then assign to the course.'
+          )
+        } else if (form.catalog_slug) {
+          setInfo(`Video ready and assigned to ${form.catalog_slug}.`)
+        } else {
+          setInfo(syncResult.message || 'Video ready. Assign to a course below.')
+        }
+
+        await logAdminAction('upload', 'video_assets', row.id, { uid, size: file.size })
+        setForm(INIT)
+        fetchItems()
+      } catch (err) {
+        setError(err.message)
+        if (rowId) {
+          try {
+            await adminUpdate('video_assets', rowId, { status: 'error' })
+            fetchItems()
+          } catch {
+            /* ignore */
+          }
+        }
+      } finally {
+        setUploading(false)
+        setUploadPct(null)
+      }
     }
+    input.click()
   }
+
+  const maxGb = limits.maxFileBytes / (1024 ** 3)
+  const recGb = limits.recommendedMaxFileBytes / (1024 ** 3)
+  const maxHours = Math.round(limits.maxDurationSeconds / 3600)
 
   return (
     <div>
       <AdminPageHeader
         title="Video library (Cloudflare Stream)"
-        description="Upload videos to Cloudflare Stream, sync playback URLs, and assign them to courses_catalog entries. Run migration 010 for video columns. Frontend plays HLS via courses_catalog.video_url."
+        description="Upload to Cloudflare Stream, sync when encoding completes, assign to courses. Course pages play HLS in the video player (not by opening the .m3u8 link in a new tab)."
       />
 
-      {error ? <AdminAlert type="error" onDismiss={() => setError(null)}>{error}</AdminAlert> : null}
-      {info ? <AdminAlert type="info" onDismiss={() => setInfo(null)}>{info}</AdminAlert> : null}
+      {error ? (
+        <AdminAlert type="error" onDismiss={() => setError(null)}>
+          {error}
+        </AdminAlert>
+      ) : null}
+      {info ? (
+        <AdminAlert type="info" onDismiss={() => setInfo(null)}>
+          {info}
+        </AdminAlert>
+      ) : null}
 
       <div className="card p-6 mb-6">
-        <h2 className="font-semibold text-bingo-dark mb-4">Upload to Stream</h2>
+        <h2 className="font-semibold text-bingo-dark mb-2">Upload to Stream</h2>
+        <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+          <strong>Size:</strong> Cloudflare allows up to {maxGb} GB per file; this admin uploader works
+          reliably up to ~{recGb} GB in the browser. Larger files may fail due to network timeouts — export
+          a smaller MP4 or use wired connection. <strong>Duration:</strong> up to {maxHours} hours per
+          video. <strong>Quality:</strong> upload at least 1080p source; playback starts at adaptive quality
+          and ramps up after a few seconds. Wait until status is <em>ready</em> before assigning to a course.
+        </p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <input
             placeholder="Title *"
@@ -187,11 +268,15 @@ export default function AdminVideo() {
         </div>
         <button
           type="button"
-          onClick={handleDirectUpload}
+          onClick={pickFileAndUpload}
           disabled={uploading}
           className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium disabled:opacity-60"
         >
-          {uploading ? 'Working…' : 'Upload video to Cloudflare Stream'}
+          {uploading
+            ? uploadPct != null
+              ? `Uploading… ${uploadPct}%`
+              : 'Working…'
+            : 'Choose file & upload'}
         </button>
       </div>
 
@@ -213,83 +298,114 @@ export default function AdminVideo() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((row) => (
-                  <tr key={row.id} className="border-t border-slate-100 align-top">
-                    <td className="p-3">
-                      <div className="font-medium">{row.title}</div>
-                      <div className="text-[10px] font-mono text-slate-400 mt-1 truncate max-w-[180px]">
-                        {row.cloudflare_uid || '—'}
-                      </div>
-                    </td>
-                    <td className="p-3 capitalize">{row.status}</td>
-                    <td className="p-3">
-                      {row.playback_url ? (
-                        <a
-                          href={row.playback_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-primary hover:underline break-all"
+                {items.map((row) => {
+                  const preview = streamPreviewUrl(row.cloudflare_uid)
+                  const ready = row.status === 'ready' && row.playback_url
+                  return (
+                    <tr key={row.id} className="border-t border-slate-100 align-top">
+                      <td className="p-3">
+                        <div className="font-medium">{row.title}</div>
+                        <div className="text-[10px] font-mono text-slate-400 mt-1 truncate max-w-[180px]">
+                          {row.cloudflare_uid || '—'}
+                        </div>
+                      </td>
+                      <td className="p-3 capitalize">
+                        <span
+                          className={
+                            row.status === 'ready'
+                              ? 'text-emerald-600'
+                              : row.status === 'error'
+                                ? 'text-red-600'
+                                : 'text-amber-600'
+                          }
                         >
-                          HLS manifest
-                        </a>
-                      ) : (
-                        <span className="text-xs text-slate-400">Not synced</span>
-                      )}
-                    </td>
-                    <td className="p-3">
-                      {row.catalog_slug ? (
-                        <a
-                          href={`/courses/detail/${row.catalog_slug}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-primary hover:underline font-mono"
-                        >
-                          {row.catalog_slug}
-                        </a>
-                      ) : (
-                        <select
-                          value={assignSlug[row.id] || ''}
-                          onChange={(e) => setAssignSlug((s) => ({ ...s, [row.id]: e.target.value }))}
-                          className="text-xs rounded border border-slate-200 px-2 py-1 max-w-[160px]"
-                        >
-                          <option value="">Select course…</option>
-                          {videoCourses.map((c) => (
-                            <option key={c.slug} value={c.slug}>
-                              {c.slug}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </td>
-                    <td className="p-3 whitespace-nowrap space-x-2">
-                      <button
-                        type="button"
-                        disabled={syncingId === row.id}
-                        onClick={() => handleSync(row)}
-                        className="text-xs text-primary hover:underline disabled:opacity-50"
-                      >
-                        Sync
-                      </button>
-                      {!row.catalog_slug ? (
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        {ready ? (
+                          <div className="space-y-1">
+                            {preview ? (
+                              <a
+                                href={preview}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-primary hover:underline block"
+                              >
+                                Preview player
+                              </a>
+                            ) : null}
+                            <span
+                              className="text-[10px] text-slate-400 break-all block max-w-[200px]"
+                              title={row.playback_url}
+                            >
+                              HLS ready (used on course page)
+                            </span>
+                          </div>
+                        ) : row.status === 'error' ? (
+                          <span className="text-xs text-red-500">Upload/encode failed — delete and retry</span>
+                        ) : (
+                          <span className="text-xs text-amber-600">
+                            Encoding… use Sync, then Preview
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3">
+                        {row.catalog_slug ? (
+                          <a
+                            href={`/courses/detail/${row.catalog_slug}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-primary hover:underline font-mono"
+                          >
+                            {row.catalog_slug}
+                          </a>
+                        ) : (
+                          <select
+                            value={assignSlug[row.id] || ''}
+                            onChange={(e) => setAssignSlug((s) => ({ ...s, [row.id]: e.target.value }))}
+                            className="text-xs rounded border border-slate-200 px-2 py-1 max-w-[160px]"
+                          >
+                            <option value="">Select course…</option>
+                            {videoCourses.map((c) => (
+                              <option key={c.slug} value={c.slug}>
+                                {c.slug}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+                      <td className="p-3 whitespace-nowrap space-x-2">
                         <button
                           type="button"
                           disabled={syncingId === row.id}
-                          onClick={() => handleAssign(row)}
-                          className="text-xs text-emerald-600 hover:underline disabled:opacity-50"
+                          onClick={() => handleSync(row)}
+                          className="text-xs text-primary hover:underline disabled:opacity-50"
                         >
-                          Assign
+                          Sync
                         </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(row.id)}
-                        className="text-xs text-red-600 hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        {!row.catalog_slug ? (
+                          <button
+                            type="button"
+                            disabled={syncingId === row.id || !ready}
+                            title={!ready ? 'Wait until status is ready' : undefined}
+                            onClick={() => handleAssign(row)}
+                            className="text-xs text-emerald-600 hover:underline disabled:opacity-50"
+                          >
+                            Assign
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(row.id)}
+                          className="text-xs text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
