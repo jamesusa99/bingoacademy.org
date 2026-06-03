@@ -1,5 +1,14 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 import { COURSE_CATALOG, COURSE_STATUS } from '../config/coursesCatalog'
+import { VIDEO_COURSE_SUB_BY_LINE } from '../config/courseListFilters'
+import { PRODUCT_LINES } from '../config/products'
+
+/** Default subcategory when switching product line in admin */
+export function defaultSubForLine(lineId) {
+  if (VIDEO_COURSE_SUB_BY_LINE[lineId]) return VIDEO_COURSE_SUB_BY_LINE[lineId]
+  const line = PRODUCT_LINES.find((p) => p.id === lineId)
+  return line?.subcategories[0]?.id || 'course'
+}
 
 /** Map Supabase courses_catalog row → frontend course object */
 export function rowToCatalogCourse(row) {
@@ -157,19 +166,34 @@ const EMPTY_FORM = {
 
 export { EMPTY_FORM as CATALOG_FORM_EMPTY }
 
+function mergeCatalogWithDatabase(staticCourses, dbRows) {
+  const dbBySlug = new Map(dbRows.map((row) => [row.slug, rowToCatalogCourse(row)]))
+  const merged = staticCourses.map((course) => dbBySlug.get(course.id) ?? course)
+  for (const [slug, course] of dbBySlug) {
+    if (!staticCourses.some((c) => c.id === slug)) merged.push(course)
+  }
+  merged.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+  return merged
+}
+
 /** Load catalogue: Supabase when available, else static config */
 export async function fetchCourseCatalog() {
+  const staticCourses = [...COURSE_CATALOG]
+
   if (!isSupabaseConfigured) {
-    return { courses: [...COURSE_CATALOG], source: 'static' }
+    return { courses: staticCourses, source: 'static' }
   }
 
   const { data, error } = await supabase.from('courses_catalog').select('*').order('sort_order')
 
   if (error || !data?.length) {
-    return { courses: [...COURSE_CATALOG], source: 'static', error: error?.message }
+    return { courses: staticCourses, source: 'static', error: error?.message }
   }
 
-  return { courses: data.map(rowToCatalogCourse), source: 'supabase' }
+  return {
+    courses: mergeCatalogWithDatabase(staticCourses, data),
+    source: 'supabase',
+  }
 }
 
 export function findCourseInList(courses, id) {

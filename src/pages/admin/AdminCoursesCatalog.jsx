@@ -6,6 +6,7 @@ import { COURSE_STATUS } from '../../config/coursesCatalog'
 import {
   CATALOG_FORM_EMPTY,
   catalogRowToForm,
+  defaultSubForLine,
   formToCatalogPayload,
 } from '../../lib/catalogCourse'
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
@@ -109,6 +110,14 @@ export default function AdminCoursesCatalog() {
     }
   }
 
+  const handleLineChange = (lineId) => {
+    setForm((f) => ({
+      ...f,
+      line: lineId,
+      sub: defaultSubForLine(lineId),
+    }))
+  }
+
   const handleSave = async () => {
     setError(null)
     setSuccess(null)
@@ -116,7 +125,25 @@ export default function AdminCoursesCatalog() {
     try {
       const payload = formToCatalogPayload(form)
       if (!payload.slug) throw new Error(c.t('pages.coursesCatalog.slugRequired'))
-      await saveCatalogCourse(payload)
+
+      let savedRow = null
+      try {
+        const result = await saveCatalogCourse(payload)
+        savedRow = result?.row ?? null
+      } catch (apiErr) {
+        const { data, error: dbErr } = await supabase
+          .from('courses_catalog')
+          .upsert(payload, { onConflict: 'slug' })
+          .select()
+          .maybeSingle()
+        if (dbErr) throw apiErr
+        savedRow = data
+      }
+
+      if (savedRow) {
+        setForm(catalogRowToForm(savedRow))
+      }
+
       setSuccess(editingSlug ? c.t('pages.coursesCatalog.courseUpdated') : c.t('pages.coursesCatalog.courseSaved'))
       if (!editingSlug) {
         setEditingSlug(payload.slug)
@@ -182,7 +209,7 @@ export default function AdminCoursesCatalog() {
             />
           </Field>
           <Field label="Product line *">
-            <select value={form.line} onChange={(e) => set('line', e.target.value)} className={inputClass}>
+            <select value={form.line} onChange={(e) => handleLineChange(e.target.value)} className={inputClass}>
               {PRODUCT_LINES.map((pl) => (
                 <option key={pl.id} value={pl.id}>
                   {pl.icon} {pl.name}

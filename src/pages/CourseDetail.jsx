@@ -32,9 +32,13 @@ export default function CourseDetail() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutMessage, setCheckoutMessage] = useState(null)
-  const { courses, loading } = useCourseCatalog()
+  const { courses, loading, reload } = useCourseCatalog()
   const { isAuthenticated } = useAuth()
   const item = findCourseInList(courses, id)
+
+  useEffect(() => {
+    reload()
+  }, [id, reload])
   const line = getProductLine(item?.line ?? 'general')
   const {
     hasAccess,
