@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import ProductLineCard from '../components/ProductLineCard'
 import HomeHero from '../components/home/HomeHero'
 import PageMeta from '../components/PageMeta'
@@ -12,7 +13,6 @@ import {
   PORTAL_CORE_ENTRIES,
   PORTAL_LEARNING_PATH,
   PORTAL_COMPETITIONS,
-  PORTAL_FEATURED_COURSES,
   PORTAL_TRUST_STATS_FALLBACK,
   PORTAL_TESTIMONIALS_FALLBACK,
   PRODUCT_LINES,
@@ -30,6 +30,11 @@ const ACCENT_RING = {
 export default function Home() {
   const [trustStats, setTrustStats] = useState(PORTAL_TRUST_STATS_FALLBACK)
   const [testimonials, setTestimonials] = useState(PORTAL_TESTIMONIALS_FALLBACK)
+  const { courses } = useCourseCatalog()
+  const featuredCourses = useMemo(
+    () => courses.filter((c) => c.featured).slice(0, 6),
+    [courses]
+  )
 
   useEffect(() => {
     supabase.from('home_stats').select('*').order('sort_order').then(({ data }) => {
@@ -146,6 +151,7 @@ export default function Home() {
         </section>
 
         {/* Featured courses */}
+        {featuredCourses.length > 0 ? (
         <section className="mb-14">
           <div className="flex items-center justify-between mb-4 gap-2">
             <div>
@@ -155,7 +161,7 @@ export default function Home() {
             <Link to="/courses" className="text-sm text-primary hover:underline shrink-0">View catalogue →</Link>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {PORTAL_FEATURED_COURSES.map((course) => (
+            {featuredCourses.map((course) => (
               <Link
                 key={course.id}
                 to={`/courses/detail/${course.id}`}
@@ -172,6 +178,7 @@ export default function Home() {
             ))}
           </div>
         </section>
+        ) : null}
 
         {/* Quick nav */}
         <section className="mb-14">

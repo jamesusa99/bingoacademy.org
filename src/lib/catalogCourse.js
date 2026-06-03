@@ -86,7 +86,7 @@ export function formToCatalogPayload(form) {
     level: form.level || 'beginner',
     lessons: parseInt(form.lessons, 10) || 12,
     rating: form.rating !== '' ? Number(form.rating) : 4.8,
-    students: parseInt(form.students, 10) || 0,
+    students: parseInt(form.students, 10) || 800,
     thumbnail_url: form.thumbnail_url?.trim() || null,
     video_url: form.video_url?.trim() || null,
     video_poster: form.video_poster?.trim() || null,
@@ -166,32 +166,20 @@ const EMPTY_FORM = {
 
 export { EMPTY_FORM as CATALOG_FORM_EMPTY }
 
-function mergeCatalogWithDatabase(staticCourses, dbRows) {
-  const dbBySlug = new Map(dbRows.map((row) => [row.slug, rowToCatalogCourse(row)]))
-  const merged = staticCourses.map((course) => dbBySlug.get(course.id) ?? course)
-  for (const [slug, course] of dbBySlug) {
-    if (!staticCourses.some((c) => c.id === slug)) merged.push(course)
-  }
-  merged.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-  return merged
-}
-
-/** Load catalogue: Supabase when available, else static config */
+/** Load catalogue from Supabase when configured; static config is dev/offline fallback only */
 export async function fetchCourseCatalog() {
-  const staticCourses = [...COURSE_CATALOG]
-
   if (!isSupabaseConfigured) {
-    return { courses: staticCourses, source: 'static' }
+    return { courses: [...COURSE_CATALOG], source: 'static' }
   }
 
   const { data, error } = await supabase.from('courses_catalog').select('*').order('sort_order')
 
-  if (error || !data?.length) {
-    return { courses: staticCourses, source: 'static', error: error?.message }
+  if (error) {
+    return { courses: [...COURSE_CATALOG], source: 'static', error: error.message }
   }
 
   return {
-    courses: mergeCatalogWithDatabase(staticCourses, data),
+    courses: (data || []).map(rowToCatalogCourse),
     source: 'supabase',
   }
 }

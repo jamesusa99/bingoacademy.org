@@ -1,5 +1,4 @@
 import { IOAI_COURSE_SYSTEM } from '../config/ioaiCourseSystem'
-import { getCourseById } from '../config/coursesCatalog'
 
 export const IOAI_TRACK_ID = 'ioai-competition-system'
 
@@ -99,7 +98,7 @@ export function buildIOAICurriculum(courses = null) {
             id,
             title,
             lessonNum: `${mod.number}.${idx + 1}`,
-            catalog: getCourseById(id),
+            catalog: courses?.find((c) => c.id === id) ?? null,
           }
         }),
       })),

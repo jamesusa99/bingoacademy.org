@@ -1,4 +1,4 @@
-import { PRODUCT_LINES, COURSE_CATALOG } from './products'
+import { PRODUCT_LINES } from './products'
 
 /** Hero carousel — aligned with bingoacademy.cn: courses + authoritative competitions */
 export const PORTAL_BANNER_SLIDES = [
@@ -116,11 +116,6 @@ export const PORTAL_COMPETITIONS = [
     tag: 'Outcomes',
   },
 ]
-
-/** Highlight courses shown on portal (subset of catalogue) */
-export const PORTAL_FEATURED_COURSES = COURSE_CATALOG.filter((c) =>
-  ['ioai-competition-system', 'ioai-1-1', 'ioai-camp', 'g1', 'k1', 'k3'].includes(c.id)
-)
 
 export const PORTAL_TRUST_STATS_FALLBACK = [
   { icon: '🎓', value: '3', label: 'Product Lines' },

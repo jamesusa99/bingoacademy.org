@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { PlayCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { getCourseById } from '../config/coursesCatalog'
+import { useCourseCatalog } from '../hooks/useCourseCatalog'
+import { findCourseInList } from '../lib/catalogCourse'
 import {
   getPurchasedSlugs,
   hasFullIOAITrack,
@@ -27,35 +28,35 @@ function ProgressBar({ percent }) {
   )
 }
 
-function buildStudyCourses(slugs) {
+function buildStudyCourses(slugs, catalog) {
   const fullTrack = hasFullIOAITrack(slugs)
   const items = []
 
   if (fullTrack) {
-    const track = getCourseById(IOAI_FULL_TRACK_SLUG)
+    const track = findCourseInList(catalog, IOAI_FULL_TRACK_SLUG)
     if (track) items.push({ ...track, accessType: 'full-track' })
   }
 
   for (const slug of slugs) {
     if (slug === IOAI_FULL_TRACK_SLUG || slug === 'ioai-track') continue
-    const course = getCourseById(slug)
+    const course = findCourseInList(catalog, slug)
     if (course) items.push({ ...course, accessType: 'lesson' })
   }
 
   return items
 }
 
-function courseContinueHref(course) {
+function courseContinueHref(course, catalog) {
   if (isIOAITrackId(course.id)) {
-    const lessonId = getContinueLessonId(getAllIOAILessonIds())
+    const lessonId = getContinueLessonId(getAllIOAILessonIds(catalog))
     return lessonId ? `/courses/detail/${lessonId}` : `/courses/detail/${IOAI_FULL_TRACK_SLUG}`
   }
   return `/courses/detail/${course.id}`
 }
 
-function courseProgressLabel(course) {
+function courseProgressLabel(course, catalog) {
   if (isIOAITrackId(course.id)) {
-    const stats = getTrackProgressStats(getAllIOAILessonIds())
+    const stats = getTrackProgressStats(getAllIOAILessonIds(catalog))
     return `${stats.percent}% · ${stats.completed}/${stats.total} lessons`
   }
   const p = getLessonProgress(course.id)
@@ -66,11 +67,12 @@ function courseProgressLabel(course) {
 
 export default function Study() {
   const { isAuthenticated, loading } = useAuth()
+  const { courses: catalog, loading: catalogLoading } = useCourseCatalog()
   const slugs = useMemo(() => getPurchasedSlugs(), [])
-  const courses = useMemo(() => buildStudyCourses(slugs), [slugs])
+  const courses = useMemo(() => buildStudyCourses(slugs, catalog), [slugs, catalog])
   const trialActive = hasClaimedFreeTrial()
 
-  if (loading) {
+  if (loading || catalogLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-500 text-sm">Loading…</div>
     )
@@ -101,10 +103,10 @@ export default function Study() {
         {courses.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.map((course) => {
-              const href = courseContinueHref(course)
-              const progressText = courseProgressLabel(course)
+              const href = courseContinueHref(course, catalog)
+              const progressText = courseProgressLabel(course, catalog)
               const trackStats = isIOAITrackId(course.id)
-                ? getTrackProgressStats(getAllIOAILessonIds())
+                ? getTrackProgressStats(getAllIOAILessonIds(catalog))
                 : null
 
               return (
