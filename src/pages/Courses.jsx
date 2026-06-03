@@ -82,11 +82,6 @@ export default function Courses() {
     return list
   }, [courses, line.id, subId])
 
-  const ioaiFeatured = useMemo(
-    () => courses.filter((c) => c.line === 'ioai' && c.featured),
-    [courses]
-  )
-
   const bannerSlides = PRODUCT_LINES.map((pl) => ({
     id: pl.id,
     gradient: pl.gradient,
@@ -160,29 +155,6 @@ export default function Courses() {
             🧭 {COURSES_PORTAL.explorationChip}
           </Link>
         </div>
-
-        {lineId === 'ioai' && (
-          <section className="mb-8 card p-5 sm:p-6 border-2 border-amber-300/60 bg-gradient-to-r from-amber-50 to-orange-50">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800 mb-1">
-              {COURSES_PORTAL.ioaiFeaturedLabel}
-            </p>
-            <h2 className="text-lg font-black text-bingo-dark mb-2">{COURSES_PORTAL.ioaiFeaturedTitle}</h2>
-            <p className="text-sm text-slate-600 mb-4">{COURSES_PORTAL.ioaiFeaturedDesc}</p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {ioaiFeatured.map((c) => (
-                <Link
-                  key={c.id}
-                  to={`/courses/detail/${c.id}`}
-                  className="rounded-xl border border-amber-200 bg-white p-4 hover:shadow-md transition"
-                >
-                  <span className="text-[10px] font-bold text-amber-700">{c.badge}</span>
-                  <p className="font-semibold text-sm text-bingo-dark mt-1">{c.name}</p>
-                  <p className="text-xs text-slate-500 mt-1">{c.price}</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
 
         <div
           className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none"
