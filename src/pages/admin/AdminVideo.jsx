@@ -11,6 +11,8 @@ import {
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 import { logAdminAction } from '../../lib/admin/auth'
 import { formatBytes, uploadFileToStream } from '../../lib/streamUpload'
+import { useAdminLocale } from '../../contexts/AdminLocaleContext'
+import { adminVideoStatusKey } from '../../config/adminI18n'
 
 const INIT = { title: '', description: '', catalog_slug: '' }
 
@@ -26,6 +28,7 @@ function streamPreviewUrl(uid) {
 }
 
 export default function AdminVideo() {
+  const { t } = useAdminLocale()
   const [items, setItems] = useState([])
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -66,9 +69,9 @@ export default function AdminVideo() {
     try {
       const result = await syncStreamVideo({ videoAssetId: row.id, wait: true })
       if (result.pending) {
-        setInfo(result.message || 'Still encoding on Cloudflare — click Sync again in a minute.')
+        setInfo(t('video.infoSyncStillEncoding'))
       } else {
-        setInfo(result.message || 'Playback URLs synced from Cloudflare Stream.')
+        setInfo(t('video.infoSyncSuccess'))
       }
       await fetchItems()
     } catch (err) {
@@ -81,7 +84,7 @@ export default function AdminVideo() {
   const handleAssign = async (row) => {
     const slug = assignSlug[row.id] || row.catalog_slug || form.catalog_slug
     if (!slug) {
-      setError('Select a course slug to assign this video.')
+      setError(t('video.errSelectCourse'))
       return
     }
     setError(null)
@@ -90,12 +93,9 @@ export default function AdminVideo() {
     try {
       const result = await assignStreamToCourse({ videoAssetId: row.id, catalogSlug: slug })
       if (result.pending) {
-        setInfo(
-          result.message ||
-            `Assigned to ${slug}, but video is still encoding. Sync again when status is ready.`
-        )
+        setInfo(t('video.infoAssignPending', { slug }))
       } else {
-        setInfo(result.message || `Assigned to ${slug}. Course page will play this video.`)
+        setInfo(t('video.infoAssignSuccess', { slug }))
       }
       await logAdminAction('assign', 'video_assets', row.id, { catalogSlug: slug })
       await fetchItems()
@@ -107,7 +107,7 @@ export default function AdminVideo() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this video record? (Does not remove from Cloudflare.)')) return
+    if (!confirm(t('video.deleteConfirm'))) return
     try {
       await adminDelete('video_assets', id)
       await logAdminAction('delete', 'video_assets', id)
@@ -121,7 +121,7 @@ export default function AdminVideo() {
     setError(null)
     setInfo(null)
     if (!form.title.trim()) {
-      setError('Enter a title before uploading')
+      setError(t('video.errTitleRequired'))
       return
     }
 
@@ -134,13 +134,19 @@ export default function AdminVideo() {
 
       if (file.size > limits.maxFileBytes) {
         setError(
-          `File is ${formatBytes(file.size)} — Cloudflare Stream maximum is ${formatBytes(limits.maxFileBytes)} (30 GB).`
+          t('video.errFileTooLarge', {
+            size: formatBytes(file.size),
+            max: formatBytes(limits.maxFileBytes),
+          })
         )
         return
       }
       if (file.size > limits.recommendedMaxFileBytes) {
         const ok = confirm(
-          `This file is ${formatBytes(file.size)}. Browser uploads work best under ${formatBytes(limits.recommendedMaxFileBytes)} (~4 GB). Continue anyway?`
+          t('video.confirmLargeFile', {
+            size: formatBytes(file.size),
+            max: formatBytes(limits.recommendedMaxFileBytes),
+          })
         )
         if (!ok) return
       }
@@ -164,13 +170,13 @@ export default function AdminVideo() {
         })
         rowId = row.id
 
-        setInfo(`Uploading ${file.name} (${formatBytes(file.size)})…`)
+        setInfo(t('video.infoUploading', { name: file.name, size: formatBytes(file.size) }))
         await uploadFileToStream(uploadURL, file, {
           onProgress: (pct) => setUploadPct(pct),
         })
 
         setUploadPct(null)
-        setInfo('Upload complete — waiting for Cloudflare to encode (may take several minutes)…')
+        setInfo(t('video.infoUploadDoneEncoding'))
         const syncResult = await syncStreamVideo({ videoAssetId: row.id, wait: true })
 
         if (form.catalog_slug) {
@@ -178,14 +184,11 @@ export default function AdminVideo() {
         }
 
         if (syncResult.pending) {
-          setInfo(
-            syncResult.message ||
-              'Upload finished. Encoding still in progress — click Sync on this row in 1–3 minutes, then assign to the course.'
-          )
+          setInfo(t('video.infoUploadPendingAssign'))
         } else if (form.catalog_slug) {
-          setInfo(`Video ready and assigned to ${form.catalog_slug}.`)
+          setInfo(t('video.infoUploadReadyAssigned', { slug: form.catalog_slug }))
         } else {
-          setInfo(syncResult.message || 'Video ready. Assign to a course below.')
+          setInfo(t('video.infoUploadReady'))
         }
 
         await logAdminAction('upload', 'video_assets', row.id, { uid, size: file.size })
@@ -215,10 +218,7 @@ export default function AdminVideo() {
 
   return (
     <div>
-      <AdminPageHeader
-        title="Video library (Cloudflare Stream)"
-        description="Upload to Cloudflare Stream, sync when encoding completes, assign to courses. Course pages play HLS in the video player (not by opening the .m3u8 link in a new tab)."
-      />
+      <AdminPageHeader title={t('video.title')} description={t('video.description')} />
 
       {error ? (
         <AdminAlert type="error" onDismiss={() => setError(null)}>
@@ -232,23 +232,21 @@ export default function AdminVideo() {
       ) : null}
 
       <div className="card p-6 mb-6">
-        <h2 className="font-semibold text-bingo-dark mb-2">Upload to Stream</h2>
+        <h2 className="font-semibold text-bingo-dark mb-2">{t('video.uploadHeading')}</h2>
         <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-          <strong>Size:</strong> Cloudflare allows up to {maxGb} GB per file; this admin uploader works
-          reliably up to ~{recGb} GB in the browser. Larger files may fail due to network timeouts — export
-          a smaller MP4 or use wired connection. <strong>Duration:</strong> up to {maxHours} hours per
-          video. <strong>Quality:</strong> upload at least 1080p source; playback starts at adaptive quality
-          and ramps up after a few seconds. Wait until status is <em>ready</em> before assigning to a course.
+          {t('video.helpSize', { maxGb: String(maxGb), recGb: String(recGb) })}{' '}
+          {t('video.helpDuration', { maxHours: String(maxHours) })}{' '}
+          {t('video.helpQuality')}
         </p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <input
-            placeholder="Title *"
+            placeholder={t('video.placeholderTitle')}
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
           />
           <input
-            placeholder="Description (optional)"
+            placeholder={t('video.placeholderDescription')}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
@@ -258,7 +256,7 @@ export default function AdminVideo() {
             onChange={(e) => setForm({ ...form, catalog_slug: e.target.value })}
             className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
           >
-            <option value="">Assign to course (optional)</option>
+            <option value="">{t('video.assignCourseOptional')}</option>
             {videoCourses.map((c) => (
               <option key={c.slug} value={c.slug}>
                 {c.slug} — {c.name}
@@ -274,27 +272,27 @@ export default function AdminVideo() {
         >
           {uploading
             ? uploadPct != null
-              ? `Uploading… ${uploadPct}%`
-              : 'Working…'
-            : 'Choose file & upload'}
+              ? t('video.uploadingPct', { pct: String(uploadPct) })
+              : t('video.working')
+            : t('video.chooseFileUpload')}
         </button>
       </div>
 
       <div className="card overflow-hidden">
         {loading ? (
-          <p className="p-6 text-slate-500 text-sm">Loading…</p>
+          <p className="p-6 text-slate-500 text-sm">{t('video.loadingList')}</p>
         ) : items.length === 0 ? (
-          <p className="p-6 text-slate-500 text-sm">No video assets yet.</p>
+          <p className="p-6 text-slate-500 text-sm">{t('video.emptyList')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-left text-slate-600">
                 <tr>
-                  <th className="p-3">Title</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Playback</th>
-                  <th className="p-3">Course</th>
-                  <th className="p-3">Actions</th>
+                  <th className="p-3">{t('video.colTitle')}</th>
+                  <th className="p-3">{t('video.colStatus')}</th>
+                  <th className="p-3">{t('video.colPlayback')}</th>
+                  <th className="p-3">{t('video.colCourse')}</th>
+                  <th className="p-3">{t('video.colActions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -309,7 +307,7 @@ export default function AdminVideo() {
                           {row.cloudflare_uid || '—'}
                         </div>
                       </td>
-                      <td className="p-3 capitalize">
+                      <td className="p-3">
                         <span
                           className={
                             row.status === 'ready'
@@ -319,7 +317,7 @@ export default function AdminVideo() {
                                 : 'text-amber-600'
                           }
                         >
-                          {row.status}
+                          {t(adminVideoStatusKey(row.status))}
                         </span>
                       </td>
                       <td className="p-3">
@@ -332,22 +330,20 @@ export default function AdminVideo() {
                                 rel="noreferrer"
                                 className="text-xs text-primary hover:underline block"
                               >
-                                Preview player
+                                {t('video.previewPlayer')}
                               </a>
                             ) : null}
                             <span
                               className="text-[10px] text-slate-400 break-all block max-w-[200px]"
                               title={row.playback_url}
                             >
-                              HLS ready (used on course page)
+                              {t('video.hlsReadyHint')}
                             </span>
                           </div>
                         ) : row.status === 'error' ? (
-                          <span className="text-xs text-red-500">Upload/encode failed — delete and retry</span>
+                          <span className="text-xs text-red-500">{t('video.encodeFailedHint')}</span>
                         ) : (
-                          <span className="text-xs text-amber-600">
-                            Encoding… use Sync, then Preview
-                          </span>
+                          <span className="text-xs text-amber-600">{t('video.encodingHint')}</span>
                         )}
                       </td>
                       <td className="p-3">
@@ -366,7 +362,7 @@ export default function AdminVideo() {
                             onChange={(e) => setAssignSlug((s) => ({ ...s, [row.id]: e.target.value }))}
                             className="text-xs rounded border border-slate-200 px-2 py-1 max-w-[160px]"
                           >
-                            <option value="">Select course…</option>
+                            <option value="">{t('video.selectCourse')}</option>
                             {videoCourses.map((c) => (
                               <option key={c.slug} value={c.slug}>
                                 {c.slug}
@@ -382,17 +378,17 @@ export default function AdminVideo() {
                           onClick={() => handleSync(row)}
                           className="text-xs text-primary hover:underline disabled:opacity-50"
                         >
-                          Sync
+                          {t('video.sync')}
                         </button>
                         {!row.catalog_slug ? (
                           <button
                             type="button"
                             disabled={syncingId === row.id || !ready}
-                            title={!ready ? 'Wait until status is ready' : undefined}
+                            title={!ready ? t('video.assignWaitReady') : undefined}
                             onClick={() => handleAssign(row)}
                             className="text-xs text-emerald-600 hover:underline disabled:opacity-50"
                           >
-                            Assign
+                            {t('video.assign')}
                           </button>
                         ) : null}
                         <button
@@ -400,7 +396,7 @@ export default function AdminVideo() {
                           onClick={() => handleDelete(row.id)}
                           className="text-xs text-red-600 hover:underline"
                         >
-                          Delete
+                          {t('video.delete')}
                         </button>
                       </td>
                     </tr>

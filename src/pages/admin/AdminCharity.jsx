@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 export default function AdminCharity() {
+  const c = useAdminCrud()
   const [tab, setTab] = useState('reports')
   const [reports, setReports] = useState([])
   const [projects, setProjects] = useState([])
@@ -55,7 +57,7 @@ export default function AdminCharity() {
   }
 
   const deleteReport = async (id) => {
-    if (!confirm('Delete?')) return
+    if (!c.confirmDeleteGeneric()) return
     setError(null)
     try {
       await adminDelete('charity_reports', id)
@@ -66,7 +68,7 @@ export default function AdminCharity() {
   }
 
   const deleteProject = async (id) => {
-    if (!confirm('Delete?')) return
+    if (!c.confirmDeleteGeneric()) return
     setError(null)
     try {
       await adminDelete('charity_projects', id)
@@ -78,16 +80,16 @@ export default function AdminCharity() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-6">Honors & Charity</h1>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-6">{c.pageTitle('charity')}</h1>
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
       <div className="flex gap-2 mb-6">
-        <button onClick={() => setTab('reports')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'reports' ? 'bg-primary text-white' : 'bg-slate-200'}`}>Reports / Coverage</button>
-        <button onClick={() => setTab('projects')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'projects' ? 'bg-primary text-white' : 'bg-slate-200'}`}>Charity Projects</button>
+        <button type="button" onClick={() => setTab('reports')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'reports' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.charity.reportsTab')}</button>
+        <button type="button" onClick={() => setTab('projects')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'projects' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.charity.projectsTab')}</button>
       </div>
       {tab === 'reports' && (
         <div className="space-y-6">
           <div className="card p-6">
-            <h2 className="font-semibold mb-4">Add / Edit Report</h2>
+            <h2 className="font-semibold mb-4">{c.t('pages.charity.editReport')}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div><label className="text-xs font-medium text-slate-600 block mb-1">type</label><select value={formReport.type} onChange={(e) => setFormReport((f) => ({ ...f, type: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm"><option value="Trending">Trending</option><option value="Industry">Industry</option><option value="Honor">Honor</option></select></div>
               <div><label className="text-xs font-medium text-slate-600 block mb-1">report_date</label><input value={formReport.report_date} onChange={(e) => setFormReport((f) => ({ ...f, report_date: e.target.value }))} placeholder="2025-02" className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
@@ -95,33 +97,33 @@ export default function AdminCharity() {
               <div><label className="text-xs font-medium text-slate-600 block mb-1">sort_order</label><input type="number" value={formReport.sort_order} onChange={(e) => setFormReport((f) => ({ ...f, sort_order: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
             </div>
             <div className="flex gap-2 mt-4">
-              <button onClick={saveReport} className="btn-primary px-5 py-2 rounded-xl text-sm">Save</button>
+              <button type="button" onClick={saveReport} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>
               {editingReport && <button onClick={() => { setEditingReport(null); setFormReport({ type: 'Trending', text: '', report_date: '', sort_order: 0 }) }} className="px-5 py-2 border rounded-xl text-sm">Cancel</button>}
             </div>
           </div>
           <div className="card overflow-hidden">
             <div className="p-4 border-b font-semibold">Reports List</div>
-            {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : <ul className="divide-y">{reports.map((r) => (<li key={r.id} className="p-4 flex justify-between"><span><span className="text-xs px-2 py-0.5 rounded bg-slate-100">{r.type}</span> {r.text}</span><span><button onClick={() => { setEditingReport(r); setFormReport({ type: r.type || 'Trending', text: r.text || '', report_date: r.report_date || '', sort_order: r.sort_order || 0 }) }} className="text-primary mr-2">Edit</button><button type="button" onClick={() => deleteReport(r.id)} className="text-red-600">Delete</button></span></li>))}</ul>}
+            {loading ? <div className="p-8 text-center text-slate-500">{c.loading}</div> : <ul className="divide-y">{reports.map((r) => (<li key={r.id} className="p-4 flex justify-between"><span><span className="text-xs px-2 py-0.5 rounded bg-slate-100">{r.type}</span> {r.text}</span><span><button type="button" onClick={() => { setEditingReport(r); setFormReport({ type: r.type || 'Trending', text: r.text || '', report_date: r.report_date || '', sort_order: r.sort_order || 0 }) }} className="text-primary mr-2">{c.edit}</button><button type="button" onClick={() => deleteReport(r.id)} className="text-red-600">{c.delete}</button></span></li>))}</ul>}
           </div>
         </div>
       )}
       {tab === 'projects' && (
         <div className="space-y-6">
           <div className="card p-6">
-            <h2 className="font-semibold mb-4">Add / Edit Project</h2>
+            <h2 className="font-semibold mb-4">{c.t('pages.charity.editProject')}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div><label className="text-xs font-medium text-slate-600 block mb-1">title</label><input value={formProject.title} onChange={(e) => setFormProject((f) => ({ ...f, title: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
               <div><label className="text-xs font-medium text-slate-600 block mb-1">sort_order</label><input type="number" value={formProject.sort_order} onChange={(e) => setFormProject((f) => ({ ...f, sort_order: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
               <div className="sm:col-span-2"><label className="text-xs font-medium text-slate-600 block mb-1">desc</label><textarea value={formProject.desc} onChange={(e) => setFormProject((f) => ({ ...f, desc: e.target.value }))} rows={2} className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
             </div>
             <div className="flex gap-2 mt-4">
-              <button onClick={saveProject} className="btn-primary px-5 py-2 rounded-xl text-sm">Save</button>
+              <button type="button" onClick={saveProject} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>
               {editingProject && <button onClick={() => { setEditingProject(null); setFormProject({ title: '', desc: '', sort_order: 0 }) }} className="px-5 py-2 border rounded-xl text-sm">Cancel</button>}
             </div>
           </div>
           <div className="card overflow-hidden">
             <div className="p-4 border-b font-semibold">Projects List</div>
-            {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : <ul className="divide-y">{projects.map((p) => (<li key={p.id} className="p-4 flex justify-between"><span><strong>{p.title}</strong> — {p.desc}</span><span><button onClick={() => { setEditingProject(p); setFormProject({ title: p.title || '', desc: p.desc || '', sort_order: p.sort_order || 0 }) }} className="text-primary mr-2">Edit</button><button type="button" onClick={() => deleteProject(p.id)} className="text-red-600">Delete</button></span></li>))}</ul>}
+            {loading ? <div className="p-8 text-center text-slate-500">{c.loading}</div> : <ul className="divide-y">{projects.map((p) => (<li key={p.id} className="p-4 flex justify-between"><span><strong>{p.title}</strong> — {p.desc}</span><span><button type="button" onClick={() => { setEditingProject(p); setFormProject({ title: p.title || '', desc: p.desc || '', sort_order: p.sort_order || 0 }) }} className="text-primary mr-2">{c.edit}</button><button type="button" onClick={() => deleteProject(p.id)} className="text-red-600">{c.delete}</button></span></li>))}</ul>}
           </div>
         </div>
       )}

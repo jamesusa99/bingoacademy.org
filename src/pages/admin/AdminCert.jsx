@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const fields = ['tier_id','stars','name','chinese','color','bg','border','inst','teacher','learner','weeks','criteria','sort_order']
 
 export default function AdminCert() {
+  const c = useAdminCrud()
+  const itemLabel = c.t('pages.cert.item')
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -41,7 +44,7 @@ export default function AdminCert() {
     try {
       payload = toPayload()
     } catch {
-      setError('courses/benefits must be JSON arrays')
+      setError(c.t('pages.cert.jsonError'))
       return
     }
     try {
@@ -60,7 +63,7 @@ export default function AdminCert() {
   }
   const startEdit = (r) => { setEditing(r); setForm({ ...Object.fromEntries(fields.map((k) => [k, r[k] ?? (k === 'sort_order' ? 0 : '')])), courses: JSON.stringify(r.courses || [], null, 2), benefits: JSON.stringify(r.benefits || [], null, 2) }) }
   const del = async (id) => {
-    if (!confirm('Delete?')) return
+    if (!c.confirmDeleteGeneric()) return
     setError(null)
     try {
       await adminDelete('cert_tiers', id)
@@ -72,10 +75,10 @@ export default function AdminCert() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-6">Certification Tiers</h1>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-6">{c.pageTitle('cert')}</h1>
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
       <div className="card p-6 mb-6">
-        <h2 className="font-semibold mb-4">{editing ? 'Edit Tier' : 'Add Tier'}</h2>
+        <h2 className="font-semibold mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           {fields.map((k) => (
             <div key={k} className={['criteria'].includes(k) ? 'sm:col-span-2' : ''}>
@@ -87,13 +90,13 @@ export default function AdminCert() {
           <div className="sm:col-span-2"><label className="text-xs font-medium text-slate-600 block mb-1">benefits (JSON array)</label><textarea value={form.benefits} onChange={(e) => setForm((f) => ({ ...f, benefits: e.target.value }))} rows={3} className="w-full rounded-xl border px-3 py-2 text-sm font-mono" /></div>
         </div>
         <div className="flex gap-2 mt-4">
-          <button onClick={save} className="btn-primary px-5 py-2 rounded-xl text-sm">Save</button>
-          {editing && <button onClick={() => { setEditing(null); setForm(Object.fromEntries([...fields.map((k) => [k, k === 'sort_order' ? 0 : '']), ['courses', '[]'], ['benefits', '[]']])) }} className="px-5 py-2 border rounded-xl text-sm">Cancel</button>}
+          <button type="button" onClick={save} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>
+          {editing && <button type="button" onClick={() => { setEditing(null); setForm(emptyForm()) }} className="px-5 py-2 border rounded-xl text-sm">{c.cancel}</button>}
         </div>
       </div>
       <div className="card overflow-hidden">
-        <div className="p-4 border-b font-semibold">Tiers List</div>
-        {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : <ul className="divide-y">{items.map((r) => (<li key={r.id} className="p-4 flex justify-between"><span>{r.stars} {r.name}</span><span><button onClick={() => startEdit(r)} className="text-primary mr-2">Edit</button><button onClick={() => del(r.id)} className="text-red-600">Delete</button></span></li>))}</ul>}
+        <div className="p-4 border-b font-semibold">{c.t('pages.cert.tiersList')}</div>
+        {loading ? <div className="p-8 text-center text-slate-500">{c.loading}</div> : <ul className="divide-y">{items.map((r) => (<li key={r.id} className="p-4 flex justify-between"><span>{r.stars} {r.name}</span><span><button type="button" onClick={() => startEdit(r)} className="text-primary mr-2">{c.edit}</button><button type="button" onClick={() => del(r.id)} className="text-red-600">{c.delete}</button></span></li>))}</ul>}
       </div>
     </div>
   )

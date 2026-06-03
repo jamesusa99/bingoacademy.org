@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 function toDb(row) {
   return {
@@ -34,6 +35,8 @@ function fromDb(row) {
 const INIT = { name: '', type: 'ai', stage: '', students: '', award: '', enrolled: '0', whitelist: true, aiCourse: true, desc: '' }
 
 export default function AdminEvents() {
+  const c = useAdminCrud()
+  const itemLabel = c.t('pages.events.item')
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
@@ -71,7 +74,7 @@ export default function AdminEvents() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this event?')) return
+    if (!confirm(c.t('pages.events.confirmDelete'))) return
     setError(null)
     try {
       await adminDelete('events', id)
@@ -103,12 +106,12 @@ export default function AdminEvents() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-6">Events Management</h1>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-6">{c.pageTitle('events')}</h1>
 
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
 
       <div className="card p-6 mb-6">
-        <h2 className="font-semibold text-bingo-dark mb-4">{editing ? 'Edit Event' : 'Add Event'}</h2>
+        <h2 className="font-semibold text-bingo-dark mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           {['name','type','stage','students','award','enrolled','desc'].map((k) => (
             <div key={k}>
@@ -126,34 +129,34 @@ export default function AdminEvents() {
             </div>
           ))}
           <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">Whitelist</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={form.whitelist} onChange={(e) => setForm((f) => ({ ...f, whitelist: e.target.checked }))} /> Yes</label>
+            <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.events.whitelist')}</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={form.whitelist} onChange={(e) => setForm((f) => ({ ...f, whitelist: e.target.checked }))} /> {c.yes}</label>
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">AI Course</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={form.aiCourse} onChange={(e) => setForm((f) => ({ ...f, aiCourse: e.target.checked }))} /> Yes</label>
+            <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.events.aiCourse')}</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={form.aiCourse} onChange={(e) => setForm((f) => ({ ...f, aiCourse: e.target.checked }))} /> {c.yes}</label>
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          <button onClick={handleSave} className="btn-primary px-5 py-2 rounded-xl text-sm">Save</button>
-          {editing && <button onClick={cancelEdit} className="px-5 py-2 rounded-xl border border-slate-300 text-sm">Cancel</button>}
+          <button onClick={handleSave} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>
+          {editing && <button onClick={cancelEdit} className="px-5 py-2 rounded-xl border border-slate-300 text-sm">{c.cancel}</button>}
         </div>
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark">Event List</div>
+        <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark">{c.t('pages.events.list')}</div>
         {loading ? (
-          <div className="p-8 text-center text-slate-500">Loading...</div>
+          <div className="p-8 text-center text-slate-500">{c.loading}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 text-left">
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Type</th>
+                  <th className="p-3">{c.name}</th>
+                  <th className="p-3">{c.type}</th>
                   <th className="p-3">Stage</th>
                   <th className="p-3">Enrolled</th>
-                  <th className="p-3 w-24">Actions</th>
+                  <th className="p-3 w-24">{c.actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,14 +167,14 @@ export default function AdminEvents() {
                     <td className="p-3">{r.stage}</td>
                     <td className="p-3">{r.enrolled}</td>
                     <td className="p-3">
-                      <button onClick={() => startEdit(r)} className="text-primary hover:underline mr-2">Edit</button>
-                      <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:underline">Delete</button>
+                      <button onClick={() => startEdit(r)} className="text-primary hover:underline mr-2">{c.edit}</button>
+                      <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:underline">{c.delete}</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {items.length === 0 && <div className="p-8 text-center text-slate-500">No events yet. Add one above.</div>}
+            {items.length === 0 && <div className="p-8 text-center text-slate-500">{c.t('pages.events.noEvents')}</div>}
           </div>
         )}
       </div>

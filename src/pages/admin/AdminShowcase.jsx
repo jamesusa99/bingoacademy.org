@@ -1,20 +1,32 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
-const AWARD_FIELDS = [
-  { key: 'student', label: 'Student name', placeholder: 'e.g. Student A', textarea: false },
-  { key: 'grade', label: 'Grade', placeholder: 'e.g. Grade 6 · Primary', textarea: false },
-  { key: 'pain', label: 'Starting challenge', placeholder: 'Problem the student/parent faced initially', textarea: true },
-  { key: 'path', label: 'Bingo solution path', placeholder: 'e.g. AI Literacy Camp → Bootcamp → 1-on-1 Coach', textarea: true },
-  { key: 'result', label: 'Award result', placeholder: 'e.g. National 1st Prize', textarea: false },
-  { key: 'detail', label: 'Full story', placeholder: 'Describe the journey from start to award', textarea: true },
-  { key: 'duration', label: 'Duration', placeholder: 'e.g. 6 months', textarea: false },
-  { key: 'tags', label: 'Tags', placeholder: 'Comma-separated: AI Zero Background, Competition, Primary', textarea: false },
-  { key: 'sort_order', label: 'Sort order', placeholder: '0', textarea: false },
+const AWARD_FIELD_KEYS = [
+  'student',
+  'grade',
+  'pain',
+  'path',
+  'result',
+  'detail',
+  'duration',
+  'tags',
+  'sort_order',
 ]
 
+function awardFields(t) {
+  return AWARD_FIELD_KEYS.map((key) => ({
+    key,
+    label: t(`pages.showcase.field.${key}`),
+    placeholder: t(`pages.showcase.ph.${key}`),
+    textarea: ['pain', 'path', 'detail'].includes(key),
+  }))
+}
+
 export default function AdminShowcase() {
+  const c = useAdminCrud()
+  const fields = awardFields(c.t)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -94,7 +106,7 @@ export default function AdminShowcase() {
     })
   }
   const handleDelete = async (id) => {
-    if (!confirm('Delete this case?')) return
+    if (!confirm(c.t('pages.showcase.confirmDelete'))) return
     setError(null)
     try {
       await adminDelete('showcase_cases', id)
@@ -106,19 +118,19 @@ export default function AdminShowcase() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-6">Achievements (Showcase)</h1>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-6">{c.pageTitle('showcase')}</h1>
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
 
       <section className="mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-bingo-dark">Student Award Cases</h2>
-          <button type="button" onClick={startAddAwardCase} className="text-sm btn-primary px-4 py-2 rounded-xl">+ Add Case</button>
+          <h2 className="text-lg font-semibold text-bingo-dark">{c.t('pages.showcase.awardSection')}</h2>
+          <button type="button" onClick={startAddAwardCase} className="text-sm btn-primary px-4 py-2 rounded-xl">{c.t('pages.showcase.addCase')}</button>
         </div>
-        <p className="text-sm text-slate-500 mb-4">Manage competition award cases shown on the public Achievements page (type: competition).</p>
+        <p className="text-sm text-slate-500 mb-4">{c.t('pages.showcase.awardDesc')}</p>
         <div className="card p-6 mb-4">
-          <h3 className="font-semibold text-bingo-dark mb-4">{editing ? 'Edit Case' : 'Add Case'} (Student Award Case)</h3>
+          <h3 className="font-semibold text-bingo-dark mb-4">{editing ? c.t('pages.showcase.editCase') : c.t('pages.showcase.addCaseForm')}</h3>
           <div className="grid sm:grid-cols-2 gap-4">
-            {AWARD_FIELDS.map(({ key, label, placeholder, textarea }) => (
+            {fields.map(({ key, label, placeholder, textarea }) => (
               <div key={key} className={textarea ? 'sm:col-span-2' : ''}>
                 <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
                 {textarea ? (
@@ -130,22 +142,22 @@ export default function AdminShowcase() {
             ))}
           </div>
           <div className="flex gap-2 mt-4">
-            <button onClick={handleSaveAward} className="btn-primary px-5 py-2 rounded-xl text-sm">Save</button>
-            {editing && <button type="button" onClick={() => { setEditing(null); resetAwardForm() }} className="px-5 py-2 rounded-xl border text-sm">Cancel</button>}
+            <button type="button" onClick={handleSaveAward} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>
+            {editing && <button type="button" onClick={() => { setEditing(null); resetAwardForm() }} className="px-5 py-2 rounded-xl border text-sm">{c.cancel}</button>}
           </div>
         </div>
         <div className="card overflow-hidden">
-          <div className="p-4 border-b font-semibold text-bingo-dark">Student Award Cases List</div>
-          {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : (
+          <div className="p-4 border-b font-semibold text-bingo-dark">{c.t('pages.showcase.awardList')}</div>
+          {loading ? <div className="p-8 text-center text-slate-500">{c.loading}</div> : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="bg-slate-50 text-left"><th className="p-3">Type</th><th className="p-3">Student / Name</th><th className="p-3">Grade</th><th className="p-3">Result</th><th className="p-3 w-32">Actions</th></tr></thead>
+                <thead><tr className="bg-slate-50 text-left"><th className="p-3">{c.type}</th><th className="p-3">{c.t('pages.showcase.colStudent')}</th><th className="p-3">{c.t('pages.showcase.colGrade')}</th><th className="p-3">{c.t('pages.showcase.colResult')}</th><th className="p-3 w-32">{c.actions}</th></tr></thead>
                 <tbody>
                   {awardCasesOnly.length === 0 ? (
-                    <tr><td colSpan={5} className="p-6 text-center text-slate-500">No Student Award Cases yet. Click &quot;Add Case&quot; above.</td></tr>
+                    <tr><td colSpan={5} className="p-6 text-center text-slate-500">{c.t('pages.showcase.noAwardCases')}</td></tr>
                   ) : (
                     awardCasesOnly.map((r) => (
-                      <tr key={r.id} className="border-t border-slate-100"><td className="p-3"><span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">competition</span></td><td className="p-3">{r.student}</td><td className="p-3">{r.grade || '—'}</td><td className="p-3 line-clamp-1">{r.result}</td><td className="p-3"><button type="button" onClick={() => startEditAward(r)} className="text-primary mr-2">Edit</button><button type="button" onClick={() => handleDelete(r.id)} className="text-red-600">Delete</button></td></tr>
+                      <tr key={r.id} className="border-t border-slate-100"><td className="p-3"><span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">competition</span></td><td className="p-3">{r.student}</td><td className="p-3">{r.grade || '—'}</td><td className="p-3 line-clamp-1">{r.result}</td><td className="p-3"><button type="button" onClick={() => startEditAward(r)} className="text-primary mr-2">{c.edit}</button><button type="button" onClick={() => handleDelete(r.id)} className="text-red-600">{c.delete}</button></td></tr>
                     ))
                   )}
                 </tbody>
@@ -156,16 +168,16 @@ export default function AdminShowcase() {
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-bingo-dark mb-3">All Cases (by type)</h2>
+        <h2 className="text-lg font-semibold text-bingo-dark mb-3">{c.t('pages.showcase.allCases')}</h2>
         <div className="card overflow-hidden">
-          <div className="p-4 border-b font-semibold text-slate-600">Cases List (All Types)</div>
-          {loading ? <div className="p-8 text-center text-slate-500">Loading...</div> : (
+          <div className="p-4 border-b font-semibold text-slate-600">{c.t('pages.showcase.allCasesList')}</div>
+          {loading ? <div className="p-8 text-center text-slate-500">{c.loading}</div> : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="bg-slate-50 text-left"><th className="p-3">Type</th><th className="p-3">Name/Org</th><th className="p-3">Result</th><th className="p-3 w-32">Actions</th></tr></thead>
+                <thead><tr className="bg-slate-50 text-left"><th className="p-3">{c.type}</th><th className="p-3">{c.t('pages.showcase.colNameOrg')}</th><th className="p-3">{c.t('pages.showcase.colResult')}</th><th className="p-3 w-32">{c.actions}</th></tr></thead>
                 <tbody>
                   {items.map((r) => (
-                    <tr key={r.id} className="border-t"><td className="p-3">{r.type}</td><td className="p-3">{r.student || r.org}</td><td className="p-3 line-clamp-1">{r.result}</td><td className="p-3"><button type="button" onClick={() => r.type === 'competition' ? startEditAward(r) : alert('Only competition-type cases can be edited in Student Award Cases above.')} className="text-primary mr-2">Edit</button><button type="button" onClick={() => handleDelete(r.id)} className="text-red-600">Delete</button></td></tr>
+                    <tr key={r.id} className="border-t"><td className="p-3">{r.type}</td><td className="p-3">{r.student || r.org}</td><td className="p-3 line-clamp-1">{r.result}</td><td className="p-3"><button type="button" onClick={() => r.type === 'competition' ? startEditAward(r) : alert(c.t('pages.showcase.editOtherType'))} className="text-primary mr-2">{c.edit}</button><button type="button" onClick={() => handleDelete(r.id)} className="text-red-600">{c.delete}</button></td></tr>
                   ))}
                 </tbody>
               </table>

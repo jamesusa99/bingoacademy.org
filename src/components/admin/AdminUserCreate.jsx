@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createAdminUser } from '../../lib/admin/users'
 import { logAdminAction } from '../../lib/admin/auth'
 import AdminAlert from './AdminAlert'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const ROLES = ['user', 'editor', 'admin']
 const STATUSES = ['active', 'suspended', 'pending']
@@ -21,6 +22,7 @@ const INIT = {
 }
 
 export default function AdminUserCreate({ onClose, onCreated }) {
+  const c = useAdminCrud()
   const [form, setForm] = useState(INIT)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -62,7 +64,7 @@ export default function AdminUserCreate({ onClose, onCreated }) {
         onSubmit={handleSubmit}
       >
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="font-bold text-bingo-dark">Add user</h2>
+          <h2 className="font-bold text-bingo-dark">{c.t('pages.users.create.title')}</h2>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">
             ×
           </button>
@@ -71,13 +73,10 @@ export default function AdminUserCreate({ onClose, onCreated }) {
         <div className="p-6 flex-1 space-y-4">
           {error ? <AdminAlert type="error" onDismiss={() => setError(null)}>{error}</AdminAlert> : null}
 
-          <p className="text-sm text-slate-600">
-            Creates a Supabase Auth account and profile. User can sign in with the email and password below.
-            For <strong>Admin console</strong> access, set Role to <strong>admin</strong> or <strong>editor</strong> (not user).
-          </p>
+          <p className="text-sm text-slate-600">{c.t('pages.users.create.hint')}</p>
 
           <label className="block text-xs font-medium text-slate-600">
-            Email *
+            {c.t('pages.users.create.email')}
             <input
               type="email"
               required
@@ -87,7 +86,7 @@ export default function AdminUserCreate({ onClose, onCreated }) {
             />
           </label>
           <label className="block text-xs font-medium text-slate-600">
-            Password * (min 6 characters)
+            {c.t('pages.users.create.password')}
             <input
               type="password"
               required
@@ -104,13 +103,13 @@ export default function AdminUserCreate({ onClose, onCreated }) {
               checked={form.email_confirm}
               onChange={(e) => set('email_confirm', e.target.checked)}
             />
-            Mark email as confirmed (skip verification email)
+            {c.t('pages.users.create.emailConfirm')}
           </label>
 
           <hr className="border-slate-100" />
 
           <label className="block text-xs font-medium text-slate-600">
-            Full name
+            {c.t('pages.users.create.fullName')}
             <input
               value={form.full_name}
               onChange={(e) => set('full_name', e.target.value)}
@@ -118,7 +117,7 @@ export default function AdminUserCreate({ onClose, onCreated }) {
             />
           </label>
           <label className="block text-xs font-medium text-slate-600">
-            Phone
+            {c.t('pages.users.create.phone')}
             <input
               value={form.phone}
               onChange={(e) => set('phone', e.target.value)}
@@ -127,7 +126,7 @@ export default function AdminUserCreate({ onClose, onCreated }) {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-xs font-medium text-slate-600">
-              Role
+              {c.t('pages.users.create.role')}
               <select
                 value={form.role}
                 onChange={(e) => set('role', e.target.value)}
@@ -141,12 +140,12 @@ export default function AdminUserCreate({ onClose, onCreated }) {
               </select>
               {form.role === 'user' ? (
                 <span className="text-[10px] text-amber-600 mt-1 block">
-                  Role &quot;user&quot; cannot access /admin — choose editor or admin for staff.
+                  {c.t('pages.users.create.roleUserWarn')}
                 </span>
               ) : null}
             </label>
             <label className="block text-xs font-medium text-slate-600">
-              Status
+              {c.t('pages.users.create.status')}
               <select
                 value={form.status}
                 onChange={(e) => set('status', e.target.value)}
@@ -161,7 +160,7 @@ export default function AdminUserCreate({ onClose, onCreated }) {
             </label>
           </div>
           <label className="block text-xs font-medium text-slate-600">
-            Member tier
+            {c.t('pages.users.create.memberTier')}
             <select
               value={form.member_tier}
               onChange={(e) => set('member_tier', e.target.value)}
@@ -176,7 +175,7 @@ export default function AdminUserCreate({ onClose, onCreated }) {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-xs font-medium text-slate-600">
-              School
+              {c.t('pages.users.create.school')}
               <input
                 value={form.school}
                 onChange={(e) => set('school', e.target.value)}
@@ -184,7 +183,7 @@ export default function AdminUserCreate({ onClose, onCreated }) {
               />
             </label>
             <label className="block text-xs font-medium text-slate-600">
-              Grade
+              {c.t('pages.users.create.grade')}
               <input
                 value={form.grade}
                 onChange={(e) => set('grade', e.target.value)}
@@ -196,14 +195,14 @@ export default function AdminUserCreate({ onClose, onCreated }) {
 
         <div className="sticky bottom-0 border-t border-slate-200 bg-white p-4 flex gap-2">
           <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-300 text-sm font-medium">
-            Cancel
+            {c.cancel}
           </button>
           <button
             type="submit"
             disabled={saving}
             className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-medium disabled:opacity-60"
           >
-            {saving ? 'Creating…' : 'Create user'}
+            {saving ? c.t('pages.users.create.creating') : c.t('pages.users.create.createBtn')}
           </button>
         </div>
       </form>

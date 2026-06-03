@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 function toDb(row) {
   return {
@@ -38,6 +39,8 @@ function fromDb(row) {
 const INIT = { name: '', type: 'course', cat: '', tag: '', price: '', bPrice: '', sold: '0', rating: '', desc: '', badge: '', aiLab: false }
 
 export default function AdminCourses() {
+  const c = useAdminCrud()
+  const itemLabel = c.t('pages.mall.item')
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
@@ -75,7 +78,7 @@ export default function AdminCourses() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this course?')) return
+    if (!confirm(c.t('pages.mall.confirmDelete'))) return
     setError(null)
     try {
       await adminDelete('courses', id)
@@ -109,14 +112,14 @@ export default function AdminCourses() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-2">Mall Management</h1>
-      <p className="text-slate-600 text-sm mb-6">Manage Mall listings and categories for the users</p>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-2">{c.pageTitle('mall')}</h1>
+      <p className="text-slate-600 text-sm mb-6">{c.pageDesc('mall')}</p>
 
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
 
       {/* Form */}
       <div className="card p-6 mb-6">
-        <h2 className="font-semibold text-bingo-dark mb-4">{editing ? 'Edit Course' : 'Add Course'}</h2>
+        <h2 className="font-semibold text-bingo-dark mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           {['name','type','cat','tag','price','bPrice','sold','rating','desc','badge'].map((k) => (
             <div key={k}>
@@ -137,30 +140,30 @@ export default function AdminCourses() {
           ))}
           <div>
             <label className="text-xs font-medium text-slate-600 block mb-1">AI Lab</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={form.aiLab} onChange={(e) => setForm((f) => ({ ...f, aiLab: e.target.checked }))} /> Yes</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={form.aiLab} onChange={(e) => setForm((f) => ({ ...f, aiLab: e.target.checked }))} /> {c.yes}</label>
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          <button onClick={handleSave} className="btn-primary px-5 py-2 rounded-xl text-sm">Save</button>
-          {editing && <button onClick={cancelEdit} className="px-5 py-2 rounded-xl border border-slate-300 text-sm">Cancel</button>}
+          <button type="button" onClick={handleSave} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>
+          {editing && <button type="button" onClick={cancelEdit} className="px-5 py-2 rounded-xl border border-slate-300 text-sm">{c.cancel}</button>}
         </div>
       </div>
 
       {/* List */}
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark">Course List</div>
+        <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark">{c.t('pages.mall.list')}</div>
         {loading ? (
-          <div className="p-8 text-center text-slate-500">Loading...</div>
+          <div className="p-8 text-center text-slate-500">{c.loading}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 text-left">
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Type</th>
-                  <th className="p-3">Price</th>
+                  <th className="p-3">{c.name}</th>
+                  <th className="p-3">{c.type}</th>
+                  <th className="p-3">{c.price}</th>
                   <th className="p-3">Sold</th>
-                  <th className="p-3 w-24">Actions</th>
+                  <th className="p-3 w-24">{c.actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,14 +174,14 @@ export default function AdminCourses() {
                     <td className="p-3">{r.price != null ? `$${r.price}` : '—'}</td>
                     <td className="p-3">{r.sold}</td>
                     <td className="p-3">
-                      <button onClick={() => startEdit(r)} className="text-primary hover:underline mr-2">Edit</button>
-                      <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:underline">Delete</button>
+                      <button type="button" onClick={() => startEdit(r)} className="text-primary hover:underline mr-2">{c.edit}</button>
+                      <button type="button" onClick={() => handleDelete(r.id)} className="text-red-600 hover:underline">{c.delete}</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {items.length === 0 && <div className="p-8 text-center text-slate-500">No courses yet. Add one above.</div>}
+            {items.length === 0 && <div className="p-8 text-center text-slate-500">{c.noItemsYet}</div>}
           </div>
         )}
       </div>

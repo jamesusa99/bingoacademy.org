@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 function formatMoney(cents, currency = 'usd') {
   if (cents == null) return '—'
@@ -9,6 +10,7 @@ function formatMoney(cents, currency = 'usd') {
 }
 
 export default function AdminPayments() {
+  const c = useAdminCrud()
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -32,16 +34,11 @@ export default function AdminPayments() {
 
   return (
     <div>
-      <AdminPageHeader
-        title="Payments"
-        description="Stripe checkout sessions mirrored in Supabase. Configure STRIPE_SECRET_KEY and webhook /api/webhooks/stripe on Railway."
-      />
+      <AdminPageHeader titleKey="pages.payments.title" descriptionKey="pages.payments.desc" />
 
       {error ? (
         <AdminAlert type="warning">
-          {error.includes('does not exist')
-            ? 'Run supabase/migrations/002_admin_platform.sql to create orders and stripe_products tables.'
-            : error}
+          {error.includes('does not exist') ? c.t('pages.payments.migrationHint') : error}
         </AdminAlert>
       ) : null}
 
@@ -51,30 +48,30 @@ export default function AdminPayments() {
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium capitalize ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium ${
               tab === t ? 'bg-primary text-white' : 'bg-slate-200 text-slate-700'
             }`}
           >
-            {t}
+            {c.t(`pages.payments.tab${t === 'orders' ? 'Orders' : 'Products'}`)}
           </button>
         ))}
       </div>
 
       <div className="card overflow-hidden">
         {loading ? (
-          <p className="p-6 text-slate-500 text-sm">Loading…</p>
+          <p className="p-6 text-slate-500 text-sm">{c.loading}</p>
         ) : tab === 'orders' ? (
           orders.length === 0 ? (
-            <p className="p-6 text-slate-500 text-sm">No orders yet. They appear when Stripe webhooks fire.</p>
+            <p className="p-6 text-slate-500 text-sm">{c.t('pages.payments.noOrders')}</p>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-left text-slate-600">
                 <tr>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Amount</th>
-                  <th className="p-3">Customer</th>
-                  <th className="p-3">Product</th>
-                  <th className="p-3">Created</th>
+                  <th className="p-3">{c.status}</th>
+                  <th className="p-3">{c.t('pages.payments.colAmount')}</th>
+                  <th className="p-3">{c.t('pages.payments.colCustomer')}</th>
+                  <th className="p-3">{c.t('pages.payments.colProduct')}</th>
+                  <th className="p-3">{c.t('pages.payments.colCreated')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -93,17 +90,15 @@ export default function AdminPayments() {
             </table>
           )
         ) : products.length === 0 ? (
-          <p className="p-6 text-slate-500 text-sm">
-            No mirrored Stripe products. Sync from Stripe Dashboard or add rows in stripe_products.
-          </p>
+          <p className="p-6 text-slate-500 text-sm">{c.t('pages.payments.noProducts')}</p>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-600">
               <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Price</th>
-                <th className="p-3">Stripe IDs</th>
-                <th className="p-3">Active</th>
+                <th className="p-3">{c.name}</th>
+                <th className="p-3">{c.t('pages.payments.colAmount')}</th>
+                <th className="p-3">{c.t('pages.payments.colStripeIds')}</th>
+                <th className="p-3">{c.t('pages.payments.colActive')}</th>
               </tr>
             </thead>
             <tbody>
@@ -115,7 +110,7 @@ export default function AdminPayments() {
                     {row.stripe_product_id}
                     {row.stripe_price_id ? ` / ${row.stripe_price_id}` : ''}
                   </td>
-                  <td className="p-3">{row.active ? 'Yes' : 'No'}</td>
+                  <td className="p-3">{row.active ? c.yes : c.no}</td>
                 </tr>
               ))}
             </tbody>

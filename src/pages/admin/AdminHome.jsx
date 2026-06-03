@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 import AdminAlert from '../../components/admin/AdminAlert'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 export default function AdminHome() {
+  const c = useAdminCrud()
   const [activeTab, setActiveTab] = useState('stats')
   const [stats, setStats] = useState([])
   const [testimonials, setTestimonials] = useState([])
@@ -44,12 +46,12 @@ export default function AdminHome() {
     try {
       if (editingStats) {
         await adminUpdate('home_stats', editingStats.id, payload)
-        setSuccess('Stat updated. Check the list below for changes.')
+        setSuccess(c.t('pages.home.statUpdated'))
         setEditingStats(null)
         setFormStats({ icon: '', value: '', label: '', sort_order: 0 })
       } else {
         await adminInsert('home_stats', payload)
-        setSuccess('Stat added.')
+        setSuccess(c.t('pages.home.statAdded'))
         setFormStats({ icon: '', value: '', label: '', sort_order: 0 })
       }
       await fetchStats()
@@ -74,12 +76,12 @@ export default function AdminHome() {
     try {
       if (editingTest) {
         await adminUpdate('home_testimonials', editingTest.id, payload)
-        setSuccess('Testimonial updated. Check the list below for changes.')
+        setSuccess(c.t('pages.home.testUpdated'))
         setEditingTest(null)
         setFormTest({ quote: '', name: '', role: '', stars: 5, sort_order: 0 })
       } else {
         await adminInsert('home_testimonials', payload)
-        setSuccess('Testimonial added.')
+        setSuccess(c.t('pages.home.testAdded'))
         setFormTest({ quote: '', name: '', role: '', stars: 5, sort_order: 0 })
       }
       await fetchTestimonials()
@@ -91,12 +93,12 @@ export default function AdminHome() {
   }
 
   const deleteStat = async (id) => {
-    if (!confirm('Delete?')) return
+    if (!c.confirmDeleteGeneric()) return
     setError(null)
     setSuccess(null)
     try {
       await adminDelete('home_stats', id)
-      setSuccess('Stat deleted.')
+      setSuccess(c.t('pages.home.statDeleted'))
       if (editingStats?.id === id) {
         setEditingStats(null)
         setFormStats({ icon: '', value: '', label: '', sort_order: 0 })
@@ -108,12 +110,12 @@ export default function AdminHome() {
   }
 
   const deleteTestimonial = async (id) => {
-    if (!confirm('Delete?')) return
+    if (!c.confirmDeleteGeneric()) return
     setError(null)
     setSuccess(null)
     try {
       await adminDelete('home_testimonials', id)
-      setSuccess('Testimonial deleted.')
+      setSuccess(c.t('pages.home.testDeleted'))
       if (editingTest?.id === id) {
         setEditingTest(null)
         setFormTest({ quote: '', name: '', role: '', stars: 5, sort_order: 0 })
@@ -126,20 +128,18 @@ export default function AdminHome() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-2">AI Era Portal (Home)</h1>
-      <p className="text-sm text-slate-600 mb-6">
-        Click <strong>Edit</strong> on a row, change fields in the form above, then <strong>Save</strong>.
-      </p>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-2">{c.pageTitle('home')}</h1>
+      <p className="text-sm text-slate-600 mb-6" dangerouslySetInnerHTML={{ __html: c.t('pages.home.hint') }} />
       {error ? <AdminAlert type="error" onDismiss={() => setError(null)}>{error}</AdminAlert> : null}
       {success ? <AdminAlert type="success" onDismiss={() => setSuccess(null)}>{success}</AdminAlert> : null}
       <div className="flex gap-2 mb-6">
-        <button type="button" onClick={() => setActiveTab('stats')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'stats' ? 'bg-primary text-white' : 'bg-slate-200'}`}>Trust Stats</button>
-        <button type="button" onClick={() => setActiveTab('testimonials')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'testimonials' ? 'bg-primary text-white' : 'bg-slate-200'}`}>Testimonials</button>
+        <button type="button" onClick={() => setActiveTab('stats')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'stats' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.home.tabStats')}</button>
+        <button type="button" onClick={() => setActiveTab('testimonials')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'testimonials' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.home.tabTestimonials')}</button>
       </div>
       {activeTab === 'stats' && (
         <div className="space-y-6">
           <div className="card p-6">
-            <h2 className="font-semibold text-bingo-dark mb-1">{editingStats ? 'Edit Trust Stat' : 'Add Trust Stat'}</h2>
+            <h2 className="font-semibold text-bingo-dark mb-1">{editingStats ? c.t('pages.home.editStat') : c.t('pages.home.addStat')}</h2>
             {editingStats ? (
               <p className="text-xs text-primary mb-4">Editing: {editingStats.label || editingStats.value}</p>
             ) : null}
@@ -158,7 +158,7 @@ export default function AdminHome() {
             </div>
             <div className="flex gap-2 mt-4">
               <button type="button" onClick={saveStat} disabled={saving} className="btn-primary px-5 py-2 rounded-xl text-sm disabled:opacity-60">
-                {saving ? 'Saving…' : 'Save'}
+                {saving ? c.saving : c.save}
               </button>
               {editingStats ? (
                 <button
@@ -169,17 +169,17 @@ export default function AdminHome() {
                   }}
                   className="px-5 py-2 rounded-xl border text-sm"
                 >
-                  Cancel
+                  {c.cancel}
                 </button>
               ) : null}
             </div>
           </div>
           <div className="card overflow-hidden">
-            <div className="p-4 border-b font-semibold">Stats List</div>
+            <div className="p-4 border-b font-semibold">{c.t('pages.home.tabStats')}</div>
             {loading ? (
-              <div className="p-8 text-center text-slate-500">Loading...</div>
+              <div className="p-8 text-center text-slate-500">{c.loading}</div>
             ) : stats.length === 0 ? (
-              <div className="p-8 text-center text-slate-500">No stats yet. Add one above or run Platform → Import site data.</div>
+              <div className="p-8 text-center text-slate-500">{c.t('pages.home.noStats')}</div>
             ) : (
               <ul className="divide-y">
                 {stats.map((s) => (
@@ -201,10 +201,10 @@ export default function AdminHome() {
                         }}
                         className="text-primary mr-2"
                       >
-                        Edit
+                        {c.edit}
                       </button>
                       <button type="button" onClick={() => deleteStat(s.id)} className="text-red-600">
-                        Delete
+                        {c.delete}
                       </button>
                     </span>
                   </li>
@@ -217,7 +217,7 @@ export default function AdminHome() {
       {activeTab === 'testimonials' && (
         <div className="space-y-6">
           <div className="card p-6">
-            <h2 className="font-semibold text-bingo-dark mb-4">{editingTest ? 'Edit Testimonial' : 'Add Testimonial'}</h2>
+            <h2 className="font-semibold text-bingo-dark mb-4">{editingTest ? c.t('pages.home.editTestimonial') : c.t('pages.home.addTestimonial')}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className="text-xs font-medium text-slate-600 block mb-1">quote</label>
@@ -242,7 +242,7 @@ export default function AdminHome() {
             </div>
             <div className="flex gap-2 mt-4">
               <button type="button" onClick={saveTestimonial} disabled={saving} className="btn-primary px-5 py-2 rounded-xl text-sm disabled:opacity-60">
-                {saving ? 'Saving…' : 'Save'}
+                {saving ? c.saving : c.save}
               </button>
               {editingTest ? (
                 <button
@@ -253,15 +253,15 @@ export default function AdminHome() {
                   }}
                   className="px-5 py-2 rounded-xl border text-sm"
                 >
-                  Cancel
+                  {c.cancel}
                 </button>
               ) : null}
             </div>
           </div>
           <div className="card overflow-hidden">
-            <div className="p-4 border-b font-semibold">Testimonials List</div>
+            <div className="p-4 border-b font-semibold">{c.t('pages.home.tabTestimonials')}</div>
             {loading ? (
-              <div className="p-8 text-center text-slate-500">Loading...</div>
+              <div className="p-8 text-center text-slate-500">{c.loading}</div>
             ) : (
               <ul className="divide-y">
                 {testimonials.map((t) => (
@@ -285,10 +285,10 @@ export default function AdminHome() {
                         }}
                         className="text-primary mr-2"
                       >
-                        Edit
+                        {c.edit}
                       </button>
                       <button type="button" onClick={() => deleteTestimonial(t.id)} className="text-red-600">
-                        Delete
+                        {c.delete}
                       </button>
                     </span>
                   </li>

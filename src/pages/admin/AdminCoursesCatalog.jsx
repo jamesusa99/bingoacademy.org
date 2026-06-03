@@ -12,11 +12,14 @@ import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
 import { assignStreamToCourse } from '../../lib/admin/api'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
-const STATUS_OPTIONS = [
-  { value: COURSE_STATUS.LIVE, label: 'Live (enrolling)' },
-  { value: COURSE_STATUS.COMING_SOON, label: 'Coming soon' },
-]
+function statusOptions(t) {
+  return [
+    { value: COURSE_STATUS.LIVE, label: t('pages.coursesCatalog.statusLive') },
+    { value: COURSE_STATUS.COMING_SOON, label: t('pages.coursesCatalog.statusComingSoon') },
+  ]
+}
 
 const DELIVERY_TYPES = ['video', 'camp', 'self-study', 'classroom', 'lab', 'materials', 'books']
 
@@ -32,6 +35,8 @@ function Field({ label, children, className = '' }) {
 const inputClass = 'w-full rounded-xl border border-slate-200 px-3 py-2 text-sm'
 
 export default function AdminCoursesCatalog() {
+  const c = useAdminCrud()
+  const STATUS_OPTIONS = statusOptions(c.t)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -73,11 +78,11 @@ export default function AdminCoursesCatalog() {
 
   const handleStreamSync = async () => {
     if (!form.cloudflare_uid?.trim()) {
-      setError('Enter a Cloudflare UID or assign via Admin → Video library.')
+      setError(c.t('pages.coursesCatalog.streamUidRequired'))
       return
     }
     if (!form.slug?.trim()) {
-      setError('Save the course slug first.')
+      setError(c.t('pages.coursesCatalog.slugSaveFirst'))
       return
     }
     setError(null)
@@ -107,9 +112,9 @@ export default function AdminCoursesCatalog() {
     setSaving(true)
     try {
       const payload = formToCatalogPayload(form)
-      if (!payload.slug) throw new Error('Slug is required (e.g. g1, ioai-whitelist)')
+      if (!payload.slug) throw new Error(c.t('pages.coursesCatalog.slugRequired'))
       await saveCatalogCourse(payload)
-      setSuccess(editingSlug ? 'Course updated.' : 'Course saved.')
+      setSuccess(editingSlug ? c.t('pages.coursesCatalog.courseUpdated') : c.t('pages.coursesCatalog.courseSaved'))
       if (!editingSlug) {
         setEditingSlug(payload.slug)
       }
@@ -122,12 +127,12 @@ export default function AdminCoursesCatalog() {
   }
 
   const handleDelete = async (slug) => {
-    if (!confirm(`Delete course "${slug}"? This cannot be undone.`)) return
+    if (!confirm(c.t('pages.coursesCatalog.confirmDelete', { slug }))) return
     setError(null)
     setSuccess(null)
     try {
       await deleteCatalogCourse(slug)
-      setSuccess('Course deleted.')
+      setSuccess(c.t('pages.coursesCatalog.courseDeleted'))
       if (editingSlug === slug) {
         setEditingSlug(null)
         setForm(CATALOG_FORM_EMPTY)
@@ -140,16 +145,11 @@ export default function AdminCoursesCatalog() {
 
   return (
     <div>
-      <AdminPageHeader
-        title="Courses Management"
-        description="Manage all courses shown on /courses (product lines, video list, detail pages). Changes appear on the site after save. Run migration 008 for list fields (category, level, rating)."
-      />
+      <AdminPageHeader titleKey="pages.coursesCatalog.title" descriptionKey="pages.coursesCatalog.desc" />
 
       {error ? (
         <AdminAlert type="error" onDismiss={() => setError(null)}>
-          {error.includes('does not exist')
-            ? 'Run supabase/migrations/007 and 008, then npm run seed'
-            : error}
+          {error.includes('does not exist') ? c.t('pages.coursesCatalog.migrationHint') : error}
         </AdminAlert>
       ) : null}
       {success ? (
@@ -161,10 +161,10 @@ export default function AdminCoursesCatalog() {
       <div className="card p-6 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="font-semibold text-bingo-dark">
-            {editingSlug ? `Edit: ${editingSlug}` : 'Add course'}
+            {editingSlug ? c.t('pages.coursesCatalog.editCourse', { slug: editingSlug }) : c.t('pages.coursesCatalog.addCourse')}
           </h2>
           <button type="button" onClick={startAdd} className="text-sm text-primary hover:underline">
-            + New course
+            {c.t('pages.coursesCatalog.newCourse')}
           </button>
         </div>
 
@@ -331,9 +331,13 @@ export default function AdminCoursesCatalog() {
             <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-cyan-200 bg-cyan-50/50 p-4 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h3 className="font-semibold text-bingo-dark text-sm">Cloudflare Stream video</h3>
+                  <h3 className="font-semibold text-bingo-dark text-sm">{c.t('pages.coursesCatalog.streamSection')}</h3>
                   <p className="text-xs text-slate-600 mt-0.5">
-                    Upload at <a href="/admin/video" className="text-primary hover:underline">Admin → Video library</a>, or paste a Stream UID and sync.
+                    {c.t('pages.coursesCatalog.streamHintPrefix')}{' '}
+                    <a href="/admin/video" className="text-primary hover:underline">
+                      {c.t('nav.video')}
+                    </a>
+                    {c.t('pages.coursesCatalog.streamHintSuffix')}
                   </p>
                 </div>
                 <button
@@ -342,7 +346,7 @@ export default function AdminCoursesCatalog() {
                   disabled={syncingVideo || !form.cloudflare_uid}
                   className="text-xs px-3 py-2 rounded-lg bg-primary text-white font-medium disabled:opacity-50"
                 >
-                  {syncingVideo ? 'Syncing…' : 'Sync from Stream'}
+                  {syncingVideo ? c.t('pages.coursesCatalog.syncing') : c.t('pages.coursesCatalog.syncStream')}
                 </button>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -382,14 +386,14 @@ export default function AdminCoursesCatalog() {
               </div>
               {form.video_url ? (
                 <p className="text-xs text-emerald-700">
-                  ✓ Video configured — preview at{' '}
+                  {c.t('pages.coursesCatalog.videoConfigured')}{' '}
                   <a
                     href={`/courses/detail/${form.slug || 'ioai-1-1'}`}
                     target="_blank"
                     rel="noreferrer"
                     className="underline"
                   >
-                    course detail page
+                    {c.t('pages.coursesCatalog.courseDetail')}
                   </a>
                 </p>
               ) : null}
@@ -404,7 +408,7 @@ export default function AdminCoursesCatalog() {
             disabled={saving}
             className="btn-primary px-5 py-2 rounded-xl text-sm disabled:opacity-60"
           >
-            {saving ? 'Saving…' : 'Save course'}
+            {saving ? c.saving : c.t('pages.coursesCatalog.saveCourse')}
           </button>
           {editingSlug ? (
             <button
@@ -415,7 +419,7 @@ export default function AdminCoursesCatalog() {
               }}
               className="px-5 py-2 rounded-xl border text-sm"
             >
-              Cancel
+              {c.cancel}
             </button>
           ) : null}
         </div>
@@ -423,25 +427,25 @@ export default function AdminCoursesCatalog() {
 
       <div className="card overflow-hidden">
         <div className="p-4 border-b font-semibold flex justify-between items-center">
-          <span>All courses ({items.length})</span>
+          <span>{c.t('pages.coursesCatalog.allCourses', { count: String(items.length) })}</span>
           <a href="/courses?line=general&sub=course" target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
-            Preview on site →
+            {c.previewOnSite}
           </a>
         </div>
         {loading ? (
-          <p className="p-6 text-sm text-slate-500">Loading…</p>
+          <p className="p-6 text-sm text-slate-500">{c.loading}</p>
         ) : items.length === 0 ? (
-          <p className="p-6 text-sm text-slate-500">No courses. Add one above or Platform → Import site data.</p>
+          <p className="p-6 text-sm text-slate-500">{c.t('pages.coursesCatalog.noCourses')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-left text-slate-600">
                 <tr>
-                  <th className="p-3">Name</th>
+                  <th className="p-3">{c.name}</th>
                   <th className="p-3">Line / Sub</th>
-                  <th className="p-3">Status</th>
+                  <th className="p-3">{c.status}</th>
                   <th className="p-3">Level</th>
-                  <th className="p-3">Price</th>
+                  <th className="p-3">{c.price}</th>
                   <th className="p-3">Slug</th>
                   <th className="p-3">Video</th>
                   <th className="p-3" />
@@ -463,19 +467,19 @@ export default function AdminCoursesCatalog() {
                     <td className="p-3 text-xs font-mono text-slate-400">{row.slug}</td>
                     <td className="p-3 text-xs">
                       {row.video_url ? (
-                        <span className="text-emerald-600 font-medium">Stream ✓</span>
+                        <span className="text-emerald-600 font-medium">{c.t('pages.coursesCatalog.streamOk')}</span>
                       ) : row.delivery_type === 'video' ? (
-                        <span className="text-amber-600">No video</span>
+                        <span className="text-amber-600">{c.t('pages.coursesCatalog.noVideo')}</span>
                       ) : (
                         '—'
                       )}
                     </td>
                     <td className="p-3 whitespace-nowrap">
                       <button type="button" onClick={() => startEdit(row)} className="text-primary mr-2">
-                        Edit
+                        {c.edit}
                       </button>
                       <button type="button" onClick={() => handleDelete(row.slug)} className="text-red-600">
-                        Delete
+                        {c.delete}
                       </button>
                     </td>
                   </tr>

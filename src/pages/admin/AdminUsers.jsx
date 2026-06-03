@@ -7,6 +7,7 @@ import AdminUserCreate from '../../components/admin/AdminUserCreate'
 import { useAdminAuth } from '../../hooks/useAdminAuth'
 import { fetchAdminUsers, syncAdminUsers, deleteAdminUser } from '../../lib/admin/users'
 import { logAdminAction } from '../../lib/admin/auth'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const ROLES = ['', 'user', 'editor', 'admin']
 const STATUSES = ['', 'active', 'suspended', 'pending']
@@ -24,8 +25,13 @@ function StatusBadge({ status }) {
   )
 }
 
-function TierBadge({ tier }) {
-  const labels = { free: 'Free', monthly: 'Monthly', quarterly: 'Quarterly', annual: 'Annual' }
+function TierBadge({ tier, t }) {
+  const labels = {
+    free: t('pages.users.tier.free'),
+    monthly: t('pages.users.tier.monthly'),
+    quarterly: t('pages.users.tier.quarterly'),
+    annual: t('pages.users.tier.annual'),
+  }
   return <span className="text-xs text-slate-600">{labels[tier] || tier || '—'}</span>
 }
 
@@ -49,6 +55,7 @@ async function fetchProfilesFallback({ q, role, status, page, perPage }) {
 }
 
 export default function AdminUsers() {
+  const c = useAdminCrud()
   const { user: currentUser, profile: currentProfile } = useAdminAuth()
   const [users, setUsers] = useState([])
   const [pagination, setPagination] = useState({ page: 1, perPage: 25, total: 0, totalPages: 0 })
@@ -134,12 +141,12 @@ export default function AdminUsers() {
       setError('You cannot delete your own account while signed in.')
       return
     }
-    if (!confirm(`Delete user ${row.email}? This cannot be undone.`)) return
+    if (!confirm(c.t('pages.users.confirmDelete', { email: row.email }))) return
     try {
       await deleteAdminUser(row.id)
       await handleUserDeleted(row.id)
     } catch (err) {
-      setError(err.status === 503 ? 'Add SUPABASE_SERVICE_ROLE_KEY and restart npm run dev to delete users.' : err.message)
+      setError(err.status === 503 ? c.t('pages.users.deleteServiceRole') : err.message)
     }
   }
 
@@ -148,12 +155,10 @@ export default function AdminUsers() {
     try {
       const result = await syncAdminUsers()
       await loadUsers()
-      window.alert(`Synced ${result.synced} registered user(s) from Supabase Auth.`)
+      window.alert(c.t('pages.users.syncDone', { count: String(result.synced) }))
     } catch (err) {
       setError(
-        err.status === 503
-          ? 'Add SUPABASE_SERVICE_ROLE_KEY to .env.local (server-side) to sync all registered users.'
-          : err.message
+        err.status === 503 ? c.t('pages.users.serviceRoleHint') : err.message
       )
     } finally {
       setSyncing(false)
@@ -163,8 +168,8 @@ export default function AdminUsers() {
   return (
     <div>
       <AdminPageHeader
-        title="User management"
-        description="Users with role admin or editor can sign in to this console and edit site content. Assign roles here; run migration 009 in Supabase for staff-only CMS writes. Add user requires SUPABASE_SERVICE_ROLE_KEY and the admin API (npm run dev or Vercel api/server)."
+        titleKey="pages.users.title"
+        descriptionKey="pages.users.desc"
         actions={
           <div className="flex flex-wrap gap-2">
             <button
@@ -172,7 +177,7 @@ export default function AdminUsers() {
               onClick={() => setShowCreate(true)}
               className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium"
             >
-              + Add user
+              {c.t('pages.users.addUser')}
             </button>
             <button
               type="button"
@@ -180,7 +185,7 @@ export default function AdminUsers() {
               disabled={syncing || loading}
               className="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
             >
-              {syncing ? 'Syncing…' : 'Sync from Auth'}
+              {syncing ? c.t('pages.users.syncing') : c.t('pages.users.syncUsers')}
             </button>
           </div>
         }
@@ -194,9 +199,7 @@ export default function AdminUsers() {
 
       {error ? (
         <AdminAlert type={apiFallback ? 'warning' : 'error'} onDismiss={() => setError(null)}>
-          {error.includes('does not exist')
-            ? 'Run supabase/migrations/002_admin_platform.sql and 003_user_profiles_extend.sql, then sign in once to create profiles.'
-            : error}
+          {error.includes('does not exist') ? c.t('pages.users.migrationHint') : error}
         </AdminAlert>
       ) : null}
 
@@ -216,16 +219,16 @@ export default function AdminUsers() {
 
       <form onSubmit={handleSearch} className="card p-4 mb-4 flex flex-wrap gap-3 items-end">
         <label className="flex-1 min-w-[200px]">
-          <span className="block text-xs font-medium text-slate-600 mb-1">Search</span>
+          <span className="block text-xs font-medium text-slate-600 mb-1">{c.t('pages.users.searchLabel')}</span>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Email, name, phone, school…"
+            placeholder={c.t('pages.users.searchPlaceholder')}
             className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
           />
         </label>
         <label>
-          <span className="block text-xs font-medium text-slate-600 mb-1">Role</span>
+          <span className="block text-xs font-medium text-slate-600 mb-1">{c.t('pages.users.colRole')}</span>
           <select
             value={roleFilter}
             onChange={(e) => {
@@ -236,13 +239,13 @@ export default function AdminUsers() {
           >
             {ROLES.map((r) => (
               <option key={r || 'all'} value={r}>
-                {r || 'All roles'}
+                {r || c.t('pages.users.roleAll')}
               </option>
             ))}
           </select>
         </label>
         <label>
-          <span className="block text-xs font-medium text-slate-600 mb-1">Status</span>
+          <span className="block text-xs font-medium text-slate-600 mb-1">{c.t('pages.users.colStatus')}</span>
           <select
             value={statusFilter}
             onChange={(e) => {
@@ -255,35 +258,33 @@ export default function AdminUsers() {
           >
             {STATUSES.map((s) => (
               <option key={s || 'all'} value={s}>
-                {s || 'All statuses'}
+                {s || c.t('pages.users.statusAll')}
               </option>
             ))}
           </select>
         </label>
         <button type="submit" className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium">
-          Search
+          {c.t('pages.users.searchBtn')}
         </button>
       </form>
 
       <div className="card overflow-hidden">
         {loading ? (
-          <p className="p-6 text-slate-500 text-sm">Loading users…</p>
+          <p className="p-6 text-slate-500 text-sm">{c.t('pages.users.loadingUsers')}</p>
         ) : users.length === 0 ? (
-          <p className="p-6 text-slate-500 text-sm">
-            No users yet. Run migrations 002–004 in Supabase, register on the site, or click &quot;Sync from Auth&quot;.
-          </p>
+          <p className="p-6 text-slate-500 text-sm">{c.t('pages.users.noUsersYet')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[800px]">
               <thead className="bg-slate-50 text-left text-slate-600">
                 <tr>
-                  <th className="p-3">User</th>
-                  <th className="p-3">Contact</th>
-                  <th className="p-3">School</th>
-                  <th className="p-3">Tier</th>
-                  <th className="p-3">Role</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Last sign-in</th>
+                  <th className="p-3">{c.t('pages.users.colUser')}</th>
+                  <th className="p-3">{c.t('pages.users.colContact')}</th>
+                  <th className="p-3">{c.t('pages.users.colSchool')}</th>
+                  <th className="p-3">{c.t('pages.users.colTier')}</th>
+                  <th className="p-3">{c.t('pages.users.colRole')}</th>
+                  <th className="p-3">{c.t('pages.users.colStatus')}</th>
+                  <th className="p-3">{c.t('pages.users.colLastSignIn')}</th>
                   <th className="p-3 w-28" />
                 </tr>
               </thead>
@@ -306,7 +307,7 @@ export default function AdminUsers() {
                       )}
                     </td>
                     <td className="p-3">
-                      <TierBadge tier={row.member_tier} />
+                      <TierBadge tier={row.member_tier} t={c.t} />
                     </td>
                     <td className="p-3">
                       <span className="text-xs font-medium capitalize">{row.role}</span>
@@ -325,7 +326,7 @@ export default function AdminUsers() {
                         onClick={() => setSelectedId(row.id)}
                         className="text-primary text-xs font-medium hover:underline mr-3"
                       >
-                        Edit
+                        {c.t('pages.users.view')}
                       </button>
                       {row.id !== currentUser?.id ? (
                         <button
@@ -333,7 +334,7 @@ export default function AdminUsers() {
                           onClick={() => handleDeleteRow(row)}
                           className="text-red-600 text-xs font-medium hover:underline"
                         >
-                          Delete
+                          {c.delete}
                         </button>
                       ) : null}
                     </td>
@@ -362,7 +363,7 @@ export default function AdminUsers() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 className="px-3 py-1 rounded-lg border border-slate-300 disabled:opacity-40"
               >
-                Previous
+                {c.t('pages.users.previous')}
               </button>
               <button
                 type="button"
@@ -370,7 +371,7 @@ export default function AdminUsers() {
                 onClick={() => setPage((p) => p + 1)}
                 className="px-3 py-1 rounded-lg border border-slate-300 disabled:opacity-40"
               >
-                Next
+                {c.t('pages.users.next')}
               </button>
             </div>
           </div>

@@ -1,5 +1,7 @@
 /** Admin console i18n — default 中文 for operations team */
 
+import { adminPagesEn, adminPagesZh } from './adminPagesI18n.js'
+
 export const ADMIN_LOCALE_STORAGE_KEY = 'bingo-admin-locale'
 export const DEFAULT_ADMIN_LOCALE = 'zh'
 export const ADMIN_LOCALES = ['zh', 'en']
@@ -96,7 +98,63 @@ const messages = {
       cancel: '取消',
       delete: '删除',
       edit: '编辑',
+      confirm: '确定',
     },
+    video: {
+      title: '视频库（Cloudflare Stream）',
+      description:
+        '上传到 Cloudflare Stream，转码完成后同步并关联课程。课程页在播放器内播放 HLS（请勿在新标签页直接打开 .m3u8 链接）。',
+      uploadHeading: '上传到 Stream',
+      helpSize:
+        '大小：Cloudflare 单文件最多 {{maxGb}} GB；本后台浏览器上传建议不超过约 {{recGb}} GB，更大文件可能因网络超时失败，请导出较小 MP4 或使用有线网络。',
+      helpDuration: '时长：单条视频最多 {{maxHours}} 小时。',
+      helpQuality:
+        '清晰度：请上传至少 1080p 源文件；播放会先自适应起播，数秒后升至高清。状态为「就绪」后再关联课程。',
+      placeholderTitle: '标题 *',
+      placeholderDescription: '描述（选填）',
+      assignCourseOptional: '关联课程（选填）',
+      chooseFileUpload: '选择文件并上传',
+      uploadingPct: '上传中… {{pct}}%',
+      working: '处理中…',
+      loadingList: '加载中…',
+      emptyList: '暂无视频资源。',
+      colTitle: '标题',
+      colStatus: '状态',
+      colPlayback: '播放',
+      colCourse: '课程',
+      colActions: '操作',
+      statusReady: '就绪',
+      statusProcessing: '转码中',
+      statusError: '失败',
+      previewPlayer: '预览播放',
+      hlsReadyHint: 'HLS 已就绪（用于课程页）',
+      encodingHint: '转码中…请先 Sync，再预览',
+      encodeFailedHint: '上传/转码失败 — 请删除后重试',
+      selectCourse: '选择课程…',
+      sync: '同步',
+      assign: '关联',
+      assignWaitReady: '请等待状态变为「就绪」',
+      delete: '删除',
+      deleteConfirm: '删除此视频记录？（不会从 Cloudflare 删除源文件）',
+      errTitleRequired: '请先填写标题再上传',
+      errSelectCourse: '请选择要关联的课程。',
+      errFileTooLarge:
+        '文件 {{size}}，超过 Cloudflare 上限 {{max}}（30 GB）。',
+      confirmLargeFile:
+        '文件大小 {{size}}。浏览器上传建议在 {{max}}（约 4 GB）以内，是否仍继续？',
+      infoUploading: '正在上传 {{name}}（{{size}}）…',
+      infoUploadDoneEncoding: '上传完成 — 等待 Cloudflare 转码（可能需要数分钟）…',
+      infoSyncStillEncoding: 'Cloudflare 仍在转码 — 约 1 分钟后再次点击「同步」。',
+      infoSyncSuccess: '已从 Cloudflare Stream 同步播放地址。',
+      infoAssignPending:
+        '已关联到 {{slug}}，但视频仍在转码。就绪后请再次「同步」。',
+      infoAssignSuccess: '已关联到 {{slug}}，课程页将播放此视频。',
+      infoUploadPendingAssign:
+        '上传完成，转码进行中 — 约 1–3 分钟后在本行点击「同步」，再关联课程。',
+      infoUploadReadyAssigned: '视频已就绪并关联到 {{slug}}。',
+      infoUploadReady: '视频已就绪，请在下方关联课程。',
+    },
+    ...adminPagesZh,
   },
   en: {
     lang: { zh: '中文', en: 'English', switch: 'Language' },
@@ -189,8 +247,72 @@ const messages = {
       cancel: 'Cancel',
       delete: 'Delete',
       edit: 'Edit',
+      confirm: 'OK',
     },
+    video: {
+      title: 'Video library (Cloudflare Stream)',
+      description:
+        'Upload to Cloudflare Stream, sync when encoding completes, assign to courses. Course pages play HLS in the video player (not by opening the .m3u8 link in a new tab).',
+      uploadHeading: 'Upload to Stream',
+      helpSize:
+        'Size: Cloudflare allows up to {{maxGb}} GB per file; this admin uploader works reliably up to ~{{recGb}} GB in the browser. Larger files may fail due to network timeouts — export a smaller MP4 or use a wired connection.',
+      helpDuration: 'Duration: up to {{maxHours}} hours per video.',
+      helpQuality:
+        'Quality: upload at least 1080p source; playback starts at adaptive quality and ramps up after a few seconds. Wait until status is ready before assigning to a course.',
+      placeholderTitle: 'Title *',
+      placeholderDescription: 'Description (optional)',
+      assignCourseOptional: 'Assign to course (optional)',
+      chooseFileUpload: 'Choose file & upload',
+      uploadingPct: 'Uploading… {{pct}}%',
+      working: 'Working…',
+      loadingList: 'Loading…',
+      emptyList: 'No video assets yet.',
+      colTitle: 'Title',
+      colStatus: 'Status',
+      colPlayback: 'Playback',
+      colCourse: 'Course',
+      colActions: 'Actions',
+      statusReady: 'Ready',
+      statusProcessing: 'Processing',
+      statusError: 'Error',
+      previewPlayer: 'Preview player',
+      hlsReadyHint: 'HLS ready (used on course page)',
+      encodingHint: 'Encoding… use Sync, then Preview',
+      encodeFailedHint: 'Upload/encode failed — delete and retry',
+      selectCourse: 'Select course…',
+      sync: 'Sync',
+      assign: 'Assign',
+      assignWaitReady: 'Wait until status is ready',
+      delete: 'Delete',
+      deleteConfirm: 'Delete this video record? (Does not remove from Cloudflare.)',
+      errTitleRequired: 'Enter a title before uploading',
+      errSelectCourse: 'Select a course slug to assign this video.',
+      errFileTooLarge:
+        'File is {{size}} — Cloudflare Stream maximum is {{max}} (30 GB).',
+      confirmLargeFile:
+        'This file is {{size}}. Browser uploads work best under {{max}} (~4 GB). Continue anyway?',
+      infoUploading: 'Uploading {{name}} ({{size}})…',
+      infoUploadDoneEncoding:
+        'Upload complete — waiting for Cloudflare to encode (may take several minutes)…',
+      infoSyncStillEncoding: 'Still encoding on Cloudflare — click Sync again in a minute.',
+      infoSyncSuccess: 'Playback URLs synced from Cloudflare Stream.',
+      infoAssignPending:
+        'Assigned to {{slug}}, but video is still encoding. Sync again when status is ready.',
+      infoAssignSuccess: 'Assigned to {{slug}}. Course page will play this video.',
+      infoUploadPendingAssign:
+        'Upload finished. Encoding still in progress — click Sync on this row in 1–3 minutes, then assign to the course.',
+      infoUploadReadyAssigned: 'Video ready and assigned to {{slug}}.',
+      infoUploadReady: 'Video ready. Assign to a course below.',
+    },
+    ...adminPagesEn,
   },
+}
+
+/** Map DB status → i18n key suffix */
+export function adminVideoStatusKey(status) {
+  if (status === 'ready') return 'video.statusReady'
+  if (status === 'error') return 'video.statusError'
+  return 'video.statusProcessing'
 }
 
 function getNested(obj, path) {

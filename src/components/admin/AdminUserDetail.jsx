@@ -3,6 +3,7 @@ import { fetchAdminUser, updateAdminUser, deleteAdminUser } from '../../lib/admi
 import { supabase } from '../../lib/supabase'
 import { logAdminAction } from '../../lib/admin/auth'
 import AdminAlert from './AdminAlert'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const ROLES = ['user', 'editor', 'admin']
 const STATUSES = ['active', 'suspended', 'pending']
@@ -42,6 +43,7 @@ function parseTags(str) {
 }
 
 export default function AdminUserDetail({ userId, currentUserId, onClose, onSaved, onDeleted }) {
+  const c = useAdminCrud()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -104,10 +106,10 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
 
   const handleDelete = async () => {
     if (userId === currentUserId) {
-      setError('You cannot delete your own account while signed in.')
+      setError(c.t('pages.users.detail.cannotDeleteSelf'))
       return
     }
-    if (!confirm(`Permanently delete user ${user?.email || userId}? This removes their Auth account and profile.`)) {
+    if (!confirm(c.t('pages.users.detail.confirmDelete', { email: user?.email || userId }))) {
       return
     }
     setDeleting(true)
@@ -157,7 +159,7 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="font-bold text-bingo-dark">User details</h2>
+          <h2 className="font-bold text-bingo-dark">{c.t('pages.users.detail.title')}</h2>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">
             ×
           </button>
@@ -167,7 +169,7 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
           {error ? <AdminAlert type="error" onDismiss={() => setError(null)}>{error}</AdminAlert> : null}
 
           {loading ? (
-            <p className="text-sm text-slate-500">Loading user…</p>
+            <p className="text-sm text-slate-500">{c.t('pages.users.detail.loading')}</p>
           ) : user ? (
             <>
               <div className="flex items-center gap-4 mb-6">
@@ -187,21 +189,24 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
 
               <section className="mb-6 rounded-xl bg-slate-50 p-4 text-xs text-slate-600 space-y-1">
                 <p>
-                  <span className="font-medium text-slate-700">Registered:</span> {formatDate(user.auth?.created_at || user.created_at)}
+                  <span className="font-medium text-slate-700">{c.t('pages.users.detail.registered')}:</span>{' '}
+                  {formatDate(user.auth?.created_at || user.created_at)}
                 </p>
                 <p>
-                  <span className="font-medium text-slate-700">Last sign-in:</span> {formatDate(user.auth?.last_sign_in_at)}
+                  <span className="font-medium text-slate-700">{c.t('pages.users.detail.lastSignIn')}:</span>{' '}
+                  {formatDate(user.auth?.last_sign_in_at)}
                 </p>
                 <p>
-                  <span className="font-medium text-slate-700">Email confirmed:</span>{' '}
-                  {user.auth?.email_confirmed_at ? 'Yes' : 'No'}
+                  <span className="font-medium text-slate-700">{c.t('pages.users.detail.emailConfirmed')}:</span>{' '}
+                  {user.auth?.email_confirmed_at ? c.t('pages.users.detail.yes') : c.t('pages.users.detail.no')}
                 </p>
                 <p>
-                  <span className="font-medium text-slate-700">Orders:</span> {user.order_count ?? orders.length}
+                  <span className="font-medium text-slate-700">{c.t('pages.users.detail.orders')}:</span>{' '}
+                  {user.order_count ?? orders.length}
                 </p>
               </section>
 
-              <h3 className="text-sm font-semibold text-bingo-dark mb-3">Profile</h3>
+              <h3 className="text-sm font-semibold text-bingo-dark mb-3">{c.t('pages.users.detail.profile')}</h3>
               <div className="grid gap-3 mb-6">
                 <label className="block text-xs font-medium text-slate-600">
                   Email
@@ -230,7 +235,7 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block text-xs font-medium text-slate-600">
-                    Role
+                    {c.t('pages.users.create.role')}
                     <select
                       value={form.role}
                       onChange={(e) => set('role', e.target.value)}
@@ -359,7 +364,7 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
         <div className="sticky bottom-0 border-t border-slate-200 bg-white p-4 space-y-2">
           <div className="flex gap-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-300 text-sm font-medium">
-              Cancel
+              {c.cancel}
             </button>
             <button
               type="button"
@@ -367,7 +372,7 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
               disabled={loading || saving || deleting}
               className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-medium disabled:opacity-60"
             >
-              {saving ? 'Saving…' : 'Save changes'}
+              {saving ? c.saving : c.t('pages.users.detail.saveChanges')}
             </button>
           </div>
           {userId !== currentUserId ? (
@@ -377,7 +382,7 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
               disabled={loading || saving || deleting}
               className="w-full py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 disabled:opacity-60"
             >
-              {deleting ? 'Deleting…' : 'Delete user'}
+              {deleting ? c.t('pages.users.detail.deleting') : c.t('pages.users.detail.deleteUser')}
             </button>
           ) : null}
         </div>

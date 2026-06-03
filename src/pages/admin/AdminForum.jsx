@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 function toDbThread(row) {
   return {
@@ -30,6 +31,8 @@ function fromDbThread(row) {
 const INIT = { title: '', content: '', author: 'Admin', category: 'Discussion', image: '' }
 
 export default function AdminForum() {
+  const c = useAdminCrud()
+  const itemLabel = c.t('pages.forum.item')
   const [threads, setThreads] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
@@ -77,7 +80,7 @@ export default function AdminForum() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this thread and all replies?')) return
+    if (!confirm(c.t('pages.forum.confirmDelete'))) return
     setError(null)
     try {
       await adminDelete('forum_threads', id)
@@ -105,58 +108,58 @@ export default function AdminForum() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-6">Forum Management</h1>
+      <h1 className="text-2xl font-bold text-bingo-dark mb-6">{c.pageTitle('forum')}</h1>
 
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
 
       <div className="card p-6 mb-6">
-        <h2 className="font-semibold text-bingo-dark mb-4">{editing ? 'Edit Thread' : 'Add Thread'}</h2>
+        <h2 className="font-semibold text-bingo-dark mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">Title</label>
+            <label className="text-xs font-medium text-slate-600 block mb-1">{c.title}</label>
             <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">Content</label>
+            <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.forum.content')}</label>
             <textarea value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} rows={3} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-medium text-slate-600 block mb-1">Author</label>
+              <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.forum.author')}</label>
               <input value={form.author} onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-600 block mb-1">Category</label>
+              <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.forum.category')}</label>
               <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white">
                 {['Discussion','Parent Experience','Competition','Course Q&A','Resources','Other'].map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">Image URL</label>
+            <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.forum.imageUrl')}</label>
             <input value={form.image} onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))} placeholder="https://..." className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          <button onClick={handleSave} className="btn-primary px-5 py-2 rounded-xl text-sm">Save</button>
-          {editing && <button onClick={cancelEdit} className="px-5 py-2 rounded-xl border border-slate-300 text-sm">Cancel</button>}
+          <button type="button" onClick={handleSave} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>
+          {editing && <button type="button" onClick={cancelEdit} className="px-5 py-2 rounded-xl border border-slate-300 text-sm">{c.cancel}</button>}
         </div>
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark">Thread List</div>
+        <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark">{c.t('pages.forum.list')}</div>
         {loading ? (
-          <div className="p-8 text-center text-slate-500">Loading...</div>
+          <div className="p-8 text-center text-slate-500">{c.loading}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 text-left">
-                  <th className="p-3">Title</th>
-                  <th className="p-3">Author</th>
-                  <th className="p-3">Category</th>
-                  <th className="p-3">Replies</th>
-                  <th className="p-3 w-24">Actions</th>
+                  <th className="p-3">{c.title}</th>
+                  <th className="p-3">{c.t('pages.forum.author')}</th>
+                  <th className="p-3">{c.t('pages.forum.category')}</th>
+                  <th className="p-3">{c.t('pages.forum.replies')}</th>
+                  <th className="p-3 w-24">{c.actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -167,14 +170,14 @@ export default function AdminForum() {
                     <td className="p-3">{r.category}</td>
                     <td className="p-3">{r.replyCount}</td>
                     <td className="p-3">
-                      <button onClick={() => startEdit(r)} className="text-primary hover:underline mr-2">Edit</button>
-                      <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:underline">Delete</button>
+                      <button type="button" onClick={() => startEdit(r)} className="text-primary hover:underline mr-2">{c.edit}</button>
+                      <button type="button" onClick={() => handleDelete(r.id)} className="text-red-600 hover:underline">{c.delete}</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {threads.length === 0 && <div className="p-8 text-center text-slate-500">No threads yet. Add one above.</div>}
+            {threads.length === 0 && <div className="p-8 text-center text-slate-500">{c.t('pages.forum.noThreads')}</div>}
           </div>
         )}
       </div>
