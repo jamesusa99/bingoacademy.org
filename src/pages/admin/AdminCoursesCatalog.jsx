@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { PRODUCT_LINES } from '../../config/products'
 import { COURSE_CATEGORIES, COURSE_LEVELS } from '../../config/courseListFilters'
@@ -15,7 +14,6 @@ import {
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
 import DraggableCatalogList from '../../components/admin/DraggableCatalogList'
 import { assignStreamToCourse } from '../../lib/admin/api'
-import { getProgramCurriculum } from '../../config/programCurriculum'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -183,51 +181,6 @@ export default function AdminCoursesCatalog() {
   return (
     <div>
       <AdminPageHeader titleKey="pages.coursesCatalog.title" descriptionKey="pages.coursesCatalog.desc" />
-
-      {(lineFilter === 'ioai' || form.line === 'ioai') && (
-        <div className="card p-4 mb-6 border-amber-200/80 bg-amber-50/50 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="font-semibold text-bingo-dark text-sm">{getProgramCurriculum('ioai').adminTitle}</p>
-            <p className="text-xs text-slate-600 mt-0.5">按阶段 · 类别 · 模块 · 课时管理 IOAI 课程 →</p>
-          </div>
-          <Link
-            to={getProgramCurriculum('ioai').adminPath}
-            className="btn-primary text-sm px-4 py-2 min-h-[40px] inline-flex items-center"
-          >
-            {getProgramCurriculum('ioai').adminTitle} →
-          </Link>
-        </div>
-      )}
-
-      {(lineFilter === 'general' || form.line === 'general') && (
-        <div className="card p-4 mb-6 border-cyan-200/80 bg-cyan-50/50 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="font-semibold text-bingo-dark text-sm">{getProgramCurriculum('general').adminTitle}</p>
-            <p className="text-xs text-slate-600 mt-0.5">按阶段 · 类别 · 模块 · 课时管理 Foundations 课程 →</p>
-          </div>
-          <Link
-            to={getProgramCurriculum('general').adminPath}
-            className="btn-primary text-sm px-4 py-2 min-h-[40px] inline-flex items-center"
-          >
-            {getProgramCurriculum('general').adminTitle} →
-          </Link>
-        </div>
-      )}
-
-      {(lineFilter === 'k12' || form.line === 'k12') && (
-        <div className="card p-4 mb-6 border-violet-200/80 bg-violet-50/50 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="font-semibold text-bingo-dark text-sm">{getProgramCurriculum('k12').adminTitle}</p>
-            <p className="text-xs text-slate-600 mt-0.5">按阶段 · 类别 · 模块 · 课时管理 K12 课程 →</p>
-          </div>
-          <Link
-            to={getProgramCurriculum('k12').adminPath}
-            className="btn-primary text-sm px-4 py-2 min-h-[40px] inline-flex items-center"
-          >
-            {getProgramCurriculum('k12').adminTitle} →
-          </Link>
-        </div>
-      )}
 
       {error ? (
         <AdminAlert type="error" onDismiss={() => setError(null)}>
