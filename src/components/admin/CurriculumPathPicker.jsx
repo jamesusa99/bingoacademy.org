@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 export const CURRICULUM_NEW = '__new__'
 
@@ -34,13 +34,20 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
   const patch = (updates) => onChange({ ...value, ...updates })
 
   const sortedLevels = useMemo(() => sortByOrder(levels), [levels])
+  const initStageRef = useRef(false)
 
   useEffect(() => {
-    if (!stageChoice && sortedLevels.length === 0) {
+    if (stageChoice) {
+      initStageRef.current = true
+      return
+    }
+    if (initStageRef.current) return
+    if (sortedLevels.length === 0) {
       patch({ stageChoice: CURRICULUM_NEW })
-    } else if (!stageChoice && sortedLevels.length > 0) {
+    } else {
       patch({ stageChoice: sortedLevels[0].id })
     }
+    initStageRef.current = true
   }, [sortedLevels, stageChoice])
 
   const selectedLevel = useMemo(

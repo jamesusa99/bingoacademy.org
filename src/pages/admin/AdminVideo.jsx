@@ -17,7 +17,7 @@ import { useAdminLocale } from '../../contexts/AdminLocaleContext'
 import { adminVideoStatusKey } from '../../config/adminI18n'
 import { CURRICULUM_LINES, getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import { fetchCurriculumAdmin } from '../../lib/ioaiCurriculumAdmin'
-import { resolveCurriculumLabels } from '../../lib/videoCurriculum'
+import { resolveCurriculumLabels, buildLessonOptionsByLine } from '../../lib/videoCurriculum'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
@@ -46,7 +46,6 @@ export default function AdminVideo() {
   const { t } = useAdminLocale()
   const c = useAdminCrud()
   const [items, setItems] = useState([])
-  const [courses, setCourses] = useState([])
   const [levelsByLine, setLevelsByLine] = useState({ ioai: [], general: [], k12: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -90,14 +89,12 @@ export default function AdminVideo() {
 
   const fetchItems = async () => {
     setLoading(true)
-    const [{ data, error: e }, { data: catalog }, ...curriculumResults] = await Promise.all([
+    const [{ data, error: e }, ...curriculumResults] = await Promise.all([
       supabase.from('video_assets').select('*').order('created_at', { ascending: false }),
-      supabase.from('courses_catalog').select('slug, name, delivery_type, line').order('sort_order'),
       ...CURRICULUM_LINES.map((line) => fetchCurriculumAdmin(line).catch(() => ({ levels: [] }))),
     ])
     setError(e?.message || null)
     setItems(data || [])
-    setCourses(catalog || [])
     setLevelsByLine(
       Object.fromEntries(CURRICULUM_LINES.map((line, i) => [line, curriculumResults[i]?.levels || []]))
     )
@@ -111,10 +108,9 @@ export default function AdminVideo() {
       .catch(() => setLimits(DEFAULT_LIMITS))
   }, [])
 
-  const videoCourses = useMemo(
-    () => courses.filter((c) => c.line === productLine || !c.line),
-    [courses, productLine]
-  )
+  const lessonOptionsByLine = useMemo(() => buildLessonOptionsByLine(levelsByLine), [levelsByLine])
+
+  const uploadLessonOptions = lessonOptionsByLine[productLine] || []
 
   const listLabels = useMemo(
     () => ({
@@ -128,7 +124,7 @@ export default function AdminVideo() {
       colModule: c.t(`${i18nRoot}.colModule`),
       previewPlayer: t('video.previewPlayer'),
       encodingHint: t('video.encodingHint'),
-      selectCourse: t('video.selectCourse'),
+      selectLesson: t('video.selectLesson'),
       sync: t('video.sync'),
       assign: t('video.assign'),
       delete: t('video.delete'),
@@ -412,16 +408,16 @@ export default function AdminVideo() {
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">{t('video.assignCourseOptional')}</label>
+            <label className="text-xs font-medium text-slate-600 block mb-1">{t('video.assignLessonOptional')}</label>
             <select
               value={form.catalog_slug}
               onChange={(e) => setFormField('catalog_slug', e.target.value)}
               className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
             >
-              <option value="">{t('video.assignCourseOptional')}</option>
-              {videoCourses.map((cRow) => (
-                <option key={cRow.slug} value={cRow.slug}>
-                  {cRow.slug} — {cRow.name}
+              <option value="">{t('video.selectLesson')}</option>
+              {uploadLessonOptions.map((lesson) => (
+                <option key={lesson.lessonId} value={lesson.slug}>
+                  {lesson.label}
                 </option>
               ))}
             </select>
@@ -468,7 +464,7 @@ export default function AdminVideo() {
             t={t}
             assignSlug={assignSlug}
             syncingId={syncingId}
-            courseOptions={courses}
+            courseOptionsByLine={lessonOptionsByLine}
             onPreview={setPreview}
             onSync={handleSync}
             onAssign={handleAssign}

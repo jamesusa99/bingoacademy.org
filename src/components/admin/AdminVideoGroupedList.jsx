@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { groupVideosByCurriculum } from '../../lib/videoCurriculum'
 import { CURRICULUM_LINES, getProgramCurriculum } from '../../config/programCurriculum'
 
-function VideoRow({ row, labels, t, assignSlug, syncingId, onPreview, onSync, onAssign, onDelete, onAssignChange }) {
+function VideoRow({ row, labels, t, assignSlug, syncingId, lessonOptions, onPreview, onSync, onAssign, onDelete, onAssignChange }) {
   const previewUrl = row.cloudflare_uid
     ? `https://iframe.cloudflarestream.com/${row.cloudflare_uid}`
     : null
@@ -59,10 +59,10 @@ function VideoRow({ row, labels, t, assignSlug, syncingId, onPreview, onSync, on
           onChange={(e) => onAssignChange(row.id, e.target.value)}
           className="text-xs rounded border border-slate-200 px-2 py-1 max-w-[200px] w-full"
         >
-          <option value="">{labels.selectCourse}</option>
-          {labels.courseOptions?.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.slug} — {c.name}
+          <option value="">{labels.selectLesson}</option>
+          {lessonOptions.map((lesson) => (
+            <option key={lesson.lessonId || lesson.slug} value={lesson.slug}>
+              {lesson.label}
             </option>
           ))}
         </select>
@@ -99,7 +99,7 @@ export default function AdminVideoGroupedList({
   t,
   assignSlug,
   syncingId,
-  courseOptions,
+  courseOptionsByLine,
   onPreview,
   onSync,
   onAssign,
@@ -108,10 +108,23 @@ export default function AdminVideoGroupedList({
 }) {
   const { byLine, unclassified } = useMemo(() => groupVideosByCurriculum(items), [items])
 
+  const allLessonOptions = useMemo(
+    () =>
+      CURRICULUM_LINES.flatMap((line) =>
+        (courseOptionsByLine?.[line] || []).map((opt) => ({
+          ...opt,
+          label: `${getProgramCurriculum(line).adminTitle} · ${opt.label}`,
+        }))
+      ),
+    [courseOptionsByLine]
+  )
+
+  const lessonOptionsForLine = (line) => courseOptionsByLine?.[line] || []
+
   const linesToShow =
     lineFilter === 'all' ? CURRICULUM_LINES.filter((l) => byLine.has(l)) : byLine.has(lineFilter) ? [lineFilter] : []
 
-  const rowLabels = { ...labels, courseOptions, statusKey: labels.statusKey }
+  const rowLabels = { ...labels, statusKey: labels.statusKey }
 
   if (!items.length) {
     return <p className="p-6 text-slate-500 text-sm">{labels.emptyList}</p>
@@ -162,6 +175,7 @@ export default function AdminVideoGroupedList({
                                   t={t}
                                   assignSlug={assignSlug}
                                   syncingId={syncingId}
+                                  lessonOptions={lessonOptionsForLine(line)}
                                   onPreview={onPreview}
                                   onSync={onSync}
                                   onAssign={onAssign}
@@ -205,6 +219,7 @@ export default function AdminVideoGroupedList({
                     t={t}
                     assignSlug={assignSlug}
                     syncingId={syncingId}
+                    lessonOptions={allLessonOptions}
                     onPreview={onPreview}
                     onSync={onSync}
                     onAssign={onAssign}

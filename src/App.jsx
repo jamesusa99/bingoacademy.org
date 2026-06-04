@@ -91,7 +91,7 @@ export default function App() {
         }
       />
       <Route
-        path="/admin/*"
+        path="/admin"
         element={
           <AdminLocaleProvider>
             <AdminGuard>
@@ -121,6 +121,7 @@ export default function App() {
         <Route path="video" element={<AdminVideo />} />
         <Route path="payments" element={<AdminPayments />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
       {/* Main site routes */}
       <Route path="/" element={<Layout><Outlet /></Layout>}>

@@ -34,8 +34,8 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-100">
-      <aside className="w-60 bg-bingo-dark flex flex-col shrink-0">
+    <div className="min-h-screen bg-slate-100">
+      <aside className="fixed inset-y-0 left-0 z-40 w-60 bg-bingo-dark flex flex-col">
         <div className="p-4 border-b border-cyan-500/20">
           <div className="flex items-center justify-between gap-2 mb-2">
             <Link to="/admin" className="flex items-center gap-2 min-w-0 flex-1">
@@ -104,7 +104,7 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto">
+      <main className="min-h-screen ml-60 overflow-auto">
         <div className="p-6">
           <Outlet />
         </div>

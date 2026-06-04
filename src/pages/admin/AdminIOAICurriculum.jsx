@@ -13,6 +13,7 @@ import {
   saveProgramLessonConfig,
 } from '../../lib/ioaiCurriculumAdmin'
 import { readAdminUiDraft, writeAdminUiDraft, clearAdminUiDraft } from '../../hooks/useAdminFormDraft'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 export default function AdminIOAICurriculum() {
   const { line: lineParam = 'ioai' } = useParams()

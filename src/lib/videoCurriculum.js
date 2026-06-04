@@ -1,3 +1,38 @@
+function sortRows(rows) {
+  return [...(rows || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+}
+
+/** Flatten curriculum tree into lesson options for video ↔ lesson assignment */
+export function buildCurriculumLessonOptions(levels) {
+  /** @type {Array<{ slug: string, name: string, label: string, lessonId: string }>} */
+  const options = []
+  for (const level of sortRows(levels)) {
+    for (const theme of sortRows(level.themes)) {
+      const categoryLabel = theme.category_label || theme.title
+      for (const mod of sortRows(theme.modules)) {
+        for (const lesson of sortRows(mod.lessons)) {
+          const slug = lesson.catalog_slug || lesson.slug
+          if (!slug) continue
+          options.push({
+            slug,
+            name: lesson.title,
+            lessonId: lesson.id,
+            label: `${level.title} · ${categoryLabel} · ${mod.title} · ${lesson.title}`,
+          })
+        }
+      }
+    }
+  }
+  return options
+}
+
+/** @param {Record<string, object[]>} levelsByLine */
+export function buildLessonOptionsByLine(levelsByLine) {
+  return Object.fromEntries(
+    Object.entries(levelsByLine || {}).map(([line, levels]) => [line, buildCurriculumLessonOptions(levels)])
+  )
+}
+
 /** Group video assets by curriculum path for admin library display */
 
 export function videoCurriculumPath(asset) {
