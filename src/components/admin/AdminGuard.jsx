@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAdminAuth } from '../../hooks/useAdminAuth'
 import { useAdminLocale } from '../../contexts/AdminLocaleContext'
+import { adminLoginPath } from '../../lib/admin/loginRedirect'
 import AdminLanguageSwitcher from './AdminLanguageSwitcher'
 
 export default function AdminGuard({ children }) {
@@ -34,7 +35,7 @@ export default function AdminGuard({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/admin/login" replace state={{ from: loc.pathname }} />
+    return <Navigate to={adminLoginPath(loc.pathname)} replace />
   }
 
   if (!isAdmin) {

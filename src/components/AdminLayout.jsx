@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { useAdminLocale } from '../contexts/AdminLocaleContext'
 import { ADMIN_NAV_GROUPS, isAdminNavActive } from '../config/adminNav'
+import AdminErrorBoundary from './admin/AdminErrorBoundary'
 import AdminLanguageSwitcher from './admin/AdminLanguageSwitcher'
 
 export default function AdminLayout() {
@@ -106,7 +107,9 @@ export default function AdminLayout() {
 
       <main className="min-h-screen ml-60 overflow-auto">
         <div className="p-6">
-          <Outlet />
+          <AdminErrorBoundary>
+            <Outlet />
+          </AdminErrorBoundary>
         </div>
       </main>
     </div>

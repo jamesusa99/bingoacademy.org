@@ -1,17 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { signInWithEmail } from '../../lib/auth'
 import { isSupabaseConfigured } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { useAdminAuth } from '../../hooks/useAdminAuth'
 import { useAdminLocale } from '../../contexts/AdminLocaleContext'
+import { readAdminLoginNext, sanitizeAdminNextPath } from '../../lib/admin/loginRedirect'
+import { getProgramCurriculum } from '../../config/programCurriculum'
 import AdminLanguageSwitcher from '../../components/admin/AdminLanguageSwitcher'
 import AuthAlert from '../../components/auth/AuthAlert'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
   const location = useLocation()
-  const from = location.state?.from || '/admin'
+  const from = readAdminLoginNext(location)
+  const nextLabel = useMemo(() => {
+    const path = sanitizeAdminNextPath(from)
+    if (path.includes('/curriculum/ioai')) return getProgramCurriculum('ioai').adminTitle
+    if (path.includes('/curriculum/general')) return getProgramCurriculum('general').adminTitle
+    if (path.includes('/curriculum/k12')) return getProgramCurriculum('k12').adminTitle
+    if (path !== '/admin') return path.replace(/^\/admin\/?/, '') || t('login.targetAdmin')
+    return null
+  }, [from, t])
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { isAdmin, loading: adminLoading } = useAdminAuth()
   const { t } = useAdminLocale()
@@ -71,7 +81,14 @@ export default function AdminLogin() {
           <span className="font-semibold text-bingo-dark text-sm leading-tight">{t('login.brand')}</span>
         </div>
         <h1 className="text-lg font-bold text-bingo-dark mb-1">{t('login.title')}</h1>
-        <p className="text-sm text-slate-500 mb-6">{t('login.subtitle')}</p>
+        <p className="text-sm text-slate-500 mb-2">{t('login.subtitle')}</p>
+        {nextLabel ? (
+          <p className="text-xs text-primary mb-4">
+            {t('login.redirectHint', { target: nextLabel })}
+          </p>
+        ) : (
+          <div className="mb-4" />
+        )}
 
         {error ? <AuthAlert type="error">{error}</AuthAlert> : null}
 

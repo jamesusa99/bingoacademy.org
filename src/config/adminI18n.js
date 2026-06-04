@@ -32,6 +32,8 @@ const messages = {
       noAdminAccess:
         '已登录，但此账号无管理权限。请管理员在「用户管理」中将角色设为 admin 或 editor 后重新登录。',
       backToSite: '← 返回网站',
+      redirectHint: '登录后将进入：{{target}}',
+      targetAdmin: '管理后台',
     },
     guard: {
       verifying: '正在验证管理权限…',
@@ -197,6 +199,8 @@ const messages = {
       noAdminAccess:
         'Signed in, but this account does not have admin access. Ask an administrator to set profiles.role to admin or editor, then sign in again.',
       backToSite: '← Back to site',
+      redirectHint: 'After sign-in you will go to: {{target}}',
+      targetAdmin: 'Admin',
     },
     guard: {
       verifying: 'Verifying admin access…',
