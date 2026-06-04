@@ -13,6 +13,9 @@ import AuthAlert from '../../components/auth/AuthAlert'
 export default function AdminLogin() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useAdminLocale()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const { isAdmin, loading: adminLoading } = useAdminAuth()
   const from = readAdminLoginNext(location)
   const nextLabel = useMemo(() => {
     const path = sanitizeAdminNextPath(from)
@@ -22,9 +25,6 @@ export default function AdminLogin() {
     if (path !== '/admin') return path.replace(/^\/admin\/?/, '') || t('login.targetAdmin')
     return null
   }, [from, t])
-  const { isAuthenticated, loading: authLoading } = useAuth()
-  const { isAdmin, loading: adminLoading } = useAdminAuth()
-  const { t } = useAdminLocale()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
