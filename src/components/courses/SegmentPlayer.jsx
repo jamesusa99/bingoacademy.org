@@ -7,7 +7,7 @@ import { LESSON_SEGMENTS, getCheckpointQuestion } from '../../config/lessonSegme
 import { useLessonProgress } from '../../hooks/useLearningProgress'
 import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import { getAdjacentLessons } from '../../lib/ioaiCourseStructure'
-import CoursePurchasePanel from './CoursePurchasePanel'
+import VideoPlayerControls from './VideoPlayerControls'
 import CourseStreamVideo from './CourseStreamVideo'
 
 function formatTime(seconds) {
@@ -281,7 +281,7 @@ export default function SegmentPlayer({
 
         {currentSegment?.type === 'video' ? (
           <div>
-            <div className="relative aspect-video bg-black">
+            <div className="relative aspect-video bg-black" data-video-shell>
               <div className="absolute top-3 left-3 z-20 flex gap-2">
                 <span
                   className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
@@ -317,7 +317,7 @@ export default function SegmentPlayer({
                 <button
                   type="button"
                   onClick={handlePlay}
-                  className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition group"
+                  className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition group z-10"
                   aria-label={COURSES_PORTAL.watchPreview}
                 >
                   <span className="w-16 h-16 rounded-full bg-white/95 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
@@ -325,6 +325,8 @@ export default function SegmentPlayer({
                   </span>
                 </button>
               ) : null}
+
+              {(hasAccess || playing) ? <VideoPlayerControls videoRef={videoRef} /> : null}
 
               {showLock ? (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-sm p-6 text-center">

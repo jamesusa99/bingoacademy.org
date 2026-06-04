@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, Loader2, AlertCircle } from 'lucide-react'
 import { fetchVideoStreamToken } from '../../lib/checkout'
 import CourseStreamVideo from '../courses/CourseStreamVideo'
+import VideoPlayerControls from '../courses/VideoPlayerControls'
 import { buildStreamManifestUrl } from '../../lib/streamPlayback'
 
 /**
@@ -12,6 +13,7 @@ import { buildStreamManifestUrl } from '../../lib/streamPlayback'
  * }} props
  */
 export default function LessonVideoModal({ open, lesson, onClose }) {
+  const videoRef = useRef(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [playback, setPlayback] = useState(null)
@@ -86,7 +88,10 @@ export default function LessonVideoModal({ open, lesson, onClose }) {
           </button>
         </div>
 
-        <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border border-slate-700/80 bg-black shadow-[0_0_80px_rgba(0,0,0,0.8)] aspect-video w-full">
+        <div
+          data-video-shell
+          className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border border-slate-700/80 bg-black shadow-[0_0_80px_rgba(0,0,0,0.8)] aspect-video w-full"
+        >
           {loading ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400">
               <Loader2 className="w-10 h-10 animate-spin text-cyan-400" />
@@ -112,13 +117,17 @@ export default function LessonVideoModal({ open, lesson, onClose }) {
           ) : null}
 
           {!loading && !error && playback?.src && !playback.useIframe ? (
-            <CourseStreamVideo
-              src={playback.src}
-              className="absolute inset-0 w-full h-full object-contain bg-black"
-              controls
-              playsInline
-              preload="metadata"
-            />
+            <>
+              <CourseStreamVideo
+                videoRef={videoRef}
+                src={playback.src}
+                className="absolute inset-0 w-full h-full object-contain bg-black"
+                controls
+                playsInline
+                preload="metadata"
+              />
+              <VideoPlayerControls videoRef={videoRef} />
+            </>
           ) : null}
         </div>
       </div>

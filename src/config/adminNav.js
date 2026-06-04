@@ -11,7 +11,7 @@ export const ADMIN_NAV_GROUPS = [
     titleKey: 'nav.group.content',
     items: [
       { path: '/admin/home', labelKey: 'nav.homePortal', icon: '🏠' },
-      { path: '/admin/courses', labelKey: 'nav.courses', icon: '📋' },
+      { path: '/admin/courses', labelKey: 'nav.courses', icon: '🧪' },
       { path: '/admin/curriculum/ioai', labelKey: 'nav.ioaiCurriculum', icon: '🏆' },
       { path: '/admin/curriculum/general', labelKey: 'nav.generalCurriculum', icon: '🌐' },
       { path: '/admin/curriculum/k12', labelKey: 'nav.k12Curriculum', icon: '🏫' },
@@ -52,7 +52,7 @@ export function isAdminNavActive(pathname, path, end = false) {
 export const ADMIN_DASHBOARD_CARDS = [
   { labelKey: 'dashboard.cards.homePortal', statKey: null, to: '/admin/home', icon: '🏠', color: 'bg-slate-100 border-slate-200' },
   { labelKey: 'dashboard.cards.achievements', statKey: 'showcase', to: '/admin/showcase', icon: '🏅', color: 'bg-amber-50 border-amber-200/60' },
-  { labelKey: 'dashboard.cards.courses', statKey: 'courses', to: '/admin/courses', icon: '📚', color: 'bg-primary/10 border-primary/20' },
+  { labelKey: 'dashboard.cards.courses', statKey: 'courses', to: '/admin/courses', icon: '🧪', color: 'bg-primary/10 border-primary/20' },
   { labelKey: 'dashboard.cards.aiCamp', statKey: 'research', to: '/admin/research', icon: '⛺', color: 'bg-green-50 border-green-200/60' },
   { labelKey: 'dashboard.cards.events', statKey: 'events', to: '/admin/events', icon: '🏆', color: 'bg-amber-50 border-amber-200/60' },
   { labelKey: 'dashboard.cards.community', statKey: 'mentors', to: '/admin/mentors', icon: '👥', color: 'bg-violet-50 border-violet-200/60' },

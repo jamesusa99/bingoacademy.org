@@ -12,6 +12,7 @@ import {
   fetchVideoAssetsForLessonPicker,
   saveProgramLessonConfig,
 } from '../../lib/ioaiCurriculumAdmin'
+import { readAdminUiDraft, writeAdminUiDraft, clearAdminUiDraft } from '../../hooks/useAdminFormDraft'
 
 export default function AdminIOAICurriculum() {
   const { line: lineParam = 'ioai' } = useParams()
@@ -82,9 +83,34 @@ export default function AdminIOAICurriculum() {
       pickFromVideoLibrary: c.t(`${i18nRoot}.pickFromVideoLibrary`),
       pickVideoPlaceholder: c.t(`${i18nRoot}.pickVideoPlaceholder`),
       pickVideoHint: c.t(`${i18nRoot}.pickVideoHint`),
+      draftHint: c.t(`${i18nRoot}.draftHint`),
+      unclassifiedVideos: c.t(`${i18nRoot}.unclassifiedVideos`),
     }),
     [c, i18nRoot]
   )
+
+  const uiKey = `admin-curriculum-ui-${productLine}`
+
+  useEffect(() => {
+    const ui = readAdminUiDraft(uiKey)
+    if (ui?.showAddForm) setShowAddForm(true)
+  }, [uiKey])
+
+  useEffect(() => {
+    if (!rows.length) return
+    const ui = readAdminUiDraft(uiKey)
+    if (ui?.editingLessonId && !editingRow) {
+      const row = rows.find((r) => r.lessonId === ui.editingLessonId)
+      if (row) setEditingRow(row)
+    }
+  }, [rows, uiKey, editingRow])
+
+  useEffect(() => {
+    writeAdminUiDraft(uiKey, {
+      showAddForm,
+      editingLessonId: editingRow?.lessonId || null,
+    })
+  }, [showAddForm, editingRow, uiKey])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -122,6 +148,8 @@ export default function AdminIOAICurriculum() {
       await saveProgramLessonConfig(productLine, editingRow.lessonId, form)
       setSuccess(c.t(`${i18nRoot}.saved`))
       setEditingRow(null)
+      sessionStorage.removeItem(`admin-curriculum-edit-${editingRow.lessonId}`)
+      clearAdminUiDraft(uiKey)
       await load()
     } catch (e) {
       setError(e.message)
@@ -137,6 +165,8 @@ export default function AdminIOAICurriculum() {
       await createProgramCourse(productLine, form)
       setSuccess(c.t(`${i18nRoot}.courseAdded`))
       setShowAddForm(false)
+      sessionStorage.removeItem(`admin-curriculum-add-${productLine}`)
+      clearAdminUiDraft(uiKey)
       await load()
     } catch (e) {
       setError(e.message)
@@ -189,6 +219,7 @@ export default function AdminIOAICurriculum() {
 
       {showAddForm ? (
         <IOAIAddCourseForm
+          productLine={productLine}
           levels={levels}
           labels={labels}
           saving={saving}

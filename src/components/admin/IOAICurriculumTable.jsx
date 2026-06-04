@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ExternalLink, Pencil, Video } from 'lucide-react'
+import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
+import { formatVideoAssetLabel, groupVideosByCurriculum } from '../../lib/videoCurriculum'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
 const textareaClass = `${inputClass} min-h-[88px] resize-y`
@@ -148,7 +150,8 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
 }
 
 export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAssets = [] }) {
-  const [form, setForm] = useState({
+  const draftKey = `admin-curriculum-edit-${row.lessonId}`
+  const [form, setForm] = useAdminFormDraft(draftKey, {
     title: row.lessonTitle || '',
     knowledge_points: row.knowledgePoints || '',
     content_goals: row.contentGoals || '',
@@ -167,6 +170,11 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
   }
 
   const readyAssets = videoAssets.filter((a) => a.cloudflare_uid && a.status !== 'error')
+  const groupedVideos = useMemo(() => groupVideosByCurriculum(readyAssets), [readyAssets])
+
+  const handleSave = () => {
+    onSave(form)
+  }
 
   return (
     <div className="card p-5 sm:p-6 border-2 border-primary/20 space-y-4">
@@ -178,6 +186,7 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
           <p className="text-sm text-slate-600">
             {row.stage} · {row.category} · {row.module}
           </p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{labels.draftHint}</p>
         </div>
         <div className="flex gap-2">
           <a
@@ -254,11 +263,24 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
             onChange={(e) => pickVideoAsset(e.target.value)}
           >
             <option value="">{labels.pickVideoPlaceholder}</option>
-            {readyAssets.map((asset) => (
+            {[...groupedVideos.byLine.entries()].map(([line, lineGroup]) => (
+              <optgroup key={line} label={line.toUpperCase()}>
+                {[...lineGroup.stages.values()].flatMap((stage) =>
+                  [...stage.categories.values()].flatMap((cat) =>
+                    [...cat.modules.values()].flatMap((mod) =>
+                      mod.items.map((asset) => (
+                        <option key={asset.id} value={asset.id}>
+                          {formatVideoAssetLabel(asset)}
+                        </option>
+                      ))
+                    )
+                  )
+                )}
+              </optgroup>
+            ))}
+            {groupedVideos.unclassified.map((asset) => (
               <option key={asset.id} value={asset.id}>
-                {asset.title}
-                {asset.catalog_slug ? ` · ${asset.catalog_slug}` : ''}
-                {asset.status !== 'ready' ? ` (${asset.status})` : ''}
+                {formatVideoAssetLabel(asset)}
               </option>
             ))}
           </select>
@@ -277,7 +299,7 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
         <button
           type="button"
           disabled={saving}
-          onClick={() => onSave(form)}
+          onClick={handleSave}
           className="btn-primary px-5 py-2 text-sm disabled:opacity-60"
         >
           {saving ? labels.saving : labels.save}

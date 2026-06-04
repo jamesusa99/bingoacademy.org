@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
+import CurriculumPathPicker, { CURRICULUM_NEW } from '../../components/admin/CurriculumPathPicker'
+import AdminVideoGroupedList from '../../components/admin/AdminVideoGroupedList'
 import {
   createStreamUploadUrl,
   fetchStreamUploadLimits,
@@ -13,8 +15,11 @@ import { logAdminAction } from '../../lib/admin/auth'
 import { formatBytes, uploadFileToStream } from '../../lib/streamUpload'
 import { useAdminLocale } from '../../contexts/AdminLocaleContext'
 import { adminVideoStatusKey } from '../../config/adminI18n'
-
-const INIT = { title: '', description: '', catalog_slug: '' }
+import { CURRICULUM_LINES, getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
+import { fetchCurriculumAdmin } from '../../lib/ioaiCurriculumAdmin'
+import { resolveCurriculumLabels } from '../../lib/videoCurriculum'
+import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
+import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const DEFAULT_LIMITS = {
   maxFileBytes: 30 * 1024 * 1024 * 1024,
@@ -22,35 +27,80 @@ const DEFAULT_LIMITS = {
   maxDurationSeconds: 21_600,
 }
 
-function streamPreviewUrl(uid) {
-  if (!uid) return null
-  return `https://iframe.cloudflarestream.com/${uid}`
+const UPLOAD_INIT = {
+  productLine: 'ioai',
+  path: {
+    stageChoice: '',
+    themeChoice: '',
+    moduleChoice: '',
+    newStage: { title: '', slug: '', emoji: '🟢' },
+    newTheme: { title: '', slug: '', category_label: '' },
+    newModule: { title: '', slug: '' },
+  },
+  title: '',
+  description: '',
+  catalog_slug: '',
 }
 
 export default function AdminVideo() {
   const { t } = useAdminLocale()
+  const c = useAdminCrud()
   const [items, setItems] = useState([])
   const [courses, setCourses] = useState([])
+  const [levelsByLine, setLevelsByLine] = useState({ ioai: [], general: [], k12: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [info, setInfo] = useState(null)
-  const [form, setForm] = useState(INIT)
   const [uploading, setUploading] = useState(false)
   const [uploadPct, setUploadPct] = useState(null)
   const [syncingId, setSyncingId] = useState(null)
   const [assignSlug, setAssignSlug] = useState({})
   const [limits, setLimits] = useState(DEFAULT_LIMITS)
   const [preview, setPreview] = useState(null)
+  const [lineFilter, setLineFilter] = useState('all')
+
+  const [form, setForm, clearUploadDraft] = useAdminFormDraft('admin-video-upload-form', UPLOAD_INIT)
+
+  const productLine = isCurriculumLine(form.productLine) ? form.productLine : 'ioai'
+  const config = getProgramCurriculum(productLine)
+  const i18nRoot = `pages.${config.i18nKey}`
+  const levels = levelsByLine[productLine] || []
+
+  const pathLabels = useMemo(
+    () => ({
+      colStage: c.t(`${i18nRoot}.colStage`),
+      colCategory: c.t(`${i18nRoot}.colCategory`),
+      colModule: c.t(`${i18nRoot}.colModule`),
+      newStage: c.t(`${i18nRoot}.newStage`),
+      newCategory: c.t(`${i18nRoot}.newCategory`),
+      newModule: c.t(`${i18nRoot}.newModule`),
+      newStageTitle: c.t(`${i18nRoot}.newStageTitle`),
+      newStageSlug: c.t(`${i18nRoot}.newStageSlug`),
+      newStageEmoji: c.t(`${i18nRoot}.newStageEmoji`),
+      newCategoryTitle: c.t(`${i18nRoot}.newCategoryTitle`),
+      newCategorySlug: c.t(`${i18nRoot}.newCategorySlug`),
+      newModuleTitle: c.t(`${i18nRoot}.newModuleTitle`),
+      newModuleSlug: c.t(`${i18nRoot}.newModuleSlug`),
+      phStageTitle: c.t(`${i18nRoot}.phStageTitle`),
+      phCategoryTitle: c.t(`${i18nRoot}.phCategoryTitle`),
+      phModuleTitle: c.t(`${i18nRoot}.phModuleTitle`),
+    }),
+    [c, i18nRoot]
+  )
 
   const fetchItems = async () => {
     setLoading(true)
-    const [{ data, error: e }, { data: catalog }] = await Promise.all([
+    const [{ data, error: e }, { data: catalog }, ...curriculumResults] = await Promise.all([
       supabase.from('video_assets').select('*').order('created_at', { ascending: false }),
-      supabase.from('courses_catalog').select('slug, name, delivery_type').order('sort_order'),
+      supabase.from('courses_catalog').select('slug, name, delivery_type, line').order('sort_order'),
+      ...CURRICULUM_LINES.map((line) => fetchCurriculumAdmin(line).catch(() => ({ levels: [] }))),
     ])
     setError(e?.message || null)
     setItems(data || [])
     setCourses(catalog || [])
+    setLevelsByLine(
+      Object.fromEntries(CURRICULUM_LINES.map((line, i) => [line, curriculumResults[i]?.levels || []]))
+    )
     setLoading(false)
   }
 
@@ -61,7 +111,33 @@ export default function AdminVideo() {
       .catch(() => setLimits(DEFAULT_LIMITS))
   }, [])
 
-  const videoCourses = courses
+  const videoCourses = useMemo(
+    () => courses.filter((c) => c.line === productLine || !c.line),
+    [courses, productLine]
+  )
+
+  const listLabels = useMemo(
+    () => ({
+      colTitle: t('video.colTitle'),
+      colStatus: t('video.colStatus'),
+      colPlayback: t('video.colPlayback'),
+      colCourse: t('video.colCourse'),
+      colActions: t('video.colActions'),
+      colStage: c.t(`${i18nRoot}.colStage`),
+      colCategory: c.t(`${i18nRoot}.colCategory`),
+      colModule: c.t(`${i18nRoot}.colModule`),
+      previewPlayer: t('video.previewPlayer'),
+      encodingHint: t('video.encodingHint'),
+      selectCourse: t('video.selectCourse'),
+      sync: t('video.sync'),
+      assign: t('video.assign'),
+      delete: t('video.delete'),
+      emptyList: t('video.emptyList'),
+      unclassifiedHeading: t('video.unclassifiedHeading'),
+      statusKey: adminVideoStatusKey,
+    }),
+    [t, c, i18nRoot]
+  )
 
   const handleSync = async (row) => {
     const slug = assignSlug[row.id] || row.catalog_slug || ''
@@ -75,11 +151,7 @@ export default function AdminVideo() {
         catalogSlug: slug || undefined,
       })
       if (result.pending) {
-        setInfo(
-          slug
-            ? t('video.infoAssignPending', { slug })
-            : t('video.infoSyncStillEncoding')
-        )
+        setInfo(slug ? t('video.infoAssignPending', { slug }) : t('video.infoSyncStillEncoding'))
       } else if (slug && result.catalogSlug) {
         setInfo(t('video.infoAssignSuccess', { slug: result.catalogSlug }))
       } else {
@@ -139,6 +211,8 @@ export default function AdminVideo() {
     }
   }
 
+  const setFormField = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+
   const pickFileAndUpload = () => {
     setError(null)
     setInfo(null)
@@ -146,6 +220,8 @@ export default function AdminVideo() {
       setError(t('video.errTitleRequired'))
       return
     }
+
+    const curriculumMeta = resolveCurriculumLabels(levels, form.path)
 
     const input = document.createElement('input')
     input.type = 'file'
@@ -188,6 +264,8 @@ export default function AdminVideo() {
           description: form.description,
           cloudflare_uid: uid,
           catalog_slug: form.catalog_slug || null,
+          product_line: productLine,
+          ...curriculumMeta,
           status: 'processing',
         })
         rowId = row.id
@@ -213,8 +291,8 @@ export default function AdminVideo() {
           setInfo(t('video.infoUploadReady'))
         }
 
-        await logAdminAction('upload', 'video_assets', row.id, { uid, size: file.size })
-        setForm(INIT)
+        await logAdminAction('upload', 'video_assets', row.id, { uid, size: file.size, productLine })
+        clearUploadDraft()
         fetchItems()
       } catch (err) {
         setError(err.message)
@@ -234,9 +312,15 @@ export default function AdminVideo() {
     input.click()
   }
 
-  const maxGb = limits.maxFileBytes / (1024 ** 3)
-  const recGb = limits.recommendedMaxFileBytes / (1024 ** 3)
+  const maxGb = limits.maxFileBytes / 1024 ** 3
+  const recGb = limits.recommendedMaxFileBytes / 1024 ** 3
   const maxHours = Math.round(limits.maxDurationSeconds / 3600)
+
+  const filteredItems = useMemo(() => {
+    if (lineFilter === 'all') return items
+    if (lineFilter === 'other') return items.filter((v) => !v.product_line)
+    return items.filter((v) => v.product_line === lineFilter)
+  }, [items, lineFilter])
 
   return (
     <div>
@@ -250,12 +334,6 @@ export default function AdminVideo() {
       {info ? (
         <AdminAlert type="info" onDismiss={() => setInfo(null)}>
           {info}
-        </AdminAlert>
-      ) : null}
-
-      {videoCourses.length === 0 ? (
-        <AdminAlert type="info">
-          {t('video.noCoursesHint')}
         </AdminAlert>
       ) : null}
 
@@ -284,36 +362,70 @@ export default function AdminVideo() {
 
       <div className="card p-6 mb-6">
         <h2 className="font-semibold text-bingo-dark mb-2">{t('video.uploadHeading')}</h2>
+        <p className="text-xs text-slate-500 mb-1 leading-relaxed">{t('video.curriculumClassifyHint')}</p>
+        <p className="text-[10px] text-slate-400 mb-4">{t('video.draftHint')}</p>
         <p className="text-xs text-slate-500 mb-4 leading-relaxed">
           {t('video.helpSize', { maxGb: String(maxGb), recGb: String(recGb) })}{' '}
           {t('video.helpDuration', { maxHours: String(maxHours) })}{' '}
           {t('video.helpQuality')}
         </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          <input
-            placeholder={t('video.placeholderTitle')}
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
-          />
-          <input
-            placeholder={t('video.placeholderDescription')}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
-          />
+
+        <div className="mb-4">
+          <label className="text-xs font-medium text-slate-600 block mb-1">{t('video.productLine')}</label>
           <select
-            value={form.catalog_slug}
-            onChange={(e) => setForm({ ...form, catalog_slug: e.target.value })}
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            value={productLine}
+            onChange={(e) => setFormField('productLine', e.target.value)}
+            className="rounded-xl border border-slate-300 px-3 py-2 text-sm max-w-xs"
           >
-            <option value="">{t('video.assignCourseOptional')}</option>
-            {videoCourses.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.slug} — {c.name}
+            {CURRICULUM_LINES.map((line) => (
+              <option key={line} value={line}>
+                {getProgramCurriculum(line).adminTitle}
               </option>
             ))}
           </select>
+        </div>
+
+        <CurriculumPathPicker
+          levels={levels}
+          labels={pathLabels}
+          value={form.path}
+          onChange={(path) => setFormField('path', path)}
+        />
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 mt-4 pt-4 border-t border-slate-100">
+          <div>
+            <label className="text-xs font-medium text-slate-600 block mb-1">{t('video.placeholderTitle')}</label>
+            <input
+              placeholder={t('video.placeholderTitle')}
+              value={form.title}
+              onChange={(e) => setFormField('title', e.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-600 block mb-1">{t('video.placeholderDescription')}</label>
+            <input
+              placeholder={t('video.placeholderDescription')}
+              value={form.description}
+              onChange={(e) => setFormField('description', e.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-600 block mb-1">{t('video.assignCourseOptional')}</label>
+            <select
+              value={form.catalog_slug}
+              onChange={(e) => setFormField('catalog_slug', e.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="">{t('video.assignCourseOptional')}</option>
+              {videoCourses.map((cRow) => (
+                <option key={cRow.slug} value={cRow.slug}>
+                  {cRow.slug} — {cRow.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <button
           type="button"
@@ -330,139 +442,39 @@ export default function AdminVideo() {
       </div>
 
       <div className="card overflow-hidden">
+        <div className="p-4 border-b flex flex-wrap justify-between items-center gap-3">
+          <span className="font-semibold text-bingo-dark">{t('video.libraryHeading')}</span>
+          <select
+            value={lineFilter}
+            onChange={(e) => setLineFilter(e.target.value)}
+            className="text-xs rounded-lg border border-slate-200 px-2 py-1.5"
+          >
+            <option value="all">{t('video.filterAllLines')}</option>
+            {CURRICULUM_LINES.map((line) => (
+              <option key={line} value={line}>
+                {getProgramCurriculum(line).adminTitle}
+              </option>
+            ))}
+            <option value="other">{t('video.unclassifiedHeading')}</option>
+          </select>
+        </div>
         {loading ? (
           <p className="p-6 text-slate-500 text-sm">{t('video.loadingList')}</p>
-        ) : items.length === 0 ? (
-          <p className="p-6 text-slate-500 text-sm">{t('video.emptyList')}</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-slate-600">
-                <tr>
-                  <th className="p-3">{t('video.colTitle')}</th>
-                  <th className="p-3">{t('video.colStatus')}</th>
-                  <th className="p-3">{t('video.colPlayback')}</th>
-                  <th className="p-3">{t('video.colCourse')}</th>
-                  <th className="p-3">{t('video.colActions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((row) => {
-                  const previewUrl = streamPreviewUrl(row.cloudflare_uid)
-                  const ready = row.status === 'ready' && row.playback_url
-                  const selectedSlug = assignSlug[row.id] || row.catalog_slug || ''
-                  return (
-                    <tr key={row.id} className="border-t border-slate-100 align-top">
-                      <td className="p-3">
-                        <div className="font-medium">{row.title}</div>
-                        <div className="text-[10px] font-mono text-slate-400 mt-1 truncate max-w-[180px]">
-                          {row.cloudflare_uid || '—'}
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={
-                            row.status === 'ready'
-                              ? 'text-emerald-600'
-                              : row.status === 'error'
-                                ? 'text-red-600'
-                                : 'text-amber-600'
-                          }
-                        >
-                          {t(adminVideoStatusKey(row.status))}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        {ready ? (
-                          <div className="space-y-1">
-                            {previewUrl ? (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setPreview({ url: previewUrl, title: row.title || row.cloudflare_uid })
-                                }
-                                className="text-xs text-primary hover:underline block text-left"
-                              >
-                                {t('video.previewPlayer')}
-                              </button>
-                            ) : null}
-                            <span
-                              className="text-[10px] text-slate-400 break-all block max-w-[200px]"
-                              title={row.playback_url}
-                            >
-                              {t('video.hlsReadyHint')}
-                            </span>
-                          </div>
-                        ) : row.status === 'error' ? (
-                          <span className="text-xs text-red-500">{t('video.encodeFailedHint')}</span>
-                        ) : (
-                          <span className="text-xs text-amber-600">{t('video.encodingHint')}</span>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        {row.catalog_slug ? (
-                          <div className="space-y-1">
-                            <a
-                              href={`/courses/detail/${row.catalog_slug}?preview=1&from=admin`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-xs text-primary hover:underline font-mono block"
-                            >
-                              {row.catalog_slug}
-                            </a>
-                          </div>
-                        ) : null}
-                        <select
-                          value={selectedSlug}
-                          onChange={(e) => setAssignSlug((s) => ({ ...s, [row.id]: e.target.value }))}
-                          className="text-xs rounded border border-slate-200 px-2 py-1 max-w-[200px] w-full mt-1"
-                        >
-                          <option value="">{t('video.selectCourse')}</option>
-                          {videoCourses.map((c) => (
-                            <option key={c.slug} value={c.slug}>
-                              {c.slug} — {c.name}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="p-3 whitespace-nowrap space-x-2">
-                        <button
-                          type="button"
-                          disabled={syncingId === row.id}
-                          onClick={() => handleSync(row)}
-                          className="text-xs text-primary hover:underline disabled:opacity-50"
-                          title={
-                            assignSlug[row.id] && !row.catalog_slug
-                              ? t('video.syncAndAssignHint')
-                              : undefined
-                          }
-                        >
-                          {assignSlug[row.id] && !row.catalog_slug
-                            ? t('video.syncAndAssign')
-                            : t('video.sync')}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={syncingId === row.id || !selectedSlug}
-                          onClick={() => handleAssign(row)}
-                          className="text-xs text-emerald-600 hover:underline disabled:opacity-50"
-                        >
-                          {t('video.assign')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(row.id)}
-                          className="text-xs text-red-600 hover:underline"
-                        >
-                          {t('video.delete')}
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <AdminVideoGroupedList
+            items={filteredItems}
+            lineFilter={lineFilter}
+            labels={listLabels}
+            t={t}
+            assignSlug={assignSlug}
+            syncingId={syncingId}
+            courseOptions={courses}
+            onPreview={setPreview}
+            onSync={handleSync}
+            onAssign={handleAssign}
+            onDelete={handleDelete}
+            onAssignChange={(id, slug) => setAssignSlug((s) => ({ ...s, [id]: slug }))}
+          />
         )}
       </div>
     </div>

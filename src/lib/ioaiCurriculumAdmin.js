@@ -104,7 +104,9 @@ export async function fetchIOAICurriculumAdmin() {
 export async function fetchVideoAssetsForLessonPicker() {
   const { data, error } = await supabase
     .from('video_assets')
-    .select('id, title, cloudflare_uid, catalog_slug, status')
+    .select(
+      'id, title, cloudflare_uid, catalog_slug, status, product_line, stage_title, category_label, module_title, stage_slug, category_slug, module_slug'
+    )
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)

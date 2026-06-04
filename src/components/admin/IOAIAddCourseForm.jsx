@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Plus } from 'lucide-react'
+import CurriculumPathPicker, { CURRICULUM_NEW, curriculumInputClass } from './CurriculumPathPicker'
+import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
 
-const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
-const textareaClass = `${inputClass} min-h-[72px] resize-y`
-
-const NEW = '__new__'
+const textareaClass = `${curriculumInputClass} min-h-[72px] resize-y`
 
 function Field({ label, children }) {
   return (
@@ -15,95 +14,70 @@ function Field({ label, children }) {
   )
 }
 
-function sortByOrder(rows) {
-  return [...(rows || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+const PATH_INIT = {
+  stageChoice: '',
+  themeChoice: '',
+  moduleChoice: '',
+  newStage: { title: '', slug: '', emoji: '🟢' },
+  newTheme: { title: '', slug: '', category_label: '' },
+  newModule: { title: '', slug: '' },
 }
 
-export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onClose, videoAssets = [] }) {
-  const [stageChoice, setStageChoice] = useState('')
-  const [themeChoice, setThemeChoice] = useState('')
-  const [moduleChoice, setModuleChoice] = useState('')
-  const [newStage, setNewStage] = useState({ title: '', slug: '', emoji: '🟢' })
-  const [newTheme, setNewTheme] = useState({ title: '', slug: '', category_label: '' })
-  const [newModule, setNewModule] = useState({ title: '', slug: '' })
-  const [lessonTitle, setLessonTitle] = useState('')
-  const [lessonSlug, setLessonSlug] = useState('')
-  const [knowledgePoints, setKnowledgePoints] = useState('')
-  const [contentGoals, setContentGoals] = useState('')
-  const [cloudflareUid, setCloudflareUid] = useState('')
-  const [syncCatalog, setSyncCatalog] = useState(true)
+const FORM_INIT = {
+  path: PATH_INIT,
+  lessonTitle: '',
+  lessonSlug: '',
+  knowledgePoints: '',
+  contentGoals: '',
+  cloudflareUid: '',
+  syncCatalog: true,
+}
 
-  const sortedLevels = useMemo(() => sortByOrder(levels), [levels])
+export default function IOAIAddCourseForm({
+  productLine = 'ioai',
+  levels,
+  labels,
+  saving,
+  onSave,
+  onClose,
+  videoAssets = [],
+}) {
+  const draftKey = `admin-curriculum-add-${productLine}`
+  const [form, setForm] = useAdminFormDraft(draftKey, FORM_INIT)
 
-  useEffect(() => {
-    if (!stageChoice && sortedLevels.length === 0) {
-      setStageChoice(NEW)
-    } else if (!stageChoice && sortedLevels.length > 0) {
-      setStageChoice(sortedLevels[0].id)
+  const setPath = (path) => setForm((f) => ({ ...f, path }))
+  const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+
+  const groupedVideoOptions = useMemo(() => {
+    const groups = new Map()
+    for (const asset of videoAssets.filter((a) => a.cloudflare_uid)) {
+      const key = asset.product_line || 'other'
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key).push(asset)
     }
-  }, [sortedLevels, stageChoice])
-
-  const selectedLevel = useMemo(
-    () => sortedLevels.find((l) => l.id === stageChoice),
-    [sortedLevels, stageChoice]
-  )
-
-  const themes = useMemo(() => sortByOrder(selectedLevel?.themes), [selectedLevel])
-
-  useEffect(() => {
-    if (stageChoice === NEW) {
-      setThemeChoice(NEW)
-      return
-    }
-    if (themes.length === 0) {
-      setThemeChoice(NEW)
-      return
-    }
-    setThemeChoice((current) => {
-      if (current === NEW) return NEW
-      if (themes.some((t) => t.id === current)) return current
-      return themes[0].id
-    })
-  }, [stageChoice, themes])
-
-  const selectedTheme = useMemo(
-    () => themes.find((t) => t.id === themeChoice),
-    [themes, themeChoice]
-  )
-
-  const modules = useMemo(() => sortByOrder(selectedTheme?.modules), [selectedTheme])
-
-  useEffect(() => {
-    if (themeChoice === NEW) {
-      setModuleChoice(NEW)
-      return
-    }
-    if (modules.length === 0) {
-      setModuleChoice(NEW)
-      return
-    }
-    setModuleChoice((current) => {
-      if (current === NEW) return NEW
-      if (modules.some((m) => m.id === current)) return current
-      return modules[0].id
-    })
-  }, [themeChoice, modules])
+    return groups
+  }, [videoAssets])
 
   const handleSubmit = () => {
+    const { path } = form
     onSave({
-      levelId: stageChoice !== NEW ? stageChoice : null,
-      newLevel: stageChoice === NEW ? newStage : null,
-      themeId: themeChoice !== NEW ? themeChoice : null,
-      newTheme: themeChoice === NEW ? newTheme : null,
-      moduleId: moduleChoice !== NEW ? moduleChoice : null,
-      newModule: moduleChoice === NEW ? newModule : null,
-      lessonTitle,
-      lessonSlug: lessonSlug.trim() || undefined,
-      knowledge_points: knowledgePoints,
-      content_goals: contentGoals,
-      cloudflare_video_id: cloudflareUid,
-      syncCatalog,
+      levelId: path.stageChoice !== CURRICULUM_NEW ? path.stageChoice : null,
+      newLevel: path.stageChoice === CURRICULUM_NEW ? path.newStage : null,
+      themeId: path.themeChoice !== CURRICULUM_NEW ? path.themeChoice : null,
+      newTheme: path.themeChoice === CURRICULUM_NEW ? path.newTheme : null,
+      moduleId: path.moduleChoice !== CURRICULUM_NEW ? path.moduleChoice : null,
+      newModule: path.moduleChoice === CURRICULUM_NEW ? path.newModule : null,
+      lessonTitle: form.lessonTitle,
+      lessonSlug: form.lessonSlug.trim() || undefined,
+      knowledge_points: form.knowledgePoints,
+      content_goals: form.contentGoals,
+      cloudflare_video_id: form.cloudflareUid,
+      syncCatalog: form.syncCatalog,
     })
+  }
+
+  const handleClose = () => {
+    onClose()
   }
 
   return (
@@ -115,155 +89,29 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
             {labels.addCourseTitle}
           </p>
           <p className="text-sm text-slate-600">{labels.addCourseDesc}</p>
+          <p className="text-[10px] text-slate-400 mt-1">{labels.draftHint}</p>
         </div>
-        <button type="button" onClick={onClose} className="text-xs text-slate-500 hover:text-slate-700">
+        <button type="button" onClick={handleClose} className="text-xs text-slate-500 hover:text-slate-700">
           {labels.close}
         </button>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        <Field label={labels.colStage}>
-          <select
-            className={inputClass}
-            value={stageChoice}
-            onChange={(e) => setStageChoice(e.target.value)}
-          >
-            {sortedLevels.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.emoji ? `${l.emoji} ` : ''}
-                {l.title}
-              </option>
-            ))}
-            <option value={NEW}>{labels.newStage}</option>
-          </select>
-        </Field>
-
-        <Field label={labels.colCategory}>
-          <select
-            className={inputClass}
-            value={themeChoice}
-            onChange={(e) => setThemeChoice(e.target.value)}
-          >
-            {stageChoice !== NEW &&
-              themes.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.category_label || t.title}
-                </option>
-              ))}
-            <option value={NEW}>{labels.newCategory}</option>
-          </select>
-        </Field>
-
-        <Field label={labels.colModule}>
-          <select
-            className={inputClass}
-            value={moduleChoice}
-            onChange={(e) => setModuleChoice(e.target.value)}
-          >
-            {themeChoice !== NEW &&
-              modules.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.title}
-                </option>
-              ))}
-            <option value={NEW}>{labels.newModule}</option>
-          </select>
-        </Field>
-      </div>
-
-      {stageChoice === NEW ? (
-        <div className="grid sm:grid-cols-3 gap-4 p-4 rounded-lg bg-white border border-slate-200">
-          <Field label={labels.newStageTitle}>
-            <input
-              className={inputClass}
-              value={newStage.title}
-              onChange={(e) => setNewStage((s) => ({ ...s, title: e.target.value }))}
-              placeholder={labels.phStageTitle}
-            />
-          </Field>
-          <Field label={labels.newStageSlug}>
-            <input
-              className={inputClass}
-              value={newStage.slug}
-              onChange={(e) => setNewStage((s) => ({ ...s, slug: e.target.value }))}
-              placeholder="intro"
-            />
-          </Field>
-          <Field label={labels.newStageEmoji}>
-            <input
-              className={inputClass}
-              value={newStage.emoji}
-              onChange={(e) => setNewStage((s) => ({ ...s, emoji: e.target.value }))}
-              placeholder="🟢"
-            />
-          </Field>
-        </div>
-      ) : null}
-
-      {themeChoice === NEW ? (
-        <div className="grid sm:grid-cols-3 gap-4 p-4 rounded-lg bg-white border border-slate-200">
-          <Field label={labels.newCategoryTitle}>
-            <input
-              className={inputClass}
-              value={newTheme.title}
-              onChange={(e) => setNewTheme((s) => ({ ...s, title: e.target.value }))}
-              placeholder={labels.phCategoryTitle}
-            />
-          </Field>
-          <Field label={labels.newCategoryLabel}>
-            <input
-              className={inputClass}
-              value={newTheme.category_label}
-              onChange={(e) => setNewTheme((s) => ({ ...s, category_label: e.target.value }))}
-              placeholder={labels.phCategoryLabel}
-            />
-          </Field>
-          <Field label={labels.newCategorySlug}>
-            <input
-              className={inputClass}
-              value={newTheme.slug}
-              onChange={(e) => setNewTheme((s) => ({ ...s, slug: e.target.value }))}
-              placeholder="math"
-            />
-          </Field>
-        </div>
-      ) : null}
-
-      {moduleChoice === NEW ? (
-        <div className="grid sm:grid-cols-2 gap-4 p-4 rounded-lg bg-white border border-slate-200">
-          <Field label={labels.newModuleTitle}>
-            <input
-              className={inputClass}
-              value={newModule.title}
-              onChange={(e) => setNewModule((s) => ({ ...s, title: e.target.value }))}
-              placeholder={labels.phModuleTitle}
-            />
-          </Field>
-          <Field label={labels.newModuleSlug}>
-            <input
-              className={inputClass}
-              value={newModule.slug}
-              onChange={(e) => setNewModule((s) => ({ ...s, slug: e.target.value }))}
-              placeholder="part-1-linear-algebra"
-            />
-          </Field>
-        </div>
-      ) : null}
+      <CurriculumPathPicker levels={levels} labels={labels} value={form.path} onChange={setPath} />
 
       <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200">
         <Field label={labels.colLesson}>
           <input
-            className={inputClass}
-            value={lessonTitle}
-            onChange={(e) => setLessonTitle(e.target.value)}
+            className={curriculumInputClass}
+            value={form.lessonTitle}
+            onChange={(e) => setField('lessonTitle', e.target.value)}
             placeholder={labels.phLessonTitle}
           />
         </Field>
         <Field label={labels.lessonSlug}>
           <input
-            className={inputClass}
-            value={lessonSlug}
-            onChange={(e) => setLessonSlug(e.target.value)}
+            className={curriculumInputClass}
+            value={form.lessonSlug}
+            onChange={(e) => setField('lessonSlug', e.target.value)}
             placeholder={labels.phLessonSlug}
           />
         </Field>
@@ -273,16 +121,16 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
         <Field label={labels.colKnowledge}>
           <textarea
             className={textareaClass}
-            value={knowledgePoints}
-            onChange={(e) => setKnowledgePoints(e.target.value)}
+            value={form.knowledgePoints}
+            onChange={(e) => setField('knowledgePoints', e.target.value)}
             placeholder={labels.phKnowledge}
           />
         </Field>
         <Field label={labels.colGoals}>
           <textarea
             className={textareaClass}
-            value={contentGoals}
-            onChange={(e) => setContentGoals(e.target.value)}
+            value={form.contentGoals}
+            onChange={(e) => setField('contentGoals', e.target.value)}
             placeholder={labels.phGoals}
           />
         </Field>
@@ -291,38 +139,41 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
       <div className="grid sm:grid-cols-2 gap-4 items-end">
         <Field label={labels.cloudflareUid}>
           <input
-            className={inputClass}
-            value={cloudflareUid}
-            onChange={(e) => setCloudflareUid(e.target.value)}
+            className={curriculumInputClass}
+            value={form.cloudflareUid}
+            onChange={(e) => setField('cloudflareUid', e.target.value)}
             placeholder="Cloudflare Stream UID"
           />
         </Field>
-        {videoAssets.filter((a) => a.cloudflare_uid).length > 0 ? (
+        {groupedVideoOptions.size > 0 ? (
           <Field label={labels.pickFromVideoLibrary}>
             <select
-              className={inputClass}
+              className={curriculumInputClass}
               defaultValue=""
               onChange={(e) => {
                 const asset = videoAssets.find((a) => a.id === e.target.value)
-                if (asset?.cloudflare_uid) setCloudflareUid(asset.cloudflare_uid)
+                if (asset?.cloudflare_uid) setField('cloudflareUid', asset.cloudflare_uid)
               }}
             >
               <option value="">{labels.pickVideoPlaceholder}</option>
-              {videoAssets
-                .filter((a) => a.cloudflare_uid)
-                .map((asset) => (
-                  <option key={asset.id} value={asset.id}>
-                    {asset.title}
-                  </option>
-                ))}
+              {[...groupedVideoOptions.entries()].map(([line, assets]) => (
+                <optgroup key={line} label={line === 'other' ? labels.unclassifiedVideos : line.toUpperCase()}>
+                  {assets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.stage_title ? `${asset.stage_title} · ${asset.category_label || ''} · ` : ''}
+                      {asset.title}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </Field>
         ) : (
           <label className="flex items-center gap-2 text-sm text-slate-600 pb-2">
             <input
               type="checkbox"
-              checked={syncCatalog}
-              onChange={(e) => setSyncCatalog(e.target.checked)}
+              checked={form.syncCatalog}
+              onChange={(e) => setField('syncCatalog', e.target.checked)}
               className="rounded border-slate-300"
             />
             {labels.syncCatalog}
@@ -330,12 +181,12 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
         )}
       </div>
 
-      {videoAssets.filter((a) => a.cloudflare_uid).length > 0 ? (
+      {groupedVideoOptions.size > 0 ? (
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
             type="checkbox"
-            checked={syncCatalog}
-            onChange={(e) => setSyncCatalog(e.target.checked)}
+            checked={form.syncCatalog}
+            onChange={(e) => setField('syncCatalog', e.target.checked)}
             className="rounded border-slate-300"
           />
           {labels.syncCatalog}
@@ -345,14 +196,14 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
       <div className="flex justify-end gap-2 pt-2">
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
         >
           {labels.cancel}
         </button>
         <button
           type="button"
-          disabled={saving || !lessonTitle.trim()}
+          disabled={saving || !form.lessonTitle.trim()}
           onClick={handleSubmit}
           className="btn-primary px-5 py-2 text-sm disabled:opacity-60 inline-flex items-center gap-1.5"
         >

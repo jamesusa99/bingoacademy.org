@@ -53,7 +53,7 @@ const messages = {
       dashboard: '控制台',
       platform: '平台设置',
       homePortal: '首页门户',
-      courses: '课程管理',
+      courses: 'Lab和材料管理',
       ioaiCurriculum: 'IOAI · 课程管理',
       generalCurriculum: 'Foundations · 课程管理',
       k12Curriculum: 'K12 · 课程管理',
@@ -80,7 +80,7 @@ const messages = {
       cards: {
         homePortal: '首页门户',
         achievements: '学员成果',
-        courses: '课程',
+        courses: 'Lab和材料',
         aiCamp: 'AI 营地',
         events: '赛事中心',
         community: 'AI 社区',
@@ -108,6 +108,12 @@ const messages = {
       description:
         '上传到 Cloudflare Stream，转码完成后同步并关联课程。课程页在播放器内播放 HLS（请勿在新标签页直接打开 .m3u8 链接）。',
       uploadHeading: '上传到 Stream',
+      curriculumClassifyHint: '上传前请先选择产品线，并按「阶段 → 类别 → 模块」分类，与课程管理结构一致。',
+      draftHint: '表单内容会自动暂存，切换页面后返回可继续填写。',
+      productLine: '产品线',
+      libraryHeading: '视频库（按课程结构分组）',
+      filterAllLines: '全部产品线',
+      unclassifiedHeading: '未分类视频',
       helpSize:
         '大小：Cloudflare 单文件最多 {{maxGb}} GB；本后台浏览器上传建议不超过约 {{recGb}} GB，更大文件可能因网络超时失败，请导出较小 MP4 或使用有线网络。',
       helpDuration: '时长：单条视频最多 {{maxHours}} 小时。',
@@ -160,7 +166,7 @@ const messages = {
       infoUploadReadyAssigned: '视频已就绪并关联到 {{slug}}。',
       infoUploadReady: '视频已就绪，请在下方关联课程。',
       noCoursesHint:
-        '课程目录为空 — 请先在「IOAI · 课程管理」或「课程管理」中添加 IOAI 课程，再在此关联视频。',
+        '课程目录为空 — 请先在「IOAI · 课程管理」或「Lab和材料管理」中添加课程，再在此关联视频。',
     },
     ...adminPagesZh,
   },
@@ -210,7 +216,7 @@ const messages = {
       dashboard: 'Dashboard',
       platform: 'Platform',
       homePortal: 'Home Portal',
-      courses: 'Courses',
+      courses: 'Labs & Materials',
       ioaiCurriculum: 'IOAI · Courses',
       generalCurriculum: 'Foundations · Courses',
       k12Curriculum: 'K12 · Courses',
@@ -237,7 +243,7 @@ const messages = {
       cards: {
         homePortal: 'Home Portal',
         achievements: 'Achievements',
-        courses: 'Courses',
+        courses: 'Labs & Materials',
         aiCamp: 'AI Camp',
         events: 'Events Center',
         community: 'AI Community',
@@ -265,6 +271,13 @@ const messages = {
       description:
         'Upload to Cloudflare Stream, sync when encoding completes, assign to courses. Course pages play HLS in the video player (not by opening the .m3u8 link in a new tab).',
       uploadHeading: 'Upload to Stream',
+      curriculumClassifyHint:
+        'Before uploading, select a product line and classify by Stage → Category → Module — same structure as course management.',
+      draftHint: 'Form content is saved automatically; return after switching pages to continue.',
+      productLine: 'Product line',
+      libraryHeading: 'Video library (grouped by curriculum)',
+      filterAllLines: 'All product lines',
+      unclassifiedHeading: 'Unclassified videos',
       helpSize:
         'Size: Cloudflare allows up to {{maxGb}} GB per file; this admin uploader works reliably up to ~{{recGb}} GB in the browser. Larger files may fail due to network timeouts — export a smaller MP4 or use a wired connection.',
       helpDuration: 'Duration: up to {{maxHours}} hours per video.',
@@ -318,7 +331,7 @@ const messages = {
       infoUploadReadyAssigned: 'Video ready and assigned to {{slug}}.',
       infoUploadReady: 'Video ready. Assign to a course below.',
       noCoursesHint:
-        'Course catalog is empty — add IOAI courses in IOAI · Course Management or Courses first, then link videos here.',
+        'Course catalog is empty — add courses in IOAI · Course Management or Labs & Materials first, then link videos here.',
     },
     ...adminPagesEn,
   },
