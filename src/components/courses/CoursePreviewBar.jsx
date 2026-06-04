@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, X } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
+import { ADMIN_LABS_MATERIALS_PATH } from '../../config/adminNav'
 
 export default function CoursePreviewBar({ course, fromAdmin = false }) {
   const coursesHref = course
@@ -12,7 +13,7 @@ export default function CoursePreviewBar({ course, fromAdmin = false }) {
       <div className="flex flex-wrap items-center gap-2">
         {fromAdmin ? (
           <Link
-            to="/admin/courses"
+            to={ADMIN_LABS_MATERIALS_PATH}
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-900 hover:text-amber-950"
           >
             <ArrowLeft className="w-4 h-4" aria-hidden />

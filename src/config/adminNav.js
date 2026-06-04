@@ -1,3 +1,6 @@
+/** Admin path for Lab & Materials catalogue (courses_catalog non-video items) */
+export const ADMIN_LABS_MATERIALS_PATH = '/admin/labs-materials'
+
 /** Grouped sidebar navigation for the admin console (labels via adminI18n) */
 export const ADMIN_NAV_GROUPS = [
   {
@@ -11,7 +14,7 @@ export const ADMIN_NAV_GROUPS = [
     titleKey: 'nav.group.content',
     items: [
       { path: '/admin/home', labelKey: 'nav.homePortal', icon: '🏠' },
-      { path: '/admin/courses', labelKey: 'nav.courses', icon: '🧪' },
+      { path: ADMIN_LABS_MATERIALS_PATH, labelKey: 'nav.courses', icon: '🧪' },
       { path: '/admin/curriculum/ioai', labelKey: 'nav.ioaiCurriculum', icon: '🏆' },
       { path: '/admin/curriculum/general', labelKey: 'nav.generalCurriculum', icon: '🌐' },
       { path: '/admin/curriculum/k12', labelKey: 'nav.k12Curriculum', icon: '🏫' },
@@ -52,7 +55,7 @@ export function isAdminNavActive(pathname, path, end = false) {
 export const ADMIN_DASHBOARD_CARDS = [
   { labelKey: 'dashboard.cards.homePortal', statKey: null, to: '/admin/home', icon: '🏠', color: 'bg-slate-100 border-slate-200' },
   { labelKey: 'dashboard.cards.achievements', statKey: 'showcase', to: '/admin/showcase', icon: '🏅', color: 'bg-amber-50 border-amber-200/60' },
-  { labelKey: 'dashboard.cards.courses', statKey: 'courses', to: '/admin/courses', icon: '🧪', color: 'bg-primary/10 border-primary/20' },
+  { labelKey: 'dashboard.cards.courses', statKey: 'courses', to: ADMIN_LABS_MATERIALS_PATH, icon: '🧪', color: 'bg-primary/10 border-primary/20' },
   { labelKey: 'dashboard.cards.aiCamp', statKey: 'research', to: '/admin/research', icon: '⛺', color: 'bg-green-50 border-green-200/60' },
   { labelKey: 'dashboard.cards.events', statKey: 'events', to: '/admin/events', icon: '🏆', color: 'bg-amber-50 border-amber-200/60' },
   { labelKey: 'dashboard.cards.community', statKey: 'mentors', to: '/admin/mentors', icon: '👥', color: 'bg-violet-50 border-violet-200/60' },
@@ -70,7 +73,7 @@ export const ADMIN_DASHBOARD_CARDS = [
 export const ADMIN_DASHBOARD_QUICK_LINKS = [
   { labelKey: 'nav.homePortal', to: '/admin/home', className: 'px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium' },
   { labelKey: 'nav.achievements', to: '/admin/showcase', className: 'px-4 py-2 rounded-xl bg-amber-100 text-amber-700 text-sm font-medium' },
-  { labelKey: 'nav.courses', to: '/admin/courses', className: 'px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium' },
+  { labelKey: 'nav.courses', to: ADMIN_LABS_MATERIALS_PATH, className: 'px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium' },
   { labelKey: 'nav.mall', to: '/admin/mall', className: 'px-4 py-2 rounded-xl bg-cyan-100 text-cyan-800 text-sm font-medium' },
   { labelKey: 'nav.aiCamp', to: '/admin/research', className: 'px-4 py-2 rounded-xl bg-green-100 text-green-700 text-sm font-medium' },
   { labelKey: 'nav.events', to: '/admin/events', className: 'px-4 py-2 rounded-xl bg-amber-100 text-amber-700 text-sm font-medium' },

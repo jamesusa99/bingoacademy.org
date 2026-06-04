@@ -4,7 +4,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import IOAICurriculumTable, { IOAILessonEditor } from '../../components/admin/IOAICurriculumTable'
 import IOAIAddCourseForm from '../../components/admin/IOAIAddCourseForm'
-import { useAdminCrud } from '../../hooks/useAdminCrud'
+import { ADMIN_LABS_MATERIALS_PATH } from '../../config/adminNav'
 import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import {
   createProgramCourse,
@@ -181,7 +181,7 @@ export default function AdminIOAICurriculum() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-3 text-sm">
-          <Link to="/admin/courses" className="text-primary hover:underline">
+          <Link to={ADMIN_LABS_MATERIALS_PATH} className="text-primary hover:underline">
             ← {c.t(`${i18nRoot}.backCatalog`)}
           </Link>
           <Link to={config.frontendPath} target="_blank" rel="noreferrer" className="text-slate-600 hover:text-primary">

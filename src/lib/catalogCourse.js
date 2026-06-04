@@ -10,6 +10,23 @@ export function defaultSubForLine(lineId) {
   return line?.subcategories[0]?.id || 'course'
 }
 
+/** Subcategories for Lab & Materials admin (excludes AI Video Courses) */
+export function labMaterialsSubcategoriesForLine(lineId) {
+  const line = PRODUCT_LINES.find((p) => p.id === lineId)
+  if (!line) return []
+  const videoSub = VIDEO_COURSE_SUB_BY_LINE[lineId]
+  return line.subcategories.filter((s) => s.id !== videoSub)
+}
+
+export function defaultLabMaterialsSubForLine(lineId) {
+  return labMaterialsSubcategoriesForLine(lineId)[0]?.id || 'online-lab'
+}
+
+export function isLabMaterialsCatalogRow(row) {
+  if (!row?.line || !row?.sub) return true
+  return VIDEO_COURSE_SUB_BY_LINE[row.line] !== row.sub
+}
+
 /** Map Supabase courses_catalog row → frontend course object */
 export function rowToCatalogCourse(row) {
   return {
@@ -134,9 +151,9 @@ export function catalogRowToForm(row) {
 const EMPTY_FORM = {
   slug: '',
   line: 'general',
-  sub: 'course',
+  sub: 'online-lab',
   status: 'live',
-  delivery_type: 'video',
+  delivery_type: 'lab',
   featured: false,
   name: '',
   name_en: '',

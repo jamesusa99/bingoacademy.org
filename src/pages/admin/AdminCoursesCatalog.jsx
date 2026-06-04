@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { PRODUCT_LINES } from '../../config/products'
@@ -7,15 +7,15 @@ import { COURSE_STATUS } from '../../config/coursesCatalog'
 import {
   CATALOG_FORM_EMPTY,
   catalogRowToForm,
-  defaultSubForLine,
+  defaultLabMaterialsSubForLine,
   formToCatalogPayload,
+  isLabMaterialsCatalogRow,
+  labMaterialsSubcategoriesForLine,
 } from '../../lib/catalogCourse'
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
 import DraggableCatalogList from '../../components/admin/DraggableCatalogList'
 import { assignStreamToCourse } from '../../lib/admin/api'
-import { CURRICULUM_LINES, getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
-import { fetchCurriculumFromDb } from '../../lib/ioaiCurriculumDb'
-import { getFirstProgramLessonId } from '../../lib/ioaiCourseStructure'
+import { getProgramCurriculum } from '../../config/programCurriculum'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -27,7 +27,7 @@ function statusOptions(t) {
   ]
 }
 
-const DELIVERY_TYPES = ['video', 'camp', 'self-study', 'classroom', 'lab', 'materials', 'books']
+const DELIVERY_TYPES = ['camp', 'self-study', 'classroom', 'lab', 'materials', 'books']
 
 function Field({ label, children, className = '' }) {
   return (
@@ -52,22 +52,14 @@ export default function AdminCoursesCatalog() {
   const [editingSlug, setEditingSlug] = useState(null)
   const [form, setForm] = useState(CATALOG_FORM_EMPTY)
   const [lineFilter, setLineFilter] = useState('all')
-  const [groupedByCurriculum, setGroupedByCurriculum] = useState(true)
-  const [curriculumTrees, setCurriculumTrees] = useState({ ioai: [], general: [], k12: [] })
-
-  const lineDef = PRODUCT_LINES.find((p) => p.id === form.line) || PRODUCT_LINES[0]
+  const labSubs = useMemo(() => labMaterialsSubcategoriesForLine(form.line), [form.line])
+  const labItems = useMemo(() => items.filter(isLabMaterialsCatalogRow), [items])
 
   const fetchItems = async () => {
     setLoading(true)
-    const [{ data, error: e }, ...treeResults] = await Promise.all([
-      supabase.from('courses_catalog').select('*').order('sort_order'),
-      ...CURRICULUM_LINES.map((line) => fetchCurriculumFromDb(line)),
-    ])
+    const { data, error: e } = await supabase.from('courses_catalog').select('*').order('sort_order')
     setError(e?.message || null)
     setItems(data || [])
-    setCurriculumTrees(
-      Object.fromEntries(CURRICULUM_LINES.map((line, i) => [line, treeResults[i]?.tree || []]))
-    )
     setLoading(false)
   }
 
@@ -79,7 +71,11 @@ export default function AdminCoursesCatalog() {
 
   const startAdd = () => {
     setEditingSlug(null)
-    setForm({ ...CATALOG_FORM_EMPTY, line: 'general', sub: 'course' })
+    setForm({
+      ...CATALOG_FORM_EMPTY,
+      line: 'general',
+      sub: defaultLabMaterialsSubForLine('general'),
+    })
     setSuccess(null)
     setError(null)
   }
@@ -125,7 +121,7 @@ export default function AdminCoursesCatalog() {
     setForm((f) => ({
       ...f,
       line: lineId,
-      sub: defaultSubForLine(lineId),
+      sub: defaultLabMaterialsSubForLine(lineId),
     }))
   }
 
@@ -275,7 +271,7 @@ export default function AdminCoursesCatalog() {
           </Field>
           <Field label="Subcategory *">
             <select value={form.sub} onChange={(e) => set('sub', e.target.value)} className={inputClass}>
-              {lineDef.subcategories.map((s) => (
+              {labSubs.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.icon} {s.name}
                 </option>
@@ -501,7 +497,7 @@ export default function AdminCoursesCatalog() {
                 <p className="text-xs text-emerald-700">
                   {c.t('pages.coursesCatalog.videoConfigured')}{' '}
                   <a
-                    href={`/courses/detail/${form.slug || getFirstProgramLessonId(null, curriculumTrees[form.line] || [], form.line) || getProgramCurriculum(form.line).trackSlug}?preview=1&from=admin`}
+                    href={`/courses/detail/${form.slug}?preview=1&from=admin`}
                     target="_blank"
                     rel="noreferrer"
                     className="underline"
@@ -540,7 +536,7 @@ export default function AdminCoursesCatalog() {
 
       <div className="card overflow-hidden">
         <div className="p-4 border-b flex flex-wrap justify-between items-center gap-3">
-          <span className="font-semibold">{c.t('pages.coursesCatalog.allCourses', { count: String(items.length) })}</span>
+          <span className="font-semibold">{c.t('pages.coursesCatalog.allCourses', { count: String(labItems.length) })}</span>
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={lineFilter}
@@ -554,18 +550,8 @@ export default function AdminCoursesCatalog() {
                 </option>
               ))}
             </select>
-            {isCurriculumLine(lineFilter) ? (
-              <label className="inline-flex items-center gap-1.5 text-xs text-slate-600">
-                <input
-                  type="checkbox"
-                  checked={groupedByCurriculum}
-                  onChange={(e) => setGroupedByCurriculum(e.target.checked)}
-                />
-                {c.t('pages.coursesCatalog.groupIOAI')}
-              </label>
-            ) : null}
             <a
-              href="/courses?line=general&sub=course"
+              href="/courses?line=general&sub=online-lab"
               target="_blank"
               rel="noreferrer"
               className="text-xs text-primary hover:underline"
@@ -576,15 +562,15 @@ export default function AdminCoursesCatalog() {
         </div>
         {loading ? (
           <p className="p-6 text-sm text-slate-500">{c.loading}</p>
-        ) : items.length === 0 ? (
+        ) : labItems.length === 0 ? (
           <p className="p-6 text-sm text-slate-500">{c.t('pages.coursesCatalog.noCourses')}</p>
         ) : (
           <DraggableCatalogList
-            items={items}
+            items={labItems}
             lineFilter={lineFilter}
-            groupedByCurriculum={groupedByCurriculum}
-            curriculumTree={curriculumTrees[lineFilter] || []}
-            productLine={isCurriculumLine(lineFilter) ? lineFilter : 'ioai'}
+            groupedByCurriculum={false}
+            curriculumTree={[]}
+            productLine="ioai"
             onEdit={startEdit}
             onDelete={handleDelete}
             onReorderComplete={fetchItems}
