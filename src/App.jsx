@@ -105,7 +105,8 @@ export default function App() {
         <Route path="home" element={<AdminHome />} />
         <Route path="showcase" element={<AdminShowcase />} />
         <Route path="courses" element={<AdminCoursesCatalog />} />
-        <Route path="ioai-curriculum" element={<AdminIOAICurriculum />} />
+        <Route path="curriculum/:line" element={<AdminIOAICurriculum />} />
+        <Route path="ioai-curriculum" element={<Navigate to="/admin/curriculum/ioai" replace />} />
         <Route path="courses-catalog" element={<Navigate to="/admin/courses" replace />} />
         <Route path="mall" element={<AdminCourses />} />
         <Route path="research" element={<AdminResearch />} />

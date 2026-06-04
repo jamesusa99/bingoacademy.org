@@ -6,6 +6,7 @@ import {
   parseIOAILessonSlug,
 } from '../data/ioaiCurriculum'
 import { buildCurriculumSummary } from './ioaiCurriculumDb'
+import { getProgramCurriculum, isCurriculumLine } from '../config/programCurriculum'
 
 export const IOAI_TRACK_ID = 'ioai-competition-system'
 
@@ -14,18 +15,33 @@ export { staticCurriculum as ioaiCurriculum, parseIOAILessonSlug }
 /** @deprecated use buildCurriculumSummary(tree) from DB */
 export const IOAI_CURRICULUM_SUMMARY = staticSummary
 
-export function getIOAICurriculumSummary(curriculumTree = null) {
+export function getProgramTrackId(productLine = 'ioai') {
+  return getProgramCurriculum(productLine).trackSlug
+}
+
+export function getProgramCurriculumSummary(curriculumTree = null, productLine = 'ioai') {
   if (curriculumTree?.length) {
-    return buildCurriculumSummary(curriculumTree)
+    return buildCurriculumSummary(curriculumTree, productLine)
   }
-  return staticSummary
+  if (productLine === 'ioai') return staticSummary
+  return buildCurriculumSummary([], productLine)
 }
 
+/** @deprecated use getProgramCurriculumSummary(tree, 'ioai') */
+export function getIOAICurriculumSummary(curriculumTree = null) {
+  return getProgramCurriculumSummary(curriculumTree, 'ioai')
+}
+
+export function isProgramTrackId(id, productLine = 'ioai') {
+  return id === getProgramTrackId(productLine)
+}
+
+/** @deprecated use isProgramTrackId(id, 'ioai') */
 export function isIOAITrackId(id) {
-  return id === IOAI_TRACK_ID
+  return isProgramTrackId(id, 'ioai')
 }
 
-export function isIOAILessonInTree(lessonId, curriculumTree) {
+export function isProgramLessonInTree(lessonId, curriculumTree) {
   if (!lessonId || !curriculumTree?.length) return false
   for (const level of curriculumTree) {
     for (const theme of level.themes || []) {
@@ -37,17 +53,46 @@ export function isIOAILessonInTree(lessonId, curriculumTree) {
   return false
 }
 
-/** IOAI lesson slugs — DB tree, catalog row, or legacy slug pattern */
-export function isIOAILessonId(id, courses = null, curriculumTree = null) {
-  if (!id || id === IOAI_TRACK_ID) return false
-  if (isIOAILessonInTree(id, curriculumTree)) return true
-  const row = courses?.find((c) => c.id === id)
-  if (row?.line === 'ioai' && row?.sub === 'video' && row.id !== IOAI_TRACK_ID) return true
-  return typeof id === 'string' && /^ioai-.+-l\d+$/.test(id)
+/** @deprecated */
+export function isIOAILessonInTree(lessonId, curriculumTree) {
+  return isProgramLessonInTree(lessonId, curriculumTree)
 }
 
+export function isProgramLessonId(id, courses = null, curriculumTree = null, productLine = 'ioai') {
+  if (!id || !isCurriculumLine(productLine)) return false
+  const trackId = getProgramTrackId(productLine)
+  if (id === trackId) return false
+  if (isProgramLessonInTree(id, curriculumTree)) return true
+  const config = getProgramCurriculum(productLine)
+  const row = courses?.find((c) => c.id === id)
+  if (row?.line === config.line && row?.sub === config.catalogSub && row.id !== trackId) return true
+  const prefix = config.slugPrefix
+  return typeof id === 'string' && new RegExp(`^${prefix}-.+-l\\d+$`).test(id)
+}
+
+/** @deprecated use isProgramLessonId(..., 'ioai') */
+export function isIOAILessonId(id, courses = null, curriculumTree = null) {
+  return isProgramLessonId(id, courses, curriculumTree, 'ioai')
+}
+
+export function isProgramVideoCourse(id, courses = null, curriculumTree = null, productLine = 'ioai') {
+  return isProgramTrackId(id, productLine) || isProgramLessonId(id, courses, curriculumTree, productLine)
+}
+
+/** @deprecated use isProgramVideoCourse(..., 'ioai') */
 export function isIOAIVideoCourse(id, courses = null, curriculumTree = null) {
-  return isIOAITrackId(id) || isIOAILessonId(id, courses, curriculumTree)
+  return isProgramVideoCourse(id, courses, curriculumTree, 'ioai')
+}
+
+export function detectProgramLineForCourse(id, courses = null, treesByLine = null) {
+  if (!id) return null
+  for (const line of ['ioai', 'general', 'k12']) {
+    const tree = treesByLine?.[line]
+    if (isProgramVideoCourse(id, courses, tree, line)) return line
+  }
+  const row = courses?.find((c) => c.id === id)
+  if (row && isCurriculumLine(row.line)) return row.line
+  return null
 }
 
 export function parseIOAILessonId(id) {
@@ -80,20 +125,26 @@ function staticLessonIds() {
   return flattenIOAICurriculumLessons().map((l) => l.id)
 }
 
-/** Ordered lesson slugs — curriculum tree first, then catalog, then static seed */
-export function getAllIOAILessonIds(courses = null, curriculumTree = null) {
+/** Ordered lesson slugs — curriculum tree first, then catalog, then static seed (IOAI only) */
+export function getAllProgramLessonIds(courses = null, curriculumTree = null, productLine = 'ioai') {
   if (curriculumTree?.length) {
     const fromTree = lessonIdsFromTree(curriculumTree)
     if (fromTree.length) return fromTree
   }
   if (courses?.length) {
     const fromCatalog = courses
-      .filter((c) => isIOAILessonId(c.id, courses, curriculumTree))
+      .filter((c) => isProgramLessonId(c.id, courses, curriculumTree, productLine))
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
       .map((c) => c.id)
     if (fromCatalog.length) return fromCatalog
   }
-  return staticLessonIds()
+  if (productLine === 'ioai') return staticLessonIds()
+  return []
+}
+
+/** @deprecated use getAllProgramLessonIds(..., 'ioai') */
+export function getAllIOAILessonIds(courses = null, curriculumTree = null) {
+  return getAllProgramLessonIds(courses, curriculumTree, 'ioai')
 }
 
 function mergeLessonMeta(lesson, courses, level, theme, mod) {
@@ -165,15 +216,21 @@ function buildFromStatic(courses) {
 }
 
 /** Structured curriculum: CourseLevel → Theme → Module → Lesson (DB tree when available) */
-export function buildIOAICurriculum(courses = null, curriculumTree = null) {
+export function buildProgramCurriculum(courses = null, curriculumTree = null, productLine = 'ioai') {
   if (curriculumTree?.length) {
     return buildFromTree(curriculumTree, courses)
   }
-  return buildFromStatic(courses)
+  if (productLine === 'ioai') return buildFromStatic(courses)
+  return []
 }
 
-export function getAdjacentLessons(lessonId, courses = null, curriculumTree = null) {
-  const all = getAllIOAILessonIds(courses, curriculumTree)
+/** @deprecated use buildProgramCurriculum(..., 'ioai') */
+export function buildIOAICurriculum(courses = null, curriculumTree = null) {
+  return buildProgramCurriculum(courses, curriculumTree, 'ioai')
+}
+
+export function getAdjacentLessons(lessonId, courses = null, curriculumTree = null, productLine = 'ioai') {
+  const all = getAllProgramLessonIds(courses, curriculumTree, productLine)
   const index = all.indexOf(lessonId)
   if (index < 0) return { prev: null, next: null, index: -1, total: all.length }
   return {
@@ -216,14 +273,15 @@ export function findModuleForLesson(lessonId, curriculumTree = null) {
   }
 }
 
-function catalogRowForLesson(lesson, lessonBySlug) {
+function catalogRowForLesson(lesson, lessonBySlug, productLine = 'ioai') {
+  const config = getProgramCurriculum(productLine)
   const slug = lesson.id || lesson.slug
   return (
     lessonBySlug.get(slug) ?? {
       slug,
       name: lesson.title || slug,
-      line: 'ioai',
-      sub: 'video',
+      line: config.line,
+      sub: config.catalogSub,
       status: 'live',
       sort_order: lesson.sort_order ?? 0,
       _curriculumOnly: true,
@@ -231,14 +289,15 @@ function catalogRowForLesson(lesson, lessonBySlug) {
   )
 }
 
-/** Group catalog rows for admin: level → category → module → lessons (DB tree when available) */
-export function groupIOAICatalogByCurriculum(items, curriculumTree = null) {
+/** Group catalog rows for admin: level → category → module → lessons */
+export function groupCatalogByCurriculum(items, curriculumTree = null, productLine = 'ioai') {
+  const config = getProgramCurriculum(productLine)
   const sorted = [...items].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-  const track = sorted.find((r) => r.slug === IOAI_TRACK_ID) ?? null
-  const lessonRows = sorted.filter((r) => isIOAILessonId(r.slug, null, curriculumTree))
+  const track = sorted.find((r) => r.slug === config.trackSlug) ?? null
+  const lessonRows = sorted.filter((r) => isProgramLessonId(r.slug, null, curriculumTree, productLine))
   const lessonBySlug = new Map(lessonRows.map((r) => [r.slug, r]))
 
-  const tree = curriculumTree?.length ? curriculumTree : staticCurriculum
+  const tree = curriculumTree?.length ? curriculumTree : productLine === 'ioai' ? staticCurriculum : []
 
   const levels = tree.map((level) => ({
     id: level.id,
@@ -253,7 +312,7 @@ export function groupIOAICatalogByCurriculum(items, curriculumTree = null) {
         levelId: level.id,
         themeId: theme.id,
         lessons: (mod.lessons || [])
-          .map((lesson) => catalogRowForLesson(lesson, lessonBySlug))
+          .map((lesson) => catalogRowForLesson(lesson, lessonBySlug, productLine))
           .filter(Boolean),
       })),
     })),
@@ -264,10 +323,20 @@ export function groupIOAICatalogByCurriculum(items, curriculumTree = null) {
   )
   const unassigned = lessonRows.filter((r) => !assigned.has(r.slug))
 
-  return { track, levels, unassigned }
+  return { track, levels, unassigned, productLine }
 }
 
-export function getFirstIOAILessonId(courses = null, curriculumTree = null) {
-  const ids = getAllIOAILessonIds(courses, curriculumTree)
+/** @deprecated use groupCatalogByCurriculum(..., 'ioai') */
+export function groupIOAICatalogByCurriculum(items, curriculumTree = null) {
+  return groupCatalogByCurriculum(items, curriculumTree, 'ioai')
+}
+
+export function getFirstProgramLessonId(courses = null, curriculumTree = null, productLine = 'ioai') {
+  const ids = getAllProgramLessonIds(courses, curriculumTree, productLine)
   return ids[0] ?? null
+}
+
+/** @deprecated use getFirstProgramLessonId(..., 'ioai') */
+export function getFirstIOAILessonId(courses = null, curriculumTree = null) {
+  return getFirstProgramLessonId(courses, curriculumTree, 'ioai')
 }

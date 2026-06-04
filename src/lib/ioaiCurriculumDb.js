@@ -1,3 +1,4 @@
+import { getProgramCurriculum, isCurriculumLine } from '../config/programCurriculum'
 import { supabase, isSupabaseConfigured } from './supabase'
 
 const CURRICULUM_SELECT = `
@@ -85,12 +86,14 @@ export function countCurriculumModules(tree) {
   return n
 }
 
-export function buildCurriculumSummary(tree) {
+export function buildCurriculumSummary(tree, productLine = 'ioai', titleOverride = null) {
   const levels = tree.length
   const modules = countCurriculumModules(tree)
   const lessons = countCurriculumLessons(tree)
+  const title = titleOverride || getProgramCurriculum(productLine).summaryTitle
   return {
-    title: 'IOAI Competition Course System',
+    title,
+    productLine,
     levels,
     modules,
     lessons,
@@ -98,31 +101,42 @@ export function buildCurriculumSummary(tree) {
   }
 }
 
-/** Fetch full IOAI curriculum tree from Supabase */
-export async function fetchIOAICurriculumFromDb() {
+/** Fetch curriculum tree from Supabase for a product line */
+export async function fetchCurriculumFromDb(productLine = 'ioai') {
   if (!isSupabaseConfigured) {
-    return { tree: [], source: 'none', error: 'Supabase not configured' }
+    return { tree: [], source: 'none', error: 'Supabase not configured', productLine }
+  }
+
+  if (!isCurriculumLine(productLine)) {
+    return { tree: [], source: 'none', error: null, productLine }
   }
 
   const { data, error } = await supabase
     .from('course_levels')
     .select(CURRICULUM_SELECT)
+    .eq('product_line', productLine)
     .order('sort_order')
     .order('sort_order', { referencedTable: 'themes', ascending: true })
     .order('sort_order', { referencedTable: 'themes.modules', ascending: true })
     .order('sort_order', { referencedTable: 'themes.modules.lessons', ascending: true })
 
   if (error) {
-    return { tree: [], source: 'supabase', error: error.message }
+    return { tree: [], source: 'supabase', error: error.message, productLine }
   }
 
   const tree = mapDbCurriculumToTree(data)
   return {
     tree,
-    summary: buildCurriculumSummary(tree),
+    summary: buildCurriculumSummary(tree, productLine),
     source: tree.length ? 'supabase' : 'empty',
     error: null,
+    productLine,
   }
+}
+
+/** @deprecated use fetchCurriculumFromDb('ioai') */
+export async function fetchIOAICurriculumFromDb() {
+  return fetchCurriculumFromDb('ioai')
 }
 
 export const IOAI_ACCESS_SCOPE = 'ioai_masterclass'

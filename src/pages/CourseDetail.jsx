@@ -1,9 +1,11 @@
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/products'
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
 import { COURSES_PORTAL } from '../config/coursesPortal'
-import { useIOAICourseContext } from '../hooks/useIOAICourseContext'
+import { useCourseCatalog } from '../hooks/useCourseCatalog'
+import { useProgramCurriculum } from '../hooks/useProgramCurriculum'
+import { isCurriculumLine } from '../config/programCurriculum'
 import { useCourseAccess } from '../hooks/useCourseAccess'
 import { useAuth } from '../contexts/AuthContext'
 import { findCourseInList } from '../lib/catalogCourse'
@@ -11,11 +13,13 @@ import { isVideoCourse } from '../lib/courseAccess'
 import { isPurchasableCourse, resolvePurchaseType, getCheckoutPriceLabel } from '../lib/coursePricing'
 import { initiateCoursePurchase } from '../lib/coursePurchase'
 import {
-  isIOAILessonId,
-  isIOAITrackId,
-  isIOAIVideoCourse,
-  getAllIOAILessonIds,
-  getFirstIOAILessonId,
+  isProgramLessonId,
+  isProgramTrackId,
+  isProgramVideoCourse,
+  getFirstProgramLessonId,
+  getAllProgramLessonIds,
+  buildProgramCurriculum,
+  getProgramCurriculumSummary,
 } from '../lib/ioaiCourseStructure'
 import { getContinueLessonId } from '../lib/learningProgress'
 import CourseComingSoon from '../components/CourseComingSoon'
@@ -33,13 +37,29 @@ export default function CourseDetail() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutMessage, setCheckoutMessage] = useState(null)
-  const { courses, tree, curriculum, summary, loading, reload } = useIOAICourseContext()
-  const { isAuthenticated } = useAuth()
+  const { courses, loading: catalogLoading, reload } = useCourseCatalog()
   const item = findCourseInList(courses, id)
+  const progLine = item?.line && isCurriculumLine(item.line) ? item.line : null
+  const { tree, loading: treeLoading, reload: reloadTree } = useProgramCurriculum(progLine)
+  const curriculum = useMemo(
+    () => (progLine ? buildProgramCurriculum(courses, tree, progLine) : []),
+    [courses, tree, progLine]
+  )
+  const summary = useMemo(
+    () => (progLine ? getProgramCurriculumSummary(tree, progLine) : null),
+    [tree, progLine]
+  )
+  const loading = catalogLoading || (progLine ? treeLoading : false)
+  const { isAuthenticated } = useAuth()
+
+  const reloadAll = useCallback(async () => {
+    await Promise.all([reload(), progLine ? reloadTree() : Promise.resolve()])
+  }, [reload, reloadTree, progLine])
 
   useEffect(() => {
-    reload()
-  }, [id, reload])
+    reloadAll()
+  }, [id, reloadAll])
+
   const line = getProductLine(item?.line ?? 'general')
   const {
     hasAccess,
@@ -120,17 +140,17 @@ export default function CourseDetail() {
   }
 
   const comingSoon = isCourseComingSoon(item)
-  const isIOAI = isIOAIVideoCourse(item.id, courses, tree)
-  const isTrack = isIOAITrackId(item.id)
-  const isLesson = isIOAILessonId(item.id, courses, tree)
+  const isProgram = progLine && isProgramVideoCourse(item.id, courses, tree, progLine)
+  const isTrack = progLine && isProgramTrackId(item.id, progLine)
+  const isLesson = progLine && isProgramLessonId(item.id, courses, tree, progLine)
   const showSegmentLearning = isLesson && isVideoCourse(item) && !comingSoon
   const showTrackOverview = isTrack && !comingSoon
-  const showLegacyVideo = isVideoCourse(item) && !comingSoon && !isIOAI
+  const showLegacyVideo = isVideoCourse(item) && !comingSoon && !isProgram
   const linkedLabs = (item.labSlugs ?? [])
     .map((slug) => EXPLORATION_EXPERIMENTS.find((e) => e.id === slug))
     .filter(Boolean)
 
-  const pageWidth = isIOAI ? 'max-w-6xl' : 'max-w-4xl'
+  const pageWidth = isProgram ? 'max-w-6xl' : 'max-w-4xl'
 
   return (
     <PageContent className={`py-6 sm:py-8 ${pageWidth} mx-auto`}>
@@ -256,14 +276,14 @@ export default function CourseDetail() {
             <p className="text-sm text-slate-700 leading-relaxed mb-6">{item.desc}</p>
           ) : null}
 
-          {!isIOAI && item.audience ? (
+          {!isProgram && item.audience ? (
             <section className="card p-5 mb-4">
               <h2 className="font-bold text-bingo-dark text-sm mb-2">{COURSES_PORTAL.audience}</h2>
               <p className="text-sm text-slate-600">{item.audience}</p>
             </section>
           ) : null}
 
-          {!isIOAI && item.outcomes?.length > 0 ? (
+          {!isProgram && item.outcomes?.length > 0 ? (
             <section className="card p-5 mb-4">
               <h2 className="font-bold text-bingo-dark text-sm mb-3">{COURSES_PORTAL.outcomes}</h2>
               <ul className="space-y-2">
@@ -277,7 +297,7 @@ export default function CourseDetail() {
             </section>
           ) : null}
 
-          {!isIOAI && item.syllabus?.length > 0 ? (
+          {!isProgram && item.syllabus?.length > 0 ? (
             <section className="card overflow-hidden mb-6">
               <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark text-sm">
                 {COURSES_PORTAL.syllabus}
@@ -329,7 +349,7 @@ export default function CourseDetail() {
               <Link
                 to={
                   isTrack
-                    ? `/courses/detail/${getContinueLessonId(getAllIOAILessonIds(courses, tree)) ?? getFirstIOAILessonId(courses, tree) ?? ''}`
+                    ? `/courses/detail/${getContinueLessonId(getAllProgramLessonIds(courses, tree, progLine)) ?? getFirstProgramLessonId(courses, tree, progLine) ?? ''}`
                     : '/profile/study'
                 }
                 className="btn-primary text-sm px-5 py-2.5"

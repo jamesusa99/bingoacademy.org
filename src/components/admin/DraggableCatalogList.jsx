@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { GripVertical } from 'lucide-react'
 import { arrayMove } from '../../lib/arrayMove'
 import { reorderCatalogCourses } from '../../lib/admin/catalog'
-import { IOAI_TRACK_ID, groupIOAICatalogByCurriculum } from '../../lib/ioaiCourseStructure'
+import { groupCatalogByCurriculum } from '../../lib/ioaiCourseStructure'
+import { isCurriculumLine } from '../../config/programCurriculum'
 
 function sortByOrder(rows) {
   return [...rows].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
@@ -156,8 +157,11 @@ function flattenGroupedOrder(grouped) {
   return list
 }
 
-function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, disabled, curriculumTree = [] }) {
-  const grouped = useMemo(() => groupIOAICatalogByCurriculum(items, curriculumTree), [items, curriculumTree])
+function GroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, disabled, curriculumTree = [], productLine = 'ioai' }) {
+  const grouped = useMemo(
+    () => groupCatalogByCurriculum(items, curriculumTree, productLine),
+    [items, curriculumTree, productLine]
+  )
   const [dragKey, setDragKey] = useState(null)
   const [overKey, setOverKey] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -350,8 +354,9 @@ export default function DraggableCatalogList({
   onDelete,
   onReorderComplete,
   lineFilter = 'all',
-  groupedIOAI = false,
+  groupedByCurriculum = false,
   curriculumTree = [],
+  productLine = 'ioai',
 }) {
   const sorted = useMemo(() => sortByOrder(items), [items])
 
@@ -381,17 +386,18 @@ export default function DraggableCatalogList({
     onReorderComplete?.()
   }
 
-  const showGrouped = groupedIOAI && lineFilter === 'ioai'
+  const showGrouped = groupedByCurriculum && isCurriculumLine(lineFilter) && lineFilter === productLine
 
   if (showGrouped) {
     return (
-      <IOAIGroupedCatalogList
+      <GroupedCatalogList
         items={visible}
         labels={labels}
         onReorder={handleReorder}
         onEdit={onEdit}
         onDelete={onDelete}
         curriculumTree={curriculumTree}
+        productLine={productLine}
       />
     )
   }

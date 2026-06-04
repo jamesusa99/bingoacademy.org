@@ -8,7 +8,9 @@ import {
 } from '../config/products'
 import { isVideoCoursesSub } from '../config/courseListFilters'
 import { COURSES_PORTAL } from '../config/coursesPortal'
-import { useIOAICourseContext } from '../hooks/useIOAICourseContext'
+import { useCourseCatalog } from '../hooks/useCourseCatalog'
+import { useProgramCurriculum } from '../hooks/useProgramCurriculum'
+import { isCurriculumLine } from '../config/programCurriculum'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import CourseListView from '../components/courses/CourseListView'
@@ -74,7 +76,9 @@ export default function Courses() {
   const subId = params.get('sub') || ''
   const line = getProductLine(lineId)
   const videoListMode = isVideoCoursesSub(line.id, subId)
-  const { courses, loading: catalogLoading, summary: ioaiSummary } = useIOAICourseContext()
+  const { courses, loading: catalogLoading } = useCourseCatalog()
+  const curriculumLine = isCurriculumLine(line.id) ? line.id : null
+  const { summary: curriculumSummary } = useProgramCurriculum(videoListMode ? curriculumLine : null)
 
   const filtered = useMemo(() => {
     let list = courses.filter((c) => c.line === line.id)
@@ -112,7 +116,7 @@ export default function Courses() {
         {catalogLoading ? (
           <div className="courses-page-dark py-16 text-center text-slate-400 text-sm">Loading courses…</div>
         ) : (
-          <CourseListView line={line} subId={subId} courses={courses} ioaiSummary={ioaiSummary} />
+          <CourseListView line={line} subId={subId} courses={courses} curriculumSummary={curriculumSummary} />
         )}
         <PageContent className="py-8">
           <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">

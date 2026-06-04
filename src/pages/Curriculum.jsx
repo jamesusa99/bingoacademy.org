@@ -3,8 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { GraduationCap, ArrowRight } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import { PAGE_SEO } from '../config/programs'
-import { IOAI_TRACK_ID } from '../lib/ioaiCourseStructure'
-import { useIOAICurriculum } from '../hooks/useIOAICurriculum'
+import { getProductLine } from '../config/products'
+import { getProgramCurriculum, isCurriculumLine } from '../config/programCurriculum'
+import { useProgramCurriculum } from '../hooks/useProgramCurriculum'
 import { useIOAIAccess } from '../hooks/useIOAIAccess'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import CurriculumNavigator from '../components/curriculum/CurriculumNavigator'
@@ -15,11 +16,13 @@ import { getDefaultSelectedModule } from '../components/curriculum/curriculumUti
 import { confirmCheckoutSession } from '../lib/checkout'
 import { useAuth } from '../contexts/AuthContext'
 
-const PROGRESS_KEY = 'ioai-curriculum-completed'
+function progressKey(line) {
+  return `${line}-curriculum-completed`
+}
 
-function loadCompletedLessons() {
+function loadCompletedLessons(line) {
   try {
-    const raw = localStorage.getItem(PROGRESS_KEY)
+    const raw = localStorage.getItem(progressKey(line))
     const list = raw ? JSON.parse(raw) : []
     return Array.isArray(list) ? list : []
   } catch {
@@ -28,17 +31,27 @@ function loadCompletedLessons() {
 }
 
 export default function Curriculum() {
-  const { tree, summary, loading, error, reload } = useIOAICurriculum()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const lineParam = searchParams.get('line') || 'ioai'
+  const productLine = isCurriculumLine(lineParam) ? lineParam : 'ioai'
+  const config = getProgramCurriculum(productLine)
+  const product = getProductLine(productLine)
+
+  const { tree, summary, loading, error, reload } = useProgramCurriculum(productLine)
   const { courses } = useCourseCatalog()
   const { hasAccess, refresh: refreshAccess } = useIOAIAccess()
   const { isAuthenticated } = useAuth()
-  const [searchParams, setSearchParams] = useSearchParams()
 
   const [selectedModule, setSelectedModule] = useState(null)
-  const [completedLessons, setCompletedLessons] = useState(loadCompletedLessons)
+  const [completedLessons, setCompletedLessons] = useState(() => loadCompletedLessons(productLine))
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [videoLesson, setVideoLesson] = useState(null)
   const [checkoutNotice, setCheckoutNotice] = useState(null)
+
+  useEffect(() => {
+    setCompletedLessons(loadCompletedLessons(productLine))
+    setSelectedModule(null)
+  }, [productLine])
 
   useEffect(() => {
     if (tree.length && !selectedModule) {
@@ -47,13 +60,13 @@ export default function Curriculum() {
   }, [tree, selectedModule])
 
   useEffect(() => {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(completedLessons))
-  }, [completedLessons])
+    localStorage.setItem(progressKey(productLine), JSON.stringify(completedLessons))
+  }, [completedLessons, productLine])
 
   useEffect(() => {
     const status = searchParams.get('checkout')
     const sessionId = searchParams.get('session_id')
-    if (status === 'success' && sessionId && isAuthenticated) {
+    if (status === 'success' && sessionId && isAuthenticated && productLine === 'ioai') {
       confirmCheckoutSession(sessionId)
         .then(() => {
           setCheckoutNotice('Payment successful — IOAI Masterclass unlocked!')
@@ -70,7 +83,7 @@ export default function Curriculum() {
       searchParams.delete('checkout')
       setSearchParams(searchParams, { replace: true })
     }
-  }, [searchParams, setSearchParams, isAuthenticated, refreshAccess])
+  }, [searchParams, setSearchParams, isAuthenticated, refreshAccess, productLine])
 
   const toggleLessonComplete = useCallback((lessonId) => {
     setCompletedLessons((prev) =>
@@ -86,9 +99,11 @@ export default function Curriculum() {
     }
   }, [])
 
+  const lineAccess = productLine === 'ioai' ? hasAccess : true
+
   return (
     <div className="curriculum-page courses-page-dark min-h-[calc(100vh-4rem)]">
-      <PageMeta title="IOAI Curriculum · Bingo AI Academy" description={PAGE_SEO.courses.description} />
+      <PageMeta title={`${config.summaryTitle} · Bingo AI Academy`} description={PAGE_SEO.courses.description} />
 
       <div className="page-content py-8 sm:py-10 lg:py-12">
         <header className="mb-8 sm:mb-10">
@@ -96,17 +111,17 @@ export default function Curriculum() {
             <div>
               <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400 mb-2">
                 <GraduationCap className="w-4 h-4" aria-hidden />
-                IOAI Competition Training
+                {product.name}
               </p>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
                 Curriculum Explorer
               </h1>
               <p className="text-sm sm:text-base text-slate-400 mt-2 max-w-2xl">
-                {summary.summary || 'IOAI curriculum'} — loaded from Supabase. Browse levels, themes, and modules.
+                {summary.summary || config.summaryTitle} — loaded from Supabase. Browse levels, themes, and modules.
               </p>
             </div>
             <Link
-              to={`/courses/detail/${IOAI_TRACK_ID}`}
+              to={`/courses/detail/${config.trackSlug}`}
               className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400/60 transition-all shrink-0"
             >
               Full track overview
@@ -124,7 +139,7 @@ export default function Curriculum() {
         {error ? (
           <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
             {error.includes('does not exist')
-              ? 'Curriculum tables missing — run migration 014_ioai_curriculum.sql then npm run seed:ioai-curriculum'
+              ? 'Curriculum tables missing — run migrations 014–016, then add courses in admin.'
               : error}
             <button type="button" onClick={reload} className="ml-3 underline">
               Retry
@@ -151,7 +166,7 @@ export default function Curriculum() {
                 catalogCourses={courses}
                 completedLessons={completedLessons}
                 onToggleLessonComplete={toggleLessonComplete}
-                hasAccess={hasAccess}
+                hasAccess={lineAccess}
                 onOpenLesson={handleOpenLesson}
                 onLockedLesson={() => setUpgradeOpen(true)}
               />

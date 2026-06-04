@@ -13,8 +13,9 @@ import {
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
 import DraggableCatalogList from '../../components/admin/DraggableCatalogList'
 import { assignStreamToCourse } from '../../lib/admin/api'
-import { fetchIOAICurriculumFromDb } from '../../lib/ioaiCurriculumDb'
-import { getFirstIOAILessonId } from '../../lib/ioaiCourseStructure'
+import { CURRICULUM_LINES, getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
+import { fetchCurriculumFromDb } from '../../lib/ioaiCurriculumDb'
+import { getFirstProgramLessonId } from '../../lib/ioaiCourseStructure'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -51,20 +52,22 @@ export default function AdminCoursesCatalog() {
   const [editingSlug, setEditingSlug] = useState(null)
   const [form, setForm] = useState(CATALOG_FORM_EMPTY)
   const [lineFilter, setLineFilter] = useState('all')
-  const [groupedIOAI, setGroupedIOAI] = useState(true)
-  const [curriculumTree, setCurriculumTree] = useState([])
+  const [groupedByCurriculum, setGroupedByCurriculum] = useState(true)
+  const [curriculumTrees, setCurriculumTrees] = useState({ ioai: [], general: [], k12: [] })
 
   const lineDef = PRODUCT_LINES.find((p) => p.id === form.line) || PRODUCT_LINES[0]
 
   const fetchItems = async () => {
     setLoading(true)
-    const [{ data, error: e }, curriculum] = await Promise.all([
+    const [{ data, error: e }, ...treeResults] = await Promise.all([
       supabase.from('courses_catalog').select('*').order('sort_order'),
-      fetchIOAICurriculumFromDb(),
+      ...CURRICULUM_LINES.map((line) => fetchCurriculumFromDb(line)),
     ])
     setError(e?.message || null)
     setItems(data || [])
-    setCurriculumTree(curriculum.tree || [])
+    setCurriculumTrees(
+      Object.fromEntries(CURRICULUM_LINES.map((line, i) => [line, treeResults[i]?.tree || []]))
+    )
     setLoading(false)
   }
 
@@ -188,16 +191,44 @@ export default function AdminCoursesCatalog() {
       {(lineFilter === 'ioai' || form.line === 'ioai') && (
         <div className="card p-4 mb-6 border-amber-200/80 bg-amber-50/50 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-semibold text-bingo-dark text-sm">IOAI · 课程管理</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              按阶段 · 类别 · 模块 · 课时管理 IOAI 课程 →
-            </p>
+            <p className="font-semibold text-bingo-dark text-sm">{getProgramCurriculum('ioai').adminTitle}</p>
+            <p className="text-xs text-slate-600 mt-0.5">按阶段 · 类别 · 模块 · 课时管理 IOAI 课程 →</p>
           </div>
           <Link
-            to="/admin/ioai-curriculum"
+            to={getProgramCurriculum('ioai').adminPath}
             className="btn-primary text-sm px-4 py-2 min-h-[40px] inline-flex items-center"
           >
-            IOAI · 课程管理 →
+            {getProgramCurriculum('ioai').adminTitle} →
+          </Link>
+        </div>
+      )}
+
+      {(lineFilter === 'general' || form.line === 'general') && (
+        <div className="card p-4 mb-6 border-cyan-200/80 bg-cyan-50/50 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-bingo-dark text-sm">{getProgramCurriculum('general').adminTitle}</p>
+            <p className="text-xs text-slate-600 mt-0.5">按阶段 · 类别 · 模块 · 课时管理 Foundations 课程 →</p>
+          </div>
+          <Link
+            to={getProgramCurriculum('general').adminPath}
+            className="btn-primary text-sm px-4 py-2 min-h-[40px] inline-flex items-center"
+          >
+            {getProgramCurriculum('general').adminTitle} →
+          </Link>
+        </div>
+      )}
+
+      {(lineFilter === 'k12' || form.line === 'k12') && (
+        <div className="card p-4 mb-6 border-violet-200/80 bg-violet-50/50 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-bingo-dark text-sm">{getProgramCurriculum('k12').adminTitle}</p>
+            <p className="text-xs text-slate-600 mt-0.5">按阶段 · 类别 · 模块 · 课时管理 K12 课程 →</p>
+          </div>
+          <Link
+            to={getProgramCurriculum('k12').adminPath}
+            className="btn-primary text-sm px-4 py-2 min-h-[40px] inline-flex items-center"
+          >
+            {getProgramCurriculum('k12').adminTitle} →
           </Link>
         </div>
       )}
@@ -470,7 +501,7 @@ export default function AdminCoursesCatalog() {
                 <p className="text-xs text-emerald-700">
                   {c.t('pages.coursesCatalog.videoConfigured')}{' '}
                   <a
-                    href={`/courses/detail/${form.slug || getFirstIOAILessonId(null, curriculumTree) || 'ioai-competition-system'}?preview=1&from=admin`}
+                    href={`/courses/detail/${form.slug || getFirstProgramLessonId(null, curriculumTrees[form.line] || [], form.line) || getProgramCurriculum(form.line).trackSlug}?preview=1&from=admin`}
                     target="_blank"
                     rel="noreferrer"
                     className="underline"
@@ -523,12 +554,12 @@ export default function AdminCoursesCatalog() {
                 </option>
               ))}
             </select>
-            {lineFilter === 'ioai' ? (
+            {isCurriculumLine(lineFilter) ? (
               <label className="inline-flex items-center gap-1.5 text-xs text-slate-600">
                 <input
                   type="checkbox"
-                  checked={groupedIOAI}
-                  onChange={(e) => setGroupedIOAI(e.target.checked)}
+                  checked={groupedByCurriculum}
+                  onChange={(e) => setGroupedByCurriculum(e.target.checked)}
                 />
                 {c.t('pages.coursesCatalog.groupIOAI')}
               </label>
@@ -551,8 +582,9 @@ export default function AdminCoursesCatalog() {
           <DraggableCatalogList
             items={items}
             lineFilter={lineFilter}
-            groupedIOAI={groupedIOAI}
-            curriculumTree={curriculumTree}
+            groupedByCurriculum={groupedByCurriculum}
+            curriculumTree={curriculumTrees[lineFilter] || []}
+            productLine={isCurriculumLine(lineFilter) ? lineFilter : 'ioai'}
             onEdit={startEdit}
             onDelete={handleDelete}
             onReorderComplete={fetchItems}

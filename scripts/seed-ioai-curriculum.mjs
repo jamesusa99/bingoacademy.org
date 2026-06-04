@@ -30,13 +30,14 @@ for (const level of ioaiCurriculum) {
     .from('course_levels')
     .upsert(
       {
+        product_line: 'ioai',
         slug: level.id,
         title: level.title,
         emoji: level.emoji || null,
         sort_order: levelOrder++,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: 'slug' }
+      { onConflict: 'product_line,slug' }
     )
     .select('id, slug')
     .single()

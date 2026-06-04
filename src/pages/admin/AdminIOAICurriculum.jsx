@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import IOAICurriculumTable, { IOAILessonEditor } from '../../components/admin/IOAICurriculumTable'
 import IOAIAddCourseForm from '../../components/admin/IOAIAddCourseForm'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
-import { createIOAICourse, fetchIOAICurriculumAdmin, fetchVideoAssetsForLessonPicker, saveIOAILessonConfig } from '../../lib/ioaiCurriculumAdmin'
+import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
+import {
+  createProgramCourse,
+  fetchCurriculumAdmin,
+  fetchVideoAssetsForLessonPicker,
+  saveProgramLessonConfig,
+} from '../../lib/ioaiCurriculumAdmin'
 
 export default function AdminIOAICurriculum() {
+  const { line: lineParam = 'ioai' } = useParams()
+  const productLine = isCurriculumLine(lineParam) ? lineParam : 'ioai'
+  const config = getProgramCurriculum(productLine)
   const c = useAdminCrud()
   const [rows, setRows] = useState([])
   const [levels, setLevels] = useState([])
@@ -19,60 +28,62 @@ export default function AdminIOAICurriculum() {
   const [saving, setSaving] = useState(false)
   const [videoAssets, setVideoAssets] = useState([])
 
+  const i18nRoot = `pages.${config.i18nKey}`
+
   const labels = useMemo(
     () => ({
-      loading: c.t('pages.ioaiCurriculum.loading'),
-      empty: c.t('pages.ioaiCurriculum.empty'),
-      emptyHint: c.t('pages.ioaiCurriculum.emptyHint'),
-      allStages: c.t('pages.ioaiCurriculum.allStages'),
-      colStage: c.t('pages.ioaiCurriculum.colStage'),
-      colModule: c.t('pages.ioaiCurriculum.colModule'),
-      colCategory: c.t('pages.ioaiCurriculum.colCategory'),
-      colLesson: c.t('pages.ioaiCurriculum.colLesson'),
-      colKnowledge: c.t('pages.ioaiCurriculum.colKnowledge'),
-      colGoals: c.t('pages.ioaiCurriculum.colGoals'),
-      colVideo: c.t('pages.ioaiCurriculum.colVideo'),
-      notSet: c.t('pages.ioaiCurriculum.notSet'),
-      noVideo: c.t('pages.ioaiCurriculum.noVideo'),
-      edit: c.t('pages.ioaiCurriculum.edit'),
-      editLesson: c.t('pages.ioaiCurriculum.editLesson'),
-      preview: c.t('pages.ioaiCurriculum.preview'),
-      close: c.t('pages.ioaiCurriculum.close'),
-      cancel: c.t('pages.ioaiCurriculum.cancel'),
-      save: c.t('pages.ioaiCurriculum.save'),
+      loading: c.t(`${i18nRoot}.loading`),
+      empty: c.t(`${i18nRoot}.empty`),
+      emptyHint: c.t(`${i18nRoot}.emptyHint`),
+      allStages: c.t(`${i18nRoot}.allStages`),
+      colStage: c.t(`${i18nRoot}.colStage`),
+      colModule: c.t(`${i18nRoot}.colModule`),
+      colCategory: c.t(`${i18nRoot}.colCategory`),
+      colLesson: c.t(`${i18nRoot}.colLesson`),
+      colKnowledge: c.t(`${i18nRoot}.colKnowledge`),
+      colGoals: c.t(`${i18nRoot}.colGoals`),
+      colVideo: c.t(`${i18nRoot}.colVideo`),
+      notSet: c.t(`${i18nRoot}.notSet`),
+      noVideo: c.t(`${i18nRoot}.noVideo`),
+      edit: c.t(`${i18nRoot}.edit`),
+      editLesson: c.t(`${i18nRoot}.editLesson`),
+      preview: c.t(`${i18nRoot}.preview`),
+      close: c.t(`${i18nRoot}.close`),
+      cancel: c.t(`${i18nRoot}.cancel`),
+      save: c.t(`${i18nRoot}.save`),
       saving: c.saving,
-      phKnowledge: c.t('pages.ioaiCurriculum.phKnowledge'),
-      phGoals: c.t('pages.ioaiCurriculum.phGoals'),
-      catalogSlug: c.t('pages.ioaiCurriculum.catalogSlug'),
-      cloudflareUid: c.t('pages.ioaiCurriculum.cloudflareUid'),
-      addCourse: c.t('pages.ioaiCurriculum.addCourse'),
-      addCourseTitle: c.t('pages.ioaiCurriculum.addCourseTitle'),
-      addCourseDesc: c.t('pages.ioaiCurriculum.addCourseDesc'),
-      newStage: c.t('pages.ioaiCurriculum.newStage'),
-      newCategory: c.t('pages.ioaiCurriculum.newCategory'),
-      newModule: c.t('pages.ioaiCurriculum.newModule'),
-      newStageTitle: c.t('pages.ioaiCurriculum.newStageTitle'),
-      newStageSlug: c.t('pages.ioaiCurriculum.newStageSlug'),
-      newStageEmoji: c.t('pages.ioaiCurriculum.newStageEmoji'),
-      newCategoryTitle: c.t('pages.ioaiCurriculum.newCategoryTitle'),
-      newCategoryLabel: c.t('pages.ioaiCurriculum.newCategoryLabel'),
-      newCategorySlug: c.t('pages.ioaiCurriculum.newCategorySlug'),
-      newModuleTitle: c.t('pages.ioaiCurriculum.newModuleTitle'),
-      newModuleSlug: c.t('pages.ioaiCurriculum.newModuleSlug'),
-      lessonSlug: c.t('pages.ioaiCurriculum.lessonSlug'),
-      syncCatalog: c.t('pages.ioaiCurriculum.syncCatalog'),
-      phStageTitle: c.t('pages.ioaiCurriculum.phStageTitle'),
-      phCategoryTitle: c.t('pages.ioaiCurriculum.phCategoryTitle'),
-      phCategoryLabel: c.t('pages.ioaiCurriculum.phCategoryLabel'),
-      phModuleTitle: c.t('pages.ioaiCurriculum.phModuleTitle'),
-      phLessonTitle: c.t('pages.ioaiCurriculum.phLessonTitle'),
-      phLessonSlug: c.t('pages.ioaiCurriculum.phLessonSlug'),
-      courseAdded: c.t('pages.ioaiCurriculum.courseAdded'),
-      pickFromVideoLibrary: c.t('pages.ioaiCurriculum.pickFromVideoLibrary'),
-      pickVideoPlaceholder: c.t('pages.ioaiCurriculum.pickVideoPlaceholder'),
-      pickVideoHint: c.t('pages.ioaiCurriculum.pickVideoHint'),
+      phKnowledge: c.t(`${i18nRoot}.phKnowledge`),
+      phGoals: c.t(`${i18nRoot}.phGoals`),
+      catalogSlug: c.t(`${i18nRoot}.catalogSlug`),
+      cloudflareUid: c.t(`${i18nRoot}.cloudflareUid`),
+      addCourse: c.t(`${i18nRoot}.addCourse`),
+      addCourseTitle: c.t(`${i18nRoot}.addCourseTitle`),
+      addCourseDesc: c.t(`${i18nRoot}.addCourseDesc`),
+      newStage: c.t(`${i18nRoot}.newStage`),
+      newCategory: c.t(`${i18nRoot}.newCategory`),
+      newModule: c.t(`${i18nRoot}.newModule`),
+      newStageTitle: c.t(`${i18nRoot}.newStageTitle`),
+      newStageSlug: c.t(`${i18nRoot}.newStageSlug`),
+      newStageEmoji: c.t(`${i18nRoot}.newStageEmoji`),
+      newCategoryTitle: c.t(`${i18nRoot}.newCategoryTitle`),
+      newCategoryLabel: c.t(`${i18nRoot}.newCategoryLabel`),
+      newCategorySlug: c.t(`${i18nRoot}.newCategorySlug`),
+      newModuleTitle: c.t(`${i18nRoot}.newModuleTitle`),
+      newModuleSlug: c.t(`${i18nRoot}.newModuleSlug`),
+      lessonSlug: c.t(`${i18nRoot}.lessonSlug`),
+      syncCatalog: c.t(`${i18nRoot}.syncCatalog`),
+      phStageTitle: c.t(`${i18nRoot}.phStageTitle`),
+      phCategoryTitle: c.t(`${i18nRoot}.phCategoryTitle`),
+      phCategoryLabel: c.t(`${i18nRoot}.phCategoryLabel`),
+      phModuleTitle: c.t(`${i18nRoot}.phModuleTitle`),
+      phLessonTitle: c.t(`${i18nRoot}.phLessonTitle`),
+      phLessonSlug: c.t(`${i18nRoot}.phLessonSlug`),
+      courseAdded: c.t(`${i18nRoot}.courseAdded`),
+      pickFromVideoLibrary: c.t(`${i18nRoot}.pickFromVideoLibrary`),
+      pickVideoPlaceholder: c.t(`${i18nRoot}.pickVideoPlaceholder`),
+      pickVideoHint: c.t(`${i18nRoot}.pickVideoHint`),
     }),
-    [c]
+    [c, i18nRoot]
   )
 
   const load = useCallback(async () => {
@@ -80,7 +91,7 @@ export default function AdminIOAICurriculum() {
     setError(null)
     try {
       const [{ rows: next, levels: tree }, assets] = await Promise.all([
-        fetchIOAICurriculumAdmin(),
+        fetchCurriculumAdmin(productLine),
         fetchVideoAssetsForLessonPicker().catch(() => []),
       ])
       setRows(next)
@@ -93,19 +104,23 @@ export default function AdminIOAICurriculum() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [productLine])
 
   useEffect(() => {
     load()
   }, [load])
+
+  if (!isCurriculumLine(lineParam)) {
+    return <Navigate to="/admin/curriculum/ioai" replace />
+  }
 
   const handleSave = async (form) => {
     if (!editingRow) return
     setSaving(true)
     setError(null)
     try {
-      await saveIOAILessonConfig(editingRow.lessonId, form)
-      setSuccess(c.t('pages.ioaiCurriculum.saved'))
+      await saveProgramLessonConfig(productLine, editingRow.lessonId, form)
+      setSuccess(c.t(`${i18nRoot}.saved`))
       setEditingRow(null)
       await load()
     } catch (e) {
@@ -119,8 +134,8 @@ export default function AdminIOAICurriculum() {
     setSaving(true)
     setError(null)
     try {
-      await createIOAICourse(form)
-      setSuccess(c.t('pages.ioaiCurriculum.courseAdded'))
+      await createProgramCourse(productLine, form)
+      setSuccess(c.t(`${i18nRoot}.courseAdded`))
       setShowAddForm(false)
       await load()
     } catch (e) {
@@ -132,15 +147,15 @@ export default function AdminIOAICurriculum() {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader titleKey="pages.ioaiCurriculum.title" descriptionKey="pages.ioaiCurriculum.desc" />
+      <AdminPageHeader titleKey={`${i18nRoot}.title`} descriptionKey={`${i18nRoot}.desc`} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-3 text-sm">
           <Link to="/admin/courses" className="text-primary hover:underline">
-            ← {c.t('pages.ioaiCurriculum.backCatalog')}
+            ← {c.t(`${i18nRoot}.backCatalog`)}
           </Link>
-          <Link to="/curriculum" target="_blank" rel="noreferrer" className="text-slate-600 hover:text-primary">
-            {c.t('pages.ioaiCurriculum.viewFrontend')} ↗
+          <Link to={config.frontendPath} target="_blank" rel="noreferrer" className="text-slate-600 hover:text-primary">
+            {c.t(`${i18nRoot}.viewFrontend`)} ↗
           </Link>
         </div>
         {!showAddForm && !editingRow ? (
@@ -153,23 +168,23 @@ export default function AdminIOAICurriculum() {
             }}
             className="btn-primary text-sm px-4 py-2 min-h-[40px]"
           >
-            + {c.t('pages.ioaiCurriculum.addCourse')}
+            + {c.t(`${i18nRoot}.addCourse`)}
           </button>
         ) : null}
       </div>
 
       {error ? (
         <AdminAlert variant="error">
-          {error.includes('does not exist') ? c.t('pages.ioaiCurriculum.migrationHint') : error}
+          {error.includes('does not exist') ? c.t(`${i18nRoot}.migrationHint`) : error}
         </AdminAlert>
       ) : null}
       {success ? <AdminAlert variant="success">{success}</AdminAlert> : null}
 
-      <div className="card p-4 sm:p-5 bg-amber-50/60 border-amber-200/80">
-        <p className="text-xs font-bold text-amber-900 uppercase tracking-wide mb-2">
-          {c.t('pages.ioaiCurriculum.structureTitle')}
+      <div className={`card p-4 sm:p-5 border ${config.bannerClass}`}>
+        <p className={`text-xs font-bold uppercase tracking-wide mb-2 ${config.bannerTextClass}`}>
+          {c.t(`${i18nRoot}.structureTitle`)}
         </p>
-        <p className="text-sm text-amber-950/80">{c.t('pages.ioaiCurriculum.structureDesc')}</p>
+        <p className={`text-sm ${config.bannerBodyClass}`}>{c.t(`${i18nRoot}.structureDesc`)}</p>
       </div>
 
       {showAddForm ? (

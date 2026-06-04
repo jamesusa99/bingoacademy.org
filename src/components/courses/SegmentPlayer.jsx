@@ -5,6 +5,7 @@ import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { getCourseVideo } from '../../config/courseVideo'
 import { LESSON_SEGMENTS, getCheckpointQuestion } from '../../config/lessonSegments'
 import { useLessonProgress } from '../../hooks/useLearningProgress'
+import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import { getAdjacentLessons } from '../../lib/ioaiCourseStructure'
 import CoursePurchasePanel from './CoursePurchasePanel'
 import CourseStreamVideo from './CourseStreamVideo'
@@ -135,7 +136,8 @@ function CheckpointSegment({ course, onComplete }) {
 }
 
 function SummarySegment({ course, onComplete, nextLessonId, courses = null, curriculumTree = null }) {
-  const { index, total } = getAdjacentLessons(course.id, courses, curriculumTree)
+  const productLine = isCurriculumLine(course?.line) ? course.line : 'ioai'
+  const { index, total } = getAdjacentLessons(course.id, courses, curriculumTree, productLine)
 
   return (
     <div className="p-6 sm:p-8 text-center">
@@ -145,7 +147,7 @@ function SummarySegment({ course, onComplete, nextLessonId, courses = null, curr
       <p className="text-xs font-bold uppercase tracking-wide text-emerald-400 mb-2">Lesson complete</p>
       <h3 className="text-lg font-bold text-white mb-2">{course.nameEn || course.name}</h3>
       <p className="text-sm text-slate-400 mb-2">
-        Lesson {index + 1} of {total} in the IOAI track
+        Lesson {index + 1} of {total} in this track
       </p>
       {course.outcomes?.[0] ? (
         <p className="text-sm text-slate-300 max-w-md mx-auto mb-6">{course.outcomes[0]}</p>
@@ -192,7 +194,8 @@ export default function SegmentPlayer({
 
   const segmentIndex = progress.currentSegment
   const currentSegment = LESSON_SEGMENTS[segmentIndex]
-  const { next: nextLessonId } = getAdjacentLessons(course.id, courses, curriculumTree)
+  const productLine = isCurriculumLine(course?.line) ? course.line : 'ioai'
+  const { next: nextLessonId } = getAdjacentLessons(course.id, courses, curriculumTree, productLine)
 
   const showLock = !hasAccess && (previewEnded || currentTime >= previewSeconds - 0.5)
 

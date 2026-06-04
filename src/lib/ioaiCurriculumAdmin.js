@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import { adminInsert, adminUpdate } from './admin/db'
 import { saveCatalogCourse } from './admin/catalog'
 import { assignStreamToCourse } from './admin/api'
+import { getProgramCurriculum, isCurriculumLine } from '../config/programCurriculum'
 
 const CURRICULUM_ADMIN_SELECT = `
   id,
@@ -77,17 +78,27 @@ export function flattenCurriculumForAdmin(levels) {
   return rows
 }
 
-export async function fetchIOAICurriculumAdmin() {
+export async function fetchCurriculumAdmin(productLine = 'ioai') {
+  if (!isCurriculumLine(productLine)) {
+    return { levels: [], rows: [], productLine }
+  }
+
   const { data, error } = await supabase
     .from('course_levels')
     .select(CURRICULUM_ADMIN_SELECT)
+    .eq('product_line', productLine)
     .order('sort_order')
     .order('sort_order', { referencedTable: 'themes', ascending: true })
     .order('sort_order', { referencedTable: 'themes.modules', ascending: true })
     .order('sort_order', { referencedTable: 'themes.modules.lessons', ascending: true })
 
   if (error) throw new Error(error.message)
-  return { levels: data || [], rows: flattenCurriculumForAdmin(data || []) }
+  return { levels: data || [], rows: flattenCurriculumForAdmin(data || []), productLine }
+}
+
+/** @deprecated use fetchCurriculumAdmin('ioai') */
+export async function fetchIOAICurriculumAdmin() {
+  return fetchCurriculumAdmin('ioai')
 }
 
 export async function fetchVideoAssetsForLessonPicker() {
@@ -120,23 +131,25 @@ function toSlug(text) {
     .replace(/^-|-$/g, '')
 }
 
-function buildLessonSlug(levelSlug, themeSlug, moduleSlug, lessonIndex) {
-  return `ioai-${levelSlug}-${themeSlug}-${moduleSlug}-l${lessonIndex + 1}`
+function buildLessonSlug(productLine, levelSlug, themeSlug, moduleSlug, lessonIndex) {
+  const prefix = getProgramCurriculum(productLine).slugPrefix
+  return `${prefix}-${levelSlug}-${themeSlug}-${moduleSlug}-l${lessonIndex + 1}`
 }
 
-function buildCatalogRow({ slug, level, theme, mod, lessonTitle, cloudflareUid }) {
+function buildCatalogRow(productLine, { slug, level, theme, mod, lessonTitle, cloudflareUid }) {
+  const config = getProgramCurriculum(productLine)
   const name = `${level.title} · ${theme.category_label || theme.title} · ${mod.title} · ${lessonTitle}`
   return {
     slug,
-    line: 'ioai',
-    sub: 'video',
+    line: config.line,
+    sub: config.catalogSub,
     status: 'live',
     delivery_type: 'video',
     featured: false,
     name,
     name_en: lessonTitle,
     description: `${level.emoji || ''} ${level.title} · ${theme.title} · ${mod.title} — ${lessonTitle}.`.trim(),
-    price: 'Included in IOAI Track',
+    price: config.catalogPrice,
     hours: '1 lesson · ~45 min',
     badge: theme.category_label || theme.title,
     category: 'ai-fundamentals',
@@ -145,7 +158,7 @@ function buildCatalogRow({ slug, level, theme, mod, lessonTitle, cloudflareUid }
     rating: 4.85,
     students: 800,
     outcomes: [`Complete ${mod.title} — ${lessonTitle}`],
-    audience: 'IOAI competition trainees',
+    audience: config.catalogAudience,
     syllabus: [lessonTitle, mod.title, theme.title, level.title],
     lab_slugs: [],
     sort_order: 1000,
@@ -153,15 +166,16 @@ function buildCatalogRow({ slug, level, theme, mod, lessonTitle, cloudflareUid }
   }
 }
 
-async function syncLessonVideoToCatalog(catalogSlug, cloudflareUid, lessonTitle) {
+async function syncLessonVideoToCatalog(productLine, catalogSlug, cloudflareUid, lessonTitle) {
   if (!catalogSlug?.trim()) return
+  const config = getProgramCurriculum(productLine)
   const slug = catalogSlug.trim()
   const uid = cloudflareUid?.trim()
 
   await saveCatalogCourse({
     slug,
-    line: 'ioai',
-    sub: 'video',
+    line: config.line,
+    sub: config.catalogSub,
     status: 'live',
     delivery_type: 'video',
     name: lessonTitle || slug,
@@ -173,7 +187,9 @@ async function syncLessonVideoToCatalog(catalogSlug, cloudflareUid, lessonTitle)
   }
 }
 
-export async function createIOAICourse(input) {
+export async function createProgramCourse(productLine, input) {
+  if (!isCurriculumLine(productLine)) throw new Error('Invalid product line')
+
   const {
     levelId,
     newLevel,
@@ -198,9 +214,10 @@ export async function createIOAICourse(input) {
     if (error) throw new Error(error.message)
     level = data
   } else if (newLevel?.title?.trim()) {
-    const sort = (await maxSortOrder('course_levels')) + 1
+    const sort = (await maxSortOrder('course_levels', { product_line: productLine })) + 1
     const slug = newLevel.slug?.trim() || toSlug(newLevel.title)
     level = await adminInsert('course_levels', {
+      product_line: productLine,
       slug,
       title: newLevel.title.trim(),
       emoji: newLevel.emoji?.trim() || null,
@@ -252,7 +269,7 @@ export async function createIOAICourse(input) {
   const lessonSort = (await maxSortOrder('lessons', { module_id: mod.id })) + 1
   const slug =
     lessonSlugInput?.trim() ||
-    buildLessonSlug(level.slug, theme.slug, mod.slug, lessonSort)
+    buildLessonSlug(productLine, level.slug, theme.slug, mod.slug, lessonSort)
 
   const lesson = await adminInsert('lessons', {
     module_id: mod.id,
@@ -267,7 +284,7 @@ export async function createIOAICourse(input) {
 
   if (syncCatalog) {
     await saveCatalogCourse(
-      buildCatalogRow({
+      buildCatalogRow(productLine, {
         slug,
         level,
         theme,
@@ -277,14 +294,19 @@ export async function createIOAICourse(input) {
       })
     )
     if (cloudflare_video_id?.trim()) {
-      await syncLessonVideoToCatalog(slug, cloudflare_video_id, lessonTitle.trim())
+      await syncLessonVideoToCatalog(productLine, slug, cloudflare_video_id, lessonTitle.trim())
     }
   }
 
   return { lesson, level, theme, module: mod }
 }
 
-export async function saveIOAILessonConfig(lessonId, patch) {
+/** @deprecated use createProgramCourse('ioai', input) */
+export async function createIOAICourse(input) {
+  return createProgramCourse('ioai', input)
+}
+
+export async function saveProgramLessonConfig(productLine, lessonId, patch) {
   const catalogSlug = patch.catalog_slug?.trim() || null
   const cloudflareUid = patch.cloudflare_video_id?.trim() || null
 
@@ -298,8 +320,13 @@ export async function saveIOAILessonConfig(lessonId, patch) {
   })
 
   if (catalogSlug) {
-    await syncLessonVideoToCatalog(catalogSlug, cloudflareUid, patch.title)
+    await syncLessonVideoToCatalog(productLine, catalogSlug, cloudflareUid, patch.title)
   }
 
   return data
+}
+
+/** @deprecated use saveProgramLessonConfig('ioai', lessonId, patch) */
+export async function saveIOAILessonConfig(lessonId, patch) {
+  return saveProgramLessonConfig('ioai', lessonId, patch)
 }
