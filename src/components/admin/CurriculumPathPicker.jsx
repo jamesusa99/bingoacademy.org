@@ -161,7 +161,7 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
               className={inputClass}
               value={newStage.slug}
               onChange={(e) => patch({ newStage: { ...newStage, slug: e.target.value } })}
-              placeholder="intro"
+              placeholder={labels.phStageSlug || 'intro'}
             />
           </Field>
           <Field label={labels.newStageEmoji}>
@@ -195,7 +195,7 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
               className={inputClass}
               value={newTheme.slug}
               onChange={(e) => patch({ newTheme: { ...newTheme, slug: e.target.value } })}
-              placeholder="math"
+              placeholder={labels.phCategorySlug || 'math'}
             />
           </Field>
         </div>
@@ -216,7 +216,7 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
               className={inputClass}
               value={newModule.slug}
               onChange={(e) => patch({ newModule: { ...newModule, slug: e.target.value } })}
-              placeholder="part-1-linear-algebra"
+              placeholder={labels.phModuleSlugExample || 'part-1'}
             />
           </Field>
         </div>

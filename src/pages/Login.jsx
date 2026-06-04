@@ -26,6 +26,9 @@ export default function Login() {
     if (searchParams.get('reset') === 'sent') {
       setInfo('If that email is registered, we sent a password reset link. Check your inbox.')
     }
+    if (searchParams.get('reset') === 'done') {
+      setInfo('Password updated. Sign in with your new password.')
+    }
     if (searchParams.get('confirmed') === '1') {
       setInfo('Email confirmed. You can sign in now.')
     }
@@ -50,7 +53,9 @@ export default function Login() {
     }
     if (data.session) {
       navigate(redirectTo, { replace: true })
+      return
     }
+    setError('Sign-in failed. If you just registered, confirm your email first, then try again.')
   }
 
   const handleGoogle = async () => {

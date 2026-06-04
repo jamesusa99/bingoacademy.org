@@ -1,77 +1,34 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  getPurchasedSlugs,
-  hasCourseAccess,
-  hasFullIOAITrack,
-  purchaseIOAITrack,
-  purchaseLesson,
-  savePurchasedSlugs,
-} from '../lib/courseAccess'
-import { fetchMyEnrollments, fetchPaymentsConfig } from '../lib/checkout'
-import { useAuth } from '../contexts/AuthContext'
-
-function mergeSlugs(local, remote) {
-  return [...new Set([...(local || []), ...(remote || [])])]
-}
+import { useMemo, useCallback } from 'react'
+import { usePurchasedCourses } from './usePurchasedCourses'
 
 export function useCourseAccess(courseId) {
-  const { isAuthenticated } = useAuth()
-  const [version, setVersion] = useState(0)
-  const [remoteSlugs, setRemoteSlugs] = useState([])
-  const [stripeCheckout, setStripeCheckout] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
-
-  useEffect(() => {
-    fetchPaymentsConfig()
-      .then((cfg) => setStripeCheckout(Boolean(cfg.stripeCheckout)))
-      .catch(() => setStripeCheckout(false))
-  }, [])
-
-  const loadEnrollments = useCallback(async () => {
-    if (!isAuthenticated) {
-      setRemoteSlugs([])
-      return
-    }
-    try {
-      const { slugs } = await fetchMyEnrollments()
-      setRemoteSlugs(slugs || [])
-      if (slugs?.length) {
-        savePurchasedSlugs(mergeSlugs(getPurchasedSlugs(), slugs))
-      }
-    } catch {
-      setRemoteSlugs([])
-    }
-    setVersion((v) => v + 1)
-  }, [isAuthenticated])
-
-  useEffect(() => {
-    loadEnrollments()
-  }, [loadEnrollments])
-
-  const purchased = useMemo(
-    () => mergeSlugs(getPurchasedSlugs(), remoteSlugs),
-    [remoteSlugs, version]
-  )
+  const {
+    isAuthenticated,
+    purchased,
+    hasAccess: checkAccess,
+    hasTrack,
+    unlockLesson: unlockLessonById,
+    unlockTrack,
+    refresh,
+    stripeCheckout,
+    checkoutSlug,
+    setCheckoutSlug,
+    checkoutLoading,
+  } = usePurchasedCourses()
 
   const hasAccess = useMemo(
-    () => hasCourseAccess(courseId, purchased),
-    [courseId, purchased, version]
+    () => (courseId ? checkAccess(courseId) : false),
+    [courseId, checkAccess]
   )
-  const hasTrack = useMemo(() => hasFullIOAITrack(purchased), [purchased, version])
-
-  const refresh = useCallback(() => {
-    loadEnrollments()
-  }, [loadEnrollments])
 
   const unlockLesson = useCallback(() => {
-    purchaseLesson(courseId)
-    refresh()
-  }, [courseId, refresh])
+    if (courseId) unlockLessonById(courseId)
+  }, [courseId, unlockLessonById])
 
-  const unlockTrack = useCallback(() => {
-    purchaseIOAITrack()
-    refresh()
-  }, [refresh])
+  const setCheckoutLoading = useCallback(
+    (busy) => setCheckoutSlug(busy ? courseId : null),
+    [courseId, setCheckoutSlug]
+  )
 
   return {
     hasAccess,
@@ -81,7 +38,8 @@ export function useCourseAccess(courseId) {
     unlockTrack,
     refresh,
     stripeCheckout,
-    checkoutLoading,
+    checkoutLoading: checkoutSlug === courseId,
     setCheckoutLoading,
+    isAuthenticated,
   }
 }

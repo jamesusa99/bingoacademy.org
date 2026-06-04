@@ -18,9 +18,12 @@ import PageMeta from '../components/PageMeta'
 import { ProgramBadge, ModuleBadge, UseCaseTag } from '../components/courses/ProgramBadges'
 import { PAGE_SEO } from '../config/programs'
 import { isProductLabSub, labsPath } from '../config/productLabs'
+import { usePurchasedCourses } from '../hooks/usePurchasedCourses'
+import CoursePurchaseButton from '../components/courses/CoursePurchaseButton'
 
-function CourseCard({ item }) {
+function CourseCard({ item, purchase }) {
   const soon = isCourseComingSoon(item)
+  const hasAccess = purchase?.hasAccess?.(item.id)
 
   return (
     <div
@@ -49,21 +52,38 @@ function CourseCard({ item }) {
       </p>
       <p className="text-xs text-slate-600 leading-relaxed flex-1 mb-4 line-clamp-3">{item.desc}</p>
       <div className="flex gap-2 flex-wrap">
-        <Link
-          to={`/courses/detail/${item.id}`}
-          className={`text-xs px-3 py-1.5 rounded-lg font-semibold min-h-[40px] inline-flex items-center ${
-            soon ? 'border border-amber-400 text-amber-800 hover:bg-amber-50' : 'btn-primary'
-          }`}
-        >
-          {COURSES_PORTAL.viewDetails}
-        </Link>
-        {!soon && (
-          <Link
-            to="/mall"
-            className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition min-h-[40px] inline-flex items-center"
-          >
-            {COURSES_PORTAL.materialsMall}
-          </Link>
+        {purchase && !soon ? (
+          <CoursePurchaseButton
+            course={{ ...item, comingSoon: soon }}
+            hasAccess={hasAccess}
+            stripeCheckout={purchase.stripeCheckout}
+            checkoutSlug={purchase.checkoutSlug}
+            setCheckoutSlug={purchase.setCheckoutSlug}
+            isAuthenticated={purchase.isAuthenticated}
+            onUnlockLesson={purchase.unlockLesson}
+            onUnlockTrack={purchase.unlockTrack}
+            variant="light"
+            showDetailsLink
+          />
+        ) : (
+          <>
+            <Link
+              to={`/courses/detail/${item.id}`}
+              className={`text-xs px-3 py-1.5 rounded-lg font-semibold min-h-[40px] inline-flex items-center ${
+                soon ? 'border border-amber-400 text-amber-800 hover:bg-amber-50' : 'btn-primary'
+              }`}
+            >
+              {soon ? COURSES_PORTAL.comingSoonBadge : COURSES_PORTAL.viewDetails}
+            </Link>
+            {!soon && (
+              <Link
+                to="/mall"
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition min-h-[40px] inline-flex items-center"
+              >
+                {COURSES_PORTAL.materialsMall}
+              </Link>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -79,6 +99,7 @@ export default function Courses() {
   const { courses, loading: catalogLoading } = useCourseCatalog()
   const curriculumLine = isCurriculumLine(line.id) ? line.id : null
   const { summary: curriculumSummary } = useProgramCurriculum(videoListMode ? curriculumLine : null)
+  const purchase = usePurchasedCourses()
 
   const filtered = useMemo(() => {
     let list = courses.filter((c) => c.line === line.id)
@@ -281,7 +302,7 @@ export default function Courses() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
               {filtered.map((item) => (
-                <CourseCard key={item.id} item={item} />
+                <CourseCard key={item.id} item={item} purchase={purchase} />
               ))}
             </div>
           )}

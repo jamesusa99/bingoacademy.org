@@ -6,6 +6,7 @@ import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
 import { filterAndSortCourses, paginateCourses } from '../../lib/courseListUtils'
 import { useCourseFilters } from '../../hooks/useCourseFilters'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
+import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
 import CoursesHero, { buildHeroStats } from './CoursesHero'
 import FilterBar from './FilterBar'
 import CourseGrid from './CourseGrid'
@@ -15,6 +16,7 @@ import EmptyState from './EmptyState'
 export default function CourseListView({ line, subId, courses = [], curriculumSummary = null }) {
   const [, setParams] = useSearchParams()
   const { filters, setFilters, perPage } = useCourseFilters()
+  const purchase = usePurchasedCourses()
 
   const baseCourses = useMemo(
     () => courses.filter((c) => c.line === line.id && c.sub === subId),
@@ -127,7 +129,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
           <EmptyState onClear={clearFilters} />
         ) : (
           <>
-            <CourseGrid courses={items} />
+            <CourseGrid courses={items} purchase={purchase} />
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={(p) => setFilters({ page: p })} />
           </>
         )}

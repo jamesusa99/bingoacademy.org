@@ -48,6 +48,7 @@ import ProfileWorks from './pages/ProfileWorks'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import AuthCallback from './pages/AuthCallback'
 import AIAssessment from './pages/AIAssessment'
 import Community from './pages/Community'
@@ -178,6 +179,7 @@ export default function App() {
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password" element={<ResetPassword />} />
         {/* Legacy routes → new product structure */}
         <Route path="research" element={<Navigate to="/programs/ioai" replace />} />
         <Route path="events" element={<Navigate to="/programs/ioai" replace />} />

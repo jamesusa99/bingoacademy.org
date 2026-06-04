@@ -1,6 +1,17 @@
-import { supabase } from './supabase'
+import { supabase, isSupabaseConfigured } from './supabase'
+
+export class AuthRequiredError extends Error {
+  constructor(message = 'Sign in required') {
+    super(message)
+    this.name = 'AuthRequiredError'
+  }
+}
 
 async function authFetch(path, options = {}) {
+  if (!isSupabaseConfigured) {
+    throw new Error('Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -15,6 +26,9 @@ async function authFetch(path, options = {}) {
 
   const res = await fetch(path, { ...options, headers })
   const body = await res.json().catch(() => ({}))
+  if (res.status === 401) {
+    throw new AuthRequiredError(body.error || 'Sign in required')
+  }
   if (!res.ok) {
     throw new Error(body.error || `Request failed (${res.status})`)
   }

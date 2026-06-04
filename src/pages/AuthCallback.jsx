@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { getSession } from '../lib/auth'
+import { completeAuthFromUrl, getSession } from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
-import { safeRedirectPath, consumePostLoginRedirect } from '../lib/authRedirect'
+import { consumePostLoginRedirect, safeRedirectPath } from '../lib/authRedirect'
 import AuthAlert from '../components/auth/AuthAlert'
 
 export default function AuthCallback() {
@@ -24,27 +24,40 @@ export default function AuthCallback() {
 
     let cancelled = false
 
+    const resolveNextPath = () =>
+      safeRedirectPath(params.get('next'), '') || consumePostLoginRedirect('/profile')
+
     const finish = async () => {
-      const { data, error: sessionError } = await getSession()
-      if (cancelled) return
+      const { data, error: sessionError } = await completeAuthFromUrl(params)
+      if (cancelled) return true
       if (sessionError) {
         setError(sessionError.message)
-        return
+        return true
       }
       if (data.session) {
-        const next = safeRedirectPath(params.get('next'), '') || consumePostLoginRedirect('/profile')
-        navigate(next, { replace: true })
-        return
+        navigate(resolveNextPath(), { replace: true })
+        return true
       }
-      setError('Sign-in could not be completed. Please try again.')
+
+      const { data: retryData } = await getSession()
+      if (cancelled) return true
+      if (retryData.session) {
+        navigate(resolveNextPath(), { replace: true })
+        return true
+      }
+      return false
     }
 
-    finish()
-    const retry = setTimeout(finish, 400)
+    ;(async () => {
+      if (await finish()) return
+      await new Promise((r) => setTimeout(r, 600))
+      if (cancelled) return
+      if (await finish()) return
+      setError('Sign-in could not be completed. Please try again.')
+    })()
 
     return () => {
       cancelled = true
-      clearTimeout(retry)
     }
   }, [navigate, params])
 

@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { ExternalLink, Pencil, Video } from 'lucide-react'
+import { COURSE_STATUS } from '../../config/coursesCatalog'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
 import { formatVideoAssetLabel, groupVideosByCurriculum } from '../../lib/videoCurriculum'
+import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
 const textareaClass = `${inputClass} min-h-[88px] resize-y`
@@ -76,7 +78,7 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="w-full text-sm min-w-[960px]">
+        <table className="w-full text-sm min-w-[1100px]">
           <thead className="bg-slate-50 text-left text-slate-600 border-b border-slate-200">
             <tr>
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colStage}</th>
@@ -86,6 +88,11 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
               <th className="p-3 font-semibold min-w-[140px]">{labels.colKnowledge}</th>
               <th className="p-3 font-semibold min-w-[160px]">{labels.colGoals}</th>
               <th className="p-3 font-semibold w-24">{labels.colVideo}</th>
+              <th className="p-3 font-semibold whitespace-nowrap">{labels.colStatus}</th>
+              <th className="p-3 font-semibold whitespace-nowrap">{labels.colPrice}</th>
+              <th className="p-3 font-semibold whitespace-nowrap w-16">{labels.colSortOrder}</th>
+              <th className="p-3 font-semibold whitespace-nowrap w-16">{labels.colRating}</th>
+              <th className="p-3 font-semibold whitespace-nowrap">{labels.colStudents}</th>
               <th className="p-3 w-20" />
             </tr>
           </thead>
@@ -124,11 +131,32 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
                   {row.cloudflareVideoId ? (
                     <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
                       <Video className="w-3.5 h-3.5" />
-                      OK
+                      {labels.videoOk}
                     </span>
                   ) : (
                     <span className="text-amber-600">{labels.noVideo}</span>
                   )}
+                </td>
+                <td className="p-3 text-xs whitespace-nowrap">
+                  {row.catalogStatus === COURSE_STATUS.COMING_SOON ? (
+                    <span className="text-amber-600">{labels.statusComingSoon}</span>
+                  ) : row.catalogStatus === COURSE_STATUS.LIVE || row.hasCatalog ? (
+                    <span className="text-emerald-600">{labels.statusLive}</span>
+                  ) : (
+                    <span className="text-slate-300 italic">{labels.notSet}</span>
+                  )}
+                </td>
+                <td className="p-3 text-xs text-slate-600 whitespace-nowrap">
+                  {row.catalogPrice || (row.hasCatalog ? '—' : labels.notSet)}
+                </td>
+                <td className="p-3 text-xs text-slate-500 font-mono">{row.catalogSortOrder ?? row.sortOrder}</td>
+                <td className="p-3 text-xs text-slate-600 font-mono whitespace-nowrap">
+                  {row.catalogRating != null ? Number(row.catalogRating).toFixed(1) : labels.notSet}
+                </td>
+                <td className="p-3 text-xs text-slate-600 whitespace-nowrap">
+                  {row.catalogStudents != null
+                    ? Number(row.catalogStudents).toLocaleString()
+                    : labels.notSet}
                 </td>
                 <td className="p-3">
                   <button
@@ -157,6 +185,14 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
     content_goals: row.contentGoals || '',
     cloudflare_video_id: row.cloudflareVideoId || '',
     catalog_slug: row.catalogSlug || row.lessonSlug || '',
+    ...CATALOG_FORM_DEFAULTS,
+    status: row.catalogStatus || COURSE_STATUS.LIVE,
+    price: row.catalogPrice || '',
+    price_cents: row.catalogPriceCents ?? '',
+    currency: row.catalogCurrency || 'usd',
+    sort_order: row.catalogSortOrder ?? row.sortOrder ?? 0,
+    rating: row.catalogRating ?? 4.85,
+    students: row.catalogStudents ?? 800,
   })
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
@@ -250,7 +286,7 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
             className={inputClass}
             value={form.cloudflare_video_id}
             onChange={(e) => set('cloudflare_video_id', e.target.value)}
-            placeholder="Cloudflare Stream UID"
+            placeholder={labels.cloudflareUidPlaceholder || labels.cloudflareUid}
           />
         </Field>
       </div>
@@ -287,6 +323,8 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
           <p className="text-[10px] text-slate-400 mt-1">{labels.pickVideoHint}</p>
         </Field>
       ) : null}
+
+      <CurriculumCatalogFields form={form} set={set} labels={labels} />
 
       <div className="flex justify-end gap-2 pt-2">
         <button

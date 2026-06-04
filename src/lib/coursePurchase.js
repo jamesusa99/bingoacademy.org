@@ -1,4 +1,5 @@
 import { authLink } from './authRedirect'
+import { AuthRequiredError } from './checkout'
 import { startCourseCheckout } from './checkout'
 
 /** Start Stripe checkout or demo unlock for a course */
@@ -13,8 +14,10 @@ export async function initiateCoursePurchase({
 }) {
   if (!course?.id) return
 
+  const returnPath = `/courses/detail/${course.id}`
+
   if (!isAuthenticated) {
-    navigate(authLink('/login', `/courses/detail/${course.id}`))
+    navigate(authLink('/login', returnPath))
     return
   }
 
@@ -32,6 +35,10 @@ export async function initiateCoursePurchase({
     })
     if (url) window.location.href = url
   } catch (err) {
+    if (err instanceof AuthRequiredError) {
+      navigate(authLink('/login', returnPath))
+      return
+    }
     alert(err.message || 'Checkout failed')
     setCheckoutLoading?.(false)
   }

@@ -45,6 +45,16 @@ export default function AdminIOAICurriculum() {
       colKnowledge: c.t(`${i18nRoot}.colKnowledge`),
       colGoals: c.t(`${i18nRoot}.colGoals`),
       colVideo: c.t(`${i18nRoot}.colVideo`),
+      colStatus: c.t(`${i18nRoot}.colStatus`),
+      colPrice: c.t(`${i18nRoot}.colPrice`),
+      colSortOrder: c.t(`${i18nRoot}.colSortOrder`),
+      colPriceCents: c.t(`${i18nRoot}.colPriceCents`),
+      colCurrency: c.t(`${i18nRoot}.colCurrency`),
+      colRating: c.t(`${i18nRoot}.colRating`),
+      colStudents: c.t(`${i18nRoot}.colStudents`),
+      catalogSectionTitle: c.t(`${i18nRoot}.catalogSectionTitle`),
+      statusLive: c.t('pages.coursesCatalog.statusLive'),
+      statusComingSoon: c.t('pages.coursesCatalog.statusComingSoon'),
       notSet: c.t(`${i18nRoot}.notSet`),
       noVideo: c.t(`${i18nRoot}.noVideo`),
       edit: c.t(`${i18nRoot}.edit`),
@@ -58,6 +68,14 @@ export default function AdminIOAICurriculum() {
       phGoals: c.t(`${i18nRoot}.phGoals`),
       catalogSlug: c.t(`${i18nRoot}.catalogSlug`),
       cloudflareUid: c.t(`${i18nRoot}.cloudflareUid`),
+      cloudflareUidPlaceholder: c.t(`${i18nRoot}.cloudflareUidPlaceholder`),
+      phPrice: c.t(`${i18nRoot}.phPrice`),
+      phPriceCents: c.t(`${i18nRoot}.phPriceCents`),
+      phCurrency: c.t(`${i18nRoot}.phCurrency`),
+      phStageSlug: c.t(`${i18nRoot}.phStageSlug`),
+      phCategorySlug: c.t(`${i18nRoot}.phCategorySlug`),
+      phModuleSlugExample: c.t(`${i18nRoot}.phModuleSlugExample`),
+      videoOk: c.t(`${i18nRoot}.videoOk`),
       addCourse: c.t(`${i18nRoot}.addCourse`),
       addCourseTitle: c.t(`${i18nRoot}.addCourseTitle`),
       addCourseDesc: c.t(`${i18nRoot}.addCourseDesc`),
@@ -100,11 +118,11 @@ export default function AdminIOAICurriculum() {
   useEffect(() => {
     if (!rows.length) return
     const ui = readAdminUiDraft(uiKey)
-    if (ui?.editingLessonId && !editingRow) {
+    if (ui?.editingLessonId) {
       const row = rows.find((r) => r.lessonId === ui.editingLessonId)
       if (row) setEditingRow(row)
     }
-  }, [rows, uiKey, editingRow])
+  }, [rows, uiKey])
 
   useEffect(() => {
     writeAdminUiDraft(uiKey, {
@@ -112,6 +130,11 @@ export default function AdminIOAICurriculum() {
       editingLessonId: editingRow?.lessonId || null,
     })
   }, [showAddForm, editingRow, uiKey])
+
+  const closeEditor = () => {
+    writeAdminUiDraft(uiKey, { showAddForm, editingLessonId: null })
+    setEditingRow(null)
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -237,7 +260,7 @@ export default function AdminIOAICurriculum() {
           saving={saving}
           videoAssets={videoAssets}
           onSave={handleSave}
-          onClose={() => setEditingRow(null)}
+          onClose={closeEditor}
         />
       ) : null}
 

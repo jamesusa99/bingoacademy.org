@@ -38,6 +38,7 @@ function pickCatalogPayload(body) {
     price_cents: p.price_cents != null ? parseInt(p.price_cents, 10) || null : null,
     currency: p.currency || 'usd',
     purchasable: p.purchasable === undefined || p.purchasable === null ? null : !!p.purchasable,
+    lesson_id: p.lesson_id || p.lessonId || null,
     updated_at: new Date().toISOString(),
   }
 }

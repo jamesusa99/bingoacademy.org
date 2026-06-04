@@ -2,6 +2,11 @@ import { supabase, isSupabaseConfigured } from './supabase'
 import { COURSE_CATALOG, COURSE_STATUS } from '../config/coursesCatalog'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../config/courseListFilters'
 import { PRODUCT_LINES } from '../config/products'
+import {
+  LAB_MATERIAL_TYPES,
+  deliveryTypeForLabSub,
+  normalizeLabMaterialSub,
+} from '../config/labMaterials'
 
 /** Default subcategory when switching product line in admin */
 export function defaultSubForLine(lineId) {
@@ -10,21 +15,20 @@ export function defaultSubForLine(lineId) {
   return line?.subcategories[0]?.id || 'course'
 }
 
-/** Subcategories for Lab & Materials admin (excludes AI Video Courses) */
-export function labMaterialsSubcategoriesForLine(lineId) {
-  const line = PRODUCT_LINES.find((p) => p.id === lineId)
-  if (!line) return []
-  const videoSub = VIDEO_COURSE_SUB_BY_LINE[lineId]
-  return line.subcategories.filter((s) => s.id !== videoSub)
+/** Subcategories for Lab & Materials admin (5 unified types; excludes video & books) */
+export function labMaterialsSubcategoriesForLine(_lineId) {
+  return LAB_MATERIAL_TYPES
 }
 
 export function defaultLabMaterialsSubForLine(lineId) {
-  return labMaterialsSubcategoriesForLine(lineId)[0]?.id || 'online-lab'
+  return lineId === 'ioai' ? 'training-lab' : 'online-lab'
 }
 
 export function isLabMaterialsCatalogRow(row) {
   if (!row?.line || !row?.sub) return true
-  return VIDEO_COURSE_SUB_BY_LINE[row.line] !== row.sub
+  if (VIDEO_COURSE_SUB_BY_LINE[row.line] === row.sub) return false
+  if (row.sub === 'books') return false
+  return true
 }
 
 /** Map Supabase courses_catalog row → frontend course object */
@@ -60,6 +64,7 @@ export function rowToCatalogCourse(row) {
     videoPoster: row.video_poster || null,
     previewSeconds: row.preview_seconds ?? 90,
     cloudflareUid: row.cloudflare_uid || null,
+    lessonId: row.lesson_id || null,
   }
 }
 
@@ -78,12 +83,15 @@ export function formToCatalogPayload(form) {
     }
   }
 
+  const sub = normalizeLabMaterialSub(form.sub, form.line)
+
   return {
     slug: form.slug?.trim(),
     line: form.line,
-    sub: form.sub || null,
+    sub,
+    lesson_id: form.lesson_id || null,
     status: form.status || 'live',
-    delivery_type: form.delivery_type || null,
+    delivery_type: form.delivery_type || deliveryTypeForLabSub(sub, form.line),
     featured: !!form.featured,
     name: form.name?.trim(),
     name_en: form.name_en?.trim() || null,
@@ -117,7 +125,8 @@ export function catalogRowToForm(row) {
   return {
     slug: row.slug || '',
     line: row.line || 'general',
-    sub: row.sub || '',
+    sub: normalizeLabMaterialSub(row.sub, row.line),
+    lesson_id: row.lesson_id || '',
     status: row.status || 'live',
     delivery_type: row.delivery_type || '',
     featured: !!row.featured,
@@ -152,6 +161,7 @@ const EMPTY_FORM = {
   slug: '',
   line: 'general',
   sub: 'online-lab',
+  lesson_id: '',
   status: 'live',
   delivery_type: 'lab',
   featured: false,

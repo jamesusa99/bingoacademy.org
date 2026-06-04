@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { PRODUCT_LINES } from '../../config/products'
-import { COURSE_CATEGORIES, COURSE_LEVELS } from '../../config/courseListFilters'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import {
   CATALOG_FORM_EMPTY,
@@ -12,11 +10,17 @@ import {
   labMaterialsSubcategoriesForLine,
 } from '../../lib/catalogCourse'
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
-import DraggableCatalogList from '../../components/admin/DraggableCatalogList'
-import { assignStreamToCourse } from '../../lib/admin/api'
+import AdminLabMaterialsGroupedList from '../../components/admin/AdminLabMaterialsGroupedList'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
+import { CURRICULUM_LINES, getProgramCurriculum } from '../../config/programCurriculum'
+import { fetchCurriculumAdmin } from '../../lib/ioaiCurriculumAdmin'
+import {
+  LAB_MATERIAL_TYPES,
+  buildCurriculumLessonIndex,
+  deliveryTypeForLabSub,
+} from '../../config/labMaterials'
 
 function statusOptions(t) {
   return [
@@ -25,7 +29,11 @@ function statusOptions(t) {
   ]
 }
 
-const DELIVERY_TYPES = ['camp', 'self-study', 'classroom', 'lab', 'materials', 'books']
+function statusLabel(status, t) {
+  if (status === COURSE_STATUS.COMING_SOON) return t('pages.coursesCatalog.statusComingSoonShort')
+  if (status === COURSE_STATUS.LIVE) return t('pages.coursesCatalog.statusLiveShort')
+  return status || '—'
+}
 
 function Field({ label, children, className = '' }) {
   return (
@@ -40,24 +48,72 @@ const inputClass = 'w-full rounded-xl border border-slate-200 px-3 py-2 text-sm'
 
 export default function AdminCoursesCatalog() {
   const c = useAdminCrud()
-  const STATUS_OPTIONS = statusOptions(c.t)
+  const t = c.t
+  const STATUS_OPTIONS = statusOptions(t)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [syncingVideo, setSyncingVideo] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [editingSlug, setEditingSlug] = useState(null)
   const [form, setForm] = useState(CATALOG_FORM_EMPTY)
   const [lineFilter, setLineFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [levelsByLine, setLevelsByLine] = useState({ ioai: [], general: [], k12: [] })
+
   const labSubs = useMemo(() => labMaterialsSubcategoriesForLine(form.line), [form.line])
   const labItems = useMemo(() => items.filter(isLabMaterialsCatalogRow), [items])
+  const lessonOptions = useMemo(
+    () => buildCurriculumLessonIndex(levelsByLine[form.line] || [], form.line).options,
+    [levelsByLine, form.line]
+  )
+
+  const labels = useMemo(
+    () => ({
+      colType: t('pages.coursesCatalog.colType'),
+      colSlug: t('pages.coursesCatalog.colSlug'),
+      colProductLine: t('pages.coursesCatalog.colProductLine'),
+      colLesson: t('pages.coursesCatalog.colLesson'),
+      colStatus: t('pages.coursesCatalog.colStatus'),
+      colSortOrder: t('pages.coursesCatalog.colSortOrder'),
+      colName: t('pages.coursesCatalog.colName'),
+      colDescription: t('pages.coursesCatalog.colDescription'),
+      colPrice: t('pages.coursesCatalog.colPrice'),
+      colPriceCents: t('pages.coursesCatalog.colPriceCents'),
+      colPriceCentsHint: t('pages.coursesCatalog.colPriceCentsHint'),
+      colCurrency: t('pages.coursesCatalog.colCurrency'),
+      phSlug: t('pages.coursesCatalog.phSlug'),
+      phPrice: t('pages.coursesCatalog.phPrice'),
+      phPriceCents: t('pages.coursesCatalog.phPriceCents'),
+      phCurrency: t('pages.coursesCatalog.phCurrency'),
+      colStage: t('pages.ioaiCurriculum.colStage'),
+      colCategory: t('pages.ioaiCurriculum.colCategory'),
+      colModule: t('pages.ioaiCurriculum.colModule'),
+      lessonItemCount: t('pages.coursesCatalog.lessonItemCount'),
+      unassignedHeading: t('pages.coursesCatalog.unassignedHeading'),
+      unassignedHint: t('pages.coursesCatalog.unassignedHint'),
+      noCourses: t('pages.coursesCatalog.noCourses'),
+      name: c.name,
+      status: c.status,
+      price: c.price,
+      edit: c.edit,
+      delete: c.delete,
+      statusLabel: (status) => statusLabel(status, t),
+    }),
+    [t, c]
+  )
 
   const fetchItems = async () => {
     setLoading(true)
-    const { data, error: e } = await supabase.from('courses_catalog').select('*').order('sort_order')
+    const [{ data, error: e }, ...curriculumResults] = await Promise.all([
+      supabase.from('courses_catalog').select('*').order('sort_order'),
+      ...CURRICULUM_LINES.map((line) => fetchCurriculumAdmin(line).catch(() => ({ levels: [] }))),
+    ])
     setError(e?.message || null)
     setItems(data || [])
+    setLevelsByLine(
+      Object.fromEntries(CURRICULUM_LINES.map((line, i) => [line, curriculumResults[i]?.levels || []]))
+    )
     setLoading(false)
   }
 
@@ -85,41 +141,22 @@ export default function AdminCoursesCatalog() {
     setError(null)
   }
 
-  const handleStreamSync = async () => {
-    if (!form.cloudflare_uid?.trim()) {
-      setError(c.t('pages.coursesCatalog.streamUidRequired'))
-      return
-    }
-    if (!form.slug?.trim()) {
-      setError(c.t('pages.coursesCatalog.slugSaveFirst'))
-      return
-    }
-    setError(null)
-    setSuccess(null)
-    setSyncingVideo(true)
-    try {
-      const result = await assignStreamToCourse({
-        uid: form.cloudflare_uid.trim(),
-        catalogSlug: form.slug.trim(),
-      })
-      const course = result.course
-      if (course) {
-        setForm(catalogRowToForm(course))
-      }
-      setSuccess(result.message || 'Video synced from Cloudflare Stream.')
-      await fetchItems()
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setSyncingVideo(false)
-    }
-  }
-
   const handleLineChange = (lineId) => {
+    const sub = defaultLabMaterialsSubForLine(lineId)
     setForm((f) => ({
       ...f,
       line: lineId,
-      sub: defaultLabMaterialsSubForLine(lineId),
+      sub,
+      lesson_id: '',
+      delivery_type: deliveryTypeForLabSub(sub, lineId),
+    }))
+  }
+
+  const handleSubChange = (sub) => {
+    setForm((f) => ({
+      ...f,
+      sub,
+      delivery_type: deliveryTypeForLabSub(sub, f.line),
     }))
   }
 
@@ -129,7 +166,8 @@ export default function AdminCoursesCatalog() {
     setSaving(true)
     try {
       const payload = formToCatalogPayload(form)
-      if (!payload.slug) throw new Error(c.t('pages.coursesCatalog.slugRequired'))
+      if (!payload.slug) throw new Error(t('pages.coursesCatalog.slugRequired'))
+      if (!payload.lesson_id) throw new Error(t('pages.coursesCatalog.lessonRequired'))
 
       let savedRow = null
       try {
@@ -149,7 +187,7 @@ export default function AdminCoursesCatalog() {
         setForm(catalogRowToForm(savedRow))
       }
 
-      setSuccess(editingSlug ? c.t('pages.coursesCatalog.courseUpdated') : c.t('pages.coursesCatalog.courseSaved'))
+      setSuccess(editingSlug ? t('pages.coursesCatalog.courseUpdated') : t('pages.coursesCatalog.courseSaved'))
       if (!editingSlug) {
         setEditingSlug(payload.slug)
       }
@@ -162,12 +200,12 @@ export default function AdminCoursesCatalog() {
   }
 
   const handleDelete = async (slug) => {
-    if (!confirm(c.t('pages.coursesCatalog.confirmDelete', { slug }))) return
+    if (!confirm(t('pages.coursesCatalog.confirmDelete', { slug }))) return
     setError(null)
     setSuccess(null)
     try {
       await deleteCatalogCourse(slug)
-      setSuccess(c.t('pages.coursesCatalog.courseDeleted'))
+      setSuccess(t('pages.coursesCatalog.courseDeleted'))
       if (editingSlug === slug) {
         setEditingSlug(null)
         setForm(CATALOG_FORM_EMPTY)
@@ -184,7 +222,7 @@ export default function AdminCoursesCatalog() {
 
       {error ? (
         <AdminAlert type="error" onDismiss={() => setError(null)}>
-          {error.includes('does not exist') ? c.t('pages.coursesCatalog.migrationHint') : error}
+          {error.includes('does not exist') ? t('pages.coursesCatalog.migrationHint') : error}
         </AdminAlert>
       ) : null}
       {success ? (
@@ -196,34 +234,37 @@ export default function AdminCoursesCatalog() {
       <div className="card p-6 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="font-semibold text-bingo-dark">
-            {editingSlug ? c.t('pages.coursesCatalog.editCourse', { slug: editingSlug }) : c.t('pages.coursesCatalog.addCourse')}
+            {editingSlug ? t('pages.coursesCatalog.editCourse', { slug: editingSlug }) : t('pages.coursesCatalog.addCourse')}
           </h2>
           <button type="button" onClick={startAdd} className="text-sm text-primary hover:underline">
-            {c.t('pages.coursesCatalog.newCourse')}
+            {t('pages.coursesCatalog.newCourse')}
           </button>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Field label="Slug (ID) *">
+          <Field label={`${labels.colSlug} *`}>
             <input
               value={form.slug}
               onChange={(e) => set('slug', e.target.value)}
               disabled={!!editingSlug}
-              placeholder="ioai-whitelist"
+              placeholder={labels.phSlug}
               className={`${inputClass} font-mono disabled:bg-slate-50`}
             />
           </Field>
-          <Field label="Product line *">
+          <Field label={`${labels.colProductLine} *`}>
             <select value={form.line} onChange={(e) => handleLineChange(e.target.value)} className={inputClass}>
-              {PRODUCT_LINES.map((pl) => (
-                <option key={pl.id} value={pl.id}>
-                  {pl.icon} {pl.name}
-                </option>
-              ))}
+              {CURRICULUM_LINES.map((lineId) => {
+                const config = getProgramCurriculum(lineId)
+                return (
+                  <option key={lineId} value={lineId}>
+                    {config.icon} {config.adminTitle}
+                  </option>
+                )
+              })}
             </select>
           </Field>
-          <Field label="Subcategory *">
-            <select value={form.sub} onChange={(e) => set('sub', e.target.value)} className={inputClass}>
+          <Field label={`${labels.colType} *`}>
+            <select value={form.sub} onChange={(e) => handleSubChange(e.target.value)} className={inputClass}>
               {labSubs.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.icon} {s.name}
@@ -231,7 +272,24 @@ export default function AdminCoursesCatalog() {
               ))}
             </select>
           </Field>
-          <Field label="Status">
+          <Field label={`${labels.colLesson} *`} className="sm:col-span-2 lg:col-span-3">
+            <select
+              value={form.lesson_id}
+              onChange={(e) => set('lesson_id', e.target.value)}
+              className={inputClass}
+            >
+              <option value="">{t('pages.coursesCatalog.selectLesson')}</option>
+              {lessonOptions.map((lesson) => (
+                <option key={lesson.lessonId} value={lesson.lessonId}>
+                  {lesson.label}
+                </option>
+              ))}
+            </select>
+            {!lessonOptions.length ? (
+              <p className="text-[10px] text-amber-600 mt-1">{t('pages.coursesCatalog.noLessonsForLine')}</p>
+            ) : null}
+          </Field>
+          <Field label={labels.colStatus}>
             <select value={form.status} onChange={(e) => set('status', e.target.value)} className={inputClass}>
               {STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -240,20 +298,7 @@ export default function AdminCoursesCatalog() {
               ))}
             </select>
           </Field>
-          <Field label="Delivery type">
-            <select
-              value={form.delivery_type}
-              onChange={(e) => set('delivery_type', e.target.value)}
-              className={inputClass}
-            >
-              {DELIVERY_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Sort order">
+          <Field label={labels.colSortOrder}>
             <input
               type="number"
               value={form.sort_order}
@@ -261,111 +306,36 @@ export default function AdminCoursesCatalog() {
               className={inputClass}
             />
           </Field>
-          <Field label="Name *" className="sm:col-span-2">
+          <Field label={`${labels.colName} *`} className="sm:col-span-2 lg:col-span-3">
             <input value={form.name} onChange={(e) => set('name', e.target.value)} className={inputClass} />
           </Field>
-          <Field label="Name (EN)">
-            <input value={form.name_en} onChange={(e) => set('name_en', e.target.value)} className={inputClass} />
+          <Field label={labels.colPrice}>
+            <input
+              value={form.price}
+              onChange={(e) => set('price', e.target.value)}
+              placeholder={labels.phPrice}
+              className={inputClass}
+            />
           </Field>
-          <Field label="Badge">
-            <input value={form.badge} onChange={(e) => set('badge', e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Price (display)">
-            <input value={form.price} onChange={(e) => set('price', e.target.value)} placeholder="$299" className={inputClass} />
-          </Field>
-          <Field label="Stripe price (cents)">
+          <Field label={labels.colPriceCents}>
             <input
               type="number"
               value={form.price_cents}
               onChange={(e) => set('price_cents', e.target.value)}
-              placeholder="29900"
+              placeholder={labels.phPriceCents}
               className={inputClass}
             />
-            <p className="text-[10px] text-slate-500 mt-1">Optional — overrides parsed display price for checkout (e.g. 29900 = $299)</p>
+            <p className="text-[10px] text-slate-500 mt-1">{labels.colPriceCentsHint}</p>
           </Field>
-          <Field label="Currency">
-            <input value={form.currency} onChange={(e) => set('currency', e.target.value)} placeholder="usd" className={inputClass} />
-          </Field>
-          <Field label="Online purchasable">
-            <select
-              value={form.purchasable === '' ? '' : form.purchasable ? 'yes' : 'no'}
-              onChange={(e) => {
-                const v = e.target.value
-                set('purchasable', v === '' ? '' : v === 'yes')
-              }}
-              className={inputClass}
-            >
-              <option value="">Auto (from price)</option>
-              <option value="yes">Yes — enable Stripe checkout</option>
-              <option value="no">No — contact sales only</option>
-            </select>
-          </Field>
-          <Field label="Hours / duration label">
-            <input value={form.hours} onChange={(e) => set('hours', e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="List: category (filter)">
-            <select value={form.category} onChange={(e) => set('category', e.target.value)} className={inputClass}>
-              {COURSE_CATEGORIES.filter((c) => c.value !== 'all').map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="List: level">
-            <select value={form.level} onChange={(e) => set('level', e.target.value)} className={inputClass}>
-              {COURSE_LEVELS.filter((l) => l.value !== 'all').map((l) => (
-                <option key={l.value} value={l.value}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Lessons count">
+          <Field label={labels.colCurrency}>
             <input
-              type="number"
-              value={form.lessons}
-              onChange={(e) => set('lessons', e.target.value)}
+              value={form.currency}
+              onChange={(e) => set('currency', e.target.value)}
+              placeholder={labels.phCurrency}
               className={inputClass}
             />
           </Field>
-          <Field label="Rating">
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              max="5"
-              value={form.rating}
-              onChange={(e) => set('rating', e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Students count">
-            <input
-              type="number"
-              value={form.students}
-              onChange={(e) => set('students', e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Thumbnail URL">
-            <input
-              value={form.thumbnail_url}
-              onChange={(e) => set('thumbnail_url', e.target.value)}
-              placeholder="https://…"
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Featured (IOAI highlight)">
-            <label className="flex items-center gap-2 text-sm mt-2">
-              <input type="checkbox" checked={form.featured} onChange={(e) => set('featured', e.target.checked)} />
-              Show in featured blocks
-            </label>
-          </Field>
-          <Field label="Audience" className="sm:col-span-2 lg:col-span-3">
-            <input value={form.audience} onChange={(e) => set('audience', e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Description" className="sm:col-span-2 lg:col-span-3">
+          <Field label={labels.colDescription} className="sm:col-span-2 lg:col-span-3">
             <textarea
               value={form.description}
               onChange={(e) => set('description', e.target.value)}
@@ -373,94 +343,6 @@ export default function AdminCoursesCatalog() {
               className={inputClass}
             />
           </Field>
-          <Field label="Outcomes (JSON array or one per line)" className="sm:col-span-2 lg:col-span-3">
-            <textarea value={form.outcomes} onChange={(e) => set('outcomes', e.target.value)} rows={3} className={`${inputClass} font-mono text-xs`} />
-          </Field>
-          <Field label="Syllabus (JSON array or one per line)" className="sm:col-span-2 lg:col-span-3">
-            <textarea value={form.syllabus} onChange={(e) => set('syllabus', e.target.value)} rows={3} className={`${inputClass} font-mono text-xs`} />
-          </Field>
-          <Field label="Lab slugs (JSON array)" className="sm:col-span-2 lg:col-span-3">
-            <textarea
-              value={form.lab_slugs}
-              onChange={(e) => set('lab_slugs', e.target.value)}
-              rows={2}
-              placeholder='["doodle-monsters","evolve-car"]'
-              className={`${inputClass} font-mono text-xs`}
-            />
-          </Field>
-
-          {form.delivery_type === 'video' ? (
-            <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-cyan-200 bg-cyan-50/50 p-4 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h3 className="font-semibold text-bingo-dark text-sm">{c.t('pages.coursesCatalog.streamSection')}</h3>
-                  <p className="text-xs text-slate-600 mt-0.5">
-                    {c.t('pages.coursesCatalog.streamHintPrefix')}{' '}
-                    <a href="/admin/video" className="text-primary hover:underline">
-                      {c.t('nav.video')}
-                    </a>
-                    {c.t('pages.coursesCatalog.streamHintSuffix')}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleStreamSync}
-                  disabled={syncingVideo || !form.cloudflare_uid}
-                  className="text-xs px-3 py-2 rounded-lg bg-primary text-white font-medium disabled:opacity-50"
-                >
-                  {syncingVideo ? c.t('pages.coursesCatalog.syncing') : c.t('pages.coursesCatalog.syncStream')}
-                </button>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <Field label="Cloudflare Stream UID">
-                  <input
-                    value={form.cloudflare_uid}
-                    onChange={(e) => set('cloudflare_uid', e.target.value)}
-                    placeholder="Stream video UID"
-                    className={`${inputClass} font-mono text-xs`}
-                  />
-                </Field>
-                <Field label="Preview seconds (freemium)">
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.preview_seconds}
-                    onChange={(e) => set('preview_seconds', e.target.value)}
-                    className={inputClass}
-                  />
-                </Field>
-                <Field label="Video URL (HLS — auto-filled on sync)" className="sm:col-span-2">
-                  <input
-                    value={form.video_url}
-                    onChange={(e) => set('video_url', e.target.value)}
-                    placeholder="https://customer-….cloudflarestream.com/…/manifest/video.m3u8"
-                    className={`${inputClass} font-mono text-xs`}
-                  />
-                </Field>
-                <Field label="Poster / thumbnail URL" className="sm:col-span-2">
-                  <input
-                    value={form.video_poster}
-                    onChange={(e) => set('video_poster', e.target.value)}
-                    placeholder="https://…"
-                    className={`${inputClass} font-mono text-xs`}
-                  />
-                </Field>
-              </div>
-              {form.video_url ? (
-                <p className="text-xs text-emerald-700">
-                  {c.t('pages.coursesCatalog.videoConfigured')}{' '}
-                  <a
-                    href={`/courses/detail/${form.slug}?preview=1&from=admin`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline"
-                  >
-                    {c.t('pages.coursesCatalog.courseDetail')}
-                  </a>
-                </p>
-              ) : null}
-            </div>
-          ) : null}
         </div>
 
         <div className="flex gap-2 mt-6">
@@ -470,7 +352,7 @@ export default function AdminCoursesCatalog() {
             disabled={saving}
             className="btn-primary px-5 py-2 rounded-xl text-sm disabled:opacity-60"
           >
-            {saving ? c.saving : c.t('pages.coursesCatalog.saveCourse')}
+            {saving ? c.saving : t('pages.coursesCatalog.saveCourse')}
           </button>
           {editingSlug ? (
             <button
@@ -489,17 +371,32 @@ export default function AdminCoursesCatalog() {
 
       <div className="card overflow-hidden">
         <div className="p-4 border-b flex flex-wrap justify-between items-center gap-3">
-          <span className="font-semibold">{c.t('pages.coursesCatalog.allCourses', { count: String(labItems.length) })}</span>
+          <span className="font-semibold">{t('pages.coursesCatalog.allCourses', { count: String(labItems.length) })}</span>
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={lineFilter}
               onChange={(e) => setLineFilter(e.target.value)}
               className="text-xs rounded-lg border border-slate-200 px-2 py-1.5"
             >
-              <option value="all">{c.t('pages.coursesCatalog.filterAllLines')}</option>
-              {PRODUCT_LINES.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
+              <option value="all">{t('pages.coursesCatalog.filterAllLines')}</option>
+              {CURRICULUM_LINES.map((lineId) => {
+                const config = getProgramCurriculum(lineId)
+                return (
+                  <option key={lineId} value={lineId}>
+                    {config.adminTitle}
+                  </option>
+                )
+              })}
+            </select>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="text-xs rounded-lg border border-slate-200 px-2 py-1.5"
+            >
+              <option value="all">{t('pages.coursesCatalog.filterAllTypes')}</option>
+              {LAB_MATERIAL_TYPES.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
                 </option>
               ))}
             </select>
@@ -516,38 +413,16 @@ export default function AdminCoursesCatalog() {
         {loading ? (
           <p className="p-6 text-sm text-slate-500">{c.loading}</p>
         ) : labItems.length === 0 ? (
-          <p className="p-6 text-sm text-slate-500">{c.t('pages.coursesCatalog.noCourses')}</p>
+          <p className="p-6 text-sm text-slate-500">{t('pages.coursesCatalog.noCourses')}</p>
         ) : (
-          <DraggableCatalogList
+          <AdminLabMaterialsGroupedList
             items={labItems}
+            levelsByLine={levelsByLine}
             lineFilter={lineFilter}
-            groupedByCurriculum={false}
-            curriculumTree={[]}
-            productLine="ioai"
+            typeFilter={typeFilter}
             onEdit={startEdit}
             onDelete={handleDelete}
-            onReorderComplete={fetchItems}
-            labels={{
-              name: c.name,
-              status: c.status,
-              price: c.price,
-              video: c.t('pages.coursesCatalog.streamSection'),
-              edit: c.edit,
-              delete: c.delete,
-              dragHint: c.t('pages.coursesCatalog.dragHint'),
-              dragModule: c.t('pages.coursesCatalog.dragModule'),
-              dragLesson: c.t('pages.coursesCatalog.dragLesson'),
-              savingOrder: c.t('pages.coursesCatalog.savingOrder'),
-              ioaiDragHint: c.t('pages.coursesCatalog.ioaiDragHint'),
-              coursePackage: c.t('pages.coursesCatalog.coursePackage'),
-              stage: c.t('pages.ioaiCurriculum.colStage'),
-              category: c.t('pages.ioaiCurriculum.colCategory'),
-              module: c.t('pages.coursesCatalog.module'),
-              lessons: c.t('pages.coursesCatalog.lessons'),
-              streamOk: c.t('pages.coursesCatalog.streamOk'),
-              noVideo: c.t('pages.coursesCatalog.noVideo'),
-              noCourses: c.t('pages.coursesCatalog.noCourses'),
-            }}
+            labels={labels}
           />
         )}
       </div>

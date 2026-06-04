@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import CurriculumPathPicker, { CURRICULUM_NEW, curriculumInputClass } from './CurriculumPathPicker'
+import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
 
 const textareaClass = `${curriculumInputClass} min-h-[72px] resize-y`
@@ -31,6 +32,7 @@ const FORM_INIT = {
   contentGoals: '',
   cloudflareUid: '',
   syncCatalog: true,
+  ...CATALOG_FORM_DEFAULTS,
 }
 
 export default function IOAIAddCourseForm({
@@ -73,6 +75,13 @@ export default function IOAIAddCourseForm({
       content_goals: form.contentGoals,
       cloudflare_video_id: form.cloudflareUid,
       syncCatalog: form.syncCatalog,
+      status: form.status,
+      price: form.price,
+      price_cents: form.price_cents,
+      currency: form.currency,
+      sort_order: form.sort_order,
+      rating: form.rating,
+      students: form.students,
     })
   }
 
@@ -142,7 +151,7 @@ export default function IOAIAddCourseForm({
             className={curriculumInputClass}
             value={form.cloudflareUid}
             onChange={(e) => setField('cloudflareUid', e.target.value)}
-            placeholder="Cloudflare Stream UID"
+            placeholder={labels.cloudflareUidPlaceholder || labels.cloudflareUid}
           />
         </Field>
         {groupedVideoOptions.size > 0 ? (
@@ -192,6 +201,8 @@ export default function IOAIAddCourseForm({
           {labels.syncCatalog}
         </label>
       ) : null}
+
+      <CurriculumCatalogFields form={form} set={setField} labels={labels} />
 
       <div className="flex justify-end gap-2 pt-2">
         <button

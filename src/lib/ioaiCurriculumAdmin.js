@@ -93,7 +93,39 @@ export async function fetchCurriculumAdmin(productLine = 'ioai') {
     .order('sort_order', { referencedTable: 'themes.modules.lessons', ascending: true })
 
   if (error) throw new Error(error.message)
-  return { levels: data || [], rows: flattenCurriculumForAdmin(data || []), productLine }
+  const rows = flattenCurriculumForAdmin(data || [])
+  const catalogMap = await fetchCatalogMapForSlugs(rows.map((r) => r.catalogSlug))
+  return { levels: data || [], rows: attachCatalogToRows(rows, catalogMap), productLine }
+}
+
+async function fetchCatalogMapForSlugs(slugs) {
+  const unique = [...new Set(slugs.filter(Boolean))]
+  if (!unique.length) return new Map()
+
+  const { data, error } = await supabase
+    .from('courses_catalog')
+    .select('slug, status, price, price_cents, currency, sort_order, rating, students')
+    .in('slug', unique)
+
+  if (error) throw new Error(error.message)
+  return new Map((data || []).map((row) => [row.slug, row]))
+}
+
+function attachCatalogToRows(rows, catalogMap) {
+  return rows.map((row) => {
+    const cat = catalogMap.get(row.catalogSlug)
+    return {
+      ...row,
+      catalogStatus: cat?.status ?? null,
+      catalogPrice: cat?.price ?? '',
+      catalogPriceCents: cat?.price_cents ?? '',
+      catalogCurrency: cat?.currency ?? 'usd',
+      catalogSortOrder: cat?.sort_order ?? row.sortOrder,
+      catalogRating: cat?.rating ?? null,
+      catalogStudents: cat?.students ?? null,
+      hasCatalog: !!cat,
+    }
+  })
 }
 
 /** @deprecated use fetchCurriculumAdmin('ioai') */
@@ -138,54 +170,85 @@ function buildLessonSlug(productLine, levelSlug, themeSlug, moduleSlug, lessonIn
   return `${prefix}-${levelSlug}-${themeSlug}-${moduleSlug}-l${lessonIndex + 1}`
 }
 
-function buildCatalogRow(productLine, { slug, level, theme, mod, lessonTitle, cloudflareUid }) {
+function parseCatalogRating(value, fallback = 4.85) {
+  return value !== '' && value != null && value !== undefined ? Number(value) || fallback : fallback
+}
+
+function parseCatalogStudents(value, fallback = 800) {
+  return value !== '' && value != null && value !== undefined ? parseInt(value, 10) || fallback : fallback
+}
+
+function buildCatalogRow(
+  productLine,
+  {
+    slug,
+    level,
+    theme,
+    mod,
+    lessonTitle,
+    cloudflareUid,
+    status,
+    price,
+    price_cents,
+    currency,
+    sort_order,
+    rating,
+    students,
+  }
+) {
   const config = getProgramCurriculum(productLine)
   const name = `${level.title} · ${theme.category_label || theme.title} · ${mod.title} · ${lessonTitle}`
   return {
     slug,
     line: config.line,
     sub: config.catalogSub,
-    status: 'live',
+    status: status || 'live',
     delivery_type: 'video',
     featured: false,
     name,
     name_en: lessonTitle,
     description: `${level.emoji || ''} ${level.title} · ${theme.title} · ${mod.title} — ${lessonTitle}.`.trim(),
-    price: config.catalogPrice,
+    price: price?.trim() || config.catalogPrice,
+    price_cents:
+      price_cents !== '' && price_cents != null && price_cents !== undefined
+        ? parseInt(price_cents, 10) || null
+        : null,
+    currency: currency?.trim()?.toLowerCase() || 'usd',
     hours: '1 lesson · ~45 min',
     badge: theme.category_label || theme.title,
     category: 'ai-fundamentals',
     level: 'beginner',
     lessons: 1,
-    rating: 4.85,
-    students: 800,
+    rating: parseCatalogRating(rating),
+    students: parseCatalogStudents(students),
     outcomes: [`Complete ${mod.title} — ${lessonTitle}`],
     audience: config.catalogAudience,
     syllabus: [lessonTitle, mod.title, theme.title, level.title],
     lab_slugs: [],
-    sort_order: 1000,
+    sort_order: sort_order != null && sort_order !== '' ? parseInt(sort_order, 10) || 0 : 1000,
     cloudflare_uid: cloudflareUid || null,
   }
 }
 
-async function syncLessonVideoToCatalog(productLine, catalogSlug, cloudflareUid, lessonTitle) {
-  if (!catalogSlug?.trim()) return
+function catalogPatchFromForm(productLine, catalogSlug, patch) {
   const config = getProgramCurriculum(productLine)
-  const slug = catalogSlug.trim()
-  const uid = cloudflareUid?.trim()
-
-  await saveCatalogCourse({
-    slug,
+  return {
+    slug: catalogSlug,
     line: config.line,
     sub: config.catalogSub,
-    status: 'live',
     delivery_type: 'video',
-    name: lessonTitle || slug,
-    cloudflare_uid: uid || null,
-  })
-
-  if (uid) {
-    await assignStreamToCourse({ catalogSlug: slug, uid })
+    name: patch.title?.trim() || catalogSlug,
+    status: patch.status || 'live',
+    price: patch.price?.trim() || null,
+    price_cents:
+      patch.price_cents !== '' && patch.price_cents != null && patch.price_cents !== undefined
+        ? parseInt(patch.price_cents, 10) || null
+        : null,
+    currency: patch.currency?.trim()?.toLowerCase() || 'usd',
+    sort_order: parseInt(patch.sort_order, 10) || 0,
+    rating: parseCatalogRating(patch.rating),
+    students: parseCatalogStudents(patch.students),
+    cloudflare_uid: patch.cloudflare_video_id?.trim() || null,
   }
 }
 
@@ -205,6 +268,13 @@ export async function createProgramCourse(productLine, input) {
     content_goals,
     cloudflare_video_id,
     syncCatalog = true,
+    status,
+    price,
+    price_cents,
+    currency,
+    sort_order,
+    rating,
+    students,
   } = input
 
   if (!lessonTitle?.trim()) throw new Error('课时标题不能为空')
@@ -293,10 +363,17 @@ export async function createProgramCourse(productLine, input) {
         mod,
         lessonTitle: lessonTitle.trim(),
         cloudflareUid: cloudflare_video_id,
+        status,
+        price,
+        price_cents,
+        currency,
+        sort_order,
+        rating,
+        students,
       })
     )
     if (cloudflare_video_id?.trim()) {
-      await syncLessonVideoToCatalog(productLine, slug, cloudflare_video_id, lessonTitle.trim())
+      await assignStreamToCourse({ catalogSlug: slug, uid: cloudflare_video_id.trim() })
     }
   }
 
@@ -322,7 +399,10 @@ export async function saveProgramLessonConfig(productLine, lessonId, patch) {
   })
 
   if (catalogSlug) {
-    await syncLessonVideoToCatalog(productLine, catalogSlug, cloudflareUid, patch.title)
+    await saveCatalogCourse(catalogPatchFromForm(productLine, catalogSlug, patch))
+    if (cloudflareUid) {
+      await assignStreamToCourse({ catalogSlug, uid: cloudflareUid })
+    }
   }
 
   return data

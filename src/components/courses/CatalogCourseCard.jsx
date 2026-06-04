@@ -3,6 +3,13 @@ import LevelBadge from './LevelBadge'
 import PriceTag from './PriceTag'
 import { ProgramBadge, ModuleBadge, UseCaseTag } from './ProgramBadges'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
+import CoursePurchaseButton from './CoursePurchaseButton'
+import {
+  getCheckoutPriceLabel,
+  getCourseDisplayPrice,
+  isPurchasableCourse,
+  resolvePurchaseType,
+} from '../../lib/coursePricing'
 
 const CATEGORY_LABELS = {
   'ai-fundamentals': 'AI Fundamentals',
@@ -12,8 +19,14 @@ const CATEGORY_LABELS = {
   'computer-vision': 'Computer Vision',
 }
 
-export default function CatalogCourseCard({ course }) {
+export default function CatalogCourseCard({ course, purchase }) {
   const categoryLabel = CATEGORY_LABELS[course.category] || course.badge
+  const purchasable = isPurchasableCourse(course)
+  const displayPrice =
+    purchasable && course.priceUnknown
+      ? getCheckoutPriceLabel(course, resolvePurchaseType(course))
+      : getCourseDisplayPrice(course) ?? course.price
+  const hasAccess = purchase?.hasAccess?.(course.id)
 
   return (
     <article className="course-card-dark group flex flex-col h-full">
@@ -59,21 +72,35 @@ export default function CatalogCourseCard({ course }) {
 
       <div className="flex items-center justify-between gap-3 px-4 py-4 border-t border-slate-700/80">
         <PriceTag
-          price={course.priceNumeric ?? course.price}
+          price={displayPrice ?? course.priceNumeric ?? course.price}
           isFree={course.isFree}
-          comingSoon={course.comingSoon}
-          priceUnknown={course.priceUnknown}
+          comingSoon={course.comingSoon && !purchasable}
+          priceUnknown={course.priceUnknown && !purchasable}
         />
-        <Link
-          to={course.comingSoon ? `/courses/detail/${course.id}` : `/courses/detail/${course.id}`}
-          className={`shrink-0 px-4 py-2 rounded-md text-sm font-medium transition min-h-[40px] inline-flex items-center ${
-            course.comingSoon
-              ? 'border border-amber-500/60 text-amber-300 hover:bg-amber-500/10'
-              : 'bg-blue-500 hover:bg-blue-600 text-white active:scale-[0.98]'
-          }`}
-        >
-          {course.comingSoon ? COURSES_PORTAL.comingSoonBadge : COURSES_PORTAL.enrollNow}
-        </Link>
+        {purchase ? (
+          <CoursePurchaseButton
+            course={course}
+            hasAccess={hasAccess}
+            stripeCheckout={purchase.stripeCheckout}
+            checkoutSlug={purchase.checkoutSlug}
+            setCheckoutSlug={purchase.setCheckoutSlug}
+            isAuthenticated={purchase.isAuthenticated}
+            onUnlockLesson={purchase.unlockLesson}
+            onUnlockTrack={purchase.unlockTrack}
+            variant="dark"
+          />
+        ) : (
+          <Link
+            to={`/courses/detail/${course.id}`}
+            className={`shrink-0 px-4 py-2 rounded-md text-sm font-medium transition min-h-[40px] inline-flex items-center ${
+              course.comingSoon
+                ? 'border border-amber-500/60 text-amber-300 hover:bg-amber-500/10'
+                : 'bg-blue-500 hover:bg-blue-600 text-white active:scale-[0.98]'
+            }`}
+          >
+            {course.comingSoon ? COURSES_PORTAL.comingSoonBadge : COURSES_PORTAL.enrollNow}
+          </Link>
+        )}
       </div>
     </article>
   )

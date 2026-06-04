@@ -8,7 +8,28 @@ export function getAuthCallbackUrl() {
 }
 
 export function getPasswordResetRedirectUrl() {
-  return `${window.location.origin}/login?reset=sent`
+  return `${window.location.origin}/auth/callback?next=${encodeURIComponent('/reset-password')}`
+}
+
+/** Finish OAuth / email-confirm / recovery after redirect to /auth/callback */
+export async function completeAuthFromUrl(searchParams) {
+  if (!isSupabaseConfigured) {
+    return { session: null, error: { message: NOT_CONFIGURED } }
+  }
+
+  const code = searchParams.get('code')
+  if (code) {
+    return supabase.auth.exchangeCodeForSession(code)
+  }
+
+  return supabase.auth.getSession()
+}
+
+export async function updatePassword(password) {
+  if (!isSupabaseConfigured) {
+    return { data: { user: null }, error: { message: NOT_CONFIGURED } }
+  }
+  return supabase.auth.updateUser({ password })
 }
 
 export async function signInWithEmail(email, password) {
