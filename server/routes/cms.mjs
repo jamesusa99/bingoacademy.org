@@ -17,6 +17,10 @@ export const CMS_TABLES = new Set([
   'cert_tiers',
   'career_jobs',
   'video_assets',
+  'course_levels',
+  'themes',
+  'modules',
+  'lessons',
 ])
 
 export function registerCmsRoutes(app, { verifyAdminUser }) {

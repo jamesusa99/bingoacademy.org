@@ -1,4 +1,7 @@
 import { supabase } from './supabase'
+import { adminInsert, adminUpdate } from './admin/db'
+import { saveCatalogCourse } from './admin/catalog'
+import { assignStreamToCourse } from './admin/api'
 
 const CURRICULUM_ADMIN_SELECT = `
   id,
@@ -37,7 +40,7 @@ function sortRows(rows) {
   return [...(rows || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 }
 
-/** Flat rows for admin table: 阶段 | 模块 | 类别 | 主题（课时） | 知识点 | 内容/目标 */
+/** Flat rows for admin table: 阶段 | 类别 | 模块 | 主题（课时） | 知识点 | 内容/目标 */
 export function flattenCurriculumForAdmin(levels) {
   /** @type {Array<object>} */
   const rows = []
@@ -85,6 +88,16 @@ export async function fetchIOAICurriculumAdmin() {
 
   if (error) throw new Error(error.message)
   return { levels: data || [], rows: flattenCurriculumForAdmin(data || []) }
+}
+
+export async function fetchVideoAssetsForLessonPicker() {
+  const { data, error } = await supabase
+    .from('video_assets')
+    .select('id, title, cloudflare_uid, catalog_slug, status')
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error(error.message)
+  return data || []
 }
 
 async function maxSortOrder(table, filter = {}) {
@@ -137,7 +150,26 @@ function buildCatalogRow({ slug, level, theme, mod, lessonTitle, cloudflareUid }
     lab_slugs: [],
     sort_order: 1000,
     cloudflare_uid: cloudflareUid || null,
-    updated_at: new Date().toISOString(),
+  }
+}
+
+async function syncLessonVideoToCatalog(catalogSlug, cloudflareUid, lessonTitle) {
+  if (!catalogSlug?.trim()) return
+  const slug = catalogSlug.trim()
+  const uid = cloudflareUid?.trim()
+
+  await saveCatalogCourse({
+    slug,
+    line: 'ioai',
+    sub: 'video',
+    status: 'live',
+    delivery_type: 'video',
+    name: lessonTitle || slug,
+    cloudflare_uid: uid || null,
+  })
+
+  if (uid) {
+    await assignStreamToCourse({ catalogSlug: slug, uid })
   }
 }
 
@@ -168,18 +200,12 @@ export async function createIOAICourse(input) {
   } else if (newLevel?.title?.trim()) {
     const sort = (await maxSortOrder('course_levels')) + 1
     const slug = newLevel.slug?.trim() || toSlug(newLevel.title)
-    const { data, error } = await supabase
-      .from('course_levels')
-      .insert({
-        slug,
-        title: newLevel.title.trim(),
-        emoji: newLevel.emoji?.trim() || null,
-        sort_order: sort,
-      })
-      .select()
-      .single()
-    if (error) throw new Error(error.message)
-    level = data
+    level = await adminInsert('course_levels', {
+      slug,
+      title: newLevel.title.trim(),
+      emoji: newLevel.emoji?.trim() || null,
+      sort_order: sort,
+    })
   } else {
     throw new Error('请选择或新建阶段')
   }
@@ -193,19 +219,13 @@ export async function createIOAICourse(input) {
   } else if (newTheme?.title?.trim()) {
     const sort = (await maxSortOrder('themes', { level_id: level.id })) + 1
     const slug = newTheme.slug?.trim() || toSlug(newTheme.title)
-    const { data, error } = await supabase
-      .from('themes')
-      .insert({
-        level_id: level.id,
-        slug,
-        title: newTheme.title.trim(),
-        category_label: newTheme.category_label?.trim() || newTheme.title.trim(),
-        sort_order: sort,
-      })
-      .select()
-      .single()
-    if (error) throw new Error(error.message)
-    theme = data
+    theme = await adminInsert('themes', {
+      level_id: level.id,
+      slug,
+      title: newTheme.title.trim(),
+      category_label: newTheme.category_label?.trim() || newTheme.title.trim(),
+      sort_order: sort,
+    })
   } else {
     throw new Error('请选择或新建类别')
   }
@@ -219,76 +239,67 @@ export async function createIOAICourse(input) {
   } else if (newModule?.title?.trim()) {
     const sort = (await maxSortOrder('modules', { theme_id: theme.id })) + 1
     const slug = newModule.slug?.trim() || toSlug(newModule.title)
-    const { data, error } = await supabase
-      .from('modules')
-      .insert({
-        theme_id: theme.id,
-        slug,
-        title: newModule.title.trim(),
-        sort_order: sort,
-      })
-      .select()
-      .single()
-    if (error) throw new Error(error.message)
-    mod = data
+    mod = await adminInsert('modules', {
+      theme_id: theme.id,
+      slug,
+      title: newModule.title.trim(),
+      sort_order: sort,
+    })
   } else {
     throw new Error('请选择或新建模块')
   }
 
   const lessonSort = (await maxSortOrder('lessons', { module_id: mod.id })) + 1
-  const lessonCount = lessonSort
   const slug =
     lessonSlugInput?.trim() ||
-    buildLessonSlug(level.slug, theme.slug, mod.slug, lessonCount)
+    buildLessonSlug(level.slug, theme.slug, mod.slug, lessonSort)
 
-  const { data: lesson, error: lessonErr } = await supabase
-    .from('lessons')
-    .insert({
-      module_id: mod.id,
-      slug,
-      title: lessonTitle.trim(),
-      sort_order: lessonSort,
-      knowledge_points: knowledge_points?.trim() || null,
-      content_goals: content_goals?.trim() || null,
-      cloudflare_video_id: cloudflare_video_id?.trim() || null,
-      catalog_slug: slug,
-    })
-    .select()
-    .single()
-
-  if (lessonErr) throw new Error(lessonErr.message)
+  const lesson = await adminInsert('lessons', {
+    module_id: mod.id,
+    slug,
+    title: lessonTitle.trim(),
+    sort_order: lessonSort,
+    knowledge_points: knowledge_points?.trim() || null,
+    content_goals: content_goals?.trim() || null,
+    cloudflare_video_id: cloudflare_video_id?.trim() || null,
+    catalog_slug: slug,
+  })
 
   if (syncCatalog) {
-    const catalogRow = buildCatalogRow({
-      slug,
-      level,
-      theme,
-      mod,
-      lessonTitle: lessonTitle.trim(),
-      cloudflareUid: cloudflare_video_id,
-    })
-    const { error: catErr } = await supabase.from('courses_catalog').upsert(catalogRow, { onConflict: 'slug' })
-    if (catErr) throw new Error(catErr.message)
+    await saveCatalogCourse(
+      buildCatalogRow({
+        slug,
+        level,
+        theme,
+        mod,
+        lessonTitle: lessonTitle.trim(),
+        cloudflareUid: cloudflare_video_id,
+      })
+    )
+    if (cloudflare_video_id?.trim()) {
+      await syncLessonVideoToCatalog(slug, cloudflare_video_id, lessonTitle.trim())
+    }
   }
 
   return { lesson, level, theme, module: mod }
 }
 
 export async function saveIOAILessonConfig(lessonId, patch) {
-  const { data, error } = await supabase
-    .from('lessons')
-    .update({
-      title: patch.title,
-      knowledge_points: patch.knowledge_points ?? null,
-      content_goals: patch.content_goals ?? null,
-      cloudflare_video_id: patch.cloudflare_video_id ?? null,
-      catalog_slug: patch.catalog_slug ?? null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', lessonId)
-    .select()
-    .single()
+  const catalogSlug = patch.catalog_slug?.trim() || null
+  const cloudflareUid = patch.cloudflare_video_id?.trim() || null
 
-  if (error) throw new Error(error.message)
+  const data = await adminUpdate('lessons', lessonId, {
+    title: patch.title,
+    knowledge_points: patch.knowledge_points ?? null,
+    content_goals: patch.content_goals ?? null,
+    cloudflare_video_id: cloudflareUid,
+    catalog_slug: catalogSlug,
+    updated_at: new Date().toISOString(),
+  })
+
+  if (catalogSlug) {
+    await syncLessonVideoToCatalog(catalogSlug, cloudflareUid, patch.title)
+  }
+
   return data
 }

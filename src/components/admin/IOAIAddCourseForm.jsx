@@ -19,7 +19,7 @@ function sortByOrder(rows) {
   return [...(rows || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 }
 
-export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onClose }) {
+export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onClose, videoAssets = [] }) {
   const [stageChoice, setStageChoice] = useState('')
   const [themeChoice, setThemeChoice] = useState('')
   const [moduleChoice, setModuleChoice] = useState('')
@@ -57,10 +57,14 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
     }
     if (themes.length === 0) {
       setThemeChoice(NEW)
-    } else if (!themes.some((t) => t.id === themeChoice)) {
-      setThemeChoice(themes[0].id)
+      return
     }
-  }, [stageChoice, themes, themeChoice])
+    setThemeChoice((current) => {
+      if (current === NEW) return NEW
+      if (themes.some((t) => t.id === current)) return current
+      return themes[0].id
+    })
+  }, [stageChoice, themes])
 
   const selectedTheme = useMemo(
     () => themes.find((t) => t.id === themeChoice),
@@ -76,10 +80,14 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
     }
     if (modules.length === 0) {
       setModuleChoice(NEW)
-    } else if (!modules.some((m) => m.id === moduleChoice)) {
-      setModuleChoice(modules[0].id)
+      return
     }
-  }, [themeChoice, modules, moduleChoice])
+    setModuleChoice((current) => {
+      if (current === NEW) return NEW
+      if (modules.some((m) => m.id === current)) return current
+      return modules[0].id
+    })
+  }, [themeChoice, modules])
 
   const handleSubmit = () => {
     onSave({
@@ -135,7 +143,6 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
             className={inputClass}
             value={themeChoice}
             onChange={(e) => setThemeChoice(e.target.value)}
-            disabled={stageChoice === NEW}
           >
             {stageChoice !== NEW &&
               themes.map((t) => (
@@ -152,7 +159,6 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
             className={inputClass}
             value={moduleChoice}
             onChange={(e) => setModuleChoice(e.target.value)}
-            disabled={themeChoice === NEW}
           >
             {themeChoice !== NEW &&
               modules.map((m) => (
@@ -291,7 +297,41 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
             placeholder="Cloudflare Stream UID"
           />
         </Field>
-        <label className="flex items-center gap-2 text-sm text-slate-600 pb-2">
+        {videoAssets.filter((a) => a.cloudflare_uid).length > 0 ? (
+          <Field label={labels.pickFromVideoLibrary}>
+            <select
+              className={inputClass}
+              defaultValue=""
+              onChange={(e) => {
+                const asset = videoAssets.find((a) => a.id === e.target.value)
+                if (asset?.cloudflare_uid) setCloudflareUid(asset.cloudflare_uid)
+              }}
+            >
+              <option value="">{labels.pickVideoPlaceholder}</option>
+              {videoAssets
+                .filter((a) => a.cloudflare_uid)
+                .map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.title}
+                  </option>
+                ))}
+            </select>
+          </Field>
+        ) : (
+          <label className="flex items-center gap-2 text-sm text-slate-600 pb-2">
+            <input
+              type="checkbox"
+              checked={syncCatalog}
+              onChange={(e) => setSyncCatalog(e.target.checked)}
+              className="rounded border-slate-300"
+            />
+            {labels.syncCatalog}
+          </label>
+        )}
+      </div>
+
+      {videoAssets.filter((a) => a.cloudflare_uid).length > 0 ? (
+        <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
             type="checkbox"
             checked={syncCatalog}
@@ -300,7 +340,7 @@ export default function IOAIAddCourseForm({ levels, labels, saving, onSave, onCl
           />
           {labels.syncCatalog}
         </label>
-      </div>
+      ) : null}
 
       <div className="flex justify-end gap-2 pt-2">
         <button

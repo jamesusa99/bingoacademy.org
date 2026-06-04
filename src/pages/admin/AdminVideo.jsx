@@ -40,6 +40,7 @@ export default function AdminVideo() {
   const [syncingId, setSyncingId] = useState(null)
   const [assignSlug, setAssignSlug] = useState({})
   const [limits, setLimits] = useState(DEFAULT_LIMITS)
+  const [preview, setPreview] = useState(null)
 
   const fetchItems = async () => {
     setLoading(true)
@@ -60,19 +61,35 @@ export default function AdminVideo() {
       .catch(() => setLimits(DEFAULT_LIMITS))
   }, [])
 
-  const videoCourses = courses.filter((c) => c.delivery_type === 'video')
+  const videoCourses = courses
 
   const handleSync = async (row) => {
+    const slug = assignSlug[row.id] || row.catalog_slug || ''
     setError(null)
     setInfo(null)
     setSyncingId(row.id)
     try {
-      const result = await syncStreamVideo({ videoAssetId: row.id, wait: true })
+      const result = await syncStreamVideo({
+        videoAssetId: row.id,
+        wait: true,
+        catalogSlug: slug || undefined,
+      })
       if (result.pending) {
-        setInfo(t('video.infoSyncStillEncoding'))
+        setInfo(
+          slug
+            ? t('video.infoAssignPending', { slug })
+            : t('video.infoSyncStillEncoding')
+        )
+      } else if (slug && result.catalogSlug) {
+        setInfo(t('video.infoAssignSuccess', { slug: result.catalogSlug }))
       } else {
         setInfo(t('video.infoSyncSuccess'))
       }
+      setAssignSlug((s) => {
+        const next = { ...s }
+        delete next[row.id]
+        return next
+      })
       await fetchItems()
     } catch (err) {
       setError(err.message)
@@ -95,9 +112,14 @@ export default function AdminVideo() {
       if (result.pending) {
         setInfo(t('video.infoAssignPending', { slug }))
       } else {
-        setInfo(t('video.infoAssignSuccess', { slug }))
+        setInfo(t('video.infoAssignSuccess', { slug: result.catalogSlug || slug }))
       }
       await logAdminAction('assign', 'video_assets', row.id, { catalogSlug: slug })
+      setAssignSlug((s) => {
+        const next = { ...s }
+        delete next[row.id]
+        return next
+      })
       await fetchItems()
     } catch (err) {
       setError(err.message)
@@ -231,6 +253,35 @@ export default function AdminVideo() {
         </AdminAlert>
       ) : null}
 
+      {videoCourses.length === 0 ? (
+        <AdminAlert type="info">
+          {t('video.noCoursesHint')}
+        </AdminAlert>
+      ) : null}
+
+      {preview ? (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/90">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 text-white shrink-0">
+            <button
+              type="button"
+              onClick={() => setPreview(null)}
+              className="text-sm font-medium text-white/90 hover:text-white"
+            >
+              ← {t('video.previewBack')}
+            </button>
+            <span className="text-sm text-white/70 truncate">{preview.title}</span>
+            <span className="w-16" />
+          </div>
+          <iframe
+            title={preview.title}
+            src={preview.url}
+            className="flex-1 w-full border-0 bg-black"
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      ) : null}
+
       <div className="card p-6 mb-6">
         <h2 className="font-semibold text-bingo-dark mb-2">{t('video.uploadHeading')}</h2>
         <p className="text-xs text-slate-500 mb-4 leading-relaxed">
@@ -297,8 +348,9 @@ export default function AdminVideo() {
               </thead>
               <tbody>
                 {items.map((row) => {
-                  const preview = streamPreviewUrl(row.cloudflare_uid)
+                  const previewUrl = streamPreviewUrl(row.cloudflare_uid)
                   const ready = row.status === 'ready' && row.playback_url
+                  const selectedSlug = assignSlug[row.id] || row.catalog_slug || ''
                   return (
                     <tr key={row.id} className="border-t border-slate-100 align-top">
                       <td className="p-3">
@@ -323,15 +375,16 @@ export default function AdminVideo() {
                       <td className="p-3">
                         {ready ? (
                           <div className="space-y-1">
-                            {preview ? (
-                              <a
-                                href={preview}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-xs text-primary hover:underline block"
+                            {previewUrl ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPreview({ url: previewUrl, title: row.title || row.cloudflare_uid })
+                                }
+                                className="text-xs text-primary hover:underline block text-left"
                               >
                                 {t('video.previewPlayer')}
-                              </a>
+                              </button>
                             ) : null}
                             <span
                               className="text-[10px] text-slate-400 break-all block max-w-[200px]"
@@ -348,28 +401,29 @@ export default function AdminVideo() {
                       </td>
                       <td className="p-3">
                         {row.catalog_slug ? (
-                          <a
-                            href={`/courses/detail/${row.catalog_slug}?preview=1&from=admin`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs text-primary hover:underline font-mono"
-                          >
-                            {row.catalog_slug}
-                          </a>
-                        ) : (
-                          <select
-                            value={assignSlug[row.id] || ''}
-                            onChange={(e) => setAssignSlug((s) => ({ ...s, [row.id]: e.target.value }))}
-                            className="text-xs rounded border border-slate-200 px-2 py-1 max-w-[160px]"
-                          >
-                            <option value="">{t('video.selectCourse')}</option>
-                            {videoCourses.map((c) => (
-                              <option key={c.slug} value={c.slug}>
-                                {c.slug}
-                              </option>
-                            ))}
-                          </select>
-                        )}
+                          <div className="space-y-1">
+                            <a
+                              href={`/courses/detail/${row.catalog_slug}?preview=1&from=admin`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-primary hover:underline font-mono block"
+                            >
+                              {row.catalog_slug}
+                            </a>
+                          </div>
+                        ) : null}
+                        <select
+                          value={selectedSlug}
+                          onChange={(e) => setAssignSlug((s) => ({ ...s, [row.id]: e.target.value }))}
+                          className="text-xs rounded border border-slate-200 px-2 py-1 max-w-[200px] w-full mt-1"
+                        >
+                          <option value="">{t('video.selectCourse')}</option>
+                          {videoCourses.map((c) => (
+                            <option key={c.slug} value={c.slug}>
+                              {c.slug} — {c.name}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                       <td className="p-3 whitespace-nowrap space-x-2">
                         <button
@@ -377,20 +431,24 @@ export default function AdminVideo() {
                           disabled={syncingId === row.id}
                           onClick={() => handleSync(row)}
                           className="text-xs text-primary hover:underline disabled:opacity-50"
+                          title={
+                            assignSlug[row.id] && !row.catalog_slug
+                              ? t('video.syncAndAssignHint')
+                              : undefined
+                          }
                         >
-                          {t('video.sync')}
+                          {assignSlug[row.id] && !row.catalog_slug
+                            ? t('video.syncAndAssign')
+                            : t('video.sync')}
                         </button>
-                        {!row.catalog_slug ? (
-                          <button
-                            type="button"
-                            disabled={syncingId === row.id || !ready}
-                            title={!ready ? t('video.assignWaitReady') : undefined}
-                            onClick={() => handleAssign(row)}
-                            className="text-xs text-emerald-600 hover:underline disabled:opacity-50"
-                          >
-                            {t('video.assign')}
-                          </button>
-                        ) : null}
+                        <button
+                          type="button"
+                          disabled={syncingId === row.id || !selectedSlug}
+                          onClick={() => handleAssign(row)}
+                          className="text-xs text-emerald-600 hover:underline disabled:opacity-50"
+                        >
+                          {t('video.assign')}
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(row.id)}

@@ -32,7 +32,7 @@ async function applyPlaybackToCatalog(admin, catalogSlug, playback) {
   return { ok: true, course: data }
 }
 
-async function applyPlaybackToAsset(admin, videoAssetId, playback, catalogSlug = null) {
+async function applyPlaybackToAsset(admin, videoAssetId, playback, catalogSlug) {
   const patch = {
     cloudflare_uid: playback.uid,
     duration_seconds: playback.durationSeconds,
@@ -43,7 +43,9 @@ async function applyPlaybackToAsset(admin, videoAssetId, playback, catalogSlug =
     patch.playback_url = playback.hlsUrl
     patch.thumbnail_url = playback.thumbnailUrl
   }
-  if (catalogSlug) patch.catalog_slug = catalogSlug
+  if (typeof catalogSlug === 'string' && catalogSlug.trim()) {
+    patch.catalog_slug = catalogSlug.trim()
+  }
 
   const { data, error } = await admin
     .from('video_assets')
@@ -55,6 +57,18 @@ async function applyPlaybackToAsset(admin, videoAssetId, playback, catalogSlug =
   if (error) return { ok: false, error: error.message }
   if (!data) return { ok: false, error: 'Video asset not found' }
   return { ok: true, asset: data }
+}
+
+async function linkLessonVideo(admin, catalogSlug, cloudflareUid) {
+  if (!catalogSlug?.trim() || !cloudflareUid?.trim()) return
+  const slug = catalogSlug.trim()
+  const uid = cloudflareUid.trim()
+  const patch = {
+    cloudflare_video_id: uid,
+    updated_at: new Date().toISOString(),
+  }
+  await admin.from('lessons').update(patch).eq('slug', slug)
+  await admin.from('lessons').update(patch).eq('catalog_slug', slug)
 }
 
 export function registerStreamRoutes(app, { verifyAdminUser }) {
@@ -101,19 +115,22 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
       return res.status(503).json({ error: 'Cloudflare Stream not configured' })
     }
 
-    const { uid, videoAssetId, wait = true } = req.body || {}
+    const { uid, videoAssetId, wait = true, catalogSlug: catalogSlugInput } = req.body || {}
     let cloudflareUid = uid?.trim()
 
     const admin = getSupabaseAdmin()
     if (!admin) return res.status(503).json({ error: 'Supabase service role not configured' })
 
+    let resolvedCatalogSlug = catalogSlugInput?.trim() || null
+
     if (!cloudflareUid && videoAssetId) {
       const { data: asset } = await admin
         .from('video_assets')
-        .select('cloudflare_uid')
+        .select('cloudflare_uid, catalog_slug')
         .eq('id', videoAssetId)
         .maybeSingle()
       cloudflareUid = asset?.cloudflare_uid
+      if (!resolvedCatalogSlug) resolvedCatalogSlug = asset?.catalog_slug?.trim() || null
     }
 
     if (!cloudflareUid) {
@@ -137,14 +154,32 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
     const { playback, pending, message } = syncResult
 
     if (videoAssetId) {
-      const assetResult = await applyPlaybackToAsset(admin, videoAssetId, playback)
+      const assetResult = await applyPlaybackToAsset(
+        admin,
+        videoAssetId,
+        playback,
+        resolvedCatalogSlug || undefined
+      )
       if (!assetResult.ok) return res.status(400).json({ error: assetResult.error })
+    }
+
+    if (resolvedCatalogSlug) {
+      const catalogResult = await applyPlaybackToCatalog(admin, resolvedCatalogSlug, playback)
+      if (!catalogResult.ok) return res.status(400).json({ error: catalogResult.error })
+      await linkLessonVideo(admin, resolvedCatalogSlug, playback.uid)
     }
 
     return res.json({
       playback,
       pending: pending || !playback.ready,
-      message: message || (playback.ready ? 'Playback URLs synced' : 'Video still processing'),
+      message:
+        message ||
+        (resolvedCatalogSlug
+          ? `Playback synced and linked to ${resolvedCatalogSlug}`
+          : playback.ready
+            ? 'Playback URLs synced'
+            : 'Video still processing'),
+      catalogSlug: resolvedCatalogSlug,
     })
   })
 
@@ -183,9 +218,11 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
     }
 
     const { playback, pending, message } = syncResult
+    const slug = catalogSlug.trim()
 
     if (assetId) {
-      await applyPlaybackToAsset(admin, assetId, playback, catalogSlug.trim())
+      const assetResult = await applyPlaybackToAsset(admin, assetId, playback, slug)
+      if (!assetResult.ok) return res.status(400).json({ error: assetResult.error })
     } else {
       const { data: existing } = await admin
         .from('video_assets')
@@ -194,17 +231,22 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
         .maybeSingle()
       if (existing?.id) {
         assetId = existing.id
-        await applyPlaybackToAsset(admin, assetId, playback, catalogSlug.trim())
+        const assetResult = await applyPlaybackToAsset(admin, assetId, playback, slug)
+        if (!assetResult.ok) return res.status(400).json({ error: assetResult.error })
       }
     }
 
-    const catalogResult = await applyPlaybackToCatalog(admin, catalogSlug.trim(), playback)
+    const catalogResult = await applyPlaybackToCatalog(admin, slug, playback)
     if (!catalogResult.ok) {
       return res.status(400).json({ error: catalogResult.error })
     }
 
+    await linkLessonVideo(admin, slug, playback.uid)
+
     return res.json({
       course: catalogResult.course,
+      assetId,
+      catalogSlug: slug,
       playback,
       pending: pending || !playback.ready,
       message: message || 'Video assigned to course',
@@ -243,6 +285,7 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
       await applyPlaybackToAsset(admin, asset.id, playback, asset.catalog_slug)
       if (asset.catalog_slug) {
         await applyPlaybackToCatalog(admin, asset.catalog_slug, playback)
+        await linkLessonVideo(admin, asset.catalog_slug, playback.uid)
       }
     }
 

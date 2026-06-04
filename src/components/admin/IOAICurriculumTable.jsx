@@ -78,8 +78,8 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
           <thead className="bg-slate-50 text-left text-slate-600 border-b border-slate-200">
             <tr>
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colStage}</th>
-              <th className="p-3 font-semibold whitespace-nowrap">{labels.colModule}</th>
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colCategory}</th>
+              <th className="p-3 font-semibold whitespace-nowrap">{labels.colModule}</th>
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colLesson}</th>
               <th className="p-3 font-semibold min-w-[140px]">{labels.colKnowledge}</th>
               <th className="p-3 font-semibold min-w-[160px]">{labels.colGoals}</th>
@@ -94,12 +94,12 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
                   <span className="text-xs text-slate-400 block">{row.stageEmoji}</span>
                   <span className="font-medium text-bingo-dark">{row.stage}</span>
                 </td>
-                <td className="p-3 text-slate-700">{row.module}</td>
                 <td className="p-3">
                   <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
                     {row.category}
                   </span>
                 </td>
+                <td className="p-3 text-slate-700">{row.module}</td>
                 <td className="p-3">
                   <p className="font-medium text-bingo-dark">{row.lessonTitle}</p>
                   <p className="text-[10px] font-mono text-slate-400 mt-0.5">{row.lessonSlug}</p>
@@ -147,7 +147,7 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
   )
 }
 
-export function IOAILessonEditor({ row, labels, saving, onSave, onClose }) {
+export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAssets = [] }) {
   const [form, setForm] = useState({
     title: row.lessonTitle || '',
     knowledge_points: row.knowledgePoints || '',
@@ -157,6 +157,16 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose }) {
   })
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+
+  const pickVideoAsset = (assetId) => {
+    if (!assetId) return
+    const asset = videoAssets.find((a) => a.id === assetId)
+    if (asset?.cloudflare_uid) {
+      set('cloudflare_video_id', asset.cloudflare_uid)
+    }
+  }
+
+  const readyAssets = videoAssets.filter((a) => a.cloudflare_uid && a.status !== 'error')
 
   return (
     <div className="card p-5 sm:p-6 border-2 border-primary/20 space-y-4">
@@ -235,6 +245,26 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose }) {
           />
         </Field>
       </div>
+
+      {readyAssets.length > 0 ? (
+        <Field label={labels.pickFromVideoLibrary}>
+          <select
+            className={inputClass}
+            defaultValue=""
+            onChange={(e) => pickVideoAsset(e.target.value)}
+          >
+            <option value="">{labels.pickVideoPlaceholder}</option>
+            {readyAssets.map((asset) => (
+              <option key={asset.id} value={asset.id}>
+                {asset.title}
+                {asset.catalog_slug ? ` · ${asset.catalog_slug}` : ''}
+                {asset.status !== 'ready' ? ` (${asset.status})` : ''}
+              </option>
+            ))}
+          </select>
+          <p className="text-[10px] text-slate-400 mt-1">{labels.pickVideoHint}</p>
+        </Field>
+      ) : null}
 
       <div className="flex justify-end gap-2 pt-2">
         <button

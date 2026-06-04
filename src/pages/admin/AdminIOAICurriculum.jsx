@@ -5,7 +5,7 @@ import AdminAlert from '../../components/admin/AdminAlert'
 import IOAICurriculumTable, { IOAILessonEditor } from '../../components/admin/IOAICurriculumTable'
 import IOAIAddCourseForm from '../../components/admin/IOAIAddCourseForm'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
-import { createIOAICourse, fetchIOAICurriculumAdmin, saveIOAILessonConfig } from '../../lib/ioaiCurriculumAdmin'
+import { createIOAICourse, fetchIOAICurriculumAdmin, fetchVideoAssetsForLessonPicker, saveIOAILessonConfig } from '../../lib/ioaiCurriculumAdmin'
 
 export default function AdminIOAICurriculum() {
   const c = useAdminCrud()
@@ -17,6 +17,7 @@ export default function AdminIOAICurriculum() {
   const [editingRow, setEditingRow] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [videoAssets, setVideoAssets] = useState([])
 
   const labels = useMemo(
     () => ({
@@ -67,6 +68,9 @@ export default function AdminIOAICurriculum() {
       phLessonTitle: c.t('pages.ioaiCurriculum.phLessonTitle'),
       phLessonSlug: c.t('pages.ioaiCurriculum.phLessonSlug'),
       courseAdded: c.t('pages.ioaiCurriculum.courseAdded'),
+      pickFromVideoLibrary: c.t('pages.ioaiCurriculum.pickFromVideoLibrary'),
+      pickVideoPlaceholder: c.t('pages.ioaiCurriculum.pickVideoPlaceholder'),
+      pickVideoHint: c.t('pages.ioaiCurriculum.pickVideoHint'),
     }),
     [c]
   )
@@ -75,9 +79,13 @@ export default function AdminIOAICurriculum() {
     setLoading(true)
     setError(null)
     try {
-      const { rows: next, levels: tree } = await fetchIOAICurriculumAdmin()
+      const [{ rows: next, levels: tree }, assets] = await Promise.all([
+        fetchIOAICurriculumAdmin(),
+        fetchVideoAssetsForLessonPicker().catch(() => []),
+      ])
       setRows(next)
       setLevels(tree)
+      setVideoAssets(assets)
     } catch (e) {
       setError(e.message)
       setRows([])
@@ -169,6 +177,7 @@ export default function AdminIOAICurriculum() {
           levels={levels}
           labels={labels}
           saving={saving}
+          videoAssets={videoAssets}
           onSave={handleAddCourse}
           onClose={() => setShowAddForm(false)}
         />
@@ -179,6 +188,7 @@ export default function AdminIOAICurriculum() {
           row={editingRow}
           labels={labels}
           saving={saving}
+          videoAssets={videoAssets}
           onSave={handleSave}
           onClose={() => setEditingRow(null)}
         />
