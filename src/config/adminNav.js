@@ -12,6 +12,7 @@ export const ADMIN_NAV_GROUPS = [
     items: [
       { path: '/admin/home', labelKey: 'nav.homePortal', icon: '🏠' },
       { path: '/admin/courses', labelKey: 'nav.courses', icon: '📋' },
+      { path: '/admin/ioai-curriculum', labelKey: 'nav.ioaiCurriculum', icon: '🏆' },
       { path: '/admin/showcase', labelKey: 'nav.achievements', icon: '🏅' },
       { path: '/admin/research', labelKey: 'nav.aiCamp', icon: '⛺' },
       { path: '/admin/events', labelKey: 'nav.events', icon: '🏆' },

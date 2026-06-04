@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { PRODUCT_LINES } from '../../config/products'
 import { COURSE_CATEGORIES, COURSE_LEVELS } from '../../config/courseListFilters'
@@ -177,6 +178,23 @@ export default function AdminCoursesCatalog() {
   return (
     <div>
       <AdminPageHeader titleKey="pages.coursesCatalog.title" descriptionKey="pages.coursesCatalog.desc" />
+
+      {(lineFilter === 'ioai' || form.line === 'ioai') && (
+        <div className="card p-4 mb-6 border-amber-200/80 bg-amber-50/50 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-bingo-dark text-sm">IOAI · 课程管理</p>
+            <p className="text-xs text-slate-600 mt-0.5">
+              按阶段 · 类别 · 模块 · 课时管理 IOAI 课程 →
+            </p>
+          </div>
+          <Link
+            to="/admin/ioai-curriculum"
+            className="btn-primary text-sm px-4 py-2 min-h-[40px] inline-flex items-center"
+          >
+            IOAI · 课程管理 →
+          </Link>
+        </div>
+      )}
 
       {error ? (
         <AdminAlert type="error" onDismiss={() => setError(null)}>
@@ -544,6 +562,8 @@ export default function AdminCoursesCatalog() {
               savingOrder: c.t('pages.coursesCatalog.savingOrder'),
               ioaiDragHint: c.t('pages.coursesCatalog.ioaiDragHint'),
               coursePackage: c.t('pages.coursesCatalog.coursePackage'),
+              stage: c.t('pages.ioaiCurriculum.colStage'),
+              category: c.t('pages.ioaiCurriculum.colCategory'),
               module: c.t('pages.coursesCatalog.module'),
               lessons: c.t('pages.coursesCatalog.lessons'),
               streamOk: c.t('pages.coursesCatalog.streamOk'),

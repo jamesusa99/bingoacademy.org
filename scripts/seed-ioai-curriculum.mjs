@@ -22,6 +22,8 @@ const admin = createClient(url, key, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
+const CATEGORY_LABEL = { math: '数学', python: 'Python', ai: 'AI' }
+
 let levelOrder = 0
 for (const level of ioaiCurriculum) {
   const { data: levelRow, error: levelErr } = await admin
@@ -53,6 +55,7 @@ for (const level of ioaiCurriculum) {
           level_id: levelRow.id,
           slug: theme.id,
           title: theme.title,
+          category_label: CATEGORY_LABEL[theme.id] || theme.title.replace(/主题$/, ''),
           sort_order: themeOrder++,
           updated_at: new Date().toISOString(),
         },
@@ -97,6 +100,8 @@ for (const level of ioaiCurriculum) {
             title: lesson.title,
             sort_order: lessonOrder++,
             catalog_slug: lesson.id,
+            knowledge_points: `${theme.title} · ${mod.title} · ${lesson.title}`,
+            content_goals: `掌握 ${mod.title} 中「${lesson.title}」的核心内容与练习目标。`,
             updated_at: new Date().toISOString(),
           },
           { onConflict: 'slug' }

@@ -231,6 +231,7 @@ function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, di
       {grouped.levels.map((level) => (
         <div key={level.id} className="border-t border-slate-200">
           <div className="px-4 py-2.5 bg-slate-100/90">
+            <p className="text-[10px] font-bold uppercase text-slate-500">{labels.stage || '阶段'}</p>
             <p className="text-xs font-bold text-bingo-dark">
               {level.emoji} {level.title}
             </p>
@@ -239,7 +240,10 @@ function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, di
           {level.themes.map((theme) => (
             <div key={`${level.id}-${theme.id}`}>
               <div className="px-4 py-2 bg-white border-b border-slate-100">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">{theme.title}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                  {labels.category || '类别'}
+                </p>
+                <p className="text-xs font-semibold text-primary">{theme.title}</p>
               </div>
 
               {theme.modules.map((mod) => {
@@ -248,6 +252,9 @@ function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, di
                   <div key={moduleKey} className="border-b border-slate-100">
                     <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50/80 pl-8">
                       <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-semibold uppercase text-slate-400">
+                          {labels.module || '模块'}
+                        </p>
                         <p className="text-sm font-semibold text-bingo-dark">{mod.title}</p>
                         <p className="text-xs text-slate-500">
                           {mod.lessons.length} {labels.lessons}
