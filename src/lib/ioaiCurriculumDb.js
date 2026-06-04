@@ -46,6 +46,7 @@ export function mapDbCurriculumToTree(rows) {
     themes: [...(level.themes || [])].sort(sortByOrder).map((theme) => ({
       id: theme.slug,
       title: theme.title,
+      categoryLabel: theme.category_label || theme.title,
       modules: [...(theme.modules || [])].sort(sortByOrder).map((mod) => ({
         id: mod.slug,
         title: mod.title,

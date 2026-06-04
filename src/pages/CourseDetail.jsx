@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/products'
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
 import { COURSES_PORTAL } from '../config/coursesPortal'
-import { useCourseCatalog } from '../hooks/useCourseCatalog'
+import { useIOAICourseContext } from '../hooks/useIOAICourseContext'
 import { useCourseAccess } from '../hooks/useCourseAccess'
 import { useAuth } from '../contexts/AuthContext'
 import { findCourseInList } from '../lib/catalogCourse'
@@ -15,8 +15,8 @@ import {
   isIOAITrackId,
   isIOAIVideoCourse,
   getAllIOAILessonIds,
+  getFirstIOAILessonId,
 } from '../lib/ioaiCourseStructure'
-import { FIRST_IOAI_LESSON_ID } from '../config/ioaiCourseSystem'
 import { getContinueLessonId } from '../lib/learningProgress'
 import CourseComingSoon from '../components/CourseComingSoon'
 import CourseVideoPlayer from '../components/courses/CourseVideoPlayer'
@@ -33,7 +33,7 @@ export default function CourseDetail() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutMessage, setCheckoutMessage] = useState(null)
-  const { courses, loading, reload } = useCourseCatalog()
+  const { courses, tree, curriculum, summary, loading, reload } = useIOAICourseContext()
   const { isAuthenticated } = useAuth()
   const item = findCourseInList(courses, id)
 
@@ -120,9 +120,9 @@ export default function CourseDetail() {
   }
 
   const comingSoon = isCourseComingSoon(item)
-  const isIOAI = isIOAIVideoCourse(item.id)
+  const isIOAI = isIOAIVideoCourse(item.id, courses, tree)
   const isTrack = isIOAITrackId(item.id)
-  const isLesson = isIOAILessonId(item.id)
+  const isLesson = isIOAILessonId(item.id, courses, tree)
   const showSegmentLearning = isLesson && isVideoCourse(item) && !comingSoon
   const showTrackOverview = isTrack && !comingSoon
   const showLegacyVideo = isVideoCourse(item) && !comingSoon && !isIOAI
@@ -210,6 +210,8 @@ export default function CourseDetail() {
                 purchasedSlugs={purchased}
                 hasAccess={hasAccess}
                 courses={courses}
+                curriculum={curriculum}
+                summary={summary}
               />
             </>
           ) : null}
@@ -224,6 +226,7 @@ export default function CourseDetail() {
                   onUnlockLesson={unlockLesson}
                   onUnlockTrack={unlockTrack}
                   courses={courses}
+                  curriculumTree={tree}
                   {...purchaseProps}
                 />
               </div>
@@ -231,7 +234,8 @@ export default function CourseDetail() {
                 <CourseLessonList
                   activeLessonId={item.id}
                   purchasedSlugs={purchased}
-                  courses={courses}
+                  curriculum={curriculum}
+                  summaryText={summary.summary}
                 />
               </div>
             </div>
@@ -325,7 +329,7 @@ export default function CourseDetail() {
               <Link
                 to={
                   isTrack
-                    ? `/courses/detail/${getContinueLessonId(getAllIOAILessonIds(courses)) ?? FIRST_IOAI_LESSON_ID}`
+                    ? `/courses/detail/${getContinueLessonId(getAllIOAILessonIds(courses, tree)) ?? getFirstIOAILessonId(courses, tree) ?? ''}`
                     : '/profile/study'
                 }
                 className="btn-primary text-sm px-5 py-2.5"

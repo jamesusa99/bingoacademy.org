@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle2, Circle, PlayCircle, ChevronDown, ChevronRight, Lock } from 'lucide-react'
-import { buildIOAICurriculum, IOAI_CURRICULUM_SUMMARY } from '../../lib/ioaiCourseStructure'
 import { getLessonProgress } from '../../lib/learningProgress'
 import { hasCourseAccess } from '../../lib/courseAccess'
 
@@ -114,7 +113,9 @@ function ThemeSection({ theme, activeLessonId, purchasedSlugs, activeModuleId })
         ) : (
           <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
         )}
-        <p className="text-xs font-semibold text-slate-700 flex-1">{theme.title}</p>
+        <p className="text-xs font-semibold text-slate-700 flex-1">
+          {theme.categoryLabel || theme.title}
+        </p>
         <span className="text-[10px] text-slate-400">{lessonCount}</span>
       </button>
       {open
@@ -136,11 +137,9 @@ export default function CourseLessonList({
   activeLessonId = null,
   purchasedSlugs = [],
   compact = false,
-  courses = null,
+  curriculum = [],
+  summaryText = '',
 }) {
-  const curriculum = buildIOAICurriculum(courses)
-  const { summary } = IOAI_CURRICULUM_SUMMARY
-
   const activeContext = activeLessonId
     ? curriculum
         .flatMap((l) => l.themes.flatMap((t) => t.modules.map((m) => ({ level: l, theme: t, module: m }))))
@@ -151,36 +150,40 @@ export default function CourseLessonList({
     <div className={`course-lesson-list card overflow-hidden ${compact ? '' : 'sticky top-20'}`}>
       <div className="p-4 border-b border-slate-100 bg-slate-50/80">
         <h2 className="font-bold text-bingo-dark text-sm">Course curriculum</h2>
-        <p className="text-xs text-slate-500 mt-0.5">{summary}</p>
+        {summaryText ? <p className="text-xs text-slate-500 mt-0.5">{summaryText}</p> : null}
       </div>
 
       <div className={`overflow-y-auto ${compact ? 'max-h-[420px]' : 'max-h-[calc(100vh-12rem)]'}`}>
-        {curriculum.map((level) => {
-          const levelLessonCount = level.themes.reduce(
-            (n, t) => n + t.modules.reduce((m, mod) => m + mod.lessons.length, 0),
-            0
-          )
-          if (!levelLessonCount) return null
+        {curriculum.length === 0 ? (
+          <p className="p-4 text-xs text-slate-500">No curriculum published yet.</p>
+        ) : (
+          curriculum.map((level) => {
+            const levelLessonCount = level.themes.reduce(
+              (n, t) => n + t.modules.reduce((m, mod) => m + mod.lessons.length, 0),
+              0
+            )
+            if (!levelLessonCount) return null
 
-          return (
-            <div key={level.id}>
-              <div className="px-4 py-2 bg-slate-100/80 border-b border-slate-100 sticky top-0 z-10">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600">
-                  {level.emoji} {level.title}
-                </p>
+            return (
+              <div key={level.id}>
+                <div className="px-4 py-2 bg-slate-100/80 border-b border-slate-100 sticky top-0 z-10">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                    {level.emoji} {level.title}
+                  </p>
+                </div>
+                {level.themes.map((theme) => (
+                  <ThemeSection
+                    key={`${level.id}-${theme.id}`}
+                    theme={theme}
+                    activeLessonId={activeLessonId}
+                    purchasedSlugs={purchasedSlugs}
+                    activeModuleId={activeContext?.module.id}
+                  />
+                ))}
               </div>
-              {level.themes.map((theme) => (
-                <ThemeSection
-                  key={`${level.id}-${theme.id}`}
-                  theme={theme}
-                  activeLessonId={activeLessonId}
-                  purchasedSlugs={purchasedSlugs}
-                  activeModuleId={activeContext?.module.id}
-                />
-              ))}
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </div>
     </div>
   )

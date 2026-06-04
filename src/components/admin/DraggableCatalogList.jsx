@@ -156,8 +156,8 @@ function flattenGroupedOrder(grouped) {
   return list
 }
 
-function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, disabled }) {
-  const grouped = useMemo(() => groupIOAICatalogByCurriculum(items), [items])
+function IOAIGroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, disabled, curriculumTree = [] }) {
+  const grouped = useMemo(() => groupIOAICatalogByCurriculum(items, curriculumTree), [items, curriculumTree])
   const [dragKey, setDragKey] = useState(null)
   const [overKey, setOverKey] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -351,6 +351,7 @@ export default function DraggableCatalogList({
   onReorderComplete,
   lineFilter = 'all',
   groupedIOAI = false,
+  curriculumTree = [],
 }) {
   const sorted = useMemo(() => sortByOrder(items), [items])
 
@@ -390,6 +391,7 @@ export default function DraggableCatalogList({
         onReorder={handleReorder}
         onEdit={onEdit}
         onDelete={onDelete}
+        curriculumTree={curriculumTree}
       />
     )
   }

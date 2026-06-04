@@ -13,7 +13,8 @@ import {
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
 import DraggableCatalogList from '../../components/admin/DraggableCatalogList'
 import { assignStreamToCourse } from '../../lib/admin/api'
-import { FIRST_IOAI_LESSON_ID } from '../../config/ioaiCourseSystem'
+import { fetchIOAICurriculumFromDb } from '../../lib/ioaiCurriculumDb'
+import { getFirstIOAILessonId } from '../../lib/ioaiCourseStructure'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -51,14 +52,19 @@ export default function AdminCoursesCatalog() {
   const [form, setForm] = useState(CATALOG_FORM_EMPTY)
   const [lineFilter, setLineFilter] = useState('all')
   const [groupedIOAI, setGroupedIOAI] = useState(true)
+  const [curriculumTree, setCurriculumTree] = useState([])
 
   const lineDef = PRODUCT_LINES.find((p) => p.id === form.line) || PRODUCT_LINES[0]
 
   const fetchItems = async () => {
     setLoading(true)
-    const { data, error: e } = await supabase.from('courses_catalog').select('*').order('sort_order')
+    const [{ data, error: e }, curriculum] = await Promise.all([
+      supabase.from('courses_catalog').select('*').order('sort_order'),
+      fetchIOAICurriculumFromDb(),
+    ])
     setError(e?.message || null)
     setItems(data || [])
+    setCurriculumTree(curriculum.tree || [])
     setLoading(false)
   }
 
@@ -464,7 +470,7 @@ export default function AdminCoursesCatalog() {
                 <p className="text-xs text-emerald-700">
                   {c.t('pages.coursesCatalog.videoConfigured')}{' '}
                   <a
-                    href={`/courses/detail/${form.slug || FIRST_IOAI_LESSON_ID}?preview=1&from=admin`}
+                    href={`/courses/detail/${form.slug || getFirstIOAILessonId(null, curriculumTree) || 'ioai-competition-system'}?preview=1&from=admin`}
                     target="_blank"
                     rel="noreferrer"
                     className="underline"
@@ -546,6 +552,7 @@ export default function AdminCoursesCatalog() {
             items={items}
             lineFilter={lineFilter}
             groupedIOAI={groupedIOAI}
+            curriculumTree={curriculumTree}
             onEdit={startEdit}
             onDelete={handleDelete}
             onReorderComplete={fetchItems}

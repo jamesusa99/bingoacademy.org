@@ -1,29 +1,55 @@
 import {
-  ioaiCurriculum,
-  IOAI_CURRICULUM_SUMMARY,
+  ioaiCurriculum as staticCurriculum,
+  IOAI_CURRICULUM_SUMMARY as staticSummary,
   flattenIOAICurriculumLessons,
   findIOAICurriculumLesson,
   parseIOAILessonSlug,
 } from '../data/ioaiCurriculum'
+import { buildCurriculumSummary } from './ioaiCurriculumDb'
 
 export const IOAI_TRACK_ID = 'ioai-competition-system'
 
-export { ioaiCurriculum, IOAI_CURRICULUM_SUMMARY, parseIOAILessonSlug }
+export { staticCurriculum as ioaiCurriculum, parseIOAILessonSlug }
+
+/** @deprecated use buildCurriculumSummary(tree) from DB */
+export const IOAI_CURRICULUM_SUMMARY = staticSummary
+
+export function getIOAICurriculumSummary(curriculumTree = null) {
+  if (curriculumTree?.length) {
+    return buildCurriculumSummary(curriculumTree)
+  }
+  return staticSummary
+}
 
 export function isIOAITrackId(id) {
   return id === IOAI_TRACK_ID
 }
 
-/** IOAI lesson slugs: ioai-{level}-{theme}-{module}-l{n} */
-export function isIOAILessonId(id) {
-  return typeof id === 'string' && /^ioai-.+-l\d+$/.test(id) && id !== IOAI_TRACK_ID
+export function isIOAILessonInTree(lessonId, curriculumTree) {
+  if (!lessonId || !curriculumTree?.length) return false
+  for (const level of curriculumTree) {
+    for (const theme of level.themes || []) {
+      for (const mod of theme.modules || []) {
+        if (mod.lessons?.some((l) => l.id === lessonId)) return true
+      }
+    }
+  }
+  return false
 }
 
-export function isIOAIVideoCourse(id) {
-  return isIOAITrackId(id) || isIOAILessonId(id)
+/** IOAI lesson slugs — DB tree, catalog row, or legacy slug pattern */
+export function isIOAILessonId(id, courses = null, curriculumTree = null) {
+  if (!id || id === IOAI_TRACK_ID) return false
+  if (isIOAILessonInTree(id, curriculumTree)) return true
+  const row = courses?.find((c) => c.id === id)
+  if (row?.line === 'ioai' && row?.sub === 'video' && row.id !== IOAI_TRACK_ID) return true
+  return typeof id === 'string' && /^ioai-.+-l\d+$/.test(id)
 }
 
-/** @deprecated use parseIOAILessonSlug */
+export function isIOAIVideoCourse(id, courses = null, curriculumTree = null) {
+  return isIOAITrackId(id) || isIOAILessonId(id, courses, curriculumTree)
+}
+
 export function parseIOAILessonId(id) {
   const parsed = parseIOAILessonSlug(id)
   if (!parsed?.levelId) return null
@@ -36,15 +62,33 @@ export function parseIOAILessonId(id) {
   }
 }
 
+function lessonIdsFromTree(curriculumTree) {
+  const ids = []
+  for (const level of curriculumTree) {
+    for (const theme of level.themes || []) {
+      for (const mod of theme.modules || []) {
+        for (const lesson of mod.lessons || []) {
+          if (lesson.id) ids.push(lesson.id)
+        }
+      }
+    }
+  }
+  return ids
+}
+
 function staticLessonIds() {
   return flattenIOAICurriculumLessons().map((l) => l.id)
 }
 
-/** Ordered lesson slugs — catalog sortOrder when courses array provided */
-export function getAllIOAILessonIds(courses = null) {
+/** Ordered lesson slugs — curriculum tree first, then catalog, then static seed */
+export function getAllIOAILessonIds(courses = null, curriculumTree = null) {
+  if (curriculumTree?.length) {
+    const fromTree = lessonIdsFromTree(curriculumTree)
+    if (fromTree.length) return fromTree
+  }
   if (courses?.length) {
     const fromCatalog = courses
-      .filter((c) => isIOAILessonId(c.id))
+      .filter((c) => isIOAILessonId(c.id, courses, curriculumTree))
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
       .map((c) => c.id)
     if (fromCatalog.length) return fromCatalog
@@ -52,55 +96,84 @@ export function getAllIOAILessonIds(courses = null) {
   return staticLessonIds()
 }
 
-function catalogLessonMeta(courses, lessonId) {
-  const staticMeta = findIOAICurriculumLesson(lessonId)
+function mergeLessonMeta(lesson, courses, level, theme, mod) {
+  const lessonId = lesson.id || lesson.slug
   const row = courses?.find((c) => c.id === lessonId)
+  const staticMeta = findIOAICurriculumLesson(lessonId)
   const parsed = parseIOAILessonSlug(lessonId)
-
-  if (!staticMeta && !row) return null
-
-  const lessonNum = parsed
-    ? `${staticMeta?.level.title ?? ''} · ${staticMeta?.theme.title ?? ''} · ${parsed.lesson}`
-    : lessonId
+  const categoryLabel = theme.categoryLabel || theme.category_label || theme.title
 
   return {
     id: lessonId,
-    title: row?.nameEn || row?.name || staticMeta?.lesson.title || lessonId,
-    lessonNum,
-    levelId: staticMeta?.level.id ?? parsed?.levelId,
-    themeId: staticMeta?.theme.id ?? parsed?.themeId,
-    moduleId: staticMeta?.module.id ?? parsed?.moduleId,
+    title: row?.nameEn || row?.name || lesson.title || staticMeta?.lesson.title || lessonId,
+    lessonNum: `${level.title} · ${categoryLabel} · ${mod.title}`,
+    levelId: level.id,
+    themeId: theme.id,
+    moduleId: mod.id,
+    categoryLabel,
     catalog: row ?? null,
+    cloudflareVideoId: lesson.cloudflareVideoId || row?.cloudflareUid || null,
+    knowledgePoints: lesson.knowledgePoints || '',
+    contentGoals: lesson.contentGoals || '',
   }
 }
 
-/** Structured curriculum: CourseLevel → Theme → Module → Lesson */
-export function buildIOAICurriculum(courses = null) {
-  const orderedIds = getAllIOAILessonIds(courses)
-  const lessonMetaById = new Map(orderedIds.map((id) => [id, catalogLessonMeta(courses, id)]))
-
-  return ioaiCurriculum.map((level) => ({
+function buildFromTree(curriculumTree, courses) {
+  return curriculumTree.map((level) => ({
     id: level.id,
     title: level.title,
-    emoji: level.emoji,
-    themes: level.themes.map((theme) => ({
+    emoji: level.emoji || '',
+    themes: (level.themes || []).map((theme) => ({
       id: theme.id,
       title: theme.title,
-      modules: theme.modules.map((mod) => ({
+      categoryLabel: theme.categoryLabel || theme.category_label || theme.title,
+      modules: (theme.modules || []).map((mod) => ({
         id: mod.id,
         title: mod.title,
         levelId: level.id,
         themeId: theme.id,
-        lessons: mod.lessons
-          .map((lesson) => lessonMetaById.get(lesson.id) ?? catalogLessonMeta(courses, lesson.id))
+        lessons: (mod.lessons || [])
+          .map((lesson) => mergeLessonMeta(lesson, courses, level, theme, mod))
           .filter(Boolean),
       })),
     })),
   }))
 }
 
-export function getAdjacentLessons(lessonId, courses = null) {
-  const all = getAllIOAILessonIds(courses)
+function buildFromStatic(courses) {
+  return staticCurriculum.map((level) => ({
+    id: level.id,
+    title: level.title,
+    emoji: level.emoji,
+    themes: level.themes.map((theme) => ({
+      id: theme.id,
+      title: theme.title,
+      categoryLabel: theme.title.replace(/主题$/, ''),
+      modules: theme.modules.map((mod) => ({
+        id: mod.id,
+        title: mod.title,
+        levelId: level.id,
+        themeId: theme.id,
+        lessons: mod.lessons
+          .map((lesson) =>
+            mergeLessonMeta({ id: lesson.id, title: lesson.title }, courses, level, theme, mod)
+          )
+          .filter(Boolean),
+      })),
+    })),
+  }))
+}
+
+/** Structured curriculum: CourseLevel → Theme → Module → Lesson (DB tree when available) */
+export function buildIOAICurriculum(courses = null, curriculumTree = null) {
+  if (curriculumTree?.length) {
+    return buildFromTree(curriculumTree, courses)
+  }
+  return buildFromStatic(courses)
+}
+
+export function getAdjacentLessons(lessonId, courses = null, curriculumTree = null) {
+  const all = getAllIOAILessonIds(courses, curriculumTree)
   const index = all.indexOf(lessonId)
   if (index < 0) return { prev: null, next: null, index: -1, total: all.length }
   return {
@@ -111,7 +184,25 @@ export function getAdjacentLessons(lessonId, courses = null) {
   }
 }
 
-export function findModuleForLesson(lessonId) {
+export function findModuleForLesson(lessonId, curriculumTree = null) {
+  const tree = curriculumTree?.length ? curriculumTree : staticCurriculum
+  for (const level of tree) {
+    for (const theme of level.themes || []) {
+      for (const mod of theme.modules || []) {
+        if (mod.lessons?.some((l) => (l.id || l.slug) === lessonId)) {
+          return {
+            levelId: level.id,
+            levelTitle: level.title,
+            themeId: theme.id,
+            themeTitle: theme.title,
+            categoryLabel: theme.categoryLabel || theme.category_label || theme.title,
+            moduleId: mod.id,
+            title: mod.title,
+          }
+        }
+      }
+    }
+  }
   const found = findIOAICurriculumLesson(lessonId)
   if (!found) return null
   return {
@@ -119,32 +210,50 @@ export function findModuleForLesson(lessonId) {
     levelTitle: found.level.title,
     themeId: found.theme.id,
     themeTitle: found.theme.title,
+    categoryLabel: found.theme.title,
     moduleId: found.module.id,
     title: found.module.title,
   }
 }
 
-/** Group catalog rows for admin: level → theme → module → lessons */
-export function groupIOAICatalogByCurriculum(items) {
+function catalogRowForLesson(lesson, lessonBySlug) {
+  const slug = lesson.id || lesson.slug
+  return (
+    lessonBySlug.get(slug) ?? {
+      slug,
+      name: lesson.title || slug,
+      line: 'ioai',
+      sub: 'video',
+      status: 'live',
+      sort_order: lesson.sort_order ?? 0,
+      _curriculumOnly: true,
+    }
+  )
+}
+
+/** Group catalog rows for admin: level → category → module → lessons (DB tree when available) */
+export function groupIOAICatalogByCurriculum(items, curriculumTree = null) {
   const sorted = [...items].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   const track = sorted.find((r) => r.slug === IOAI_TRACK_ID) ?? null
-  const lessonRows = sorted.filter((r) => isIOAILessonId(r.slug))
+  const lessonRows = sorted.filter((r) => isIOAILessonId(r.slug, null, curriculumTree))
   const lessonBySlug = new Map(lessonRows.map((r) => [r.slug, r]))
 
-  const levels = ioaiCurriculum.map((level) => ({
+  const tree = curriculumTree?.length ? curriculumTree : staticCurriculum
+
+  const levels = tree.map((level) => ({
     id: level.id,
     title: level.title,
-    emoji: level.emoji,
-    themes: level.themes.map((theme) => ({
+    emoji: level.emoji || '',
+    themes: (level.themes || []).map((theme) => ({
       id: theme.id,
-      title: theme.title,
-      modules: theme.modules.map((mod) => ({
+      title: theme.categoryLabel || theme.category_label || theme.title,
+      modules: (theme.modules || []).map((mod) => ({
         id: mod.id,
         title: mod.title,
         levelId: level.id,
         themeId: theme.id,
-        lessons: mod.lessons
-          .map((l) => lessonBySlug.get(l.id))
+        lessons: (mod.lessons || [])
+          .map((lesson) => catalogRowForLesson(lesson, lessonBySlug))
           .filter(Boolean),
       })),
     })),
@@ -156,4 +265,9 @@ export function groupIOAICatalogByCurriculum(items) {
   const unassigned = lessonRows.filter((r) => !assigned.has(r.slug))
 
   return { track, levels, unassigned }
+}
+
+export function getFirstIOAILessonId(courses = null, curriculumTree = null) {
+  const ids = getAllIOAILessonIds(courses, curriculumTree)
+  return ids[0] ?? null
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useCourseCatalog } from '../hooks/useCourseCatalog'
+import { useIOAICourseContext } from '../hooks/useIOAICourseContext'
 import ProductLineCard from '../components/ProductLineCard'
 import HomeHero from '../components/home/HomeHero'
 import PageMeta from '../components/PageMeta'
@@ -30,7 +30,7 @@ const ACCENT_RING = {
 export default function Home() {
   const [trustStats, setTrustStats] = useState(PORTAL_TRUST_STATS_FALLBACK)
   const [testimonials, setTestimonials] = useState(PORTAL_TESTIMONIALS_FALLBACK)
-  const { courses } = useCourseCatalog()
+  const { courses } = useIOAICourseContext()
   const featuredCourses = useMemo(
     () => courses.filter((c) => c.featured).slice(0, 6),
     [courses]

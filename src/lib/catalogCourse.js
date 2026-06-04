@@ -166,7 +166,7 @@ const EMPTY_FORM = {
 
 export { EMPTY_FORM as CATALOG_FORM_EMPTY }
 
-/** Load catalogue from Supabase when configured; static config is dev/offline fallback only */
+/** Load catalogue from Supabase when configured; no static merge when DB is available */
 export async function fetchCourseCatalog() {
   if (!isSupabaseConfigured) {
     return { courses: [...COURSE_CATALOG], source: 'static' }
@@ -175,7 +175,7 @@ export async function fetchCourseCatalog() {
   const { data, error } = await supabase.from('courses_catalog').select('*').order('sort_order')
 
   if (error) {
-    return { courses: [...COURSE_CATALOG], source: 'static', error: error.message }
+    return { courses: [], source: 'supabase', error: error.message }
   }
 
   return {

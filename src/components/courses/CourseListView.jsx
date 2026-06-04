@@ -12,7 +12,7 @@ import CourseGrid from './CourseGrid'
 import Pagination from './Pagination'
 import EmptyState from './EmptyState'
 
-export default function CourseListView({ line, subId, courses = [] }) {
+export default function CourseListView({ line, subId, courses = [], ioaiSummary = null }) {
   const [, setParams] = useSearchParams()
   const { filters, setFilters, perPage } = useCourseFilters()
 
@@ -108,7 +108,11 @@ export default function CourseListView({ line, subId, courses = [] }) {
 
         <CoursesHero
           title={`${sub?.icon || '🎓'} ${subName}`}
-          subtitle={COURSES_PORTAL.videoListSubtitle(line.id)}
+          subtitle={
+            line.id === 'ioai' && ioaiSummary?.summary
+              ? `IOAI Competition Course System — ${ioaiSummary.summary}`
+              : COURSES_PORTAL.videoListSubtitle(line.id)
+          }
           stats={heroStats}
         />
 

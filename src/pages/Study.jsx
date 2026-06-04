@@ -1,9 +1,8 @@
 import { useMemo } from 'react'
-import { FIRST_IOAI_LESSON_ID } from '../config/ioaiCourseSystem'
 import { Link, Navigate } from 'react-router-dom'
 import { PlayCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useCourseCatalog } from '../hooks/useCourseCatalog'
+import { useIOAICourseContext } from '../hooks/useIOAICourseContext'
 import { findCourseInList } from '../lib/catalogCourse'
 import {
   getPurchasedSlugs,
@@ -14,6 +13,7 @@ import { authLink } from '../lib/authRedirect'
 import { hasClaimedFreeTrial } from '../lib/freeTrial'
 import {
   getAllIOAILessonIds,
+  getFirstIOAILessonId,
   isIOAITrackId,
 } from '../lib/ioaiCourseStructure'
 import { getTrackProgressStats, getLessonProgress, getContinueLessonId } from '../lib/learningProgress'
@@ -47,17 +47,17 @@ function buildStudyCourses(slugs, catalog) {
   return items
 }
 
-function courseContinueHref(course, catalog) {
+function courseContinueHref(course, catalog, tree) {
   if (isIOAITrackId(course.id)) {
-    const lessonId = getContinueLessonId(getAllIOAILessonIds(catalog))
+    const lessonId = getContinueLessonId(getAllIOAILessonIds(catalog, tree))
     return lessonId ? `/courses/detail/${lessonId}` : `/courses/detail/${IOAI_FULL_TRACK_SLUG}`
   }
   return `/courses/detail/${course.id}`
 }
 
-function courseProgressLabel(course, catalog) {
+function courseProgressLabel(course, catalog, tree) {
   if (isIOAITrackId(course.id)) {
-    const stats = getTrackProgressStats(getAllIOAILessonIds(catalog))
+    const stats = getTrackProgressStats(getAllIOAILessonIds(catalog, tree))
     return `${stats.percent}% · ${stats.completed}/${stats.total} lessons`
   }
   const p = getLessonProgress(course.id)
@@ -68,9 +68,10 @@ function courseProgressLabel(course, catalog) {
 
 export default function Study() {
   const { isAuthenticated, loading } = useAuth()
-  const { courses: catalog, loading: catalogLoading } = useCourseCatalog()
+  const { courses: catalog, tree, loading: catalogLoading } = useIOAICourseContext()
   const slugs = useMemo(() => getPurchasedSlugs(), [])
   const courses = useMemo(() => buildStudyCourses(slugs, catalog), [slugs, catalog])
+  const firstLessonId = getFirstIOAILessonId(catalog, tree)
   const trialActive = hasClaimedFreeTrial()
 
   if (loading || catalogLoading) {
@@ -104,10 +105,10 @@ export default function Study() {
         {courses.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.map((course) => {
-              const href = courseContinueHref(course, catalog)
-              const progressText = courseProgressLabel(course, catalog)
+              const href = courseContinueHref(course, catalog, tree)
+              const progressText = courseProgressLabel(course, catalog, tree)
               const trackStats = isIOAITrackId(course.id)
-                ? getTrackProgressStats(getAllIOAILessonIds(catalog))
+                ? getTrackProgressStats(getAllIOAILessonIds(catalog, tree))
                 : null
 
               return (
@@ -148,7 +149,7 @@ export default function Study() {
                   Claim free trial
                 </Link>
               ) : (
-                <Link to={`/courses/detail/${FIRST_IOAI_LESSON_ID}`} className="btn-primary text-sm px-4 py-2">
+                <Link to={`/courses/detail/${firstLessonId || IOAI_FULL_TRACK_SLUG}`} className="btn-primary text-sm px-4 py-2">
                   Open free trial lesson
                 </Link>
               )}

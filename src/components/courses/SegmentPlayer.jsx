@@ -134,8 +134,8 @@ function CheckpointSegment({ course, onComplete }) {
   )
 }
 
-function SummarySegment({ course, onComplete, nextLessonId, courses = null }) {
-  const { index, total } = getAdjacentLessons(course.id, courses)
+function SummarySegment({ course, onComplete, nextLessonId, courses = null, curriculumTree = null }) {
+  const { index, total } = getAdjacentLessons(course.id, courses, curriculumTree)
 
   return (
     <div className="p-6 sm:p-8 text-center">
@@ -178,6 +178,7 @@ export default function SegmentPlayer({
   checkoutLoading,
   setCheckoutLoading,
   courses = null,
+  curriculumTree = null,
 }) {
   const videoRef = useRef(null)
   const { url, poster, previewSeconds, isStream, hasCustomVideo } = getCourseVideo(course)
@@ -191,7 +192,7 @@ export default function SegmentPlayer({
 
   const segmentIndex = progress.currentSegment
   const currentSegment = LESSON_SEGMENTS[segmentIndex]
-  const { next: nextLessonId } = getAdjacentLessons(course.id, courses)
+  const { next: nextLessonId } = getAdjacentLessons(course.id, courses, curriculumTree)
 
   const showLock = !hasAccess && (previewEnded || currentTime >= previewSeconds - 0.5)
 
@@ -390,6 +391,7 @@ export default function SegmentPlayer({
             course={course}
             nextLessonId={nextLessonId}
             courses={courses}
+            curriculumTree={curriculumTree}
             onComplete={() => completeLesson()}
           />
         ) : null}
