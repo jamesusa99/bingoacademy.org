@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authLink } from '../lib/authRedirect'
 import {
@@ -206,7 +206,28 @@ function EarnBySharing() {
 
 // ─── Main Profile ──────────────────────────────────────────────────
 
+function scrollToProfileSection(id = 'settings') {
+  const headerOffset = 120
+
+  const attempt = (retriesLeft) => {
+    const el = document.getElementById(id)
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - headerOffset
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+      return
+    }
+    if (retriesLeft > 0) {
+      requestAnimationFrame(() => attempt(retriesLeft - 1))
+    }
+  }
+
+  requestAnimationFrame(() => attempt(24))
+}
+
 export default function Profile() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const pendingSettingsScroll = useRef(false)
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const [view, setView] = useState('home')
   const [showEarnBySharing, setShowEarnBySharing] = useState(false)
@@ -238,10 +259,42 @@ export default function Profile() {
     }
   }, [user?.id])
 
+  const goToSettingsSection = useCallback(
+    (e) => {
+      e?.preventDefault?.()
+      pendingSettingsScroll.current = true
+      setView('home')
+
+      const scrollAfterPaint = () => {
+        window.setTimeout(() => {
+          pendingSettingsScroll.current = false
+          scrollToProfileSection('settings')
+        }, 80)
+      }
+
+      if (location.pathname !== '/profile' || location.hash !== '#settings') {
+        navigate('/profile#settings')
+        return
+      }
+
+      scrollAfterPaint()
+    },
+    [location.pathname, location.hash, navigate]
+  )
+
   useEffect(() => {
-    if (profileLoading || window.location.hash !== '#settings') return
-    document.getElementById('settings')?.scrollIntoView({ behavior: 'smooth' })
-  }, [profileLoading])
+    const wantScroll = pendingSettingsScroll.current || location.hash === '#settings'
+    if (!wantScroll) return
+    if (authLoading || !isAuthenticated) return
+    if (view !== 'home') return
+
+    const timer = window.setTimeout(() => {
+      pendingSettingsScroll.current = false
+      scrollToProfileSection('settings')
+    }, 80)
+
+    return () => window.clearTimeout(timer)
+  }, [location.hash, view, authLoading, isAuthenticated, profileLoading])
 
   if (authLoading) {
     return (
@@ -250,7 +303,8 @@ export default function Profile() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={authLink('/login', '/profile')} replace />
+    const profileReturn = location.hash ? `/profile${location.hash}` : '/profile'
+    return <Navigate to={authLink('/login', profileReturn)} replace />
   }
 
   const memberTier = profile?.member_tier || 'free'
@@ -311,7 +365,14 @@ export default function Profile() {
               {displayPhone ? <span className="text-slate-500 font-normal"> · {displayPhone}</span> : null}
             </div>
             <div className="text-sm text-slate-500">
-              Account ID: {accountId} · <Link to="/profile#settings" className="text-primary hover:underline">Account settings</Link>
+              Account ID: {accountId} ·{' '}
+              <button
+                type="button"
+                onClick={goToSettingsSection}
+                className="text-primary hover:underline"
+              >
+                Account settings
+              </button>
             </div>
             {profileError ? (
               <p className="text-xs text-red-600 mt-1">{profileError}</p>
@@ -330,7 +391,13 @@ export default function Profile() {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap shrink-0">
-            <a href="#settings" className="rounded-lg border border-slate-300 text-slate-700 px-4 py-2 text-sm hover:bg-slate-50">Edit profile</a>
+            <button
+              type="button"
+              onClick={goToSettingsSection}
+              className="rounded-lg border border-slate-300 text-slate-700 px-4 py-2 text-sm hover:bg-slate-50"
+            >
+              Edit profile
+            </button>
             {memberTier !== 'free' ? (
               <button type="button" onClick={() => setView('member')} className="btn-primary px-4 py-2 text-sm">Member benefits →</button>
             ) : (
@@ -349,6 +416,7 @@ export default function Profile() {
               {item.to ? (
                 <Link
                   to={item.to}
+                  onClick={item.to === '/profile#settings' ? goToSettingsSection : undefined}
                   className={`card p-4 text-center hover:shadow-md transition block ${item.highlight ? 'border-amber-300 bg-amber-50/30' : ''}`}
                 >
                   {item.share && (
@@ -514,7 +582,7 @@ export default function Profile() {
 
       {/* ── Account settings ──────────────────────────────────────── */}
       {view === 'home' && (
-        <section id="settings" className="mb-8 scroll-mt-24">
+        <section id="settings" className="mb-8 scroll-mt-28">
           <h2 className="section-title mb-4">Account settings</h2>
           <div className="card p-6">
             {profileLoading ? (
