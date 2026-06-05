@@ -17,6 +17,11 @@ Run **once** on a new project, in order. All files are safe to **re-run** (idemp
 | `011_course_enrollments.sql` | course_enrollments (Stripe unlocks) | Table exists |
 | `012_profiles_role_service_bypass.sql` | Service role can update profiles.role | — |
 | `013_course_checkout_pricing.sql` | price_cents, currency, purchasable on courses_catalog | Columns exist |
+| `014_ioai_curriculum.sql` | course_levels, themes, modules, lessons | Curriculum admin |
+| `015_ioai_curriculum_admin_fields.sql` | Extra curriculum admin columns | — |
+| `016_curriculum_product_line.sql` | product_line on course_levels (ioai/general/k12) | Labs-materials grouping |
+| `017_video_assets_curriculum.sql` | Video library curriculum fields | — |
+| `018_lab_materials_lesson.sql` | courses_catalog.lesson_id → lessons | Lab/material lesson binding |
 
 **After migration 013**, backfill Stripe cents from display prices:
 
