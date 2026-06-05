@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import { ExternalLink, Pencil, Video } from 'lucide-react'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
-import { formatVideoAssetLabel, groupVideosByCurriculum } from '../../lib/videoCurriculum'
 import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
+import CurriculumVideoUpload from './CurriculumVideoUpload'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
 const textareaClass = `${inputClass} min-h-[88px] resize-y`
@@ -93,12 +93,12 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
               <th className="p-3 font-semibold whitespace-nowrap w-16">{labels.colSortOrder}</th>
               <th className="p-3 font-semibold whitespace-nowrap w-16">{labels.colRating}</th>
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colStudents}</th>
-              <th className="p-3 w-20" />
+              <th className="p-3 w-28 sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.08)]" />
             </tr>
           </thead>
           <tbody>
             {visible.map((row) => (
-              <tr key={row.lessonId} className="border-t border-slate-100 hover:bg-slate-50/80 align-top">
+              <tr key={row.lessonId} className="border-t border-slate-100 hover:bg-slate-50/80 align-top group">
                 <td className="p-3 whitespace-nowrap">
                   <span className="text-xs text-slate-400 block">{row.stageEmoji}</span>
                   <span className="font-medium text-bingo-dark">{row.stage}</span>
@@ -158,14 +158,14 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
                     ? Number(row.catalogStudents).toLocaleString()
                     : labels.notSet}
                 </td>
-                <td className="p-3">
+                <td className="p-3 sticky right-0 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.06)] group-hover:bg-slate-50/80">
                   <button
                     type="button"
                     onClick={() => onEditLesson(row)}
-                    className="inline-flex items-center gap-1 text-primary text-xs font-semibold hover:underline"
+                    className="inline-flex items-center gap-1 text-primary text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-primary/5 min-h-[36px]"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
-                    {labels.edit}
+                    <Pencil className="w-3.5 h-3.5 shrink-0" />
+                    {labels.editLesson}
                   </button>
                 </td>
               </tr>
@@ -177,7 +177,7 @@ export default function IOAICurriculumTable({ rows, loading, labels, onEditLesso
   )
 }
 
-export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAssets = [] }) {
+export function IOAILessonEditor({ row, productLine, levels, labels, saving, onSave, onClose }) {
   const draftKey = `admin-curriculum-edit-${row.lessonId}`
   const [form, setForm] = useAdminFormDraft(draftKey, {
     title: row.lessonTitle || '',
@@ -197,16 +197,16 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
 
-  const pickVideoAsset = (assetId) => {
-    if (!assetId) return
-    const asset = videoAssets.find((a) => a.id === assetId)
-    if (asset?.cloudflare_uid) {
-      set('cloudflare_video_id', asset.cloudflare_uid)
-    }
-  }
+  const lessonPath = useMemo(
+    () => ({
+      stageChoice: row.levelId,
+      themeChoice: row.themeId,
+      moduleChoice: row.moduleId,
+    }),
+    [row.levelId, row.themeId, row.moduleId]
+  )
 
-  const readyAssets = videoAssets.filter((a) => a.cloudflare_uid && a.status !== 'error')
-  const groupedVideos = useMemo(() => groupVideosByCurriculum(readyAssets), [readyAssets])
+  const previewHref = `/courses/detail/${encodeURIComponent(form.catalog_slug || row.lessonSlug)}?preview=1&from=admin&reload=1`
 
   const handleSave = () => {
     onSave(form)
@@ -224,9 +224,9 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
           </p>
           <p className="text-[10px] text-slate-400 mt-0.5">{labels.draftHint}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <a
-            href={`/courses/detail/${form.catalog_slug || row.lessonSlug}?preview=1&from=admin`}
+            href={previewHref}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
@@ -273,56 +273,25 @@ export function IOAILessonEditor({ row, labels, saving, onSave, onClose, videoAs
         />
       </Field>
 
-      <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-        <Field label={labels.catalogSlug}>
-          <input
-            className={inputClass}
-            value={form.catalog_slug}
-            onChange={(e) => set('catalog_slug', e.target.value)}
-          />
-        </Field>
-        <Field label={labels.cloudflareUid}>
-          <input
-            className={inputClass}
-            value={form.cloudflare_video_id}
-            onChange={(e) => set('cloudflare_video_id', e.target.value)}
-            placeholder={labels.cloudflareUidPlaceholder || labels.cloudflareUid}
-          />
-        </Field>
-      </div>
+      <Field label={labels.catalogSlug}>
+        <input
+          className={inputClass}
+          value={form.catalog_slug}
+          onChange={(e) => set('catalog_slug', e.target.value)}
+        />
+      </Field>
 
-      {readyAssets.length > 0 ? (
-        <Field label={labels.pickFromVideoLibrary}>
-          <select
-            className={inputClass}
-            defaultValue=""
-            onChange={(e) => pickVideoAsset(e.target.value)}
-          >
-            <option value="">{labels.pickVideoPlaceholder}</option>
-            {[...groupedVideos.byLine.entries()].map(([line, lineGroup]) => (
-              <optgroup key={line} label={line.toUpperCase()}>
-                {[...lineGroup.stages.values()].flatMap((stage) =>
-                  [...stage.categories.values()].flatMap((cat) =>
-                    [...cat.modules.values()].flatMap((mod) =>
-                      mod.items.map((asset) => (
-                        <option key={asset.id} value={asset.id}>
-                          {formatVideoAssetLabel(asset)}
-                        </option>
-                      ))
-                    )
-                  )
-                )}
-              </optgroup>
-            ))}
-            {groupedVideos.unclassified.map((asset) => (
-              <option key={asset.id} value={asset.id}>
-                {formatVideoAssetLabel(asset)}
-              </option>
-            ))}
-          </select>
-          <p className="text-[10px] text-slate-400 mt-1">{labels.pickVideoHint}</p>
-        </Field>
-      ) : null}
+      <CurriculumVideoUpload
+        productLine={productLine}
+        levels={levels}
+        path={lessonPath}
+        lessonTitle={form.title}
+        catalogSlug={form.catalog_slug || row.lessonSlug}
+        cloudflareUid={form.cloudflare_video_id}
+        onUidChange={(uid) => set('cloudflare_video_id', uid)}
+        labels={labels}
+        disabled={saving}
+      />
 
       <CurriculumCatalogFields form={form} set={set} labels={labels} />
 

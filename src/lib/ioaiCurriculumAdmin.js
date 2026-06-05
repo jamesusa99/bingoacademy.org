@@ -133,18 +133,6 @@ export async function fetchIOAICurriculumAdmin() {
   return fetchCurriculumAdmin('ioai')
 }
 
-export async function fetchVideoAssetsForLessonPicker() {
-  const { data, error } = await supabase
-    .from('video_assets')
-    .select(
-      'id, title, cloudflare_uid, catalog_slug, status, product_line, stage_title, category_label, module_title, stage_slug, category_slug, module_slug'
-    )
-    .order('created_at', { ascending: false })
-
-  if (error) throw new Error(error.message)
-  return data || []
-}
-
 async function maxSortOrder(table, filter = {}) {
   let q = supabase.from(table).select('sort_order').order('sort_order', { ascending: false }).limit(1)
   for (const [key, val] of Object.entries(filter)) {
@@ -156,13 +144,166 @@ async function maxSortOrder(table, filter = {}) {
 }
 
 function toSlug(text) {
-  return String(text || '')
+  const slug = String(text || '')
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
+  return slug
+}
+
+function slugFromInput(explicit, title, fallbackPrefix) {
+  return explicit?.trim() || toSlug(title) || `${fallbackPrefix}-${Date.now()}`
+}
+
+async function findLevelById(levelId) {
+  const { data, error } = await supabase.from('course_levels').select('*').eq('id', levelId).maybeSingle()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+async function findOrCreateLevel(productLine, { levelId, newLevel }) {
+  if (levelId) {
+    const existing = await findLevelById(levelId)
+    if (existing) return existing
+  }
+
+  const title = newLevel?.title?.trim()
+  if (!title) throw new Error('请选择或新建阶段')
+
+  const slug = slugFromInput(newLevel?.slug, title, 'stage')
+  const { data: bySlug, error: slugErr } = await supabase
+    .from('course_levels')
+    .select('*')
+    .eq('product_line', productLine)
+    .eq('slug', slug)
+    .maybeSingle()
+  if (slugErr) throw new Error(slugErr.message)
+
+  if (bySlug) {
+    const updates = {}
+    if (title !== bySlug.title) updates.title = title
+    const emoji = newLevel?.emoji?.trim()
+    if (emoji && emoji !== bySlug.emoji) updates.emoji = emoji
+    if (Object.keys(updates).length) {
+      updates.updated_at = new Date().toISOString()
+      return adminUpdate('course_levels', bySlug.id, updates)
+    }
+    return bySlug
+  }
+
+  const sort = (await maxSortOrder('course_levels', { product_line: productLine })) + 1
+  return adminInsert('course_levels', {
+    product_line: productLine,
+    slug,
+    title,
+    emoji: newLevel?.emoji?.trim() || null,
+    sort_order: sort,
+  })
+}
+
+async function findThemeById(themeId) {
+  const { data, error } = await supabase.from('themes').select('*').eq('id', themeId).maybeSingle()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+async function findOrCreateTheme(levelId, { themeId, newTheme }) {
+  if (themeId) {
+    const existing = await findThemeById(themeId)
+    if (existing) return existing
+  }
+
+  const title = newTheme?.title?.trim() || newTheme?.category_label?.trim()
+  if (!title) throw new Error('请选择或新建类别')
+
+  const slug = slugFromInput(newTheme?.slug, title, 'category')
+  const { data: bySlug, error: slugErr } = await supabase
+    .from('themes')
+    .select('*')
+    .eq('level_id', levelId)
+    .eq('slug', slug)
+    .maybeSingle()
+  if (slugErr) throw new Error(slugErr.message)
+
+  const categoryLabel = newTheme?.category_label?.trim() || title
+
+  if (bySlug) {
+    const updates = {}
+    if (title !== bySlug.title) updates.title = title
+    if (categoryLabel !== bySlug.category_label) updates.category_label = categoryLabel
+    if (Object.keys(updates).length) {
+      updates.updated_at = new Date().toISOString()
+      return adminUpdate('themes', bySlug.id, updates)
+    }
+    return bySlug
+  }
+
+  const sort = (await maxSortOrder('themes', { level_id: levelId })) + 1
+  return adminInsert('themes', {
+    level_id: levelId,
+    slug,
+    title,
+    category_label: categoryLabel,
+    sort_order: sort,
+  })
+}
+
+async function findModuleById(moduleId) {
+  const { data, error } = await supabase.from('modules').select('*').eq('id', moduleId).maybeSingle()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+async function findOrCreateModule(themeId, { moduleId, newModule }) {
+  if (moduleId) {
+    const existing = await findModuleById(moduleId)
+    if (existing) return existing
+  }
+
+  const title = newModule?.title?.trim()
+  if (!title) throw new Error('请选择或新建模块')
+
+  const slug = slugFromInput(newModule?.slug, title, 'module')
+  const { data: bySlug, error: slugErr } = await supabase
+    .from('modules')
+    .select('*')
+    .eq('theme_id', themeId)
+    .eq('slug', slug)
+    .maybeSingle()
+  if (slugErr) throw new Error(slugErr.message)
+
+  if (bySlug) {
+    if (title !== bySlug.title) {
+      return adminUpdate('modules', bySlug.id, {
+        title,
+        updated_at: new Date().toISOString(),
+      })
+    }
+    return bySlug
+  }
+
+  const sort = (await maxSortOrder('modules', { theme_id: themeId })) + 1
+  return adminInsert('modules', {
+    theme_id: themeId,
+    slug,
+    title,
+    sort_order: sort,
+  })
+}
+
+async function ensureUniqueLessonSlug(baseSlug) {
+  let slug = baseSlug
+  let suffix = 1
+  while (true) {
+    const { data, error } = await supabase.from('lessons').select('id').eq('slug', slug).maybeSingle()
+    if (error) throw new Error(error.message)
+    if (!data) return slug
+    suffix += 1
+    slug = `${baseSlug}-${suffix}`
+  }
 }
 
 function buildLessonSlug(productLine, levelSlug, themeSlug, moduleSlug, lessonIndex) {
@@ -279,69 +420,15 @@ export async function createProgramCourse(productLine, input) {
 
   if (!lessonTitle?.trim()) throw new Error('课时标题不能为空')
 
-  /** @type {object} */
-  let level
-  if (levelId) {
-    const { data, error } = await supabase.from('course_levels').select('*').eq('id', levelId).single()
-    if (error) throw new Error(error.message)
-    level = data
-  } else if (newLevel?.title?.trim()) {
-    const sort = (await maxSortOrder('course_levels', { product_line: productLine })) + 1
-    const slug = newLevel.slug?.trim() || toSlug(newLevel.title)
-    level = await adminInsert('course_levels', {
-      product_line: productLine,
-      slug,
-      title: newLevel.title.trim(),
-      emoji: newLevel.emoji?.trim() || null,
-      sort_order: sort,
-    })
-  } else {
-    throw new Error('请选择或新建阶段')
-  }
-
-  /** @type {object} */
-  let theme
-  if (themeId) {
-    const { data, error } = await supabase.from('themes').select('*').eq('id', themeId).single()
-    if (error) throw new Error(error.message)
-    theme = data
-  } else if (newTheme?.title?.trim()) {
-    const sort = (await maxSortOrder('themes', { level_id: level.id })) + 1
-    const slug = newTheme.slug?.trim() || toSlug(newTheme.title)
-    theme = await adminInsert('themes', {
-      level_id: level.id,
-      slug,
-      title: newTheme.title.trim(),
-      category_label: newTheme.category_label?.trim() || newTheme.title.trim(),
-      sort_order: sort,
-    })
-  } else {
-    throw new Error('请选择或新建类别')
-  }
-
-  /** @type {object} */
-  let mod
-  if (moduleId) {
-    const { data, error } = await supabase.from('modules').select('*').eq('id', moduleId).single()
-    if (error) throw new Error(error.message)
-    mod = data
-  } else if (newModule?.title?.trim()) {
-    const sort = (await maxSortOrder('modules', { theme_id: theme.id })) + 1
-    const slug = newModule.slug?.trim() || toSlug(newModule.title)
-    mod = await adminInsert('modules', {
-      theme_id: theme.id,
-      slug,
-      title: newModule.title.trim(),
-      sort_order: sort,
-    })
-  } else {
-    throw new Error('请选择或新建模块')
-  }
+  const level = await findOrCreateLevel(productLine, { levelId, newLevel })
+  const theme = await findOrCreateTheme(level.id, { themeId, newTheme })
+  const mod = await findOrCreateModule(theme.id, { moduleId, newModule })
 
   const lessonSort = (await maxSortOrder('lessons', { module_id: mod.id })) + 1
-  const slug =
+  const baseSlug =
     lessonSlugInput?.trim() ||
     buildLessonSlug(productLine, level.slug, theme.slug, mod.slug, lessonSort)
+  const slug = await ensureUniqueLessonSlug(baseSlug)
 
   const lesson = await adminInsert('lessons', {
     module_id: mod.id,

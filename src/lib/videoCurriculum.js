@@ -96,7 +96,6 @@ export function groupVideosByCurriculum(videos) {
   return { byLine, unclassified }
 }
 
-/** Resolve curriculum labels from admin levels tree + picker state */
 export function resolveCurriculumLabels(levels, pickerState) {
   const { stageChoice, themeChoice, moduleChoice, newStage, newTheme, newModule } = pickerState
   const NEW = '__new__'
@@ -152,4 +151,29 @@ export function resolveCurriculumLabels(levels, pickerState) {
     module_slug,
     module_title,
   }
+}
+
+const NEW = '__new__'
+
+/** Human-readable path for admin picker summary */
+export function resolveCurriculumPathDisplay(levels, pickerState) {
+  const labels = resolveCurriculumLabels(levels, pickerState)
+  const { stageChoice, themeChoice, moduleChoice, newStage, newTheme, newModule } = pickerState || {}
+
+  const stage =
+    stageChoice === NEW
+      ? newStage?.title?.trim() || labels.stage_title || '—'
+      : labels.stage_title || '—'
+
+  const category =
+    themeChoice === NEW
+      ? newTheme?.category_label?.trim() || newTheme?.title?.trim() || labels.category_label || '—'
+      : labels.category_label || '—'
+
+  const module =
+    moduleChoice === NEW
+      ? newModule?.title?.trim() || labels.module_title || '—'
+      : labels.module_title || '—'
+
+  return { stage, category, module }
 }

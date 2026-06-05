@@ -124,3 +124,7 @@ export function getContinueLessonId(lessonIds) {
 export function getAllLessonProgress() {
   return readStore().lessons
 }
+
+export function clearLearningProgress() {
+  localStorage.removeItem(LEARNING_PROGRESS_KEY)
+}

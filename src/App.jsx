@@ -19,7 +19,6 @@ import AdminCert from './pages/admin/AdminCert'
 import AdminMallProducts from './pages/admin/AdminMallProducts'
 import AdminCharity from './pages/admin/AdminCharity'
 import AdminMentors from './pages/admin/AdminMentors'
-import AdminVideo from './pages/admin/AdminVideo'
 import AdminPayments from './pages/admin/AdminPayments'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminSettings from './pages/admin/AdminSettings'
@@ -119,7 +118,7 @@ export default function App() {
         <Route path="mall-products" element={<AdminMallProducts />} />
         <Route path="charity" element={<AdminCharity />} />
         <Route path="forum" element={<AdminForum />} />
-        <Route path="video" element={<AdminVideo />} />
+        <Route path="video" element={<Navigate to="/admin/curriculum/ioai" replace />} />
         <Route path="payments" element={<AdminPayments />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />

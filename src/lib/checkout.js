@@ -82,3 +82,7 @@ export async function confirmCheckoutSession(sessionId) {
     body: JSON.stringify({ sessionId }),
   })
 }
+
+export async function resetMyEnrollments() {
+  return authFetch('/api/me/enrollments', { method: 'DELETE' })
+}

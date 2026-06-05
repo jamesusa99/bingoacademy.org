@@ -1,4 +1,4 @@
-import { purchaseLesson } from './courseAccess'
+import { clearPurchasedSlugs, getPurchasedSlugs, purchaseLesson, savePurchasedSlugs } from './courseAccess'
 
 import { FIRST_IOAI_LESSON_ID } from '../config/ioaiCourseSystem'
 
@@ -26,4 +26,12 @@ export function claimFreeTrial() {
   const state = { claimedAt: Date.now(), lessonId: FREE_TRIAL_LESSON_ID }
   localStorage.setItem(FREE_TRIAL_STORAGE_KEY, JSON.stringify(state))
   return state
+}
+
+/** Clear free-trial flag and remove the trial lesson from local unlocks. */
+export function resetFreeTrial() {
+  localStorage.removeItem(FREE_TRIAL_STORAGE_KEY)
+  const slugs = getPurchasedSlugs().filter((slug) => slug !== FREE_TRIAL_LESSON_ID)
+  if (slugs.length) savePurchasedSlugs(slugs)
+  else clearPurchasedSlugs()
 }

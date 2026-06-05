@@ -40,10 +40,6 @@ export const ADMIN_NAV_GROUPS = [
     titleKey: 'nav.group.users',
     items: [{ path: '/admin/users', labelKey: 'nav.userManagement', icon: '👥' }],
   },
-  {
-    titleKey: 'nav.group.media',
-    items: [{ path: '/admin/video', labelKey: 'nav.video', icon: '🎬' }],
-  },
 ]
 
 export function isAdminNavActive(pathname, path, end = false) {
@@ -64,7 +60,7 @@ export const ADMIN_DASHBOARD_CARDS = [
   { labelKey: 'dashboard.cards.mallProducts', statKey: 'mallProducts', to: '/admin/mall-products', icon: '🛒', color: 'bg-orange-50 border-orange-200/60' },
   { labelKey: 'dashboard.cards.charity', statKey: 'charity', to: '/admin/charity', icon: '🎗️', color: 'bg-rose-50 border-rose-200/60' },
   { labelKey: 'dashboard.cards.forum', statKey: 'threads', to: '/admin/forum', icon: '💬', color: 'bg-green-50 border-green-200/60' },
-  { labelKey: 'dashboard.cards.videos', statKey: 'videos', to: '/admin/video', icon: '🎬', color: 'bg-indigo-50 border-indigo-200/60' },
+  { labelKey: 'dashboard.cards.videos', statKey: 'videos', to: '/admin/curriculum/ioai', icon: '🎬', color: 'bg-indigo-50 border-indigo-200/60' },
   { labelKey: 'dashboard.cards.orders', statKey: 'orders', to: '/admin/payments', icon: '💳', color: 'bg-violet-50 border-violet-200/60' },
   { labelKey: 'dashboard.cards.users', statKey: 'users', to: '/admin/users', icon: '👥', color: 'bg-slate-100 border-slate-200' },
   { labelKey: 'dashboard.cards.platform', statKey: null, to: '/admin/settings', icon: '⚙️', color: 'bg-slate-100 border-slate-200' },
@@ -83,7 +79,6 @@ export const ADMIN_DASHBOARD_QUICK_LINKS = [
   { labelKey: 'nav.mallProducts', to: '/admin/mall-products', className: 'px-4 py-2 rounded-xl bg-orange-100 text-orange-700 text-sm font-medium' },
   { labelKey: 'nav.charity', to: '/admin/charity', className: 'px-4 py-2 rounded-xl bg-rose-100 text-rose-700 text-sm font-medium' },
   { labelKey: 'nav.forum', to: '/admin/forum', className: 'px-4 py-2 rounded-xl bg-green-100 text-green-700 text-sm font-medium' },
-  { labelKey: 'nav.video', to: '/admin/video', className: 'px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 text-sm font-medium' },
   { labelKey: 'nav.payments', to: '/admin/payments', className: 'px-4 py-2 rounded-xl bg-violet-100 text-violet-700 text-sm font-medium' },
   { labelKey: 'nav.userManagement', to: '/admin/users', className: 'px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-medium' },
   { labelKey: 'nav.platform', to: '/admin/settings', className: 'px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-medium' },

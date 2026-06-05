@@ -1,10 +1,32 @@
 import { useCallback, useState } from 'react'
 
-function readDraft(key, fallback) {
+const DEFAULT_PATH_NESTED = {
+  newStage: { title: '', slug: '', emoji: '🟢' },
+  newTheme: { title: '', slug: '', category_label: '' },
+  newModule: { title: '', slug: '' },
+}
+
+function mergePathDraft(storedPath, fallbackPath) {
+  if (!storedPath || typeof storedPath !== 'object') return fallbackPath
+  return {
+    ...fallbackPath,
+    ...storedPath,
+    newStage: { ...DEFAULT_PATH_NESTED.newStage, ...fallbackPath?.newStage, ...storedPath.newStage },
+    newTheme: { ...DEFAULT_PATH_NESTED.newTheme, ...fallbackPath?.newTheme, ...storedPath.newTheme },
+    newModule: { ...DEFAULT_PATH_NESTED.newModule, ...fallbackPath?.newModule, ...storedPath.newModule },
+  }
+}
+
+function readDraft(key, fallback, { mergePathKey } = {}) {
   try {
     const raw = sessionStorage.getItem(key)
     if (!raw) return fallback
-    return { ...fallback, ...JSON.parse(raw) }
+    const parsed = JSON.parse(raw)
+    const merged = { ...fallback, ...parsed }
+    if (mergePathKey && parsed[mergePathKey]) {
+      merged[mergePathKey] = mergePathDraft(parsed[mergePathKey], fallback[mergePathKey])
+    }
+    return merged
   } catch {
     return fallback
   }
@@ -19,8 +41,8 @@ function writeDraft(key, value) {
 }
 
 /** Persist admin form state across page navigation within the same tab */
-export function useAdminFormDraft(key, initialState) {
-  const [state, setStateInternal] = useState(() => readDraft(key, initialState))
+export function useAdminFormDraft(key, initialState, options = {}) {
+  const [state, setStateInternal] = useState(() => readDraft(key, initialState, options))
 
   const setState = useCallback(
     (updater) => {

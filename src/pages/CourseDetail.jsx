@@ -56,9 +56,20 @@ export default function CourseDetail() {
     await Promise.all([reload(), progLine ? reloadTree() : Promise.resolve()])
   }, [reload, reloadTree, progLine])
 
+  const previewMode = searchParams.get('preview') === '1'
+  const fromAdmin = searchParams.get('from') === 'admin' || previewMode
+  const adminReloadToken = searchParams.get('reload')
+
   useEffect(() => {
     reloadAll()
   }, [id, reloadAll])
+
+  useEffect(() => {
+    if (!fromAdmin) return
+    reloadAll()
+    const timer = window.setTimeout(() => reloadAll(), 600)
+    return () => window.clearTimeout(timer)
+  }, [fromAdmin, id, reloadAll, adminReloadToken])
 
   const line = getProductLine(item?.line ?? 'general')
   const {
@@ -97,9 +108,6 @@ export default function CourseDetail() {
       setSearchParams(searchParams, { replace: true })
     }
   }, [searchParams, setSearchParams, isAuthenticated, refresh])
-
-  const previewMode = searchParams.get('preview') === '1'
-  const fromAdmin = searchParams.get('from') === 'admin' || previewMode
 
   const purchaseProps = {
     stripeCheckout,

@@ -85,3 +85,31 @@ export async function listEnrollmentSlugs(admin, userId) {
   if (error) return []
   return data.map((r) => r.course_slug)
 }
+
+/** Remove all course unlocks for one user (testing / account reset). */
+export async function revokeUserEnrollments(admin, userId) {
+  if (!admin || !userId) return { enrollments: 0, access: 0 }
+
+  const { count: enrollmentCount, error: countErr } = await admin
+    .from('course_enrollments')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+  if (countErr) throw new Error(countErr.message)
+
+  const { count: accessCount, error: accessCountErr } = await admin
+    .from('user_course_access')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+  if (accessCountErr) throw new Error(accessCountErr.message)
+
+  const { error: enrollErr } = await admin.from('course_enrollments').delete().eq('user_id', userId)
+  if (enrollErr) throw new Error(enrollErr.message)
+
+  const { error: accessErr } = await admin.from('user_course_access').delete().eq('user_id', userId)
+  if (accessErr) throw new Error(accessErr.message)
+
+  return {
+    enrollments: enrollmentCount ?? 0,
+    access: accessCount ?? 0,
+  }
+}

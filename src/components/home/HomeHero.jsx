@@ -57,12 +57,6 @@ export default function HomeHero() {
             <span>🧪</span>
             Try AI Exploration Lab — Free, No Sign-up
           </Link>
-          <Link
-            to="/compare"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-white/20 text-slate-300 hover:text-white hover:bg-white/10 transition text-sm font-medium min-h-[44px]"
-          >
-            Which program is right for you? →
-          </Link>
         </div>
       </div>
     </section>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
@@ -9,7 +9,6 @@ import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurr
 import {
   createProgramCourse,
   fetchCurriculumAdmin,
-  fetchVideoAssetsForLessonPicker,
   saveProgramLessonConfig,
 } from '../../lib/ioaiCurriculumAdmin'
 import { readAdminUiDraft, writeAdminUiDraft, clearAdminUiDraft } from '../../hooks/useAdminFormDraft'
@@ -28,7 +27,7 @@ export default function AdminIOAICurriculum() {
   const [editingRow, setEditingRow] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [videoAssets, setVideoAssets] = useState([])
+  const editorRef = useRef(null)
 
   const i18nRoot = `pages.${config.i18nKey}`
 
@@ -99,11 +98,19 @@ export default function AdminIOAICurriculum() {
       phLessonTitle: c.t(`${i18nRoot}.phLessonTitle`),
       phLessonSlug: c.t(`${i18nRoot}.phLessonSlug`),
       courseAdded: c.t(`${i18nRoot}.courseAdded`),
-      pickFromVideoLibrary: c.t(`${i18nRoot}.pickFromVideoLibrary`),
-      pickVideoPlaceholder: c.t(`${i18nRoot}.pickVideoPlaceholder`),
-      pickVideoHint: c.t(`${i18nRoot}.pickVideoHint`),
       draftHint: c.t(`${i18nRoot}.draftHint`),
-      unclassifiedVideos: c.t(`${i18nRoot}.unclassifiedVideos`),
+      pathSummaryTitle: c.t(`${i18nRoot}.pathSummaryTitle`),
+      pathSummaryEmpty: c.t(`${i18nRoot}.pathSummaryEmpty`),
+      uploadVideo: c.t(`${i18nRoot}.uploadVideo`),
+      chooseVideoFile: c.t(`${i18nRoot}.chooseVideoFile`),
+      replaceVideo: c.t(`${i18nRoot}.replaceVideo`),
+      uploadingVideoPct: c.t(`${i18nRoot}.uploadingVideoPct`),
+      videoUploadWorking: c.t(`${i18nRoot}.videoUploadWorking`),
+      videoUploadReady: c.t(`${i18nRoot}.videoUploadReady`),
+      videoUploadHint: c.t(`${i18nRoot}.videoUploadHint`),
+      videoAttached: c.t(`${i18nRoot}.videoAttached`),
+      noVideoAttached: c.t(`${i18nRoot}.noVideoAttached`),
+      removeVideo: c.t(`${i18nRoot}.removeVideo`),
     }),
     [c, i18nRoot]
   )
@@ -116,13 +123,25 @@ export default function AdminIOAICurriculum() {
   }, [uiKey])
 
   useEffect(() => {
-    if (!rows.length) return
+    if (!rows.length || editingRow) return
     const ui = readAdminUiDraft(uiKey)
-    if (ui?.editingLessonId) {
-      const row = rows.find((r) => r.lessonId === ui.editingLessonId)
-      if (row) setEditingRow(row)
+    if (!ui?.editingLessonId) return
+    const row = rows.find((r) => r.lessonId === ui.editingLessonId)
+    if (row) setEditingRow(row)
+  }, [rows, uiKey, editingRow])
+
+  useEffect(() => {
+    if (!editingRow?.lessonId || !rows.length) return
+    const fresh = rows.find((r) => r.lessonId === editingRow.lessonId)
+    if (!fresh) return
+    if (
+      fresh.cloudflareVideoId !== editingRow.cloudflareVideoId ||
+      fresh.lessonTitle !== editingRow.lessonTitle ||
+      fresh.knowledgePoints !== editingRow.knowledgePoints
+    ) {
+      setEditingRow(fresh)
     }
-  }, [rows, uiKey])
+  }, [rows, editingRow?.lessonId])
 
   useEffect(() => {
     writeAdminUiDraft(uiKey, {
@@ -140,13 +159,9 @@ export default function AdminIOAICurriculum() {
     setLoading(true)
     setError(null)
     try {
-      const [{ rows: next, levels: tree }, assets] = await Promise.all([
-        fetchCurriculumAdmin(productLine),
-        fetchVideoAssetsForLessonPicker().catch(() => []),
-      ])
+      const { rows: next, levels: tree } = await fetchCurriculumAdmin(productLine)
       setRows(next)
       setLevels(tree)
-      setVideoAssets(assets)
     } catch (e) {
       setError(e.message)
       setRows([])
@@ -159,6 +174,24 @@ export default function AdminIOAICurriculum() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') load()
+    }
+    window.addEventListener('focus', refreshIfVisible)
+    document.addEventListener('visibilitychange', refreshIfVisible)
+    return () => {
+      window.removeEventListener('focus', refreshIfVisible)
+      document.removeEventListener('visibilitychange', refreshIfVisible)
+    }
+  }, [load])
+
+  useEffect(() => {
+    if (editingRow && editorRef.current) {
+      editorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [editingRow?.lessonId])
 
   if (!isCurriculumLine(lineParam)) {
     return <Navigate to="/admin/curriculum/ioai" replace />
@@ -247,21 +280,24 @@ export default function AdminIOAICurriculum() {
           levels={levels}
           labels={labels}
           saving={saving}
-          videoAssets={videoAssets}
           onSave={handleAddCourse}
           onClose={() => setShowAddForm(false)}
         />
       ) : null}
 
       {editingRow ? (
-        <IOAILessonEditor
-          row={editingRow}
-          labels={labels}
-          saving={saving}
-          videoAssets={videoAssets}
-          onSave={handleSave}
-          onClose={closeEditor}
-        />
+        <div ref={editorRef} className="scroll-mt-24">
+          <IOAILessonEditor
+            key={editingRow.lessonId}
+            row={editingRow}
+            productLine={productLine}
+            levels={levels}
+            labels={labels}
+            saving={saving}
+            onSave={handleSave}
+            onClose={closeEditor}
+          />
+        </div>
       ) : null}
 
       <IOAICurriculumTable

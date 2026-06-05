@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { resolveCurriculumPathDisplay } from '../../lib/videoCurriculum'
 
 export const CURRICULUM_NEW = '__new__'
 
@@ -35,20 +36,24 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
 
   const sortedLevels = useMemo(() => sortByOrder(levels), [levels])
   const initStageRef = useRef(false)
+  const prevStageRef = useRef(stageChoice)
 
   useEffect(() => {
-    if (stageChoice) {
+    const staleNew = stageChoice === CURRICULUM_NEW && !newStage.title?.trim()
+    if (initStageRef.current && stageChoice && stageChoice !== CURRICULUM_NEW) return
+    if (initStageRef.current && stageChoice === CURRICULUM_NEW && newStage.title?.trim()) return
+
+    if (sortedLevels.length === 0) {
+      if (stageChoice !== CURRICULUM_NEW) patch({ stageChoice: CURRICULUM_NEW })
       initStageRef.current = true
       return
     }
-    if (initStageRef.current) return
-    if (sortedLevels.length === 0) {
-      patch({ stageChoice: CURRICULUM_NEW })
-    } else {
+
+    if (!stageChoice || staleNew) {
       patch({ stageChoice: sortedLevels[0].id })
     }
     initStageRef.current = true
-  }, [sortedLevels, stageChoice])
+  }, [sortedLevels, stageChoice, newStage.title])
 
   const selectedLevel = useMemo(
     () => sortedLevels.find((l) => l.id === stageChoice),
@@ -58,6 +63,9 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
   const themes = useMemo(() => sortByOrder(selectedLevel?.themes), [selectedLevel])
 
   useEffect(() => {
+    const stageChanged = prevStageRef.current !== stageChoice
+    prevStageRef.current = stageChoice
+
     if (stageChoice === CURRICULUM_NEW) {
       if (themeChoice !== CURRICULUM_NEW) patch({ themeChoice: CURRICULUM_NEW })
       return
@@ -67,8 +75,12 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
       return
     }
     if (themeChoice === CURRICULUM_NEW) return
-    if (!themes.some((t) => t.id === themeChoice)) {
+    if (!themeChoice || !themes.some((t) => t.id === themeChoice)) {
       patch({ themeChoice: themes[0].id })
+      return
+    }
+    if (stageChanged && themeChoice && themes.some((t) => t.id === themeChoice)) {
+      /* keep user's category when stage changes only if still valid — already handled above */
     }
   }, [stageChoice, themes, themeChoice])
 
@@ -89,10 +101,18 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
       return
     }
     if (moduleChoice === CURRICULUM_NEW) return
-    if (!modules.some((m) => m.id === moduleChoice)) {
+    if (!moduleChoice || !modules.some((m) => m.id === moduleChoice)) {
       patch({ moduleChoice: modules[0].id })
     }
   }, [themeChoice, modules, moduleChoice])
+
+  const pathDisplay = useMemo(
+    () => resolveCurriculumPathDisplay(sortedLevels, value),
+    [sortedLevels, value]
+  )
+
+  const summaryTitle = labels.pathSummaryTitle || 'Selected path'
+  const summaryEmpty = labels.pathSummaryEmpty || 'Choose stage, category, and module'
 
   return (
     <div className="space-y-4">
@@ -144,6 +164,28 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
             <option value={CURRICULUM_NEW}>{labels.newModule}</option>
           </select>
         </Field>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">{summaryTitle}</p>
+        {pathDisplay.stage === '—' && pathDisplay.category === '—' && pathDisplay.module === '—' ? (
+          <p className="text-slate-400 text-xs">{summaryEmpty}</p>
+        ) : (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-slate-700">
+            <span>
+              <span className="text-slate-500">{labels.colStage}:</span>{' '}
+              <strong>{pathDisplay.stage}</strong>
+            </span>
+            <span>
+              <span className="text-slate-500">{labels.colCategory}:</span>{' '}
+              <strong className="text-primary">{pathDisplay.category}</strong>
+            </span>
+            <span>
+              <span className="text-slate-500">{labels.colModule}:</span>{' '}
+              <strong>{pathDisplay.module}</strong>
+            </span>
+          </div>
+        )}
       </div>
 
       {showNewPanels && stageChoice === CURRICULUM_NEW ? (

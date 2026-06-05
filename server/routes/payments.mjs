@@ -6,6 +6,7 @@ import {
   grantCourseEntitlements,
   IOAI_FULL_TRACK_SLUG,
   listEnrollmentSlugs,
+  revokeUserEnrollments,
   userHasIOAIAccess,
 } from '../lib/courseEntitlements.mjs'
 import {
@@ -24,6 +25,10 @@ function siteOrigin(req) {
     req.headers.origin ||
     'http://localhost:5173'
   ).replace(/\/$/, '')
+}
+
+function enrollmentResetAllowed() {
+  return process.env.ALLOW_ENROLLMENT_RESET === 'true' || process.env.NODE_ENV !== 'production'
 }
 
 export function registerPaymentRoutes(app) {
@@ -63,6 +68,23 @@ export function registerPaymentRoutes(app) {
 
     const slugs = await listEnrollmentSlugs(auth.admin, auth.user.id)
     return res.json({ slugs })
+  })
+
+  app.delete('/api/me/enrollments', async (req, res) => {
+    if (!enrollmentResetAllowed()) {
+      return res.status(403).json({ error: 'Enrollment reset is disabled on this environment' })
+    }
+
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    try {
+      const removed = await revokeUserEnrollments(auth.admin, auth.user.id)
+      return res.json({ ok: true, removed, slugs: [] })
+    } catch (err) {
+      console.error('[enrollments/reset]', err)
+      return res.status(502).json({ error: err.message || 'Failed to reset enrollments' })
+    }
   })
 
   app.get('/api/me/ioai-access', async (req, res) => {

@@ -11,6 +11,7 @@ import {
   MEMBER_TIER_LABELS,
 } from '../lib/userProfile'
 import ProfileAccountForm from '../components/ProfileAccountForm'
+import CourseAccessReset from '../components/CourseAccessReset'
 
 // ─── Member tier data ──────────────────────────────────────────────
 
@@ -599,6 +600,7 @@ export default function Profile() {
                 No profile found. Try signing in again, or contact support if the problem continues.
               </p>
             )}
+            <CourseAccessReset />
           </div>
         </section>
       )}

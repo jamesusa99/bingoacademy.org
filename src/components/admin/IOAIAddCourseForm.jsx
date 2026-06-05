@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import CurriculumPathPicker, { CURRICULUM_NEW, curriculumInputClass } from './CurriculumPathPicker'
 import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
+import CurriculumVideoUpload from './CurriculumVideoUpload'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
 
 const textareaClass = `${curriculumInputClass} min-h-[72px] resize-y`
@@ -42,33 +42,37 @@ export default function IOAIAddCourseForm({
   saving,
   onSave,
   onClose,
-  videoAssets = [],
 }) {
   const draftKey = `admin-curriculum-add-${productLine}`
-  const [form, setForm] = useAdminFormDraft(draftKey, FORM_INIT)
+  const [form, setForm] = useAdminFormDraft(draftKey, FORM_INIT, { mergePathKey: 'path' })
 
   const setPath = (path) => setForm((f) => ({ ...f, path }))
   const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }))
 
-  const groupedVideoOptions = useMemo(() => {
-    const groups = new Map()
-    for (const asset of videoAssets.filter((a) => a.cloudflare_uid)) {
-      const key = asset.product_line || 'other'
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key).push(asset)
-    }
-    return groups
-  }, [videoAssets])
-
   const handleSubmit = () => {
     const { path } = form
+    const isNew = (choice) => choice === CURRICULUM_NEW
+
+    if (isNew(path.stageChoice) && !path.newStage?.title?.trim()) {
+      window.alert(labels.phStageTitle || '请填写阶段名称，或从下拉框选择已有阶段')
+      return
+    }
+    if (isNew(path.themeChoice) && !path.newTheme?.title?.trim() && !path.newTheme?.category_label?.trim()) {
+      window.alert(labels.phCategoryTitle || '请填写类别名称，或选择已有类别')
+      return
+    }
+    if (isNew(path.moduleChoice) && !path.newModule?.title?.trim()) {
+      window.alert(labels.phModuleTitle || '请填写模块名称，或选择已有模块')
+      return
+    }
+
     onSave({
-      levelId: path.stageChoice !== CURRICULUM_NEW ? path.stageChoice : null,
-      newLevel: path.stageChoice === CURRICULUM_NEW ? path.newStage : null,
-      themeId: path.themeChoice !== CURRICULUM_NEW ? path.themeChoice : null,
-      newTheme: path.themeChoice === CURRICULUM_NEW ? path.newTheme : null,
-      moduleId: path.moduleChoice !== CURRICULUM_NEW ? path.moduleChoice : null,
-      newModule: path.moduleChoice === CURRICULUM_NEW ? path.newModule : null,
+      levelId: !isNew(path.stageChoice) ? path.stageChoice : null,
+      newLevel: isNew(path.stageChoice) ? path.newStage : null,
+      themeId: !isNew(path.themeChoice) ? path.themeChoice : null,
+      newTheme: isNew(path.themeChoice) ? path.newTheme : null,
+      moduleId: !isNew(path.moduleChoice) ? path.moduleChoice : null,
+      newModule: isNew(path.moduleChoice) ? path.newModule : null,
       lessonTitle: form.lessonTitle,
       lessonSlug: form.lessonSlug.trim() || undefined,
       knowledge_points: form.knowledgePoints,
@@ -85,10 +89,6 @@ export default function IOAIAddCourseForm({
     })
   }
 
-  const handleClose = () => {
-    onClose()
-  }
-
   return (
     <div className="card p-5 sm:p-6 border-2 border-emerald-200/80 bg-emerald-50/30 space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -100,7 +100,7 @@ export default function IOAIAddCourseForm({
           <p className="text-sm text-slate-600">{labels.addCourseDesc}</p>
           <p className="text-[10px] text-slate-400 mt-1">{labels.draftHint}</p>
         </div>
-        <button type="button" onClick={handleClose} className="text-xs text-slate-500 hover:text-slate-700">
+        <button type="button" onClick={onClose} className="text-xs text-slate-500 hover:text-slate-700">
           {labels.close}
         </button>
       </div>
@@ -145,69 +145,34 @@ export default function IOAIAddCourseForm({
         </Field>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4 items-end">
-        <Field label={labels.cloudflareUid}>
-          <input
-            className={curriculumInputClass}
-            value={form.cloudflareUid}
-            onChange={(e) => setField('cloudflareUid', e.target.value)}
-            placeholder={labels.cloudflareUidPlaceholder || labels.cloudflareUid}
-          />
-        </Field>
-        {groupedVideoOptions.size > 0 ? (
-          <Field label={labels.pickFromVideoLibrary}>
-            <select
-              className={curriculumInputClass}
-              defaultValue=""
-              onChange={(e) => {
-                const asset = videoAssets.find((a) => a.id === e.target.value)
-                if (asset?.cloudflare_uid) setField('cloudflareUid', asset.cloudflare_uid)
-              }}
-            >
-              <option value="">{labels.pickVideoPlaceholder}</option>
-              {[...groupedVideoOptions.entries()].map(([line, assets]) => (
-                <optgroup key={line} label={line === 'other' ? labels.unclassifiedVideos : line.toUpperCase()}>
-                  {assets.map((asset) => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.stage_title ? `${asset.stage_title} · ${asset.category_label || ''} · ` : ''}
-                      {asset.title}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-          </Field>
-        ) : (
-          <label className="flex items-center gap-2 text-sm text-slate-600 pb-2">
-            <input
-              type="checkbox"
-              checked={form.syncCatalog}
-              onChange={(e) => setField('syncCatalog', e.target.checked)}
-              className="rounded border-slate-300"
-            />
-            {labels.syncCatalog}
-          </label>
-        )}
-      </div>
+      <CurriculumVideoUpload
+        productLine={productLine}
+        levels={levels}
+        path={form.path}
+        lessonTitle={form.lessonTitle}
+        catalogSlug={form.lessonSlug.trim() || undefined}
+        cloudflareUid={form.cloudflareUid}
+        onUidChange={(uid) => setField('cloudflareUid', uid)}
+        labels={labels}
+        disabled={saving}
+      />
 
-      {groupedVideoOptions.size > 0 ? (
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={form.syncCatalog}
-            onChange={(e) => setField('syncCatalog', e.target.checked)}
-            className="rounded border-slate-300"
-          />
-          {labels.syncCatalog}
-        </label>
-      ) : null}
+      <label className="flex items-center gap-2 text-sm text-slate-600">
+        <input
+          type="checkbox"
+          checked={form.syncCatalog}
+          onChange={(e) => setField('syncCatalog', e.target.checked)}
+          className="rounded border-slate-300"
+        />
+        {labels.syncCatalog}
+      </label>
 
       <CurriculumCatalogFields form={form} set={setField} labels={labels} />
 
       <div className="flex justify-end gap-2 pt-2">
         <button
           type="button"
-          onClick={handleClose}
+          onClick={onClose}
           className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
         >
           {labels.cancel}

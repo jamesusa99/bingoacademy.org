@@ -25,6 +25,11 @@ export function savePurchasedSlugs(slugs) {
   localStorage.setItem(COURSE_ACCESS_STORAGE_KEY, JSON.stringify([...new Set(slugs)]))
 }
 
+/** Remove all locally unlocked course slugs (browser demo unlocks + synced cache). */
+export function clearPurchasedSlugs() {
+  localStorage.removeItem(COURSE_ACCESS_STORAGE_KEY)
+}
+
 export function hasFullIOAITrack(slugs = getPurchasedSlugs()) {
   return slugs.includes(IOAI_FULL_TRACK_SLUG) || slugs.includes('ioai-track')
 }
