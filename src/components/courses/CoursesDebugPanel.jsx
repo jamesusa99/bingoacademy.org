@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { getPurchasedSlugs, IOAI_FULL_TRACK_SLUG } from '../../lib/courseAccess'
 import { getFreeTrialState } from '../../lib/freeTrial'
 import { isSupabaseConfigured } from '../../lib/supabase'
@@ -101,6 +102,12 @@ export default function CoursesDebugPanel({
         {unlockedInView != null ? (
           <Row label="Unlocked in view">{unlockedInView} / {filteredCount} show “Study Center”</Row>
         ) : null}
+        <Row label="Reset access">
+          <Link to="/profile?debug=1#settings" className="text-amber-900 underline hover:text-amber-950">
+            Profile → Account settings
+          </Link>
+          {' '}(add <code className="bg-amber-100 px-1 rounded">?debug=1</code> on production)
+        </Row>
       </div>
     </section>
   )
