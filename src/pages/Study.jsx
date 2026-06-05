@@ -3,14 +3,11 @@ import { Link, Navigate } from 'react-router-dom'
 import { PlayCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useIOAICourseContext } from '../hooks/useIOAICourseContext'
+import { usePurchasedCourses } from '../hooks/usePurchasedCourses'
 import { findCourseInList } from '../lib/catalogCourse'
-import {
-  getPurchasedSlugs,
-  hasFullIOAITrack,
-  IOAI_FULL_TRACK_SLUG,
-} from '../lib/courseAccess'
+import { hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from '../lib/courseAccess'
 import { authLink } from '../lib/authRedirect'
-import { hasClaimedFreeTrial } from '../lib/freeTrial'
+import { claimFreeTrial, hasClaimedFreeTrial, FREE_TRIAL_COURSE_HREF } from '../lib/freeTrial'
 import {
   getAllIOAILessonIds,
   getFirstIOAILessonId,
@@ -69,10 +66,16 @@ function courseProgressLabel(course, catalog, tree) {
 export default function Study() {
   const { isAuthenticated, loading } = useAuth()
   const { courses: catalog, tree, loading: catalogLoading } = useIOAICourseContext()
-  const slugs = useMemo(() => getPurchasedSlugs(), [])
-  const courses = useMemo(() => buildStudyCourses(slugs, catalog), [slugs, catalog])
+  const { purchased, refresh, stripeCheckout } = usePurchasedCourses()
+  const courses = useMemo(() => buildStudyCourses(purchased, catalog), [purchased, catalog])
   const firstLessonId = getFirstIOAILessonId(catalog, tree)
   const trialActive = hasClaimedFreeTrial()
+  const trialLessonHref = firstLessonId ? `/courses/detail/${firstLessonId}` : FREE_TRIAL_COURSE_HREF
+
+  const handleClaimTrial = () => {
+    claimFreeTrial()
+    refresh()
+  }
 
   if (loading || catalogLoading) {
     return (
@@ -139,17 +142,38 @@ export default function Study() {
             })}
           </div>
         ) : (
-          <div className="card p-6 border-primary/20 space-y-3">
-            <p className="text-slate-500 text-sm">
-              No courses yet. Claim your free IOAI trial lesson or browse the catalogue to enroll.
+          <div className="card p-6 border-primary/20 space-y-5">
+            <p className="text-slate-600 text-sm">
+              Courses appear here after you unlock or purchase them. Choose one of the options below:
             </p>
+            <ol className="text-sm text-slate-700 space-y-3 list-decimal list-inside">
+              <li>
+                <strong>Free trial</strong> — unlock your first IOAI lesson at no cost.
+              </li>
+              <li>
+                <strong>Single lesson</strong> — open a course, watch the preview, then click{' '}
+                <strong>Unlock This Lesson</strong> or <strong>Enroll Now</strong>.
+              </li>
+              <li>
+                <strong>Full IOAI track</strong> — on the{' '}
+                <Link to={`/courses/detail/${IOAI_FULL_TRACK_SLUG}`} className="text-primary hover:underline">
+                  IOAI track page
+                </Link>
+                , choose <strong>Get IOAI Full Track</strong>.
+              </li>
+            </ol>
+            {!stripeCheckout ? (
+              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Demo mode: purchases unlock instantly in your browser (no Stripe payment required).
+              </p>
+            ) : null}
             <div className="flex flex-wrap gap-3">
               {!trialActive ? (
-                <Link to="/#get-started" className="btn-primary text-sm px-4 py-2">
+                <button type="button" onClick={handleClaimTrial} className="btn-primary text-sm px-4 py-2">
                   Claim free trial
-                </Link>
+                </button>
               ) : (
-                <Link to={`/courses/detail/${firstLessonId || IOAI_FULL_TRACK_SLUG}`} className="btn-primary text-sm px-4 py-2">
+                <Link to={trialLessonHref} className="btn-primary text-sm px-4 py-2">
                   Open free trial lesson
                 </Link>
               )}
@@ -157,7 +181,13 @@ export default function Study() {
                 to="/courses?line=ioai&sub=video"
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
               >
-                Browse IOAI courses
+                Browse &amp; purchase courses
+              </Link>
+              <Link
+                to={`/courses/detail/${IOAI_FULL_TRACK_SLUG}`}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                IOAI full track
               </Link>
             </div>
           </div>
