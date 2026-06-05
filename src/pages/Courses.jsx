@@ -11,12 +11,9 @@ import { COURSES_PORTAL } from '../config/coursesPortal'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import { useProgramCurriculum } from '../hooks/useProgramCurriculum'
 import { isCurriculumLine } from '../config/programCurriculum'
-import { useAuth } from '../contexts/AuthContext'
-import { isCoursesDebugEnabled } from '../lib/coursesDebug'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import CourseListView from '../components/courses/CourseListView'
-import CoursesDebugPanel from '../components/courses/CoursesDebugPanel'
 import PageMeta from '../components/PageMeta'
 import { ProgramBadge, ModuleBadge, UseCaseTag } from '../components/courses/ProgramBadges'
 import { PAGE_SEO } from '../config/programs'
@@ -99,9 +96,7 @@ export default function Courses() {
   const subId = params.get('sub') || ''
   const line = getProductLine(lineId)
   const videoListMode = isVideoCoursesSub(line.id, subId)
-  const showDebug = isCoursesDebugEnabled(params)
-  const { user, isAuthenticated } = useAuth()
-  const { courses, loading: catalogLoading, source, error: catalogError, reload } = useCourseCatalog()
+  const { courses, loading: catalogLoading } = useCourseCatalog()
   const curriculumLine = isCurriculumLine(line.id) ? line.id : null
   const { summary: curriculumSummary } = useProgramCurriculum(videoListMode ? curriculumLine : null)
   const purchase = usePurchasedCourses()
@@ -111,21 +106,6 @@ export default function Courses() {
     if (subId) list = list.filter((c) => c.sub === subId)
     return list
   }, [courses, line.id, subId])
-
-  const debugPanel = showDebug ? (
-    <CoursesDebugPanel
-      catalogSource={catalogLoading ? 'loading' : source}
-      catalogError={catalogError}
-      coursesTotal={courses.length}
-      filteredCount={filtered.length}
-      lineId={line.id}
-      subId={subId || null}
-      purchase={purchase}
-      user={user}
-      isAuthenticated={isAuthenticated}
-      onReloadCatalog={reload}
-    />
-  ) : null
 
   const bannerSlides = PRODUCT_LINES.map((pl) => ({
     id: pl.id,
@@ -157,11 +137,6 @@ export default function Courses() {
     return (
       <div className="w-full">
         <PageMeta title={PAGE_SEO.courses.title} description={PAGE_SEO.courses.description} />
-        {showDebug ? (
-          <PageContent className="py-4 pb-0">
-            {debugPanel}
-          </PageContent>
-        ) : null}
         {catalogLoading ? (
           <div className="courses-page-dark py-16 text-center text-slate-400 text-sm">Loading courses…</div>
         ) : (
@@ -188,8 +163,6 @@ export default function Courses() {
       <PageBanner slides={bannerSlides} autoPlayMs={8000} />
 
       <PageContent className="py-6 sm:py-8">
-        {debugPanel}
-
         <div className="flex flex-wrap gap-2 mb-4">
           <Link
             to={curriculumHref}

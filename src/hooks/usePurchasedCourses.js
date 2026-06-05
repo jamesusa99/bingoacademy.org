@@ -81,7 +81,6 @@ export function usePurchasedCourses() {
   return {
     isAuthenticated,
     purchased,
-    remoteSlugs,
     hasAccess,
     hasTrack,
     unlockLesson,

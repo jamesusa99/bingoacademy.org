@@ -4,9 +4,7 @@ import { resetMyCourseAccess } from '../lib/courseAccessReset'
 import { isCoursesDebugEnabled } from '../lib/coursesDebug'
 
 const resetEnabled =
-  import.meta.env.DEV ||
-  import.meta.env.VITE_ALLOW_ENROLLMENT_RESET === 'true' ||
-  import.meta.env.VITE_COURSES_DEBUG === 'true'
+  import.meta.env.DEV || import.meta.env.VITE_ALLOW_ENROLLMENT_RESET === 'true'
 
 export default function CourseAccessReset({ onReset }) {
   const [searchParams] = useSearchParams()
