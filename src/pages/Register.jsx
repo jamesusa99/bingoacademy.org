@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { signUpWithEmail, signInWithGoogle } from '../lib/auth'
+import { signUpWithEmail, signInWithGoogle, formatAuthError } from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { safeRedirectPath, authLink, storePostLoginRedirect } from '../lib/authRedirect'
@@ -69,7 +69,7 @@ export default function Register() {
     const { error: oauthError } = await signInWithGoogle()
     setGoogleLoading(false)
     if (oauthError) {
-      setError(oauthError.message)
+      setError(formatAuthError(oauthError))
     }
   }
 

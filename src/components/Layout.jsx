@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { mainNav, authNav } from '../config/nav'
 import { programPath } from '../config/programs'
 import { useAuth } from '../contexts/AuthContext'
+import { authLink } from '../lib/authRedirect'
 import NavDropdown from './NavDropdown'
 import ChatWidget from './ChatWidget'
 
@@ -24,7 +25,8 @@ function isNavActive(loc, path) {
 
 export default function Layout({ children }) {
   const loc = useLocation()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading: authLoading, signOut } = useAuth()
+  const showGuestNav = !authLoading && !isAuthenticated
 
   const headerAuthLinks = isAuthenticated
     ? [
@@ -46,7 +48,7 @@ export default function Layout({ children }) {
     { type: 'link', path: '/community', label: 'Community' },
     { type: 'sep' },
     { type: 'link', path: '/mall', label: 'AI Mall' },
-    { type: 'link', path: '/profile', label: 'Profile' },
+    ...(isAuthenticated ? [{ type: 'link', path: '/profile', label: 'Profile' }] : []),
   ]
 
   return (
@@ -77,20 +79,50 @@ export default function Layout({ children }) {
                 )
               })}
             </nav>
-            <div className="hidden lg:flex items-center gap-1 shrink-0">
-              {headerAuthLinks.map(({ path, label }) => (
-                <Link
-                  key={path}
-                  to={path}
-                  className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${navLinkClass(isNavActive(loc, path))}`}
-                >
-                  {label}
-                </Link>
-              ))}
+            <div className="hidden lg:flex items-center gap-2 shrink-0">
+              {showGuestNav ? (
+                <>
+                  <Link
+                    to={authLink('/login', loc.pathname)}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-cyan-500 text-slate-900 hover:bg-cyan-400 transition-colors whitespace-nowrap"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to={authLink('/register', loc.pathname)}
+                    className="px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors text-slate-300 hover:text-white hover:bg-white/10 border border-white/20"
+                  >
+                    Register
+                  </Link>
+                </>
+              ) : authLoading ? (
+                <span className="text-xs text-slate-500 px-2">…</span>
+              ) : (
+                <>
+                  {headerAuthLinks.map(({ path, label }) => (
+                    <Link
+                      key={path}
+                      to={path}
+                      className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${navLinkClass(isNavActive(loc, path))}`}
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => signOut()}
+                    className="px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/10 whitespace-nowrap"
+                  >
+                    Sign out
+                  </button>
+                </>
+              )}
             </div>
           </div>
           <nav className="lg:hidden nav-scroll-mobile pb-2" aria-label="Mobile navigation">
-            {mainNav.map(({ path, label }) => (
+            {mainNav
+              .filter(({ path }) => isAuthenticated || path !== '/profile')
+              .map(({ path, label }) => (
               <Link
                 key={path + label}
                 to={path}
@@ -101,17 +133,36 @@ export default function Layout({ children }) {
                 {label}
               </Link>
             ))}
-            {headerAuthLinks.map(({ path, label }) => (
-              <Link
-                key={path}
-                to={path}
-                className={`px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 ${
-                  isNavActive(loc, path) ? 'bg-cyan-500 text-white' : 'bg-white/10 text-slate-200'
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
+            {showGuestNav ? (
+              <>
+                <Link
+                  to={authLink('/login', loc.pathname)}
+                  className="px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center font-semibold bg-cyan-500 text-slate-900"
+                >
+                  Log in
+                </Link>
+                <Link
+                  to={authLink('/register', loc.pathname)}
+                  className="px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center bg-white/10 text-slate-200"
+                >
+                  Register
+                </Link>
+              </>
+            ) : authLoading ? null : (
+              <>
+                {headerAuthLinks.map(({ path, label }) => (
+                  <Link
+                    key={path}
+                    to={path}
+                    className={`px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center ${
+                      isNavActive(loc, path) ? 'bg-cyan-500 text-white' : 'bg-white/10 text-slate-200'
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </>
+            )}
           </nav>
         </div>
       </header>

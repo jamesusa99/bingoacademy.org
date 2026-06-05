@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { completeAuthFromUrl, getSession } from '../lib/auth'
+import { completeAuthFromUrl, formatAuthError, getSession, clearRecoveryParamsFromUrl } from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { consumePostLoginRedirect, safeRedirectPath } from '../lib/authRedirect'
 import AuthAlert from '../components/auth/AuthAlert'
@@ -30,27 +30,25 @@ export default function AuthCallback() {
     const finish = async () => {
       const { data, error: sessionError } = await completeAuthFromUrl(params)
       if (cancelled) return true
-      if (sessionError) {
-        setError(sessionError.message)
-        return true
-      }
-      if (data.session) {
+
+      const session = data.session ?? (await getSession()).data.session
+      if (session) {
+        clearRecoveryParamsFromUrl()
         navigate(resolveNextPath(), { replace: true })
         return true
       }
 
-      const { data: retryData } = await getSession()
-      if (cancelled) return true
-      if (retryData.session) {
-        navigate(resolveNextPath(), { replace: true })
+      if (sessionError) {
+        setError(formatAuthError(sessionError))
         return true
       }
+
       return false
     }
 
     ;(async () => {
       if (await finish()) return
-      await new Promise((r) => setTimeout(r, 600))
+      await new Promise((r) => setTimeout(r, 800))
       if (cancelled) return
       if (await finish()) return
       setError('Sign-in could not be completed. Please try again.')

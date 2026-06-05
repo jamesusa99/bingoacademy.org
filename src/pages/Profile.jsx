@@ -1,5 +1,16 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, Navigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { authLink } from '../lib/authRedirect'
+import {
+  fetchMyProfile,
+  profileDisplayName,
+  profileInitials,
+  maskPhone,
+  formatAccountId,
+  MEMBER_TIER_LABELS,
+} from '../lib/userProfile'
+import ProfileAccountForm from '../components/ProfileAccountForm'
 
 // ─── Member tier data ──────────────────────────────────────────────
 
@@ -196,14 +207,61 @@ function EarnBySharing() {
 // ─── Main Profile ──────────────────────────────────────────────────
 
 export default function Profile() {
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
   const [view, setView] = useState('home')
   const [showEarnBySharing, setShowEarnBySharing] = useState(false)
   const [shareModal, setShareModal] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [profileError, setProfileError] = useState('')
 
-  const memberTier = 'annual'
-  const memberExpiryDays = 320
-  const autoRenew = true
-  const memberLabel = { free: 'Free Member', monthly: 'Monthly Member', quarterly: 'Quarterly Member', annual: 'Annual Member' }[memberTier]
+  useEffect(() => {
+    if (!user?.id) {
+      setProfile(null)
+      setProfileLoading(false)
+      return
+    }
+
+    let mounted = true
+    setProfileLoading(true)
+    setProfileError('')
+
+    fetchMyProfile(user.id).then(({ data, error }) => {
+      if (!mounted) return
+      if (error) setProfileError(error.message)
+      else setProfile(data)
+      setProfileLoading(false)
+    })
+
+    return () => {
+      mounted = false
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (profileLoading || window.location.hash !== '#settings') return
+    document.getElementById('settings')?.scrollIntoView({ behavior: 'smooth' })
+  }, [profileLoading])
+
+  if (authLoading) {
+    return (
+      <div className="page-content w-full py-16 text-center text-slate-500 text-sm">Loading…</div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to={authLink('/login', '/profile')} replace />
+  }
+
+  const memberTier = profile?.member_tier || 'free'
+  const memberExpiryDays = null
+  const autoRenew = false
+  const memberLabel = MEMBER_TIER_LABELS[memberTier] || MEMBER_TIER_LABELS.free
+  const displayName = profileDisplayName(profile, user)
+  const displayPhone = maskPhone(profile?.phone)
+  const accountId = formatAccountId(user?.id)
+  const avatarUrl = profile?.avatar_url?.trim()
+  const userEmail = profile?.email || user?.email || ''
 
   const coreLinks = [
     { to: '/profile/study', icon: '📚', label: 'My Courses', share: false },
@@ -240,15 +298,29 @@ export default function Profile() {
       {/* ── Top bar: user + member ─────────────────────────────────── */}
       <section className="mb-8">
         <div className="card p-6 flex flex-wrap items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl font-semibold shrink-0">A</div>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="w-16 h-16 rounded-full object-cover shrink-0" />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl font-semibold shrink-0">
+              {profileInitials(profile, user)}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-bingo-dark">Nickname · 138****8000</div>
-            <div className="text-sm text-slate-500">Student ID: BINGO-2024-08412 · <Link to="/profile#settings" className="text-primary hover:underline">Security</Link></div>
+            <div className="font-semibold text-bingo-dark">
+              {profileLoading ? 'Loading…' : displayName}
+              {displayPhone ? <span className="text-slate-500 font-normal"> · {displayPhone}</span> : null}
+            </div>
+            <div className="text-sm text-slate-500">
+              Account ID: {accountId} · <Link to="/profile#settings" className="text-primary hover:underline">Account settings</Link>
+            </div>
+            {profileError ? (
+              <p className="text-xs text-red-600 mt-1">{profileError}</p>
+            ) : null}
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${memberTier === 'annual' ? 'bg-amber-100 text-amber-700' : memberTier === 'free' ? 'bg-slate-100 text-slate-600' : 'bg-sky-100 text-sky-700'}`}>
                 {memberLabel}
               </span>
-              {memberTier !== 'free' && (
+              {memberTier !== 'free' && memberExpiryDays != null && (
                 <>
                   <span className="text-xs text-slate-500">{memberExpiryDays} days left</span>
                   {autoRenew && <span className="text-xs text-green-600">Auto-renew on · <button type="button" onClick={() => setView('member')} className="hover:underline">Manage</button></span>}
@@ -258,7 +330,7 @@ export default function Profile() {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap shrink-0">
-            <Link to="/login" className="rounded-lg border border-slate-300 text-slate-700 px-4 py-2 text-sm hover:bg-slate-50">Edit profile</Link>
+            <a href="#settings" className="rounded-lg border border-slate-300 text-slate-700 px-4 py-2 text-sm hover:bg-slate-50">Edit profile</a>
             {memberTier !== 'free' ? (
               <button type="button" onClick={() => setView('member')} className="btn-primary px-4 py-2 text-sm">Member benefits →</button>
             ) : (
@@ -436,6 +508,29 @@ export default function Profile() {
               <button type="button" className="px-4 py-2 rounded-xl border border-slate-200 text-sm hover:bg-slate-50">Invoice / receipt</button>
             </div>
             <p className="text-xs text-slate-500 mt-3">Reminder 3 days before auto-renewal. You can turn off auto-renew at any time; current period is unaffected.</p>
+          </div>
+        </section>
+      )}
+
+      {/* ── Account settings ──────────────────────────────────────── */}
+      {view === 'home' && (
+        <section id="settings" className="mb-8 scroll-mt-24">
+          <h2 className="section-title mb-4">Account settings</h2>
+          <div className="card p-6">
+            {profileLoading ? (
+              <p className="text-sm text-slate-500">Loading account info…</p>
+            ) : profile ? (
+              <ProfileAccountForm
+                userId={user.id}
+                profile={profile}
+                userEmail={userEmail}
+                onSaved={setProfile}
+              />
+            ) : (
+              <p className="text-sm text-slate-600">
+                No profile found. Try signing in again, or contact support if the problem continues.
+              </p>
+            )}
           </div>
         </section>
       )}

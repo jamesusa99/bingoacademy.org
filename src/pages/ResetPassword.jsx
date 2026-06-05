@@ -1,25 +1,109 @@
-import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { updatePassword } from '../lib/auth'
+import { useEffect, useState } from 'react'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  establishRecoverySession,
+  hasRecoveryParams,
+  clearRecoveryParamsFromUrl,
+  updatePassword,
+  formatAuthError,
+} from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import AuthAlert from '../components/auth/AuthAlert'
 
+function pkceRecoveryHint(message) {
+  if (!message || !message.toLowerCase().includes('pkce')) return null
+  return (
+    <>
+      <p className="mt-2">{message}</p>
+      <ul className="mt-3 list-disc pl-5 space-y-1 text-sm">
+        <li>
+          Open the link in the <strong>same browser</strong> where you requested the reset (copy the link from
+          your email and paste it into that browser&apos;s address bar).
+        </li>
+        <li>
+          Avoid in-app email browsers (Gmail/Outlook preview) — they do not share login storage with Chrome or
+          Safari.
+        </li>
+        <li>
+          Request a new reset link and click it immediately in that same browser.
+        </li>
+      </ul>
+    </>
+  )
+}
+
 export default function ResetPassword() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { isAuthenticated, loading: authLoading } = useAuth()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [recoveryLoading, setRecoveryLoading] = useState(() => hasRecoveryParams(searchParams))
+  const [recoveryError, setRecoveryError] = useState('')
+  const [recoverySession, setRecoverySession] = useState(null)
 
-  if (authLoading) {
+  useEffect(() => {
+    if (!hasRecoveryParams(searchParams)) {
+      setRecoveryLoading(false)
+      return
+    }
+
+    let cancelled = false
+
+    ;(async () => {
+      const { data, error: recoveryErr } = await establishRecoverySession(searchParams)
+      if (cancelled) return
+
+      if (data?.session) {
+        setRecoverySession(data.session)
+        clearRecoveryParamsFromUrl()
+        setRecoveryError('')
+      } else if (recoveryErr) {
+        setRecoveryError(formatAuthError(recoveryErr))
+      }
+
+      setRecoveryLoading(false)
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [searchParams])
+
+  const canSetPassword = isAuthenticated || Boolean(recoverySession)
+
+  if (authLoading || recoveryLoading) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 text-center text-slate-500 text-sm">Loading…</div>
+      <div className="max-w-md mx-auto px-4 py-16 text-center text-slate-500 text-sm">
+        <div className="inline-block w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4" />
+        <p>Verifying reset link…</p>
+      </div>
     )
   }
 
-  if (!isAuthenticated) {
+  if (!canSetPassword) {
+    if (recoveryError) {
+      return (
+        <div className="max-w-md mx-auto px-4 py-12">
+          <h1 className="text-2xl font-bold text-bingo-dark mb-2">Reset link expired</h1>
+          <AuthAlert>
+            {pkceRecoveryHint(recoveryError) || recoveryError}
+          </AuthAlert>
+          <div className="mt-6 flex flex-col gap-3 text-sm">
+            <Link to="/forgot-password" className="btn-primary text-center py-2.5">
+              Request a new reset link
+            </Link>
+            <Link to="/login" className="text-primary text-center font-medium hover:underline">
+              Back to login
+            </Link>
+          </div>
+        </div>
+      )
+    }
+
     return <Navigate to="/login?redirect=%2Freset-password" replace />
   }
 

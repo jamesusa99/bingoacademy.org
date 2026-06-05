@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogIn, UserPlus, GraduationCap, Gift } from 'lucide-react'
+import { LogIn, UserPlus, GraduationCap, Gift, User } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { HOME_USER_ENTRY } from '../../config/homeUserEntry'
 import { authLink } from '../../lib/authRedirect'
@@ -14,10 +14,12 @@ const STUDY_PATH = HOME_USER_ENTRY.studyRedirect
 
 export default function HomeUserEntry() {
   const navigate = useNavigate()
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, user } = useAuth()
   const [trialClaimed, setTrialClaimed] = useState(hasClaimedFreeTrial())
   const [claiming, setClaiming] = useState(false)
   const [toast, setToast] = useState('')
+
+  const showGuest = !loading && !isAuthenticated
 
   const handleFreeTrial = () => {
     setClaiming(true)
@@ -54,7 +56,9 @@ export default function HomeUserEntry() {
             {HOME_USER_ENTRY.eyebrow}
           </p>
           <h2 className="text-lg sm:text-xl font-bold text-white">{HOME_USER_ENTRY.title}</h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-lg mx-auto">{HOME_USER_ENTRY.subtitle}</p>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-lg mx-auto">
+            {showGuest ? HOME_USER_ENTRY.guestSubtitle : HOME_USER_ENTRY.subtitle}
+          </p>
         </div>
 
         {toast ? (
@@ -63,53 +67,103 @@ export default function HomeUserEntry() {
           </p>
         ) : null}
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <EntryButton
-            as={Link}
-            to={authLink('/register', STUDY_PATH)}
-            icon={UserPlus}
-            label={HOME_USER_ENTRY.register.label}
-            desc={HOME_USER_ENTRY.register.desc}
-            variant="primary"
-          />
-          <EntryButton
-            as={Link}
-            to={authLink('/login', STUDY_PATH)}
-            icon={LogIn}
-            label={HOME_USER_ENTRY.login.label}
-            desc={HOME_USER_ENTRY.login.desc}
-            variant="secondary"
-          />
-          <EntryButton
-            as="button"
-            type="button"
-            onClick={handleFreeTrial}
-            disabled={claiming}
-            icon={Gift}
-            label={freeTrialLabel}
-            desc={freeTrialDesc}
-            variant="accent"
-            highlight={!trialClaimed}
-          />
-          <EntryButton
-            as="button"
-            type="button"
-            onClick={handleStudyCenter}
-            disabled={loading}
-            icon={GraduationCap}
-            label={HOME_USER_ENTRY.studyCenter.label}
-            desc={
-              isAuthenticated
-                ? HOME_USER_ENTRY.studyCenter.desc
-                : HOME_USER_ENTRY.studyCenter.loginRequired
-            }
-            variant="secondary"
-          />
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+            <EntryButton
+              as={Link}
+              to={authLink('/login', STUDY_PATH)}
+              icon={LogIn}
+              label={HOME_USER_ENTRY.login.label}
+              desc={HOME_USER_ENTRY.login.desc}
+              variant="primary"
+            />
+            <EntryButton
+              as={Link}
+              to={authLink('/register', STUDY_PATH)}
+              icon={UserPlus}
+              label={HOME_USER_ENTRY.register.label}
+              desc={HOME_USER_ENTRY.register.desc}
+              variant="secondary"
+            />
+          </div>
+        ) : showGuest ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <EntryButton
+              as={Link}
+              to={authLink('/login', STUDY_PATH)}
+              icon={LogIn}
+              label={HOME_USER_ENTRY.login.label}
+              desc={HOME_USER_ENTRY.login.desc}
+              variant="primary"
+            />
+            <EntryButton
+              as={Link}
+              to={authLink('/register', STUDY_PATH)}
+              icon={UserPlus}
+              label={HOME_USER_ENTRY.register.label}
+              desc={HOME_USER_ENTRY.register.desc}
+              variant="secondary"
+            />
+            <EntryButton
+              as="button"
+              type="button"
+              onClick={handleFreeTrial}
+              disabled={claiming}
+              icon={Gift}
+              label={freeTrialLabel}
+              desc={freeTrialDesc}
+              variant="accent"
+              highlight={!trialClaimed}
+            />
+            <EntryButton
+              as="button"
+              type="button"
+              onClick={handleStudyCenter}
+              icon={GraduationCap}
+              label={HOME_USER_ENTRY.studyCenter.label}
+              desc={HOME_USER_ENTRY.studyCenter.loginRequired}
+              variant="secondary"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
+            <EntryButton
+              as={Link}
+              to={STUDY_PATH}
+              icon={GraduationCap}
+              label={HOME_USER_ENTRY.studyCenter.label}
+              desc={HOME_USER_ENTRY.studyCenter.desc}
+              variant="primary"
+            />
+            <EntryButton
+              as={Link}
+              to="/profile"
+              icon={User}
+              label={HOME_USER_ENTRY.profile.label}
+              desc={HOME_USER_ENTRY.profile.desc}
+              variant="secondary"
+            />
+            <EntryButton
+              as="button"
+              type="button"
+              onClick={handleFreeTrial}
+              disabled={claiming}
+              icon={Gift}
+              label={freeTrialLabel}
+              desc={freeTrialDesc}
+              variant="accent"
+              highlight={!trialClaimed}
+            />
+          </div>
+        )}
 
-        {isAuthenticated ? (
+        {showGuest ? (
+          <p className="text-center text-[11px] text-slate-400 mt-4">
+            {HOME_USER_ENTRY.guestHint}
+          </p>
+        ) : isAuthenticated ? (
           <p className="text-center text-[11px] text-emerald-300/90 mt-4">
-            Signed in —{' '}
+            {user?.email ? `Signed in as ${user.email} — ` : 'Signed in — '}
             <Link to={STUDY_PATH} className="underline hover:text-emerald-200">
               Open Study Center
             </Link>

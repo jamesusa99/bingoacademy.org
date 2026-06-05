@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { dualAuthStorage } from './authStorage'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -87,10 +88,12 @@ const stubClient = {
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
-        flowType: 'pkce',
+        // Implicit avoids PKCE verifier storage issues on email links / OAuth return URLs.
+        flowType: 'implicit',
         detectSessionInUrl: true,
         persistSession: true,
         autoRefreshToken: true,
+        storage: dualAuthStorage,
       },
     })
   : stubClient

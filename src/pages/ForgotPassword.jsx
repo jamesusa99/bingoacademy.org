@@ -47,6 +47,10 @@ export default function ForgotPassword() {
           <AuthAlert variant="success">
             If an account exists for that email, a reset link has been sent. Check your inbox and spam folder.
           </AuthAlert>
+          <p className="mt-4 text-sm text-slate-600">
+            Open the link in the <strong>same browser</strong> where you submitted this form. If your email app
+            opens its own browser, copy the link and paste it into Chrome, Safari, or Firefox instead.
+          </p>
           <Link to="/login" className="mt-4 inline-block text-primary text-sm font-medium hover:underline">
             Back to login
           </Link>
