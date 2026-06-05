@@ -8,6 +8,8 @@ export const COURSES_PORTAL = {
   bannerEyebrow: 'AI Course Center',
   browseCourses: 'Browse courses',
   assessmentChip: 'Assessment · Find your path',
+  videoCurriculumChip: 'Video curriculum · watch lessons',
+  videoCoursesChip: 'AI video course catalog',
   labChip: 'Labs & kits',
   explorationChip: 'AI Exploration · free games',
   ioaiFeaturedLabel: 'IOAI Featured',

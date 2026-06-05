@@ -1,5 +1,7 @@
 /** Client-side course access (demo until Stripe + Supabase enrollments ship) */
 
+import { VIDEO_COURSE_SUB_BY_LINE } from '../config/courseListFilters'
+
 export const COURSE_ACCESS_STORAGE_KEY = 'bingo-course-access'
 export const IOAI_FULL_TRACK_SLUG = 'ioai-competition-system'
 export const DEFAULT_PREVIEW_SECONDS = 90
@@ -49,7 +51,10 @@ export function purchaseLesson(courseId) {
 }
 
 export function isVideoCourse(course) {
-  return course?.deliveryType === 'video' || course?.sub === 'video'
+  if (!course) return false
+  if (course.deliveryType === 'video') return true
+  const videoSub = VIDEO_COURSE_SUB_BY_LINE[course.line]
+  return Boolean(videoSub && course.sub === videoSub)
 }
 
 export function lessonPriceLabel(course) {

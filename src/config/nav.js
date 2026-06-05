@@ -16,6 +16,7 @@ export const mainNavGroups = [
   [
     { type: 'programs-dropdown', label: 'Programs' },
     { path: '/courses', label: 'Courses' },
+    { path: '/curriculum', label: 'Video Lessons' },
     { path: '/labs', label: 'Labs' },
     { path: '/exploration', label: 'AI Exploration' },
   ],
@@ -41,6 +42,7 @@ export const mainNav = [
   { path: '/', label: 'Home' },
   ...PROGRAMS.map((p) => ({ path: programPath(p.slug), label: p.icon + ' ' + p.title.split(' ')[0] })),
   { path: '/courses', label: 'Courses' },
+  { path: '/curriculum', label: 'Video Lessons' },
   { path: '/labs', label: 'Labs' },
   { path: '/exploration', label: 'Explore' },
   { path: '/compare', label: 'Compare' },

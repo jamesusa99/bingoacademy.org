@@ -118,6 +118,23 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
           stats={heroStats}
         />
 
+        <div className="flex flex-wrap gap-3 mb-6">
+          <Link
+            to={`/curriculum?line=${line.id}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition"
+          >
+            🎬 {COURSES_PORTAL.videoCurriculumChip}
+          </Link>
+          {purchase?.isAuthenticated ? (
+            <Link
+              to="/profile/study"
+              className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/20 transition"
+            >
+              📚 {COURSES_PORTAL.continueLearning}
+            </Link>
+          ) : null}
+        </div>
+
         <FilterBar filters={filters} onFiltersChange={setFilters} />
 
         <p className="text-sm text-slate-400 mt-6 mb-4">

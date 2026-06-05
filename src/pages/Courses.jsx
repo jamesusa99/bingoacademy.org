@@ -6,7 +6,7 @@ import {
   subcategoryLabel,
   isCourseComingSoon,
 } from '../config/products'
-import { isVideoCoursesSub } from '../config/courseListFilters'
+import { isVideoCoursesSub, VIDEO_COURSE_SUB_BY_LINE } from '../config/courseListFilters'
 import { COURSES_PORTAL } from '../config/coursesPortal'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import { useProgramCurriculum } from '../hooks/useProgramCurriculum'
@@ -126,6 +126,9 @@ export default function Courses() {
     return counts
   }, [courses, line.id, line.subcategories])
 
+  const videoSubId = VIDEO_COURSE_SUB_BY_LINE[line.id]
+  const curriculumHref = `/curriculum?line=${line.id}`
+
   if (subId && isProductLabSub(lineId, subId)) {
     return <Navigate to={labsPath(lineId, subId)} replace />
   }
@@ -161,6 +164,20 @@ export default function Courses() {
 
       <PageContent className="py-6 sm:py-8">
         <div className="flex flex-wrap gap-2 mb-4">
+          <Link
+            to={curriculumHref}
+            className="text-xs font-semibold px-3 py-2 rounded-full bg-cyan-100 text-cyan-900 hover:bg-cyan-200 transition"
+          >
+            🎬 {COURSES_PORTAL.videoCurriculumChip}
+          </Link>
+          {videoSubId ? (
+            <Link
+              to={`/courses?line=${line.id}&sub=${videoSubId}`}
+              className="text-xs font-semibold px-3 py-2 rounded-full bg-indigo-100 text-indigo-900 hover:bg-indigo-200 transition"
+            >
+              📺 {COURSES_PORTAL.videoCoursesChip}
+            </Link>
+          ) : null}
           <Link
             to="/assessment"
             className="text-xs font-semibold px-3 py-2 rounded-full bg-violet-100 text-violet-800 hover:bg-violet-200 transition"
@@ -268,23 +285,32 @@ export default function Courses() {
                   <span className="text-[10px] text-primary font-medium mt-2 inline-block">View in Labs →</span>
                 </Link>
               ) : (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setParams({ line: line.id, sub: s.id })}
-                  className="card p-4 text-left hover:border-primary/40 hover:shadow-sm transition"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-lg">{s.icon}</span>
-                    {subCounts[s.id] > 0 ? (
-                      <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                        {subCounts[s.id]}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="font-semibold text-bingo-dark text-sm mt-1">{s.name}</p>
-                  <p className="text-xs text-slate-500">{s.desc}</p>
-                </button>
+                <div key={s.id} className="card p-4 text-left hover:border-primary/40 hover:shadow-sm transition">
+                  <button
+                    type="button"
+                    onClick={() => setParams({ line: line.id, sub: s.id })}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-lg">{s.icon}</span>
+                      {subCounts[s.id] > 0 ? (
+                        <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          {subCounts[s.id]}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="font-semibold text-bingo-dark text-sm mt-1">{s.name}</p>
+                    <p className="text-xs text-slate-500">{s.desc}</p>
+                  </button>
+                  {VIDEO_COURSE_SUB_BY_LINE[line.id] === s.id ? (
+                    <Link
+                      to={`/curriculum?line=${line.id}`}
+                      className="text-[10px] text-primary font-medium mt-2 inline-block hover:underline"
+                    >
+                      Open curriculum explorer →
+                    </Link>
+                  ) : null}
+                </div>
               )
             )}
           </div>

@@ -15,6 +15,7 @@ function navLinkClass(active) {
 function isNavActive(loc, path) {
   if (path === '/profile') return loc.pathname.startsWith('/profile')
   if (path === '/profile/study') return loc.pathname.startsWith('/profile/study')
+  if (path === '/curriculum') return loc.pathname === '/curriculum'
   if (path === '/labs') return loc.pathname === '/labs' || loc.pathname === '/lab'
   if (path === '/exploration') {
     return loc.pathname === '/exploration' || loc.pathname.startsWith('/exploration/')
@@ -39,6 +40,7 @@ export default function Layout({ children }) {
     { type: 'link', path: '/', label: 'Home' },
     { type: 'programs', label: 'Programs' },
     { type: 'link', path: '/courses', label: 'Courses' },
+    { type: 'link', path: '/curriculum', label: 'Video Lessons' },
     { type: 'link', path: '/labs', label: 'Labs' },
     { type: 'link', path: '/exploration', label: 'AI Exploration' },
     { type: 'sep' },
