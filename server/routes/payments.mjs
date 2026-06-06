@@ -4,7 +4,7 @@ import { getStripeClient, isStripeConfigured } from '../lib/stripeClient.mjs'
 import {
   CHECKOUT_PRICING,
   grantCourseEntitlements,
-  IOAI_FULL_TRACK_SLUG,
+  IOAI_FULL_BUNDLE_SLUG,
   listEnrollmentSlugs,
   revokeUserEnrollments,
   userHasIOAIAccess,
@@ -169,7 +169,7 @@ export function registerPaymentRoutes(app) {
   /** IOAI Masterclass checkout — alias for Stripe from curriculum paywall */
   app.post('/api/checkout', async (req, res) => {
     req.body = {
-      courseSlug: IOAI_FULL_TRACK_SLUG,
+      courseSlug: IOAI_FULL_BUNDLE_SLUG,
       purchaseType: 'ioai_track',
       returnPath: '/curriculum',
       ...(req.body || {}),
@@ -182,7 +182,7 @@ export function registerPaymentRoutes(app) {
       return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
     }
 
-    const courseSlug = IOAI_FULL_TRACK_SLUG
+    const courseSlug = IOAI_FULL_BUNDLE_SLUG
     const purchaseType = 'ioai_track'
     const admin = getSupabaseAdmin()
     const course = admin ? await getCatalogCourseBySlug(admin, courseSlug) : null

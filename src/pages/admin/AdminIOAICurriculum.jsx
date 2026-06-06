@@ -2,14 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
-import IOAICurriculumTable, { IOAILessonEditor } from '../../components/admin/IOAICurriculumTable'
+import IOAICurriculumTable, { IOAILessonEditor, IOAIModuleEditor } from '../../components/admin/IOAICurriculumTable'
 import IOAIAddCourseForm from '../../components/admin/IOAIAddCourseForm'
 import { ADMIN_LABS_MATERIALS_PATH } from '../../config/adminNav'
 import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import {
   createProgramCourse,
+  deleteProgramLesson,
   fetchCurriculumAdmin,
   saveProgramLessonConfig,
+  saveProgramModuleConfig,
 } from '../../lib/ioaiCurriculumAdmin'
 import { readAdminUiDraft, writeAdminUiDraft, clearAdminUiDraft } from '../../hooks/useAdminFormDraft'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -20,13 +22,16 @@ export default function AdminIOAICurriculum() {
   const config = getProgramCurriculum(productLine)
   const c = useAdminCrud()
   const [rows, setRows] = useState([])
+  const [moduleGroups, setModuleGroups] = useState([])
   const [levels, setLevels] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [editingRow, setEditingRow] = useState(null)
+  const [editingModule, setEditingModule] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
   const editorRef = useRef(null)
 
   const i18nRoot = `pages.${config.i18nKey}`
@@ -118,6 +123,30 @@ export default function AdminIOAICurriculum() {
       videoPreviewRefresh: c.t(`${i18nRoot}.videoPreviewRefresh`),
       videoFileMeta: c.t(`${i18nRoot}.videoFileMeta`),
       videoDurationTooLong: c.t(`${i18nRoot}.videoDurationTooLong`),
+      deleteLesson: c.t(`${i18nRoot}.deleteLesson`),
+      confirmDeleteLesson: (title) => c.t(`${i18nRoot}.confirmDeleteLesson`, { title }),
+      lessonDeleted: c.t(`${i18nRoot}.lessonDeleted`),
+      deleting: c.t(`${i18nRoot}.deleting`),
+      editModule: c.t(`${i18nRoot}.editModule`),
+      saveModule: c.t(`${i18nRoot}.saveModule`),
+      moduleSaved: c.t(`${i18nRoot}.moduleSaved`),
+      colModulePrice: c.t(`${i18nRoot}.colModulePrice`),
+      modulePriceHint: c.t(`${i18nRoot}.modulePriceHint`),
+      moduleCatalogSlug: c.t(`${i18nRoot}.moduleCatalogSlug`),
+      phModuleCatalogSlug: c.t(`${i18nRoot}.phModuleCatalogSlug`),
+      moduleSummaryLabel: c.t(`${i18nRoot}.moduleSummaryLabel`),
+      phModuleSummary: c.t(`${i18nRoot}.phModuleSummary`),
+      moduleIntro: c.t(`${i18nRoot}.moduleIntro`),
+      phModuleIntro: c.t(`${i18nRoot}.phModuleIntro`),
+      moduleContainsLessons: c.t(`${i18nRoot}.moduleContainsLessons`),
+      moduleLessonCount: (n) => c.t(`${i18nRoot}.moduleLessonCount`, { count: n }),
+      moduleLessonsTitle: (n) => c.t(`${i18nRoot}.moduleLessonsTitle`, { count: n }),
+      moduleLessonsHint: c.t(`${i18nRoot}.moduleLessonsHint`),
+      lessonIncludedInModule: c.t(`${i18nRoot}.lessonIncludedInModule`),
+      lessonCatalogPriceHint: c.t(`${i18nRoot}.lessonCatalogPriceHint`),
+      addLessonToModule: c.t(`${i18nRoot}.addLessonToModule`),
+      previewModule: c.t(`${i18nRoot}.previewModule`),
+      moduleSummary: (modules, lessons) => c.t(`${i18nRoot}.moduleSummaryStats`, { modules, lessons }),
     }),
     [c, i18nRoot]
   )
@@ -162,16 +191,22 @@ export default function AdminIOAICurriculum() {
     setEditingRow(null)
   }
 
+  const closeModuleEditor = () => {
+    setEditingModule(null)
+  }
+
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const { rows: next, levels: tree } = await fetchCurriculumAdmin(productLine)
+      const { rows: next, moduleGroups: groups, levels: tree } = await fetchCurriculumAdmin(productLine)
       setRows(next)
+      setModuleGroups(groups)
       setLevels(tree)
     } catch (e) {
       setError(e.message)
       setRows([])
+      setModuleGroups([])
       setLevels([])
     } finally {
       setLoading(false)
@@ -239,6 +274,81 @@ export default function AdminIOAICurriculum() {
     }
   }
 
+  const handleDelete = async (row) => {
+    const title = row.lessonTitle || row.lessonSlug || row.lessonId
+    if (!confirm(labels.confirmDeleteLesson(title))) return
+    setDeletingId(row.lessonId)
+    setError(null)
+    try {
+      await deleteProgramLesson(productLine, {
+        lessonId: row.lessonId,
+        catalogSlug: row.catalogSlug || row.lessonSlug,
+      })
+      setSuccess(labels.lessonDeleted)
+      if (editingRow?.lessonId === row.lessonId) {
+        sessionStorage.removeItem(`admin-curriculum-edit-${row.lessonId}`)
+        closeEditor()
+      }
+      clearAdminUiDraft(uiKey)
+      await load()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handleSaveModule = async (form) => {
+    if (!editingModule) return
+    setSaving(true)
+    setError(null)
+    try {
+      await saveProgramModuleConfig(productLine, editingModule.moduleDbId, form, {
+        stage: editingModule.stage,
+        category: editingModule.category,
+        categorySlug: editingModule.categorySlug,
+        levelSlug: editingModule.levelSlug,
+        moduleSlug: editingModule.moduleSlug,
+        moduleTitle: editingModule.moduleTitle,
+        sortOrder: editingModule.sortOrder,
+        lessonCount: editingModule.lessons?.length || 0,
+        lessons: editingModule.lessons,
+      })
+      setSuccess(c.t(`${i18nRoot}.moduleSaved`))
+      closeModuleEditor()
+      sessionStorage.removeItem(`admin-curriculum-module-${editingModule.moduleDbId}`)
+      clearAdminUiDraft(uiKey)
+      await load()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleAddLessonToModule = (group) => {
+    writeAdminUiDraft(`admin-curriculum-add-${productLine}`, {
+      path: {
+        stageChoice: group.levelDbId,
+        themeChoice: group.themeDbId,
+        moduleChoice: group.moduleDbId,
+        newStage: { title: '', slug: '', emoji: '🟢' },
+        newTheme: { title: '', slug: '', category_label: '' },
+        newModule: { title: '', slug: '' },
+      },
+      lessonTitle: '',
+      lessonSlug: '',
+      knowledgePoints: '',
+      contentGoals: '',
+      cloudflareUid: '',
+      syncCatalog: true,
+    })
+    setShowAddForm(true)
+    setEditingRow(null)
+    setEditingModule(null)
+    setSuccess(null)
+  }
+
   return (
     <div className="space-y-6">
       <AdminPageHeader titleKey={`${i18nRoot}.title`} descriptionKey={`${i18nRoot}.desc`} />
@@ -252,12 +362,13 @@ export default function AdminIOAICurriculum() {
             {c.t(`${i18nRoot}.viewFrontend`)} ↗
           </Link>
         </div>
-        {!showAddForm && !editingRow ? (
+        {!showAddForm && !editingRow && !editingModule ? (
           <button
             type="button"
             onClick={() => {
               setShowAddForm(true)
               setEditingRow(null)
+              setEditingModule(null)
               setSuccess(null)
             }}
             className="btn-primary text-sm px-4 py-2 min-h-[40px]"
@@ -292,6 +403,20 @@ export default function AdminIOAICurriculum() {
         />
       ) : null}
 
+      {editingModule ? (
+        <div ref={editorRef} className="scroll-mt-24">
+          <IOAIModuleEditor
+            key={editingModule.moduleDbId}
+            group={editingModule}
+            productLine={productLine}
+            labels={labels}
+            saving={saving}
+            onSave={handleSaveModule}
+            onClose={closeModuleEditor}
+          />
+        </div>
+      ) : null}
+
       {editingRow ? (
         <div ref={editorRef} className="scroll-mt-24">
           <IOAILessonEditor
@@ -301,22 +426,34 @@ export default function AdminIOAICurriculum() {
             levels={levels}
             labels={labels}
             saving={saving}
+            deleting={deletingId === editingRow.lessonId}
             onSave={handleSave}
+            onDelete={() => handleDelete(editingRow)}
             onClose={closeEditor}
           />
         </div>
       ) : null}
 
       <IOAICurriculumTable
-        rows={rows}
+        moduleGroups={moduleGroups}
         loading={loading}
         labels={labels}
+        deletingId={deletingId}
+        onEditModule={(group) => {
+          setShowAddForm(false)
+          setEditingRow(null)
+          setEditingModule(group)
+        }}
         onEditLesson={(row) => {
           setShowAddForm(false)
+          setEditingModule(null)
           setEditingRow(row)
         }}
+        onDeleteLesson={handleDelete}
+        onAddLessonToModule={handleAddLessonToModule}
         onAddCourse={() => {
           setEditingRow(null)
+          setEditingModule(null)
           setShowAddForm(true)
         }}
       />

@@ -18,6 +18,9 @@ const CURRICULUM_SELECT = `
       slug,
       title,
       sort_order,
+      catalog_slug,
+      price_cents,
+      currency,
       lessons (
         id,
         slug,
@@ -51,6 +54,9 @@ export function mapDbCurriculumToTree(rows) {
       modules: [...(theme.modules || [])].sort(sortByOrder).map((mod) => ({
         id: mod.slug,
         title: mod.title,
+        catalogSlug: mod.catalog_slug || null,
+        priceCents: mod.price_cents ?? null,
+        currency: mod.currency || 'usd',
         lessons: [...(mod.lessons || [])].sort(sortByOrder).map((lesson) => ({
           id: lesson.slug,
           title: lesson.title,

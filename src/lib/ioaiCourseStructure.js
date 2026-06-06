@@ -255,6 +255,9 @@ export function findModuleForLesson(lessonId, curriculumTree = null) {
             categoryLabel: theme.categoryLabel || theme.category_label || theme.title,
             moduleId: mod.id,
             title: mod.title,
+            catalogSlug: mod.catalogSlug || null,
+            priceCents: mod.priceCents ?? null,
+            currency: mod.currency || 'usd',
           }
         }
       }

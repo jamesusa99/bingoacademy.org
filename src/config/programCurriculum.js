@@ -12,7 +12,7 @@ export const PROGRAM_CURRICULUM = {
     adminTitle: 'IOAI · 课程管理',
     adminTitleEn: 'IOAI · Course Management',
     adminPath: '/admin/curriculum/ioai',
-    frontendPath: '/curriculum?line=ioai',
+    frontendPath: '/courses?line=ioai',
     catalogPrice: 'Included in IOAI Track',
     catalogAudience: 'IOAI competition trainees',
     i18nKey: 'ioaiCurriculum',

@@ -22,6 +22,10 @@ const CATEGORY_LABELS = {
 export default function CatalogCourseCard({ course, purchase }) {
   const categoryLabel = CATEGORY_LABELS[course.category] || course.badge
   const purchasable = isPurchasableCourse(course)
+  const isIoaiModule = course.line === 'ioai' && course.sub === 'module'
+  const detailPath = isIoaiModule
+    ? `/courses/module/${encodeURIComponent(course.id)}`
+    : `/courses/detail/${course.id}`
   const displayPrice =
     purchasable && course.priceUnknown
       ? getCheckoutPriceLabel(course, resolvePurchaseType(course))
@@ -30,7 +34,7 @@ export default function CatalogCourseCard({ course, purchase }) {
 
   return (
     <article className="course-card-dark group flex flex-col h-full">
-      <Link to={`/courses/detail/${course.id}`} className="block relative">
+      <Link to={detailPath} className="block relative">
         <div
           className={`course-card-dark__thumb bg-gradient-to-br ${course.thumbnailGradient} flex items-center justify-center overflow-hidden`}
           aria-hidden
@@ -52,7 +56,7 @@ export default function CatalogCourseCard({ course, purchase }) {
           <ModuleBadge lineId={course.line} subId={course.sub} />
         </div>
         <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{categoryLabel}</span>
-        <Link to={`/courses/detail/${course.id}`}>
+        <Link to={detailPath}>
           <h3 className="text-lg font-semibold text-white mt-1 mb-2 group-hover:text-cyan-300 transition line-clamp-2">
             {course.name}
           </h3>
@@ -91,7 +95,7 @@ export default function CatalogCourseCard({ course, purchase }) {
           />
         ) : (
           <Link
-            to={`/courses/detail/${course.id}`}
+            to={detailPath}
             className={`shrink-0 px-4 py-2 rounded-md text-sm font-medium transition min-h-[40px] inline-flex items-center ${
               course.comingSoon
                 ? 'border border-amber-500/60 text-amber-300 hover:bg-amber-500/10'

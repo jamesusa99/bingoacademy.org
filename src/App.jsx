@@ -29,6 +29,7 @@ import ShowcaseWorks from './pages/ShowcaseWorks'
 import ShowcaseAwards from './pages/ShowcaseAwards'
 import ShowcaseMaterials from './pages/ShowcaseMaterials'
 import Courses from './pages/Courses'
+import IOAIModuleDetailPage from './pages/courses/IOAIModuleDetailPage'
 import ProductLabs from './pages/ProductLabs'
 import AIExploration from './pages/AIExploration'
 import IOAITrainingLabSession from './pages/labs/IOAITrainingLabSession'
@@ -138,7 +139,8 @@ export default function App() {
         <Route path="showcase/award/:id" element={<ShowcaseCase />} />
         <Route path="assessment" element={<AIAssessment />} />
         <Route path="courses" element={<Courses />} />
-        <Route path="ioai" element={<IOAIStore />} />
+        <Route path="courses/module/:moduleSlug" element={<IOAIModuleDetailPage />} />
+        <Route path="ioai" element={<Navigate to="/courses?line=ioai" replace />} />
         <Route path="ioai/l1/:levelSlug" element={<IOAILevelPage />} />
         <Route path="ioai/l3/:moduleSlug" element={<IOAIModulePage />} />
         <Route path="curriculum" element={<Curriculum />} />

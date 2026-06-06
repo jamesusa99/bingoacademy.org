@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/products'
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
@@ -22,7 +22,7 @@ import {
   getProgramCurriculumSummary,
   findModuleForLesson,
 } from '../lib/ioaiCourseStructure'
-import { buildModuleCatalogSlug } from '../lib/ioaiStore'
+import { buildModuleCatalogSlug, formatIoaiPrice } from '../lib/ioaiStore'
 import { getContinueLessonId } from '../lib/learningProgress'
 import CourseComingSoon from '../components/CourseComingSoon'
 import CourseVideoPlayer from '../components/courses/CourseVideoPlayer'
@@ -149,6 +149,10 @@ export default function CourseDetail() {
     )
   }
 
+  if (item.sub === 'module' && item.line === 'ioai') {
+    return <Navigate to={`/courses/module/${encodeURIComponent(item.id)}`} replace />
+  }
+
   const comingSoon = isCourseComingSoon(item)
   const isProgram = progLine && isProgramVideoCourse(item.id, courses, tree, progLine)
   const isTrack = progLine && isProgramTrackId(item.id, progLine)
@@ -160,10 +164,11 @@ export default function CourseDetail() {
     if (!isLesson || !item?.id) return null
     const found = findModuleForLesson(item.id, tree)
     if (!found) return null
-    return {
-      ...found,
-      catalogSlug: buildModuleCatalogSlug(found.levelId, found.themeId, found.moduleId),
-    }
+    const catalogSlug =
+      found.catalogSlug ||
+      buildModuleCatalogSlug(found.levelId, found.themeId, found.moduleId)
+    if (!catalogSlug) return null
+    return { ...found, catalogSlug }
   }, [isLesson, item?.id, tree])
   const linkedLabs = (item.labSlugs ?? [])
     .map((slug) => EXPLORATION_EXPERIMENTS.find((e) => e.id === slug))
@@ -267,6 +272,7 @@ export default function CourseDetail() {
                   onUnlockTrack={unlockTrack}
                   courses={courses}
                   curriculumTree={tree}
+                  moduleContext={moduleContext}
                   {...purchaseProps}
                 />
               </div>
@@ -376,6 +382,15 @@ export default function CourseDetail() {
                 className="btn-primary text-sm px-5 py-2.5"
               >
                 {COURSES_PORTAL.continueLearning}
+              </Link>
+            ) : moduleContext?.catalogSlug ? (
+              <Link
+                to={`/courses/module/${encodeURIComponent(moduleContext.catalogSlug)}`}
+                className="btn-primary text-sm px-5 py-2.5"
+              >
+                {moduleContext.priceCents
+                  ? COURSES_PORTAL.purchaseCourse(formatIoaiPrice(moduleContext.priceCents, moduleContext.currency))
+                  : 'View unit & purchase'}
               </Link>
             ) : isPurchasableCourse(item) ? (
               <button

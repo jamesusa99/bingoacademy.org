@@ -14,6 +14,7 @@ import { isCurriculumLine } from '../config/programCurriculum'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import CourseListView from '../components/courses/CourseListView'
+import IOAICoursesModuleView from '../components/courses/IOAICoursesModuleView'
 import PageMeta from '../components/PageMeta'
 import { ProgramBadge, ModuleBadge, UseCaseTag } from '../components/courses/ProgramBadges'
 import { PAGE_SEO } from '../config/programs'
@@ -24,6 +25,10 @@ import CoursePurchaseButton from '../components/courses/CoursePurchaseButton'
 function CourseCard({ item, purchase }) {
   const soon = isCourseComingSoon(item)
   const hasAccess = purchase?.hasAccess?.(item.id)
+  const isIoaiModule = item.line === 'ioai' && item.sub === 'module'
+  const detailPath = isIoaiModule
+    ? `/courses/module/${encodeURIComponent(item.id)}`
+    : `/courses/detail/${item.id}`
 
   return (
     <div
@@ -68,7 +73,7 @@ function CourseCard({ item, purchase }) {
         ) : (
           <>
             <Link
-              to={`/courses/detail/${item.id}`}
+              to={detailPath}
               className={`text-xs px-3 py-1.5 rounded-lg font-semibold min-h-[40px] inline-flex items-center ${
                 soon ? 'border border-amber-400 text-amber-800 hover:bg-amber-50' : 'btn-primary'
               }`}
@@ -121,7 +126,11 @@ export default function Courses() {
   const subCounts = useMemo(() => {
     const counts = {}
     for (const s of line.subcategories) {
-      counts[s.id] = courses.filter((c) => c.line === line.id && c.sub === s.id).length
+      if (line.id === 'ioai' && s.id === VIDEO_COURSE_SUB_BY_LINE.ioai) {
+        counts[s.id] = courses.filter((c) => c.line === 'ioai' && c.sub === 'module').length
+      } else {
+        counts[s.id] = courses.filter((c) => c.line === line.id && c.sub === s.id).length
+      }
     }
     return counts
   }, [courses, line.id, line.subcategories])
@@ -131,6 +140,28 @@ export default function Courses() {
 
   if (subId && isProductLabSub(lineId, subId)) {
     return <Navigate to={labsPath(lineId, subId)} replace />
+  }
+
+  const ioaiModuleView =
+    lineId === 'ioai' && (!subId || subId === VIDEO_COURSE_SUB_BY_LINE.ioai || subId === 'module')
+
+  if (ioaiModuleView) {
+    return (
+      <>
+        <IOAICoursesModuleView line={line} />
+        <PageContent className="py-8">
+          <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-bingo-dark">{COURSES_PORTAL.certTitle}</h3>
+              <p className="text-sm text-slate-600 mt-1">{COURSES_PORTAL.certDesc}</p>
+            </div>
+            <Link to="/cert" className="btn-primary px-5 py-2.5 text-sm min-h-[44px] inline-flex items-center">
+              {COURSES_PORTAL.certCta}
+            </Link>
+          </section>
+        </PageContent>
+      </>
+    )
   }
 
   if (videoListMode) {
@@ -175,7 +206,7 @@ export default function Courses() {
               to={`/courses?line=${line.id}&sub=${videoSubId}`}
               className="text-xs font-semibold px-3 py-2 rounded-full bg-indigo-100 text-indigo-900 hover:bg-indigo-200 transition"
             >
-              📺 {COURSES_PORTAL.videoCoursesChip}
+              📺 {line.id === 'ioai' ? COURSES_PORTAL.ioaiModulesTitle : COURSES_PORTAL.videoCoursesChip}
             </Link>
           ) : null}
           <Link

@@ -102,4 +102,23 @@ export const COURSES_PORTAL = {
     }
     return map[lineId] || map.general
   },
+  allStages: 'All stages',
+  ioaiModulesTitle: 'Course units',
+  ioaiModulesSubtitle:
+    'Purchase a course unit (L3) to unlock all video lessons inside. Open a unit to see individual lessons (L4).',
+  ioaiModuleCount: (n) => `${n} course unit${n === 1 ? '' : 's'}`,
+  ioaiModuleCardDesc: 'Full video unit — purchase once to unlock all lessons inside.',
+  emptyIoaiModules: 'No course units published yet. Check back soon.',
+  loadingModules: 'Loading course units…',
+  moduleNotFound: 'Course unit not found.',
+  moduleLessonCount: (n) => `${n} lesson${n === 1 ? '' : 's'}`,
+  moduleUnlocked: 'Unlocked',
+  moduleLessonsHeading: 'Lessons in this unit',
+  buyModule: (price) => (price ? `Buy unit — ${price}` : 'Buy unit'),
+  buyModuleShort: 'Buy unit',
+  redirecting: 'Redirecting…',
+  watchLesson: 'Watch lesson',
+  purchaseModuleToUnlock: 'Purchase unit to unlock',
+  freeTrialLesson: 'Free trial',
+  ioaiLegacyNote: 'Looking for the interactive curriculum tree?',
 }

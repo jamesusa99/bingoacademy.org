@@ -1,8 +1,10 @@
 import { supabase } from './supabase'
-import { adminInsert, adminUpdate } from './admin/db'
-import { saveCatalogCourse } from './admin/catalog'
+import { adminInsert, adminUpdate, adminDelete } from './admin/db'
+import { saveCatalogCourse, deleteCatalogCourse } from './admin/catalog'
 import { assignStreamToCourse } from './admin/api'
 import { getProgramCurriculum, isCurriculumLine } from '../config/programCurriculum'
+import { COURSE_STATUS } from '../config/coursesCatalog'
+import { buildModuleCatalogSlug } from './ioaiStore'
 
 const CURRICULUM_ADMIN_SELECT = `
   id,
@@ -23,6 +25,12 @@ const CURRICULUM_ADMIN_SELECT = `
       title,
       summary,
       sort_order,
+      catalog_slug,
+      price_cents,
+      compare_at_cents,
+      currency,
+      intro_html,
+      status,
       lessons (
         id,
         slug,
@@ -78,6 +86,69 @@ export function flattenCurriculumForAdmin(levels) {
   return rows
 }
 
+/** Group curriculum tree by L3 modules (each module contains L4 lessons) */
+export function groupModulesForAdmin(levels) {
+  /** @type {Array<object>} */
+  const groups = []
+  for (const level of sortRows(levels)) {
+    for (const theme of sortRows(level.themes)) {
+      const categoryLabel = theme.category_label || theme.title
+      for (const mod of sortRows(theme.modules)) {
+        const lessons = sortRows(mod.lessons).map((lesson) => ({
+          lessonId: lesson.id,
+          levelId: level.id,
+          themeId: theme.id,
+          moduleId: mod.id,
+          stage: level.title,
+          stageSlug: level.slug,
+          stageEmoji: level.emoji,
+          module: mod.title,
+          moduleSlug: mod.slug,
+          category: categoryLabel,
+          categorySlug: theme.slug,
+          themeTitle: theme.title,
+          lessonTitle: lesson.title,
+          lessonSlug: lesson.slug,
+          knowledgePoints: lesson.knowledge_points || '',
+          contentGoals: lesson.content_goals || '',
+          cloudflareVideoId: lesson.cloudflare_video_id || '',
+          catalogSlug: lesson.catalog_slug || lesson.slug,
+          sortOrder: lesson.sort_order ?? 0,
+        }))
+        groups.push({
+          moduleDbId: mod.id,
+          levelDbId: level.id,
+          themeDbId: theme.id,
+          stage: level.title,
+          stageSlug: level.slug,
+          stageEmoji: level.emoji,
+          category: categoryLabel,
+          categorySlug: theme.slug,
+          themeTitle: theme.title,
+          moduleTitle: mod.title,
+          moduleSlug: mod.slug,
+          moduleSummary: mod.summary || '',
+          catalogSlug: mod.catalog_slug || '',
+          priceCents: mod.price_cents ?? null,
+          compareAtCents: mod.compare_at_cents ?? null,
+          currency: mod.currency || 'usd',
+          introHtml: mod.intro_html || '',
+          status: mod.status || 'live',
+          sortOrder: mod.sort_order ?? 0,
+          levelSlug: level.slug,
+          lessons,
+        })
+      }
+    }
+  }
+  return groups
+}
+
+function formatUsd(cents) {
+  if (cents == null) return ''
+  return `$${(cents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+}
+
 export async function fetchCurriculumAdmin(productLine = 'ioai') {
   if (!isCurriculumLine(productLine)) {
     return { levels: [], rows: [], productLine }
@@ -93,9 +164,26 @@ export async function fetchCurriculumAdmin(productLine = 'ioai') {
     .order('sort_order', { referencedTable: 'themes.modules.lessons', ascending: true })
 
   if (error) throw new Error(error.message)
+  const moduleGroups = groupModulesForAdmin(data || [])
   const rows = flattenCurriculumForAdmin(data || [])
-  const catalogMap = await fetchCatalogMapForSlugs(rows.map((r) => r.catalogSlug))
-  return { levels: data || [], rows: attachCatalogToRows(rows, catalogMap), productLine }
+  const catalogSlugs = [
+    ...rows.map((r) => r.catalogSlug),
+    ...moduleGroups.map((g) => g.catalogSlug).filter(Boolean),
+  ]
+  const catalogMap = await fetchCatalogMapForSlugs(catalogSlugs)
+  const rowsWithCatalog = attachCatalogToRows(rows, catalogMap)
+  const moduleGroupsWithCatalog = moduleGroups.map((group) => ({
+    ...group,
+    catalogPrice: catalogMap.get(group.catalogSlug)?.price ?? (group.priceCents ? formatUsd(group.priceCents) : ''),
+    catalogPriceCents: catalogMap.get(group.catalogSlug)?.price_cents ?? group.priceCents,
+    lessons: attachCatalogToRows(group.lessons, catalogMap),
+  }))
+  return {
+    levels: data || [],
+    rows: rowsWithCatalog,
+    moduleGroups: moduleGroupsWithCatalog,
+    productLine,
+  }
 }
 
 async function fetchCatalogMapForSlugs(slugs) {
@@ -424,6 +512,17 @@ export async function createProgramCourse(productLine, input) {
   const theme = await findOrCreateTheme(level.id, { themeId, newTheme })
   const mod = await findOrCreateModule(theme.id, { moduleId, newModule })
 
+  const moduleCatalogSlug =
+    mod.catalog_slug?.trim() ||
+    buildModuleCatalogSlug(level.slug, theme.slug, mod.slug)
+  if (moduleCatalogSlug && !mod.catalog_slug) {
+    await adminUpdate('modules', mod.id, {
+      catalog_slug: moduleCatalogSlug,
+      updated_at: new Date().toISOString(),
+    })
+    mod.catalog_slug = moduleCatalogSlug
+  }
+
   const lessonSort = (await maxSortOrder('lessons', { module_id: mod.id })) + 1
   const baseSlug =
     lessonSlugInput?.trim() ||
@@ -498,4 +597,103 @@ export async function saveProgramLessonConfig(productLine, lessonId, patch) {
 /** @deprecated use saveProgramLessonConfig('ioai', lessonId, patch) */
 export async function saveIOAILessonConfig(lessonId, patch) {
   return saveProgramLessonConfig('ioai', lessonId, patch)
+}
+
+function buildModuleCatalogPayload(productLine, group, patch) {
+  const config = getProgramCurriculum(productLine)
+  const priceCents =
+    patch.price_cents !== '' && patch.price_cents != null && patch.price_cents !== undefined
+      ? parseInt(patch.price_cents, 10) || null
+      : null
+  const lessonCount = group.lessonCount ?? group.lessons?.length ?? 0
+  const title = patch.title?.trim() || group.moduleTitle
+
+  return {
+    slug: patch.catalog_slug?.trim(),
+    line: config.line,
+    sub: 'module',
+    status: patch.status || COURSE_STATUS.LIVE,
+    delivery_type: 'video',
+    featured: false,
+    purchasable: true,
+    name: `${group.stage} · ${group.category} · ${title}`,
+    name_en: title,
+    description: patch.summary?.trim() || `${title} — ${lessonCount} lesson(s)`,
+    price: patch.price?.trim() || (priceCents ? formatUsd(priceCents) : null),
+    price_cents: priceCents,
+    currency: (patch.currency || 'usd').trim().toLowerCase(),
+    hours: `${lessonCount} lesson${lessonCount === 1 ? '' : 's'}`,
+    lessons: lessonCount,
+    sort_order: parseInt(patch.sort_order, 10) || group.sortOrder || 0,
+    rating: parseCatalogRating(patch.rating),
+    students: parseCatalogStudents(patch.students),
+  }
+}
+
+/** Save L3 module settings and sync purchasable courses_catalog row (sub=module). */
+export async function saveProgramModuleConfig(productLine, moduleDbId, patch, groupContext = {}) {
+  if (!isCurriculumLine(productLine)) throw new Error('Invalid product line')
+  if (!moduleDbId) throw new Error('Missing module id')
+
+  const priceCents =
+    patch.price_cents !== '' && patch.price_cents != null && patch.price_cents !== undefined
+      ? parseInt(patch.price_cents, 10) || null
+      : null
+
+  let catalogSlug = patch.catalog_slug?.trim() || null
+  if (!catalogSlug && groupContext.levelSlug && groupContext.moduleSlug) {
+    catalogSlug = buildModuleCatalogSlug(
+      groupContext.levelSlug,
+      groupContext.categorySlug || groupContext.themeSlug,
+      groupContext.moduleSlug
+    )
+  }
+
+  const data = await adminUpdate('modules', moduleDbId, {
+    title: patch.title?.trim(),
+    summary: patch.summary?.trim() || null,
+    catalog_slug: catalogSlug,
+    price_cents: priceCents,
+    currency: (patch.currency || 'usd').trim().toLowerCase(),
+    intro_html: patch.intro_html?.trim() || null,
+    updated_at: new Date().toISOString(),
+  })
+
+  if (catalogSlug && priceCents != null && priceCents > 0) {
+    await saveCatalogCourse(
+      buildModuleCatalogPayload(productLine, { ...groupContext, moduleTitle: patch.title?.trim() || groupContext.moduleTitle }, {
+        ...patch,
+        catalog_slug: catalogSlug,
+        price_cents: priceCents,
+      })
+    )
+  }
+
+  return data
+}
+
+/** @deprecated use saveProgramModuleConfig('ioai', moduleDbId, patch, ctx) */
+export async function saveIOAIModuleConfig(moduleDbId, patch, ctx) {
+  return saveProgramModuleConfig('ioai', moduleDbId, patch, ctx)
+}
+
+/** Delete a curriculum lesson and its linked L4 catalog row (if any). */
+export async function deleteProgramLesson(_productLine, { lessonId, catalogSlug } = {}) {
+  if (!lessonId) throw new Error('Missing lesson id')
+
+  const slug = catalogSlug?.trim()
+  if (slug) {
+    try {
+      await deleteCatalogCourse(slug)
+    } catch (err) {
+      if (err?.status !== 404) throw err
+    }
+  }
+
+  return adminDelete('lessons', lessonId)
+}
+
+/** @deprecated use deleteProgramLesson('ioai', input) */
+export async function deleteIOAILesson(input) {
+  return deleteProgramLesson('ioai', input)
 }

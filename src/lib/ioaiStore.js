@@ -82,3 +82,31 @@ export function findModule(levels, catalogSlug) {
   }
   return null
 }
+
+/** Flat list of L3 purchasable modules for course catalog views */
+export function flattenIoaiModules(levels) {
+  /** @type {Array<object>} */
+  const modules = []
+  for (const level of levels || []) {
+    for (const theme of level.themes || []) {
+      for (const mod of theme.modules || []) {
+        if (!mod.catalogSlug) continue
+        modules.push({
+          catalogSlug: mod.catalogSlug,
+          title: mod.title,
+          introHtml: mod.introHtml || '',
+          priceCents: mod.priceCents,
+          compareAtCents: mod.compareAtCents,
+          currency: mod.currency || 'usd',
+          lessonCount: mod.lessonCount ?? mod.lessons?.length ?? 0,
+          levelId: level.id,
+          levelTitle: level.title,
+          levelEmoji: level.emoji || '🏆',
+          themeTitle: theme.categoryLabel || theme.title,
+          marketingTags: mod.marketingTags || [],
+        })
+      }
+    }
+  }
+  return modules
+}

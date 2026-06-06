@@ -35,7 +35,7 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
 
   return (
     <div className="card p-4 flex flex-col h-full hover:shadow-md transition">
-      <Link to={`/ioai/l3/${encodeURIComponent(mod.catalogSlug)}`} className="flex-1 flex flex-col">
+      <Link to={`/courses/module/${encodeURIComponent(mod.catalogSlug)}`} className="flex-1 flex flex-col">
         <h3 className="font-semibold text-bingo-dark text-sm">{mod.title}</h3>
         <p className="text-xs text-slate-600 mt-1 flex-1 line-clamp-2">{mod.introHtml || `${mod.lessonCount} lessons`}</p>
         {(mod.marketingTags || []).length ? (
@@ -55,7 +55,7 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
         </div>
         {owned ? (
           <Link
-            to={`/ioai/l3/${encodeURIComponent(mod.catalogSlug)}`}
+            to={`/courses/module/${encodeURIComponent(mod.catalogSlug)}`}
             className="text-xs font-semibold text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200"
           >
             Owned
@@ -103,7 +103,7 @@ export default function IOAILevelPage() {
     return (
       <PageContent className="py-12">
         <p className="text-sm text-slate-600">Track not found.</p>
-        <Link to="/ioai" className="text-primary text-sm mt-2 inline-block">
+        <Link to="/courses?line=ioai" className="text-primary text-sm mt-2 inline-block">
           ← Back to IOAI
         </Link>
       </PageContent>
@@ -114,7 +114,7 @@ export default function IOAILevelPage() {
     <div className="w-full">
       <PageMeta title={`${level.title} · IOAI`} />
       <PageContent className="py-8">
-        <Link to="/ioai" className="text-xs text-primary hover:underline">
+        <Link to="/courses?line=ioai" className="text-xs text-primary hover:underline">
           ← All IOAI tracks
         </Link>
         <header className="mt-4 mb-8">

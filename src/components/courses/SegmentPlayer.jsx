@@ -181,6 +181,7 @@ export default function SegmentPlayer({
   setCheckoutLoading,
   courses = null,
   curriculumTree = null,
+  moduleContext = null,
 }) {
   const videoRef = useRef(null)
   const { url, poster, previewSeconds, isStream, hasCustomVideo } = getCourseVideo(course)
@@ -410,6 +411,7 @@ export default function SegmentPlayer({
             hasTrack={hasTrack}
             onUnlockLesson={onUnlockLesson}
             onUnlockTrack={onUnlockTrack}
+            moduleContext={moduleContext}
             isAuthenticated={isAuthenticated}
             stripeCheckout={stripeCheckout}
             checkoutLoading={checkoutLoading}

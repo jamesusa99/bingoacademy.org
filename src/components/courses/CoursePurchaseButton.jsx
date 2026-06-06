@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import {
   getCheckoutPriceLabel,
+  isIoaiLessonOnlyCatalog,
   isPurchasableCourse,
   resolvePurchaseType,
 } from '../../lib/coursePricing'
@@ -96,6 +97,21 @@ export default function CoursePurchaseButton({
         >
           {loading ? 'Redirecting…' : label}
         </button>
+        {showDetailsLink ? (
+          <Link to={detailPath} className={btnClass(variant, 'secondary')}>
+            {COURSES_PORTAL.viewDetails}
+          </Link>
+        ) : null}
+      </div>
+    )
+  }
+
+  if (isIoaiLessonOnlyCatalog(course)) {
+    return (
+      <div className={`flex flex-wrap gap-2 ${showDetailsLink ? '' : 'contents'}`}>
+        <Link to="/ioai" className={btnClass(variant, 'primary', className)}>
+          Browse course units
+        </Link>
         {showDetailsLink ? (
           <Link to={detailPath} className={btnClass(variant, 'secondary')}>
             {COURSES_PORTAL.viewDetails}
