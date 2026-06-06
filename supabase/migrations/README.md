@@ -22,6 +22,14 @@ Run **once** on a new project, in order. All files are safe to **re-run** (idemp
 | `016_curriculum_product_line.sql` | product_line on course_levels (ioai/general/k12) | Labs-materials grouping |
 | `017_video_assets_curriculum.sql` | Video library curriculum fields | — |
 | `018_lab_materials_lesson.sql` | courses_catalog.lesson_id → lessons | Lab/material lesson binding |
+| `019_ioai_commerce.sql` | L3 module pricing, ioai_bundles, lesson trial | IOAI L3 purchase model |
+
+**After migration 019**, backfill module catalog + migrate enrollments:
+
+```bash
+npm run migrate:ioai-commerce          # apply
+npm run migrate:ioai-commerce -- --dry-run
+```
 
 **After migration 013**, backfill Stripe cents from display prices:
 

@@ -9,8 +9,10 @@ import {
   resolvePurchaseType,
 } from '../../lib/coursePricing'
 import { initiateCoursePurchase } from '../../lib/coursePurchase'
+import { purchaseIoaiBundle } from '../../lib/ioaiPurchase'
 import { authLink } from '../../lib/authRedirect'
-import { isIOAILessonId } from '../../lib/ioaiCourseStructure'
+import { IOAI_TRACK_ID, isIOAILessonId } from '../../lib/ioaiCourseStructure'
+import { buildModuleCatalogSlug } from '../../lib/ioaiStore'
 
 export default function CoursePurchasePanel({
   course,
@@ -23,13 +25,20 @@ export default function CoursePurchasePanel({
   checkoutLoading = false,
   setCheckoutLoading,
   compact = false,
+  moduleContext = null,
 }) {
   const navigate = useNavigate()
   const purchaseType = resolvePurchaseType(course)
   const isIOAILesson = isIOAILessonId(course?.id)
-  const isIOAITrackPage = course?.id === IOAI_FULL_TRACK_SLUG
+  const isIOAITrackPage = course?.id === IOAI_TRACK_ID || course?.id === IOAI_FULL_TRACK_SLUG
   const isIOAIContext = isIoaiCheckoutCourse(course?.id)
   const purchasable = isPurchasableCourse(course)
+
+  const moduleCatalogSlug =
+    moduleContext?.catalogSlug ||
+    (moduleContext?.levelId && moduleContext?.themeId && moduleContext?.moduleId
+      ? buildModuleCatalogSlug(moduleContext.levelId, moduleContext.themeId, moduleContext.moduleId)
+      : null)
 
   const handleCheckout = (type) => {
     initiateCoursePurchase({
@@ -40,6 +49,18 @@ export default function CoursePurchasePanel({
       navigate,
       setCheckoutLoading,
       onDemoUnlock: { lesson: onUnlockLesson, track: onUnlockTrack },
+    })
+  }
+
+  const handleFullTrackCheckout = () => {
+    purchaseIoaiBundle({
+      bundleSlug: IOAI_FULL_TRACK_SLUG,
+      stripeCheckout,
+      isAuthenticated,
+      navigate,
+      setCheckoutLoading,
+      returnPath: isIOAITrackPage ? `/courses/detail/${IOAI_TRACK_ID}` : `/ioai`,
+      onDemoUnlock: { bundle: onUnlockTrack },
     })
   }
 
@@ -55,10 +76,7 @@ export default function CoursePurchasePanel({
             {COURSES_PORTAL.continueLearning}
           </Link>
           {isIOAIContext ? (
-            <Link
-              to={`/courses/detail/${IOAI_FULL_TRACK_SLUG}`}
-              className="text-sm px-4 py-2 rounded-lg border border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/10"
-            >
+            <Link to="/ioai" className="text-sm px-4 py-2 rounded-lg border border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/10">
               {COURSES_PORTAL.viewFullTrack}
             </Link>
           ) : null}
@@ -67,80 +85,72 @@ export default function CoursePurchasePanel({
     )
   }
 
-  if (!purchasable) {
+  // Phase 1: IOAI L4 lesson — no single-lesson purchase; point to L3 unit
+  if (isIOAILesson && moduleCatalogSlug) {
+    return (
+      <div
+        className={`rounded-xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 to-cyan-950/20 ${compact ? 'p-4' : 'p-5 sm:p-6'}`}
+      >
+        <p className="text-sm font-bold text-white mb-1">Unlock this course unit</p>
+        <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+          IOAI lessons are sold as full course units (L3). Purchase the unit to unlock all lessons including this one.
+        </p>
+        <Link
+          to={`/ioai/l3/${encodeURIComponent(moduleCatalogSlug)}`}
+          className="inline-flex btn-primary text-sm px-4 py-2"
+        >
+          View unit & purchase
+        </Link>
+        <p className="text-[10px] text-slate-600 mt-3">
+          Single-lesson purchase is not available in this release.
+        </p>
+      </div>
+    )
+  }
+
+  if (!purchasable && !isIOAITrackPage) {
     return (
       <div
         className={`rounded-xl border border-slate-200 bg-slate-50 ${compact ? 'p-4' : 'p-5 sm:p-6'} mb-6`}
       >
         <p className="text-sm font-semibold text-bingo-dark mb-1">{COURSES_PORTAL.contactSalesTitle}</p>
         <p className="text-xs text-slate-600 mb-4">{COURSES_PORTAL.notOnlinePurchase}</p>
-        <Link to="/contact" className="btn-primary text-sm px-4 py-2 inline-block">
+        <Link to="/ioai" className="btn-primary text-sm px-4 py-2 inline-block mr-2">
+          Browse IOAI courses
+        </Link>
+        <Link to="/contact" className="text-sm text-primary hover:underline">
           {COURSES_PORTAL.contactSales}
         </Link>
       </div>
     )
   }
 
-  if (isIOAIContext && (isIOAILesson || isIOAITrackPage)) {
+  if (isIOAIContext && isIOAITrackPage) {
     return (
       <div
         className={`rounded-xl border border-amber-500/30 bg-gradient-to-br from-slate-900 to-amber-950/30 ${compact ? 'p-4' : 'p-5 sm:p-6'}`}
       >
         <p className="text-sm font-bold text-white mb-1">{COURSES_PORTAL.unlockTitle}</p>
-        <p className="text-xs text-slate-400 mb-4 leading-relaxed">{COURSES_PORTAL.unlockDesc}</p>
-
-        <div className="grid sm:grid-cols-2 gap-3 mb-4">
-          {isIOAILesson ? (
-            <div className="rounded-lg border border-slate-700 bg-slate-900/80 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 mb-1">
-                {COURSES_PORTAL.singleLesson}
-              </p>
-              <p className="text-2xl font-black text-white mb-1">${PRICING.lesson.price}</p>
-              <p className="text-xs text-slate-500 mb-3">{COURSES_PORTAL.singleLessonDesc}</p>
-              <button
-                type="button"
-                disabled={checkoutLoading}
-                onClick={() => handleCheckout('lesson')}
-                className="w-full btn-primary text-sm py-2 disabled:opacity-60"
-              >
-                {checkoutLoading ? 'Redirecting…' : COURSES_PORTAL.unlockLesson(PRICING.lesson.price)}
-              </button>
-            </div>
-          ) : null}
-
-          <div
-            className={`rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 ${!isIOAILesson ? 'sm:col-span-2' : ''}`}
-          >
-            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-1">
-              {COURSES_PORTAL.fullTrack}
-            </p>
-            <p className="text-2xl font-black text-white mb-1">
-              {COURSES_PORTAL.fromPrice(PRICING.ioaiTrack.price)}
-            </p>
-            <p className="text-xs text-slate-500 mb-3">{COURSES_PORTAL.fullTrackDesc}</p>
-            <button
-              type="button"
-              onClick={() => handleCheckout('ioai_track')}
-              disabled={hasTrack || checkoutLoading}
-              className="w-full text-sm font-semibold py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 disabled:opacity-50"
-            >
-              {checkoutLoading ? 'Redirecting…' : hasTrack ? COURSES_PORTAL.trackOwned : COURSES_PORTAL.unlockTrack}
-            </button>
-          </div>
-        </div>
-
-        {!isAuthenticated ? (
-          <p className="text-xs text-slate-500">
-            {COURSES_PORTAL.signInHint}{' '}
-            <Link to={authLink('/login', `/courses/detail/${course.id}`)} className="text-cyan-400 hover:underline">
-              {COURSES_PORTAL.signIn}
-            </Link>
+        <p className="text-xs text-slate-400 mb-4 leading-relaxed">{COURSES_PORTAL.fullTrackDesc}</p>
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 mb-4">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-1">
+            {COURSES_PORTAL.fullTrack}
           </p>
-        ) : null}
-
-        <p className="text-[10px] text-slate-600 mt-3">
-          {stripeCheckout ? COURSES_PORTAL.stripeCheckoutNote : COURSES_PORTAL.demoPurchaseNote}
-        </p>
+          <p className="text-2xl font-black text-white mb-1">
+            {COURSES_PORTAL.fromPrice(PRICING.ioaiTrack.price)}
+          </p>
+          <button
+            type="button"
+            onClick={handleFullTrackCheckout}
+            disabled={hasTrack || checkoutLoading}
+            className="w-full text-sm font-semibold py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 disabled:opacity-50"
+          >
+            {checkoutLoading ? 'Redirecting…' : hasTrack ? COURSES_PORTAL.trackOwned : COURSES_PORTAL.unlockTrack}
+          </button>
+        </div>
+        <Link to="/ioai" className="text-xs text-cyan-400 hover:underline">
+          Or browse individual course units →
+        </Link>
       </div>
     )
   }

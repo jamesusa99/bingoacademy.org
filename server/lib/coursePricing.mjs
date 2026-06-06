@@ -1,4 +1,10 @@
-import { CHECKOUT_PRICING, IOAI_FULL_TRACK_SLUG } from './courseEntitlements.mjs'
+import { IOAI_FULL_BUNDLE_SLUG } from './courseEntitlements.mjs'
+import {
+  getBundleBySlug,
+  getModuleByCatalogSlug,
+  isBundlePurchasable,
+  isModulePurchasable,
+} from './ioaiCommerce.mjs'
 
 const NON_PURCHASABLE_PATTERN =
   /coming\s*soon|quote|contact|included|free|school\s*quote|\/yr|\/\s*session|tbd|upon\s*request|custom/i
@@ -42,37 +48,57 @@ export async function getCatalogCourseBySlug(admin, slug) {
 }
 
 function isIoaiLessonSlug(slug) {
-  return slug?.startsWith('ioai-') && slug !== IOAI_FULL_TRACK_SLUG
+  return slug?.startsWith('ioai-') && slug !== IOAI_FULL_BUNDLE_SLUG
 }
 
 /** Resolve Stripe line item for checkout */
-export function resolveCheckoutQuote({ courseSlug, purchaseType, course }) {
+export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, course }) {
   const slug = courseSlug?.trim()
   if (!slug) return { error: 'courseSlug is required' }
 
   if (purchaseType === 'ioai_track') {
-    const p = CHECKOUT_PRICING.ioai_track
+    const bundle = admin ? await getBundleBySlug(admin, IOAI_FULL_BUNDLE_SLUG) : null
+    const amountCents = bundle?.price_cents || 299000
     return {
-      purchaseType: 'ioai_track',
-      returnSlug: IOAI_FULL_TRACK_SLUG,
-      amountCents: p.amountCents,
-      currency: p.currency,
-      productName: p.label,
+      purchaseType: 'bundle',
+      returnSlug: IOAI_FULL_BUNDLE_SLUG,
+      amountCents,
+      currency: (bundle?.currency || 'usd').toLowerCase(),
+      productName: bundle?.title || 'IOAI Full Track',
     }
   }
 
+  if (purchaseType === 'bundle') {
+    const bundle = admin ? await getBundleBySlug(admin, slug) : null
+    if (!bundle) return { error: 'Bundle not found' }
+    if (!isBundlePurchasable(bundle)) return { error: 'This bundle is not available for purchase' }
+    return {
+      purchaseType: 'bundle',
+      returnSlug: bundle.slug,
+      amountCents: bundle.price_cents,
+      currency: (bundle.currency || 'usd').toLowerCase(),
+      productName: bundle.title || bundle.slug,
+    }
+  }
+
+  if (purchaseType === 'module') {
+    const mod = admin ? await getModuleByCatalogSlug(admin, slug) : null
+    if (!mod) return { error: 'Module not found' }
+    if (!isModulePurchasable(mod)) return { error: 'This module is not available for purchase' }
+    return {
+      purchaseType: 'module',
+      returnSlug: mod.catalog_slug,
+      amountCents: mod.price_cents,
+      currency: (mod.currency || 'usd').toLowerCase(),
+      productName: mod.title || mod.catalog_slug,
+    }
+  }
+
+  // IOAI lesson checkout disabled — L3 modules only
   if (purchaseType === 'lesson' && isIoaiLessonSlug(slug)) {
-    const p = CHECKOUT_PRICING.lesson
-    return {
-      purchaseType: 'lesson',
-      returnSlug: slug,
-      amountCents: p.amountCents,
-      currency: p.currency,
-      productName: `IOAI Lesson — ${slug}`,
-    }
+    return { error: 'IOAI lessons are sold as modules. Purchase the course unit (L3) instead.' }
   }
 
-  // Generic catalog course purchase
   if (!course) {
     return { error: 'Course not found in catalog' }
   }

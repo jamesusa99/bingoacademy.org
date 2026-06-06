@@ -1,26 +1,41 @@
-export const IOAI_FULL_TRACK_SLUG = 'ioai-competition-system'
+import {
+  IOAI_FULL_BUNDLE_SLUG,
+  grantBundleEntitlement,
+  grantModuleEntitlement,
+} from './ioaiCommerce.mjs'
+
+export { IOAI_FULL_BUNDLE_SLUG }
 
 export const CHECKOUT_PRICING = {
+  /** @deprecated Phase 1 — IOAI sells L3 modules only */
   lesson: { amountCents: 2900, currency: 'usd', label: 'Single IOAI lesson' },
   ioai_track: {
     amountCents: 299000,
     currency: 'usd',
-    label: 'IOAI Full Track (all lessons)',
-    slug: IOAI_FULL_TRACK_SLUG,
+    label: 'IOAI Full Track (all modules)',
+    slug: IOAI_FULL_BUNDLE_SLUG,
   },
 }
 
-/** Grant enrollment rows after successful payment (purchaseType: lesson | course | ioai_track) */
+/** Grant enrollment rows after successful payment */
 export async function grantCourseEntitlements(admin, { userId, purchaseType, courseSlug, orderId = null }) {
   if (!admin || !userId) return { granted: [] }
 
+  if (purchaseType === 'module') {
+    return grantModuleEntitlement(admin, { userId, moduleCatalogSlug: courseSlug, orderId })
+  }
+
+  if (purchaseType === 'bundle' || purchaseType === 'ioai_track') {
+    const bundleSlug = purchaseType === 'ioai_track' ? IOAI_FULL_BUNDLE_SLUG : courseSlug
+    return grantBundleEntitlement(admin, { userId, bundleSlug, orderId })
+  }
+
+  // Generic catalog course (non-IOAI module)
   const slugs =
-    purchaseType === 'ioai_track'
-      ? [IOAI_FULL_TRACK_SLUG]
-      : purchaseType === 'course' || purchaseType === 'lesson'
-        ? courseSlug
-          ? [courseSlug]
-          : []
+    purchaseType === 'course' && courseSlug
+      ? [courseSlug]
+      : purchaseType === 'lesson' && courseSlug
+        ? [courseSlug]
         : courseSlug
           ? [courseSlug]
           : []
@@ -37,10 +52,6 @@ export async function grantCourseEntitlements(admin, { userId, purchaseType, cou
       { onConflict: 'user_id,course_slug' }
     )
     if (!error) granted.push(slug)
-  }
-
-  if (purchaseType === 'ioai_track' || slugs.includes(IOAI_FULL_TRACK_SLUG)) {
-    await grantIOAIMasterclassAccess(admin, userId, 'stripe')
   }
 
   return { granted }
@@ -73,7 +84,7 @@ export async function userHasIOAIAccess(admin, userId) {
   if (access) return true
 
   const slugs = await listEnrollmentSlugs(admin, userId)
-  return slugs.includes(IOAI_FULL_TRACK_SLUG) || slugs.includes('ioai-track')
+  return slugs.includes(IOAI_FULL_BUNDLE_SLUG) || slugs.includes('ioai-track')
 }
 
 export async function listEnrollmentSlugs(admin, userId) {

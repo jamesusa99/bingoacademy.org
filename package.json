@@ -18,7 +18,7 @@
     "seed:ioai-curriculum": "node scripts/seed-ioai-curriculum.mjs",
     "clear:courses": "node scripts/clear-courses-data.mjs",
     "clear:enrollments": "node scripts/clear-user-enrollments.mjs",
-    "backfill:price-cents": "node scripts/backfill-price-cents.mjs",
+    "migrate:ioai-commerce": "node scripts/migrate-ioai-commerce.mjs",
     "seed:force": "node scripts/seed-supabase.mjs -- --force",
     "lint": "eslint .",
     "preview": "vite preview"

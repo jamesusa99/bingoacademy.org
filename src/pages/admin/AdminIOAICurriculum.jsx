@@ -111,6 +111,13 @@ export default function AdminIOAICurriculum() {
       videoAttached: c.t(`${i18nRoot}.videoAttached`),
       noVideoAttached: c.t(`${i18nRoot}.noVideoAttached`),
       removeVideo: c.t(`${i18nRoot}.removeVideo`),
+      previewVideo: c.t(`${i18nRoot}.previewVideo`),
+      hidePreview: c.t(`${i18nRoot}.hidePreview`),
+      localPreview: c.t(`${i18nRoot}.localPreview`),
+      videoPreviewProcessing: c.t(`${i18nRoot}.videoPreviewProcessing`),
+      videoPreviewRefresh: c.t(`${i18nRoot}.videoPreviewRefresh`),
+      videoFileMeta: c.t(`${i18nRoot}.videoFileMeta`),
+      videoDurationTooLong: c.t(`${i18nRoot}.videoDurationTooLong`),
     }),
     [c, i18nRoot]
   )

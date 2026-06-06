@@ -59,6 +59,11 @@ export async function createStreamUploadUrl(payload) {
   })
 }
 
+export async function fetchAdminStreamPlayback(uid) {
+  const q = encodeURIComponent(uid.trim())
+  return adminFetch(`/api/admin/stream/playback?uid=${q}`)
+}
+
 export async function syncStreamVideo(payload) {
   return adminFetch('/api/admin/stream/sync', {
     method: 'POST',

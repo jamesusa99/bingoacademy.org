@@ -20,7 +20,9 @@ import {
   getAllProgramLessonIds,
   buildProgramCurriculum,
   getProgramCurriculumSummary,
+  findModuleForLesson,
 } from '../lib/ioaiCourseStructure'
+import { buildModuleCatalogSlug } from '../lib/ioaiStore'
 import { getContinueLessonId } from '../lib/learningProgress'
 import CourseComingSoon from '../components/CourseComingSoon'
 import CourseVideoPlayer from '../components/courses/CourseVideoPlayer'
@@ -154,6 +156,15 @@ export default function CourseDetail() {
   const showSegmentLearning = isLesson && isVideoCourse(item) && !comingSoon
   const showTrackOverview = isTrack && !comingSoon
   const showLegacyVideo = isVideoCourse(item) && !comingSoon && !isProgram
+  const moduleContext = useMemo(() => {
+    if (!isLesson || !item?.id) return null
+    const found = findModuleForLesson(item.id, tree)
+    if (!found) return null
+    return {
+      ...found,
+      catalogSlug: buildModuleCatalogSlug(found.levelId, found.themeId, found.moduleId),
+    }
+  }, [isLesson, item?.id, tree])
   const linkedLabs = (item.labSlugs ?? [])
     .map((slug) => EXPLORATION_EXPERIMENTS.find((e) => e.id === slug))
     .filter(Boolean)
@@ -230,6 +241,7 @@ export default function CourseDetail() {
                   hasTrack={hasTrack}
                   onUnlockLesson={unlockLesson}
                   onUnlockTrack={unlockTrack}
+                  moduleContext={moduleContext}
                   {...purchaseProps}
                 />
               ) : null}
@@ -348,6 +360,7 @@ export default function CourseDetail() {
               hasTrack={hasTrack}
               onUnlockLesson={unlockLesson}
               onUnlockTrack={unlockTrack}
+              moduleContext={moduleContext}
               {...purchaseProps}
             />
           ) : null}

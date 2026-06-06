@@ -6,12 +6,13 @@ import {
 } from './admin/api'
 import { adminInsert, adminUpdate } from './admin/db'
 import { formatBytes, uploadFileToStream } from './streamUpload'
+import { formatDuration, readVideoFileMeta } from './videoFileMeta'
 import { resolveCurriculumLabels } from './videoCurriculum'
 
 const DEFAULT_LIMITS = {
   maxFileBytes: 30 * 1024 * 1024 * 1024,
   recommendedMaxFileBytes: 4 * 1024 * 1024 * 1024,
-  maxDurationSeconds: 21_600,
+  maxDurationSeconds: 43_200,
 }
 
 export { formatBytes, DEFAULT_LIMITS as CURRICULUM_VIDEO_LIMITS }
@@ -32,6 +33,20 @@ export async function uploadCurriculumVideo({
   if (!file) throw new Error('No file selected')
 
   const limits = await fetchStreamUploadLimits().catch(() => DEFAULT_LIMITS)
+  const maxDurationSeconds = limits.maxDurationSeconds || DEFAULT_LIMITS.maxDurationSeconds
+
+  let fileMeta = null
+  try {
+    fileMeta = await readVideoFileMeta(file)
+  } catch {
+    /* optional — still attempt upload if browser cannot read metadata */
+  }
+
+  if (fileMeta?.durationSeconds && fileMeta.durationSeconds > maxDurationSeconds) {
+    throw new Error(
+      `Video is ${formatDuration(fileMeta.durationSeconds)} — maximum allowed is ${formatDuration(maxDurationSeconds)}.`
+    )
+  }
 
   if (file.size > limits.maxFileBytes) {
     throw new Error(
@@ -54,7 +69,7 @@ export async function uploadCurriculumVideo({
 
   const { uploadURL, uid } = await createStreamUploadUrl({
     title,
-    maxDurationSeconds: limits.maxDurationSeconds,
+    maxDurationSeconds,
   })
 
   let rowId = null

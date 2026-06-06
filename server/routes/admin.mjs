@@ -4,6 +4,9 @@ import {
   STREAM_DEFAULT_MAX_DURATION_SECONDS,
   STREAM_MAX_FILE_BYTES,
   STREAM_RECOMMENDED_MAX_FILE_BYTES,
+  fetchStreamVideo,
+  isStreamConfigured,
+  streamVideoToPlayback,
 } from '../lib/cloudflareStream.mjs'
 
 function envFlag(name) {
@@ -38,13 +41,38 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
   })
 
   app.get('/api/admin/stream/limits', (_req, res) => {
+    const maxDurationSeconds = STREAM_DEFAULT_MAX_DURATION_SECONDS
     res.json({
       maxFileBytes: STREAM_MAX_FILE_BYTES,
       recommendedMaxFileBytes: STREAM_RECOMMENDED_MAX_FILE_BYTES,
-      maxDurationSeconds: STREAM_DEFAULT_MAX_DURATION_SECONDS,
+      maxDurationSeconds,
+      maxDurationHours: Math.round(maxDurationSeconds / 3600),
       maxFileGb: 30,
       recommendedMaxFileGb: 4,
     })
+  })
+
+  app.get('/api/admin/stream/playback', async (req, res) => {
+    const auth = await verifyAdminUser(req)
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error })
+    }
+
+    const uid = String(req.query.uid || '').trim()
+    if (!uid) {
+      return res.status(400).json({ error: 'uid is required' })
+    }
+
+    if (!isStreamConfigured()) {
+      return res.status(503).json({ error: 'Cloudflare Stream not configured' })
+    }
+
+    const { ok, error, video } = await fetchStreamVideo(uid)
+    if (!ok) {
+      return res.status(502).json({ error: error || 'Failed to fetch video' })
+    }
+
+    return res.json({ playback: streamVideoToPlayback(video) })
   })
 
   app.post('/api/admin/stream/upload-url', async (req, res) => {

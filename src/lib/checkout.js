@@ -7,7 +7,7 @@ export class AuthRequiredError extends Error {
   }
 }
 
-async function authFetch(path, options = {}) {
+export async function authFetch(path, options = {}) {
   if (!isSupabaseConfigured) {
     throw new Error('Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
   }
@@ -44,10 +44,10 @@ export async function fetchMyEnrollments() {
   return authFetch('/api/me/enrollments')
 }
 
-export async function startCourseCheckout({ courseSlug, purchaseType }) {
+export async function startCourseCheckout({ courseSlug, purchaseType, returnPath }) {
   return authFetch('/api/checkout/course', {
     method: 'POST',
-    body: JSON.stringify({ courseSlug, purchaseType }),
+    body: JSON.stringify({ courseSlug, purchaseType, returnPath }),
   })
 }
 

@@ -6,8 +6,17 @@ import crypto from 'node:crypto'
 export const STREAM_MAX_FILE_BYTES = 30 * 1024 * 1024 * 1024
 /** Practical limit for browser POST uploads (memory / timeouts). */
 export const STREAM_RECOMMENDED_MAX_FILE_BYTES = 4 * 1024 * 1024 * 1024
-/** Default maxDurationSeconds on direct_upload (6 h). Override per request if needed. */
-export const STREAM_DEFAULT_MAX_DURATION_SECONDS = 21_600
+/** Default maxDurationSeconds on direct_upload (12 h). Override with STREAM_MAX_DURATION_SECONDS. */
+export const STREAM_DEFAULT_MAX_DURATION_SECONDS = resolveStreamMaxDurationSeconds()
+
+export function resolveStreamMaxDurationSeconds() {
+  const raw = process.env.STREAM_MAX_DURATION_SECONDS
+  if (raw != null && String(raw).trim() !== '') {
+    const parsed = parseInt(String(raw).trim(), 10)
+    if (Number.isFinite(parsed) && parsed > 0) return parsed
+  }
+  return 43_200
+}
 
 export function isStreamConfigured() {
   return Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN)

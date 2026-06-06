@@ -8,6 +8,7 @@ import {
   savePurchasedSlugs,
 } from '../lib/courseAccess'
 import { fetchMyEnrollments, fetchPaymentsConfig } from '../lib/checkout'
+import { fetchMyIoaiAccess } from '../lib/ioaiStore'
 import { useAuth } from '../contexts/AuthContext'
 
 function mergeSlugs(local, remote) {
@@ -19,6 +20,7 @@ export function usePurchasedCourses() {
   const { isAuthenticated } = useAuth()
   const [version, setVersion] = useState(0)
   const [remoteSlugs, setRemoteSlugs] = useState([])
+  const [ioaiLessonSlugs, setIoaiLessonSlugs] = useState([])
   const [stripeCheckout, setStripeCheckout] = useState(false)
   const [checkoutSlug, setCheckoutSlug] = useState(null)
 
@@ -31,16 +33,22 @@ export function usePurchasedCourses() {
   const loadEnrollments = useCallback(async () => {
     if (!isAuthenticated) {
       setRemoteSlugs([])
+      setIoaiLessonSlugs([])
       return
     }
     try {
-      const { slugs } = await fetchMyEnrollments()
+      const [{ slugs }, ioai] = await Promise.all([
+        fetchMyEnrollments(),
+        fetchMyIoaiAccess().catch(() => ({ lessonSlugs: [], moduleSlugs: [] })),
+      ])
       setRemoteSlugs(slugs || [])
+      setIoaiLessonSlugs(ioai.lessonSlugs || [])
       if (slugs?.length) {
         savePurchasedSlugs(mergeSlugs(getPurchasedSlugs(), slugs))
       }
     } catch {
       setRemoteSlugs([])
+      setIoaiLessonSlugs([])
     }
     setVersion((v) => v + 1)
   }, [isAuthenticated])
@@ -50,8 +58,8 @@ export function usePurchasedCourses() {
   }, [loadEnrollments])
 
   const purchased = useMemo(
-    () => mergeSlugs(getPurchasedSlugs(), remoteSlugs),
-    [remoteSlugs, version]
+    () => mergeSlugs(mergeSlugs(getPurchasedSlugs(), remoteSlugs), ioaiLessonSlugs),
+    [remoteSlugs, ioaiLessonSlugs, version]
   )
 
   const hasAccess = useCallback(

@@ -52,6 +52,9 @@ import AuthCallback from './pages/AuthCallback'
 import AIAssessment from './pages/AIAssessment'
 import Community from './pages/Community'
 import Curriculum from './pages/Curriculum'
+import IOAIStore from './pages/ioai/IOAIStore'
+import IOAILevelPage from './pages/ioai/IOAILevelPage'
+import IOAIModulePage from './pages/ioai/IOAIModulePage'
 
 const ProgramPage = lazy(() => import('./pages/programs/ProgramPage'))
 const Compare = lazy(() => import('./pages/Compare'))
@@ -135,6 +138,9 @@ export default function App() {
         <Route path="showcase/award/:id" element={<ShowcaseCase />} />
         <Route path="assessment" element={<AIAssessment />} />
         <Route path="courses" element={<Courses />} />
+        <Route path="ioai" element={<IOAIStore />} />
+        <Route path="ioai/l1/:levelSlug" element={<IOAILevelPage />} />
+        <Route path="ioai/l3/:moduleSlug" element={<IOAIModulePage />} />
         <Route path="curriculum" element={<Curriculum />} />
         <Route path="labs" element={<ProductLabs />} />
         <Route path="exploration" element={<AIExploration />} />
