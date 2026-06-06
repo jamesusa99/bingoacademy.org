@@ -35,7 +35,16 @@ export function formatIoaiPrice(cents, currency = 'USD') {
 
 export async function fetchIoaiStore() {
   const res = await fetch('/api/ioai/store')
-  const body = await res.json().catch(() => ({}))
+  const text = await res.text()
+  let body = {}
+  try {
+    body = text ? JSON.parse(text) : {}
+  } catch {
+    if (text.trimStart().startsWith('<!')) {
+      throw new Error('IOAI store API unavailable (received HTML instead of JSON). Deploy /api/ioai routes on the server.')
+    }
+    throw new Error(`Failed to load IOAI store (${res.status})`)
+  }
   if (!res.ok) throw new Error(body.error || `Failed to load IOAI store (${res.status})`)
   return body
 }
