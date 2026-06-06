@@ -1,6 +1,6 @@
-import { IOAI_FULL_BUNDLE_SLUG, getPurchasedSlugs, hasFullIOAITrack } from './courseAccess'
+import { getPurchasedSlugs, hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from './courseAccess'
 
-export { IOAI_FULL_BUNDLE_SLUG }
+export const IOAI_FULL_BUNDLE_SLUG = IOAI_FULL_TRACK_SLUG
 
 export function hasIoaiModuleAccess(moduleCatalogSlug, { moduleSlugs = [], enrolledSlugs = getPurchasedSlugs() } = {}) {
   if (!moduleCatalogSlug) return false
