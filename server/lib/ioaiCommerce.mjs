@@ -1,6 +1,129 @@
-/** IOAI L3 module + bundle commerce (server) */
+import { parsePriceStringToCents } from './priceUtils.mjs'
 
 export const IOAI_FULL_BUNDLE_SLUG = 'ioai-competition-system'
+
+export function sumCatalogRowsPriceCents(rows) {
+  return (rows || []).reduce((sum, row) => {
+    const cents =
+      row.price_cents != null && row.price_cents > 0 ? row.price_cents : parsePriceStringToCents(row.price)
+    return sum + (cents || 0)
+  }, 0)
+}
+
+const LAB_MATERIAL_SELECT =
+  'slug, name, sub, price, price_cents, currency, status, delivery_type, description, thumbnail_url, sort_order, module_id, lesson_id'
+
+/** Lab/material catalog rows bound to an L3 module (module_id or legacy lesson_id) */
+export async function listLabMaterialsForModule(admin, moduleId) {
+  if (!admin || !moduleId) return []
+
+  const { data: direct, error: directErr } = await admin
+    .from('courses_catalog')
+    .select(LAB_MATERIAL_SELECT)
+    .eq('module_id', moduleId)
+    .neq('status', 'coming-soon')
+    .order('sort_order')
+
+  if (directErr) return []
+
+  const { data: lessons } = await admin.from('lessons').select('id').eq('module_id', moduleId)
+  const lessonIds = (lessons || []).map((l) => l.id)
+
+  let legacy = []
+  if (lessonIds.length) {
+    const { data: legacyRows } = await admin
+      .from('courses_catalog')
+      .select(LAB_MATERIAL_SELECT)
+      .in('lesson_id', lessonIds)
+      .is('module_id', null)
+      .neq('status', 'coming-soon')
+      .order('sort_order')
+    legacy = legacyRows || []
+  }
+
+  const seen = new Set()
+  const merged = []
+  for (const row of [...(direct || []), ...legacy]) {
+    if (seen.has(row.slug)) continue
+    seen.add(row.slug)
+    merged.push(row)
+  }
+  return merged
+}
+
+export async function sumLabMaterialsPriceCents(admin, moduleId) {
+  const rows = await listLabMaterialsForModule(admin, moduleId)
+  return sumCatalogRowsPriceCents(rows)
+}
+
+export async function resolveModuleTotalPriceCents(admin, mod) {
+  if (!mod) return 0
+  const base = mod.price_cents ?? 0
+  const extras = mod.id ? await sumLabMaterialsPriceCents(admin, mod.id) : 0
+  return base + extras
+}
+
+/** Batch extras price by module id for store tree */
+export async function mapLabExtrasByModuleId(admin, moduleIds) {
+  /** @type {Map<string, number>} */
+  const map = new Map()
+  if (!admin || !moduleIds?.length) return map
+
+  for (const id of moduleIds) {
+    map.set(id, 0)
+  }
+
+  const { data: direct } = await admin
+    .from('courses_catalog')
+    .select('module_id, price_cents, price')
+    .in('module_id', moduleIds)
+    .neq('status', 'coming-soon')
+
+  for (const row of direct || []) {
+    if (!row.module_id) continue
+    const cents =
+      row.price_cents != null && row.price_cents > 0 ? row.price_cents : parsePriceStringToCents(row.price)
+    map.set(row.module_id, (map.get(row.module_id) || 0) + (cents || 0))
+  }
+
+  const { data: lessons } = await admin.from('lessons').select('id, module_id').in('module_id', moduleIds)
+  const lessonToModule = new Map((lessons || []).map((l) => [l.id, l.module_id]))
+  const lessonIds = [...lessonToModule.keys()]
+
+  if (lessonIds.length) {
+    const { data: legacy } = await admin
+      .from('courses_catalog')
+      .select('lesson_id, price_cents, price')
+      .in('lesson_id', lessonIds)
+      .is('module_id', null)
+      .neq('status', 'coming-soon')
+
+    for (const row of legacy || []) {
+      const moduleId = lessonToModule.get(row.lesson_id)
+      if (!moduleId) continue
+      const cents =
+        row.price_cents != null && row.price_cents > 0 ? row.price_cents : parsePriceStringToCents(row.price)
+      map.set(moduleId, (map.get(moduleId) || 0) + (cents || 0))
+    }
+  }
+
+  return map
+}
+
+export function mapLabMaterialRow(row) {
+  if (!row) return null
+  return {
+    slug: row.slug,
+    name: row.name,
+    sub: row.sub,
+    price: row.price || null,
+    priceCents: row.price_cents ?? null,
+    currency: row.currency || 'usd',
+    deliveryType: row.delivery_type || null,
+    description: row.description || '',
+    thumbnailUrl: row.thumbnail_url || null,
+  }
+}
 
 export function buildModuleCatalogSlug(levelSlug, themeSlug, moduleSlug) {
   if (!levelSlug || !themeSlug || !moduleSlug) return null
@@ -259,12 +382,13 @@ export async function resolveUnlockedLessonSlugs(admin, userId, enrolledSlugs = 
   return [...slugs]
 }
 
-export function isModulePurchasable(mod) {
+export function isModulePurchasable(mod, totalPriceCents = null) {
   if (!mod) return false
   if (mod.status !== 'live') return false
   if (mod.theme?.hidden || mod.theme?.status === 'hidden') return false
   if (mod.theme?.level?.status === 'hidden') return false
-  return (mod.price_cents ?? 0) > 0
+  const cents = totalPriceCents != null ? totalPriceCents : mod.price_cents ?? 0
+  return cents > 0
 }
 
 export function isBundlePurchasable(bundle) {

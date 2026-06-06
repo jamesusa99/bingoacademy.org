@@ -6,13 +6,17 @@ import {
   getBundleBySlug,
   resolveUnlockedModuleSlugs,
   resolveUnlockedLessonSlugs,
+  mapLabExtrasByModuleId,
+  listLabMaterialsForModule,
+  mapLabMaterialRow,
+  resolveModuleTotalPriceCents,
 } from '../lib/ioaiCommerce.mjs'
 
 function sortByOrder(a, b) {
   return (a.sort_order ?? 0) - (b.sort_order ?? 0)
 }
 
-function mapStoreTree(levels) {
+function mapStoreTree(levels, extrasByModuleId = new Map()) {
   return [...(levels || [])].sort(sortByOrder).map((level) => ({
     id: level.slug,
     title: level.title,
@@ -35,13 +39,19 @@ function mapStoreTree(levels) {
         modules: [...(theme.modules || [])]
           .filter((m) => m.status === 'live')
           .sort(sortByOrder)
-          .map((mod) => ({
+          .map((mod) => {
+            const extrasCents = extrasByModuleId.get(mod.id) || 0
+            const baseCents = mod.price_cents ?? 0
+            const totalCents = baseCents + extrasCents
+            return {
             id: mod.slug,
             catalogSlug: mod.catalog_slug,
             title: mod.title,
             coverUrl: mod.cover_url || null,
             introHtml: mod.intro_html || mod.summary || '',
-            priceCents: mod.price_cents ?? null,
+            priceCents: baseCents || null,
+            extrasPriceCents: extrasCents || null,
+            totalPriceCents: totalCents > 0 ? totalCents : null,
             compareAtCents: mod.compare_at_cents ?? null,
             currency: mod.currency || 'usd',
             marketingTags: mod.marketing_tags || [],
@@ -56,7 +66,7 @@ function mapStoreTree(levels) {
                 trialEnabled: Boolean(lesson.trial_enabled),
                 sortOrder: lesson.sort_order ?? 0,
               })),
-          })),
+          }})
       })),
   }))
 }
@@ -105,8 +115,18 @@ export function registerIoaiRoutes(app) {
 
     const fullBundle = (bundles || []).find((b) => b.slug === IOAI_FULL_BUNDLE_SLUG) || null
 
+    const moduleIds = []
+    for (const level of levels || []) {
+      for (const theme of level.themes || []) {
+        for (const mod of theme.modules || []) {
+          if (mod.id) moduleIds.push(mod.id)
+        }
+      }
+    }
+    const extrasByModuleId = await mapLabExtrasByModuleId(admin, moduleIds)
+
     return res.json({
-      levels: mapStoreTree(levels),
+      levels: mapStoreTree(levels, extrasByModuleId),
       bundles: bundles || [],
       fullBundle,
     })
@@ -140,7 +160,18 @@ export function registerIoaiRoutes(app) {
     if (error) return res.status(502).json({ error: error.message })
     if (!mod) return res.status(404).json({ error: 'Module not found' })
 
-    return res.json({ module: mod })
+    const labMaterials = (await listLabMaterialsForModule(admin, mod.id)).map(mapLabMaterialRow).filter(Boolean)
+    const extrasPriceCents = labMaterials.reduce((sum, row) => sum + (row.priceCents || 0), 0)
+    const totalPriceCents = await resolveModuleTotalPriceCents(admin, mod)
+
+    return res.json({
+      module: {
+        ...mod,
+        extrasPriceCents: extrasPriceCents || null,
+        totalPriceCents: totalPriceCents > 0 ? totalPriceCents : null,
+        labMaterials,
+      },
+    })
   })
 
   app.get('/api/me/ioai-access', async (req, res) => {

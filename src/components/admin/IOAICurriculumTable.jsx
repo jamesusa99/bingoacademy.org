@@ -250,6 +250,7 @@ export function IOAIModuleEditor({ group, productLine, labels, saving, onSave, o
     title: group.moduleTitle || '',
     summary: group.moduleSummary || '',
     intro_html: group.introHtml || '',
+    cover_url: group.coverUrl || '',
     catalog_slug: group.catalogSlug || '',
     price: group.catalogPrice || '',
     price_cents: group.catalogPriceCents ?? group.priceCents ?? '',
@@ -324,6 +325,23 @@ export function IOAIModuleEditor({ group, productLine, labels, saving, onSave, o
           onChange={(e) => set('intro_html', e.target.value)}
           placeholder={labels.phModuleIntro}
         />
+      </Field>
+
+      <Field label={labels.moduleCover}>
+        <input
+          className={inputClass}
+          value={form.cover_url}
+          onChange={(e) => set('cover_url', e.target.value)}
+          placeholder={labels.phModuleCover}
+        />
+        {form.cover_url?.trim() ? (
+          <img
+            src={form.cover_url.trim()}
+            alt=""
+            className="mt-2 h-28 w-full max-w-xs object-cover rounded-lg border border-slate-200"
+          />
+        ) : null}
+        <p className="text-[10px] text-slate-400 mt-1">{labels.moduleCoverHint}</p>
       </Field>
 
       <CurriculumCatalogFields form={form} set={set} labels={labels} />

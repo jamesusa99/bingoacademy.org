@@ -65,6 +65,7 @@ export function rowToCatalogCourse(row) {
     previewSeconds: row.preview_seconds ?? 90,
     cloudflareUid: row.cloudflare_uid || null,
     lessonId: row.lesson_id || null,
+    moduleId: row.module_id || null,
   }
 }
 
@@ -90,6 +91,7 @@ export function formToCatalogPayload(form) {
     line: form.line,
     sub,
     lesson_id: form.lesson_id || null,
+    module_id: form.module_id || null,
     status: form.status || 'live',
     delivery_type: form.delivery_type || deliveryTypeForLabSub(sub, form.line),
     featured: !!form.featured,
@@ -127,6 +129,7 @@ export function catalogRowToForm(row) {
     line: row.line || 'general',
     sub: normalizeLabMaterialSub(row.sub, row.line),
     lesson_id: row.lesson_id || '',
+    module_id: row.module_id || '',
     status: row.status || 'live',
     delivery_type: row.delivery_type || '',
     featured: !!row.featured,
@@ -162,6 +165,7 @@ const EMPTY_FORM = {
   line: 'general',
   sub: 'online-lab',
   lesson_id: '',
+  module_id: '',
   status: 'live',
   delivery_type: 'lab',
   featured: false,

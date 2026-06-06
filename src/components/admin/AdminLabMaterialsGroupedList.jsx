@@ -1,6 +1,10 @@
 import { useMemo } from 'react'
 import { getProgramCurriculum } from '../../config/programCurriculum'
-import { groupLabMaterialsByLesson, labMaterialTypeLabel, normalizeLabMaterialSub } from '../../config/labMaterials'
+import {
+  groupLabMaterialsByModule,
+  labMaterialTypeLabel,
+  normalizeLabMaterialSub,
+} from '../../config/labMaterials'
 
 function ItemRow({ row, labels, onEdit, onDelete }) {
   return (
@@ -24,7 +28,7 @@ function ItemRow({ row, labels, onEdit, onDelete }) {
   )
 }
 
-function LessonGroupTable({ items, labels, onEdit, onDelete }) {
+function ModuleGroupTable({ items, labels, onEdit, onDelete }) {
   if (!items.length) return null
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-200 mb-3">
@@ -68,7 +72,7 @@ export default function AdminLabMaterialsGroupedList({
   }, [items, lineFilter, typeFilter])
 
   const { groups, unassigned } = useMemo(
-    () => groupLabMaterialsByLesson(filtered, levelsByLine, lineFilter),
+    () => groupLabMaterialsByModule(filtered, levelsByLine, lineFilter),
     [filtered, levelsByLine, lineFilter]
   )
 
@@ -78,27 +82,33 @@ export default function AdminLabMaterialsGroupedList({
 
   return (
     <div className="p-4 space-y-6">
-      {groups.map(({ line, lesson, items: groupItems }) => {
+      {groups.map(({ line, module, items: groupItems }) => {
         const config = getProgramCurriculum(line)
+        const extrasCents = groupItems.reduce((sum, row) => {
+          const cents = row.price_cents > 0 ? row.price_cents : null
+          return sum + (cents || 0)
+        }, 0)
         return (
-          <div key={`${line}-${lesson.lessonId}`} className="border-b border-slate-100 pb-6 last:border-0">
+          <div key={`${line}-${module.moduleId}`} className="border-b border-slate-100 pb-6 last:border-0">
             <div className="mb-3">
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                 {config.icon} {config.adminTitle}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
-                {labels.colStage}: {lesson.stage} · {labels.colCategory}: {lesson.category} · {labels.colModule}:{' '}
-                {lesson.module}
+                {labels.colStage}: {module.stage} · {labels.colCategory}: {module.category}
               </p>
               <p className="text-sm font-semibold text-bingo-dark mt-1">
-                {labels.colLesson}: {lesson.lessonTitle}
-                <span className="ml-2 text-xs font-normal text-slate-400 font-mono">{lesson.catalogSlug}</span>
+                {labels.colModule}: {module.module}
+                <span className="ml-2 text-xs font-normal text-slate-400 font-mono">{module.catalogSlug}</span>
               </p>
               <p className="text-[10px] text-slate-400 mt-0.5">
-                {labels.lessonItemCount.replace('{{count}}', String(groupItems.length))}
+                {labels.moduleItemCount.replace('{{count}}', String(groupItems.length))}
+                {extrasCents > 0 && labels.moduleExtrasPrice
+                  ? ` · ${labels.moduleExtrasPrice.replace('{{price}}', `$${(extrasCents / 100).toLocaleString()}`)}`
+                  : ''}
               </p>
             </div>
-            <LessonGroupTable items={groupItems} labels={labels} onEdit={onEdit} onDelete={onDelete} />
+            <ModuleGroupTable items={groupItems} labels={labels} onEdit={onEdit} onDelete={onDelete} />
           </div>
         )
       })}
@@ -107,7 +117,7 @@ export default function AdminLabMaterialsGroupedList({
         <div>
           <p className="text-sm font-semibold text-amber-800 mb-2">{labels.unassignedHeading}</p>
           <p className="text-xs text-amber-700/80 mb-3">{labels.unassignedHint}</p>
-          <LessonGroupTable items={unassigned} labels={labels} onEdit={onEdit} onDelete={onDelete} />
+          <ModuleGroupTable items={unassigned} labels={labels} onEdit={onEdit} onDelete={onDelete} />
         </div>
       ) : null}
     </div>

@@ -16,7 +16,7 @@ import { PAGE_SEO } from '../../config/programs'
 function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate }) {
   const [loading, setLoading] = useState(false)
   const owned = hasModule(mod.catalogSlug)
-  const price = formatIoaiPrice(mod.priceCents, mod.currency)
+  const price = formatIoaiPrice(mod.totalPriceCents ?? mod.priceCents, mod.currency)
   const detailPath = `/courses/module/${encodeURIComponent(mod.catalogSlug)}`
 
   const buy = (e) => {
@@ -41,10 +41,14 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
     <article className="course-card-dark group flex flex-col h-full">
       <Link to={detailPath} className="block relative">
         <div
-          className="course-card-dark__thumb bg-gradient-to-br from-amber-500/80 via-orange-600/70 to-amber-950 flex items-center justify-center"
+          className="course-card-dark__thumb bg-gradient-to-br from-amber-500/80 via-orange-600/70 to-amber-950 flex items-center justify-center overflow-hidden"
           aria-hidden
         >
-          <span className="text-5xl opacity-90 drop-shadow-lg">{mod.levelEmoji || '🏆'}</span>
+          {mod.coverUrl ? (
+            <img src={mod.coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <span className="text-5xl opacity-90 drop-shadow-lg">{mod.levelEmoji || '🏆'}</span>
+          )}
         </div>
       </Link>
 
@@ -69,7 +73,12 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
           {mod.introHtml || COURSES_PORTAL.ioaiModuleCardDesc}
         </p>
         <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-700/80 mt-auto">
-          <span className="text-lg font-bold text-cyan-400">{price}</span>
+          <div>
+            <span className="text-lg font-bold text-cyan-400">{price}</span>
+            {mod.extrasPriceCents > 0 ? (
+              <p className="text-[10px] text-slate-500 mt-0.5">{COURSES_PORTAL.modulePriceIncludesExtras}</p>
+            ) : null}
+          </div>
           {owned ? (
             <Link
               to={detailPath}
@@ -126,7 +135,7 @@ export default function IOAICoursesModuleView({ line }) {
     () =>
       buildHeroStats(
         modules.map((m) => ({
-          priceNumeric: m.priceCents != null ? m.priceCents / 100 : null,
+          priceNumeric: (m.totalPriceCents ?? m.priceCents) != null ? (m.totalPriceCents ?? m.priceCents) / 100 : null,
           students: 800,
           rating: 4.9,
         }))

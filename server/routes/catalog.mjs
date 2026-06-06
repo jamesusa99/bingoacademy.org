@@ -39,6 +39,7 @@ function pickCatalogPayload(body) {
     currency: p.currency || 'usd',
     purchasable: p.purchasable === undefined || p.purchasable === null ? null : !!p.purchasable,
     lesson_id: p.lesson_id || p.lessonId || null,
+    module_id: p.module_id || p.moduleId || null,
     updated_at: new Date().toISOString(),
   }
 }

@@ -15,10 +15,10 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 import { CURRICULUM_LINES, getProgramCurriculum } from '../../config/programCurriculum'
-import { fetchCurriculumAdmin } from '../../lib/ioaiCurriculumAdmin'
+import { fetchCurriculumAdmin, resyncModuleCatalogPrice } from '../../lib/ioaiCurriculumAdmin'
 import {
   LAB_MATERIAL_TYPES,
-  buildCurriculumLessonIndex,
+  buildCurriculumModuleIndex,
   deliveryTypeForLabSub,
 } from '../../config/labMaterials'
 
@@ -63,8 +63,8 @@ export default function AdminCoursesCatalog() {
 
   const labSubs = useMemo(() => labMaterialsSubcategoriesForLine(form.line), [form.line])
   const labItems = useMemo(() => items.filter(isLabMaterialsCatalogRow), [items])
-  const lessonOptions = useMemo(
-    () => buildCurriculumLessonIndex(levelsByLine[form.line] || [], form.line).options,
+  const moduleOptions = useMemo(
+    () => buildCurriculumModuleIndex(levelsByLine[form.line] || [], form.line).options,
     [levelsByLine, form.line]
   )
 
@@ -73,6 +73,7 @@ export default function AdminCoursesCatalog() {
       colType: t('pages.coursesCatalog.colType'),
       colSlug: t('pages.coursesCatalog.colSlug'),
       colProductLine: t('pages.coursesCatalog.colProductLine'),
+      colModule: t('pages.coursesCatalog.colModule'),
       colLesson: t('pages.coursesCatalog.colLesson'),
       colStatus: t('pages.coursesCatalog.colStatus'),
       colSortOrder: t('pages.coursesCatalog.colSortOrder'),
@@ -88,8 +89,9 @@ export default function AdminCoursesCatalog() {
       phCurrency: t('pages.coursesCatalog.phCurrency'),
       colStage: t('pages.ioaiCurriculum.colStage'),
       colCategory: t('pages.ioaiCurriculum.colCategory'),
-      colModule: t('pages.ioaiCurriculum.colModule'),
       lessonItemCount: t('pages.coursesCatalog.lessonItemCount'),
+      moduleItemCount: t('pages.coursesCatalog.moduleItemCount'),
+      moduleExtrasPrice: t('pages.coursesCatalog.moduleExtrasPrice'),
       unassignedHeading: t('pages.coursesCatalog.unassignedHeading'),
       unassignedHint: t('pages.coursesCatalog.unassignedHint'),
       noCourses: t('pages.coursesCatalog.noCourses'),
@@ -148,6 +150,7 @@ export default function AdminCoursesCatalog() {
       line: lineId,
       sub,
       lesson_id: '',
+      module_id: '',
       delivery_type: deliveryTypeForLabSub(sub, lineId),
     }))
   }
@@ -167,7 +170,8 @@ export default function AdminCoursesCatalog() {
     try {
       const payload = formToCatalogPayload(form)
       if (!payload.slug) throw new Error(t('pages.coursesCatalog.slugRequired'))
-      if (!payload.lesson_id) throw new Error(t('pages.coursesCatalog.lessonRequired'))
+      if (!payload.module_id) throw new Error(t('pages.coursesCatalog.moduleRequired'))
+      payload.lesson_id = null
 
       let savedRow = null
       try {
@@ -190,6 +194,9 @@ export default function AdminCoursesCatalog() {
       setSuccess(editingSlug ? t('pages.coursesCatalog.courseUpdated') : t('pages.coursesCatalog.courseSaved'))
       if (!editingSlug) {
         setEditingSlug(payload.slug)
+      }
+      if (payload.module_id) {
+        await resyncModuleCatalogPrice(payload.line, payload.module_id).catch(() => {})
       }
       await fetchItems()
     } catch (e) {
@@ -272,21 +279,21 @@ export default function AdminCoursesCatalog() {
               ))}
             </select>
           </Field>
-          <Field label={`${labels.colLesson} *`} className="sm:col-span-2 lg:col-span-3">
+          <Field label={`${labels.colModule} *`} className="sm:col-span-2 lg:col-span-3">
             <select
-              value={form.lesson_id}
-              onChange={(e) => set('lesson_id', e.target.value)}
+              value={form.module_id}
+              onChange={(e) => set('module_id', e.target.value)}
               className={inputClass}
             >
-              <option value="">{t('pages.coursesCatalog.selectLesson')}</option>
-              {lessonOptions.map((lesson) => (
-                <option key={lesson.lessonId} value={lesson.lessonId}>
-                  {lesson.label}
+              <option value="">{t('pages.coursesCatalog.selectModule')}</option>
+              {moduleOptions.map((mod) => (
+                <option key={mod.moduleId} value={mod.moduleId}>
+                  {mod.label}
                 </option>
               ))}
             </select>
-            {!lessonOptions.length ? (
-              <p className="text-[10px] text-amber-600 mt-1">{t('pages.coursesCatalog.noLessonsForLine')}</p>
+            {!moduleOptions.length ? (
+              <p className="text-[10px] text-amber-600 mt-1">{t('pages.coursesCatalog.noModulesForLine')}</p>
             ) : null}
           </Field>
           <Field label={labels.colStatus}>

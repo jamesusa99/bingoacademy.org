@@ -1,4 +1,4 @@
-/** Lab & materials types — all bind to curriculum lessons (1 lesson → N items) */
+/** Lab & materials types — bind to curriculum modules (L3); legacy rows may use lesson_id */
 
 export const LAB_MATERIAL_TYPES = [
   { id: 'training-lab', name: '集训 Lab', icon: '🏕️' },
@@ -53,6 +53,7 @@ export function buildCurriculumLessonIndex(levels, productLine) {
         for (const lesson of sortRows(mod.lessons)) {
           const entry = {
             lessonId: lesson.id,
+            moduleId: mod.id,
             productLine,
             stage: level.title,
             stageSlug: level.slug,
@@ -75,8 +76,48 @@ export function buildCurriculumLessonIndex(levels, productLine) {
   return { byId, options }
 }
 
-/** Group lab/material catalog rows under curriculum lessons */
-export function groupLabMaterialsByLesson(items, levelsByLine, lineFilter = 'all') {
+/** Flatten curriculum tree into L3 module index + picker options for one product line */
+export function buildCurriculumModuleIndex(levels, productLine) {
+  /** @type {Map<string, object>} */
+  const byId = new Map()
+  /** @type {Array<object>} */
+  const options = []
+
+  for (const level of sortRows(levels)) {
+    for (const theme of sortRows(level.themes)) {
+      const categoryLabel = theme.category_label || theme.title
+      for (const mod of sortRows(theme.modules)) {
+        const entry = {
+          moduleId: mod.id,
+          productLine,
+          stage: level.title,
+          stageSlug: level.slug,
+          category: categoryLabel,
+          categorySlug: theme.slug,
+          module: mod.title,
+          moduleSlug: mod.slug,
+          catalogSlug: mod.catalog_slug || mod.slug,
+          label: `${level.title} · ${categoryLabel} · ${mod.title}`,
+        }
+        byId.set(mod.id, entry)
+        options.push(entry)
+      }
+    }
+  }
+
+  return { byId, options }
+}
+
+function resolveRowModuleId(row, lessonById) {
+  if (row.module_id) return row.module_id
+  if (row.lesson_id && lessonById.has(row.lesson_id)) {
+    return lessonById.get(row.lesson_id).moduleId
+  }
+  return null
+}
+
+/** Group lab/material catalog rows under curriculum modules (L3) */
+export function groupLabMaterialsByModule(items, levelsByLine, lineFilter = 'all') {
   const lines = lineFilter === 'all' ? ['ioai', 'general', 'k12'] : [lineFilter]
   /** @type {Array<object>} */
   const groups = []
@@ -87,23 +128,37 @@ export function groupLabMaterialsByLesson(items, levelsByLine, lineFilter = 'all
 
   for (const line of lines) {
     const levels = levelsByLine[line] || []
-    const { byId } = buildCurriculumLessonIndex(levels, line)
+    const { byId: moduleById } = buildCurriculumModuleIndex(levels, line)
+    const { byId: lessonById } = buildCurriculumLessonIndex(levels, line)
     const lineItems = items.filter((row) => row.line === line)
 
-    for (const [, lesson] of byId) {
-      const bound = lineItems.filter((row) => row.lesson_id === lesson.lessonId)
+    for (const [, modEntry] of moduleById) {
+      const bound = lineItems.filter((row) => resolveRowModuleId(row, lessonById) === modEntry.moduleId)
       if (!bound.length) continue
       bound.forEach((row) => assignedIds.add(row.slug))
-      groups.push({ line, lesson, items: bound })
+      groups.push({ line, module: modEntry, items: bound })
     }
   }
 
   for (const row of items) {
     if (lineFilter !== 'all' && row.line !== lineFilter) continue
-    if (!row.lesson_id || !assignedIds.has(row.slug)) {
-      if (!assignedIds.has(row.slug)) unassigned.push(row)
+    const lines = lineFilter === 'all' ? ['ioai', 'general', 'k12'] : [lineFilter]
+    let moduleId = null
+    for (const line of lines) {
+      if (row.line !== line) continue
+      const { byId: lessonById } = buildCurriculumLessonIndex(levelsByLine[line] || [], line)
+      moduleId = resolveRowModuleId(row, lessonById)
+      if (moduleId) break
+    }
+    if (!moduleId && !assignedIds.has(row.slug)) {
+      unassigned.push(row)
     }
   }
 
   return { groups, unassigned }
+}
+
+/** @deprecated use groupLabMaterialsByModule */
+export function groupLabMaterialsByLesson(items, levelsByLine, lineFilter = 'all') {
+  return groupLabMaterialsByModule(items, levelsByLine, lineFilter)
 }

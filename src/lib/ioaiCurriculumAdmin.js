@@ -30,6 +30,7 @@ const CURRICULUM_ADMIN_SELECT = `
       compare_at_cents,
       currency,
       intro_html,
+      cover_url,
       status,
       lessons (
         id,
@@ -129,6 +130,7 @@ export function groupModulesForAdmin(levels) {
           moduleSlug: mod.slug,
           moduleSummary: mod.summary || '',
           catalogSlug: mod.catalog_slug || '',
+          coverUrl: mod.cover_url || '',
           priceCents: mod.price_cents ?? null,
           compareAtCents: mod.compare_at_cents ?? null,
           currency: mod.currency || 'usd',
@@ -599,14 +601,44 @@ export async function saveIOAILessonConfig(lessonId, patch) {
   return saveProgramLessonConfig('ioai', lessonId, patch)
 }
 
-function buildModuleCatalogPayload(productLine, group, patch) {
+function sumCatalogRowsPriceCents(rows) {
+  return (rows || []).reduce((sum, row) => {
+    const cents = row.price_cents != null && row.price_cents > 0 ? row.price_cents : null
+    return sum + (cents || 0)
+  }, 0)
+}
+
+async function sumLabExtrasForModule(moduleDbId) {
+  const { data: direct } = await supabase
+    .from('courses_catalog')
+    .select('price_cents, price, lesson_id')
+    .eq('module_id', moduleDbId)
+
+  let legacyTotal = 0
+  const { data: lessons } = await supabase.from('lessons').select('id').eq('module_id', moduleDbId)
+  const lessonIds = (lessons || []).map((l) => l.id)
+  if (lessonIds.length) {
+    const { data: legacy } = await supabase
+      .from('courses_catalog')
+      .select('price_cents, price')
+      .in('lesson_id', lessonIds)
+      .is('module_id', null)
+    legacyTotal = sumCatalogRowsPriceCents(legacy)
+  }
+
+  return sumCatalogRowsPriceCents(direct) + legacyTotal
+}
+
+function buildModuleCatalogPayload(productLine, group, patch, { totalPriceCents = null } = {}) {
   const config = getProgramCurriculum(productLine)
-  const priceCents =
+  const baseCents =
     patch.price_cents !== '' && patch.price_cents != null && patch.price_cents !== undefined
       ? parseInt(patch.price_cents, 10) || null
       : null
+  const priceCents = totalPriceCents != null && totalPriceCents > 0 ? totalPriceCents : baseCents
   const lessonCount = group.lessonCount ?? group.lessons?.length ?? 0
   const title = patch.title?.trim() || group.moduleTitle
+  const coverUrl = patch.cover_url?.trim() || null
 
   return {
     slug: patch.catalog_slug?.trim(),
@@ -627,6 +659,7 @@ function buildModuleCatalogPayload(productLine, group, patch) {
     sort_order: parseInt(patch.sort_order, 10) || group.sortOrder || 0,
     rating: parseCatalogRating(patch.rating),
     students: parseCatalogStudents(patch.students),
+    thumbnail_url: coverUrl,
   }
 }
 
@@ -656,23 +689,81 @@ export async function saveProgramModuleConfig(productLine, moduleDbId, patch, gr
     price_cents: priceCents,
     currency: (patch.currency || 'usd').trim().toLowerCase(),
     intro_html: patch.intro_html?.trim() || null,
+    cover_url: patch.cover_url?.trim() || null,
     updated_at: new Date().toISOString(),
   })
 
-  if (catalogSlug && priceCents != null && priceCents > 0) {
+  const extrasCents = await sumLabExtrasForModule(moduleDbId)
+  const totalCents = (priceCents || 0) + extrasCents
+
+  if (catalogSlug && totalCents > 0) {
     await saveCatalogCourse(
-      buildModuleCatalogPayload(productLine, { ...groupContext, moduleTitle: patch.title?.trim() || groupContext.moduleTitle }, {
-        ...patch,
-        catalog_slug: catalogSlug,
-        price_cents: priceCents,
-      })
+      buildModuleCatalogPayload(
+        productLine,
+        { ...groupContext, moduleTitle: patch.title?.trim() || groupContext.moduleTitle },
+        { ...patch, catalog_slug: catalogSlug, price_cents: priceCents },
+        { totalPriceCents: totalCents }
+      )
     )
   }
 
   return data
 }
 
-/** @deprecated use saveProgramModuleConfig('ioai', moduleDbId, patch, ctx) */
+/** Re-sync module courses_catalog row after lab/material price or binding changes */
+export async function resyncModuleCatalogPrice(productLine, moduleDbId) {
+  if (!isCurriculumLine(productLine) || !moduleDbId) return
+
+  const { data: mod } = await supabase
+    .from('modules')
+    .select(
+      `
+      id, slug, title, summary, catalog_slug, price_cents, currency, intro_html, cover_url, status, sort_order,
+      theme:themes (
+        slug, title, category_label,
+        level:course_levels ( slug, title, product_line )
+      ),
+      lessons ( id )
+    `
+    )
+    .eq('id', moduleDbId)
+    .maybeSingle()
+
+  if (!mod?.catalog_slug || mod.theme?.level?.product_line !== productLine) return
+
+  const level = mod.theme?.level
+  const theme = mod.theme
+  const groupContext = {
+    stage: level?.title || '',
+    category: theme?.category_label || theme?.title || '',
+    moduleTitle: mod.title,
+    lessons: mod.lessons || [],
+    sortOrder: mod.sort_order ?? 0,
+  }
+
+  const extrasCents = await sumLabExtrasForModule(moduleDbId)
+  const baseCents = mod.price_cents ?? 0
+  const totalCents = baseCents + extrasCents
+  if (totalCents <= 0) return
+
+  await saveCatalogCourse(
+    buildModuleCatalogPayload(
+      productLine,
+      groupContext,
+      {
+        title: mod.title,
+        summary: mod.summary || '',
+        catalog_slug: mod.catalog_slug,
+        price_cents: baseCents,
+        currency: mod.currency || 'usd',
+        cover_url: mod.cover_url || '',
+        status: mod.status || COURSE_STATUS.LIVE,
+        sort_order: mod.sort_order ?? 0,
+      },
+      { totalPriceCents: totalCents }
+    )
+  )
+}
 export async function saveIOAIModuleConfig(moduleDbId, patch, ctx) {
   return saveProgramModuleConfig('ioai', moduleDbId, patch, ctx)
 }

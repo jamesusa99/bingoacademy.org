@@ -94,8 +94,11 @@ export function flattenIoaiModules(levels) {
         modules.push({
           catalogSlug: mod.catalogSlug,
           title: mod.title,
+          coverUrl: mod.coverUrl || null,
           introHtml: mod.introHtml || '',
           priceCents: mod.priceCents,
+          extrasPriceCents: mod.extrasPriceCents ?? null,
+          totalPriceCents: mod.totalPriceCents ?? mod.priceCents,
           compareAtCents: mod.compareAtCents,
           currency: mod.currency || 'usd',
           lessonCount: mod.lessonCount ?? mod.lessons?.length ?? 0,
