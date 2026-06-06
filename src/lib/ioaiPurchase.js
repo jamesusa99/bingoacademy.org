@@ -11,7 +11,7 @@ export async function purchaseIoaiModule({
   onDemoUnlock,
 }) {
   if (!catalogSlug) return
-  const returnPath = `/ioai/l3/${encodeURIComponent(catalogSlug)}`
+  const returnPath = `/courses/module/${encodeURIComponent(catalogSlug)}`
 
   if (!isAuthenticated) {
     navigate(authLink('/login', returnPath))

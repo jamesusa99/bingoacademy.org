@@ -169,50 +169,8 @@ export default function IOAIModuleDetail({
           </div>
         </header>
 
-        {labMaterials.length > 0 ? (
-          <section className="mb-8">
-            <h2 className="text-sm font-semibold text-bingo-dark mb-1">{COURSES_PORTAL.moduleLabsHeading}</h2>
-            <p className="text-xs text-slate-500 mb-3">{COURSES_PORTAL.moduleLabsDesc}</p>
-            <ul className="space-y-2">
-              {labMaterials.map((item) => (
-                <li key={item.slug} className="card p-4 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex gap-3 min-w-0">
-                    {item.thumbnailUrl ? (
-                      <img
-                        src={item.thumbnailUrl}
-                        alt=""
-                        className="w-12 h-12 rounded-lg object-cover shrink-0"
-                      />
-                    ) : (
-                      <span className="w-12 h-12 rounded-lg bg-primary/10 text-primary text-lg flex items-center justify-center shrink-0">
-                        📦
-                      </span>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
-                        {labMaterialTypeLabel(item.sub, 'ioai')}
-                      </p>
-                      <p className="font-medium text-sm text-bingo-dark">{item.name}</p>
-                      {item.description ? (
-                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{item.description}</p>
-                      ) : null}
-                    </div>
-                  </div>
-                  {item.priceCents || item.price ? (
-                    <span className="text-sm font-semibold text-primary shrink-0">
-                      {item.priceCents
-                        ? formatIoaiPrice(item.priceCents, item.currency)
-                        : item.price}
-                    </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
         <h2 className="text-sm font-semibold text-bingo-dark mb-3">{COURSES_PORTAL.moduleLessonsHeading}</h2>
-        <ul className="space-y-2">
+        <ul className="space-y-2 mb-8">
           {(mod.lessons || []).map((lesson, index) => {
             const canWatch =
               owned ||
@@ -257,6 +215,48 @@ export default function IOAIModuleDetail({
             )
           })}
         </ul>
+
+        {labMaterials.length > 0 ? (
+          <section>
+            <h2 className="text-sm font-semibold text-bingo-dark mb-1">{COURSES_PORTAL.moduleLabsHeading}</h2>
+            <p className="text-xs text-slate-500 mb-3">{COURSES_PORTAL.moduleLabsDesc}</p>
+            <ul className="space-y-2">
+              {labMaterials.map((item) => (
+                <li key={item.slug} className="card p-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex gap-3 min-w-0">
+                    {item.thumbnailUrl ? (
+                      <img
+                        src={item.thumbnailUrl}
+                        alt=""
+                        className="w-12 h-12 rounded-lg object-cover shrink-0"
+                      />
+                    ) : (
+                      <span className="w-12 h-12 rounded-lg bg-primary/10 text-primary text-lg flex items-center justify-center shrink-0">
+                        📦
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                        {labMaterialTypeLabel(item.sub, 'ioai')}
+                      </p>
+                      <p className="font-medium text-sm text-bingo-dark">{item.name}</p>
+                      {item.description ? (
+                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{item.description}</p>
+                      ) : null}
+                    </div>
+                  </div>
+                  {item.priceCents || item.price ? (
+                    <span className="text-sm font-semibold text-primary shrink-0">
+                      {item.priceCents
+                        ? formatIoaiPrice(item.priceCents, item.currency)
+                        : item.price}
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </PageContent>
     </div>
   )

@@ -112,11 +112,10 @@ export function registerPaymentRoutes(app) {
 
     const admin = getSupabaseAdmin()
     const course = admin ? await getCatalogCourseBySlug(admin, courseSlug.trim()) : null
-    const quote = await resolveCheckoutQuote({
+    const quote = await resolveCheckoutQuote(admin, {
       courseSlug,
       purchaseType,
       course,
-      admin,
     })
     if (quote.error) {
       return res.status(quote.error === 'Course not found in catalog' ? 404 : 400).json({
@@ -186,11 +185,10 @@ export function registerPaymentRoutes(app) {
     const purchaseType = 'ioai_track'
     const admin = getSupabaseAdmin()
     const course = admin ? await getCatalogCourseBySlug(admin, courseSlug) : null
-    const quote = await resolveCheckoutQuote({
+    const quote = await resolveCheckoutQuote(admin, {
       courseSlug,
       purchaseType,
       course,
-      admin,
     })
     if (quote.error) {
       return res.status(400).json({ error: quote.error })
