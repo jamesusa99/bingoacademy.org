@@ -5,7 +5,7 @@ import AdminAlert from '../../components/admin/AdminAlert'
 import IOAICurriculumTable, { IOAILessonEditor, IOAIModuleEditor } from '../../components/admin/IOAICurriculumTable'
 import IOAIAddCourseForm from '../../components/admin/IOAIAddCourseForm'
 import { ADMIN_LABS_MATERIALS_PATH } from '../../config/adminNav'
-import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
+import { DEFAULT_ADMIN_PRODUCT_LINE, getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import {
   createProgramCourse,
   deleteProgramLesson,
@@ -17,8 +17,8 @@ import { readAdminUiDraft, writeAdminUiDraft, clearAdminUiDraft } from '../../ho
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 export default function AdminIOAICurriculum() {
-  const { line: lineParam = 'ioai' } = useParams()
-  const productLine = isCurriculumLine(lineParam) ? lineParam : 'ioai'
+  const { line: lineParam = DEFAULT_ADMIN_PRODUCT_LINE } = useParams()
+  const productLine = isCurriculumLine(lineParam) ? lineParam : DEFAULT_ADMIN_PRODUCT_LINE
   const config = getProgramCurriculum(productLine)
   const c = useAdminCrud()
   const [rows, setRows] = useState([])
@@ -239,7 +239,7 @@ export default function AdminIOAICurriculum() {
   }, [editingRow?.lessonId])
 
   if (!isCurriculumLine(lineParam)) {
-    return <Navigate to="/admin/curriculum/ioai" replace />
+    return <Navigate to={`/admin/curriculum/${DEFAULT_ADMIN_PRODUCT_LINE}`} replace />
   }
 
   const handleSave = async (form) => {

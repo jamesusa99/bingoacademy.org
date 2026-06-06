@@ -7,6 +7,7 @@ import {
   deliveryTypeForLabSub,
   normalizeLabMaterialSub,
 } from '../config/labMaterials'
+import { DEFAULT_ADMIN_PRODUCT_LINE } from '../config/programCurriculum'
 
 /** Default subcategory when switching product line in admin */
 export function defaultSubForLine(lineId) {
@@ -126,7 +127,7 @@ export function catalogRowToForm(row) {
   if (!row) return null
   return {
     slug: row.slug || '',
-    line: row.line || 'general',
+    line: row.line || DEFAULT_ADMIN_PRODUCT_LINE,
     sub: normalizeLabMaterialSub(row.sub, row.line),
     lesson_id: row.lesson_id || '',
     module_id: row.module_id || '',
@@ -162,8 +163,8 @@ export function catalogRowToForm(row) {
 
 const EMPTY_FORM = {
   slug: '',
-  line: 'general',
-  sub: 'online-lab',
+  line: DEFAULT_ADMIN_PRODUCT_LINE,
+  sub: defaultLabMaterialsSubForLine(DEFAULT_ADMIN_PRODUCT_LINE),
   lesson_id: '',
   module_id: '',
   status: 'live',

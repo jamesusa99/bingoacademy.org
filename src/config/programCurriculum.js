@@ -2,6 +2,9 @@
 
 export const CURRICULUM_LINES = ['ioai', 'general', 'k12']
 
+/** Default product line in admin forms, filters, and empty states */
+export const DEFAULT_ADMIN_PRODUCT_LINE = 'ioai'
+
 export const PROGRAM_CURRICULUM = {
   ioai: {
     line: 'ioai',

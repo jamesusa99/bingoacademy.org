@@ -3,7 +3,7 @@ import { GripVertical } from 'lucide-react'
 import { arrayMove } from '../../lib/arrayMove'
 import { reorderCatalogCourses } from '../../lib/admin/catalog'
 import { groupCatalogByCurriculum } from '../../lib/ioaiCourseStructure'
-import { isCurriculumLine } from '../../config/programCurriculum'
+import { DEFAULT_ADMIN_PRODUCT_LINE, isCurriculumLine } from '../../config/programCurriculum'
 
 function sortByOrder(rows) {
   return [...rows].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
@@ -157,7 +157,7 @@ function flattenGroupedOrder(grouped) {
   return list
 }
 
-function GroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, disabled, curriculumTree = [], productLine = 'ioai' }) {
+function GroupedCatalogList({ items, labels, onReorder, onEdit, onDelete, disabled, curriculumTree = [], productLine = DEFAULT_ADMIN_PRODUCT_LINE }) {
   const grouped = useMemo(
     () => groupCatalogByCurriculum(items, curriculumTree, productLine),
     [items, curriculumTree, productLine]
@@ -353,10 +353,10 @@ export default function DraggableCatalogList({
   onEdit,
   onDelete,
   onReorderComplete,
-  lineFilter = 'all',
+  lineFilter = DEFAULT_ADMIN_PRODUCT_LINE,
   groupedByCurriculum = false,
   curriculumTree = [],
-  productLine = 'ioai',
+  productLine = DEFAULT_ADMIN_PRODUCT_LINE,
 }) {
   const sorted = useMemo(() => sortByOrder(items), [items])
 

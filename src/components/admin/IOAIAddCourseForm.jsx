@@ -3,6 +3,7 @@ import CurriculumPathPicker, { CURRICULUM_NEW, curriculumInputClass } from './Cu
 import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
 import CurriculumVideoUpload from './CurriculumVideoUpload'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
+import { DEFAULT_ADMIN_PRODUCT_LINE } from '../../config/programCurriculum'
 
 const textareaClass = `${curriculumInputClass} min-h-[72px] resize-y`
 
@@ -36,7 +37,7 @@ const FORM_INIT = {
 }
 
 export default function IOAIAddCourseForm({
-  productLine = 'ioai',
+  productLine = DEFAULT_ADMIN_PRODUCT_LINE,
   levels,
   labels,
   saving,

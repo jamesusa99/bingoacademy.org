@@ -14,7 +14,7 @@ import AdminLabMaterialsGroupedList from '../../components/admin/AdminLabMateria
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
-import { CURRICULUM_LINES, getProgramCurriculum } from '../../config/programCurriculum'
+import { CURRICULUM_LINES, DEFAULT_ADMIN_PRODUCT_LINE, getProgramCurriculum } from '../../config/programCurriculum'
 import { fetchCurriculumAdmin, resyncModuleCatalogPrice } from '../../lib/ioaiCurriculumAdmin'
 import {
   LAB_MATERIAL_TYPES,
@@ -57,7 +57,7 @@ export default function AdminCoursesCatalog() {
   const [success, setSuccess] = useState(null)
   const [editingSlug, setEditingSlug] = useState(null)
   const [form, setForm] = useState(CATALOG_FORM_EMPTY)
-  const [lineFilter, setLineFilter] = useState('all')
+  const [lineFilter, setLineFilter] = useState(DEFAULT_ADMIN_PRODUCT_LINE)
   const [typeFilter, setTypeFilter] = useState('all')
   const [levelsByLine, setLevelsByLine] = useState({ ioai: [], general: [], k12: [] })
 
@@ -129,8 +129,8 @@ export default function AdminCoursesCatalog() {
     setEditingSlug(null)
     setForm({
       ...CATALOG_FORM_EMPTY,
-      line: 'general',
-      sub: defaultLabMaterialsSubForLine('general'),
+      line: DEFAULT_ADMIN_PRODUCT_LINE,
+      sub: defaultLabMaterialsSubForLine(DEFAULT_ADMIN_PRODUCT_LINE),
     })
     setSuccess(null)
     setError(null)
@@ -408,7 +408,7 @@ export default function AdminCoursesCatalog() {
               ))}
             </select>
             <a
-              href="/courses?line=general&sub=online-lab"
+              href="/courses?line=ioai"
               target="_blank"
               rel="noreferrer"
               className="text-xs text-primary hover:underline"
