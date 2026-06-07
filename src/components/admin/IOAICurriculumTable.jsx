@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { ExternalLink, Pencil, Plus, Trash2, Video } from 'lucide-react'
 import { getProgramCurriculum } from '../../config/programCurriculum'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
@@ -249,22 +249,32 @@ export function IOAIModuleEditor(props) {
   return <ProgramModuleEditor {...props} />
 }
 
-/** L3 module editor — shared by ioai, general, and k12 curriculum admin */
-export function ProgramModuleEditor({ group, productLine, labels, saving, deleting, onSave, onDelete, onClose }) {
-  const draftKey = `admin-curriculum-module-${group.moduleDbId}`
-  const [form, setForm] = useAdminFormDraft(draftKey, {
+function buildModuleFormState(group) {
+  return {
     title: group.moduleTitle || '',
     summary: group.moduleSummary || '',
     intro_html: group.introHtml || '',
     cover_url: group.coverUrl || '',
     catalog_slug: group.catalogSlug || '',
-    price: group.catalogPrice || '',
-    price_cents: group.catalogPriceCents ?? group.priceCents ?? '',
-    currency: group.currency || 'usd',
     ...CATALOG_FORM_DEFAULTS,
-    status: group.status || COURSE_STATUS.LIVE,
-    sort_order: group.sortOrder ?? 0,
-  })
+    status: group.catalogStatus || group.status || COURSE_STATUS.LIVE,
+    sort_order: group.catalogSortOrder ?? group.sortOrder ?? 0,
+    price: group.catalogPrice || (group.priceCents != null ? formatIoaiPrice(group.priceCents, group.currency) : ''),
+    price_cents: group.catalogPriceCents ?? group.priceCents ?? '',
+    currency: group.catalogCurrency || group.currency || 'usd',
+    rating: group.catalogRating ?? CATALOG_FORM_DEFAULTS.rating,
+    students: group.catalogStudents ?? CATALOG_FORM_DEFAULTS.students,
+  }
+}
+
+/** L3 module editor — shared by ioai, general, and k12 curriculum admin */
+export function ProgramModuleEditor({ group, productLine, labels, saving, deleting, onSave, onDelete, onClose }) {
+  const draftKey = `admin-curriculum-module-${group.moduleDbId}`
+  const [form, setForm] = useAdminFormDraft(draftKey, buildModuleFormState(group))
+
+  useEffect(() => {
+    setForm(buildModuleFormState(group))
+  }, [group.moduleDbId, group.catalogSlug, group.catalogPriceCents, group.catalogPrice, group.catalogStatus, group.catalogSortOrder, group.catalogRating, group.catalogStudents, group.moduleTitle, group.priceCents, setForm])
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const catalogSlug = form.catalog_slug?.trim() || group.catalogSlug || ''

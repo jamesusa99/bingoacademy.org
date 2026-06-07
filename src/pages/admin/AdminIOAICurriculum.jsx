@@ -470,6 +470,7 @@ export default function AdminIOAICurriculum() {
         labels={labels}
         deletingId={deletingId}
         onEditModule={(group) => {
+          sessionStorage.removeItem(`admin-curriculum-module-${group.moduleDbId}`)
           setShowAddForm(false)
           setEditingRow(null)
           setEditingModule(group)

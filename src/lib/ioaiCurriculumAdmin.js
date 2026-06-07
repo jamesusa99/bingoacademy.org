@@ -174,12 +174,7 @@ export async function fetchCurriculumAdmin(productLine = 'ioai') {
   ]
   const catalogMap = await fetchCatalogMapForSlugs(catalogSlugs)
   const rowsWithCatalog = attachCatalogToRows(rows, catalogMap)
-  const moduleGroupsWithCatalog = moduleGroups.map((group) => ({
-    ...group,
-    catalogPrice: catalogMap.get(group.catalogSlug)?.price ?? (group.priceCents ? formatUsd(group.priceCents) : ''),
-    catalogPriceCents: catalogMap.get(group.catalogSlug)?.price_cents ?? group.priceCents,
-    lessons: attachCatalogToRows(group.lessons, catalogMap),
-  }))
+  const moduleGroupsWithCatalog = moduleGroups.map((group) => attachCatalogToModuleGroup(group, catalogMap))
   return {
     levels: data || [],
     rows: rowsWithCatalog,
@@ -199,6 +194,22 @@ async function fetchCatalogMapForSlugs(slugs) {
 
   if (error) throw new Error(error.message)
   return new Map((data || []).map((row) => [row.slug, row]))
+}
+
+function attachCatalogToModuleGroup(group, catalogMap) {
+  const cat = group.catalogSlug ? catalogMap.get(group.catalogSlug) : null
+  return {
+    ...group,
+    catalogPrice: cat?.price ?? (group.priceCents != null ? formatUsd(group.priceCents) : ''),
+    catalogPriceCents: cat?.price_cents ?? group.priceCents,
+    catalogStatus: cat?.status ?? null,
+    catalogCurrency: cat?.currency ?? group.currency ?? 'usd',
+    catalogSortOrder: cat?.sort_order ?? group.sortOrder,
+    catalogRating: cat?.rating ?? null,
+    catalogStudents: cat?.students ?? null,
+    hasCatalog: !!cat,
+    lessons: attachCatalogToRows(group.lessons, catalogMap),
+  }
 }
 
 function attachCatalogToRows(rows, catalogMap) {
@@ -690,6 +701,8 @@ export async function saveProgramModuleConfig(productLine, moduleDbId, patch, gr
     currency: (patch.currency || 'usd').trim().toLowerCase(),
     intro_html: patch.intro_html?.trim() || null,
     cover_url: patch.cover_url?.trim() || null,
+    status: patch.status || 'live',
+    sort_order: parseInt(patch.sort_order, 10) || 0,
     updated_at: new Date().toISOString(),
   })
 
