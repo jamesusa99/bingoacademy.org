@@ -244,7 +244,7 @@ function LessonRow({ row, labels, deletingId, onEditLesson, onDeleteLesson }) {
   )
 }
 
-export function IOAIModuleEditor({ group, productLine, labels, saving, onSave, onClose }) {
+export function IOAIModuleEditor({ group, productLine, labels, saving, deleting, onSave, onDelete, onClose }) {
   const draftKey = `admin-curriculum-module-${group.moduleDbId}`
   const [form, setForm] = useAdminFormDraft(draftKey, {
     title: group.moduleTitle || '',
@@ -360,18 +360,33 @@ export function IOAIModuleEditor({ group, productLine, labels, saving, onSave, o
         <p className="text-[10px] text-slate-400 mt-2">{labels.moduleLessonsHint}</p>
       </div>
 
-      <div className="flex justify-end gap-2 pt-2">
-        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">
-          {labels.cancel}
-        </button>
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() => onSave(form)}
-          className="btn-primary px-5 py-2 text-sm disabled:opacity-60"
-        >
-          {saving ? labels.saving : labels.saveModule}
-        </button>
+      <div className="flex flex-wrap justify-between gap-2 pt-2">
+        {onDelete ? (
+          <button
+            type="button"
+            disabled={saving || deleting}
+            onClick={onDelete}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
+          >
+            <Trash2 className="w-4 h-4" />
+            {deleting ? labels.deleting : labels.deleteModule}
+          </button>
+        ) : (
+          <span />
+        )}
+        <div className="flex gap-2">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">
+            {labels.cancel}
+          </button>
+          <button
+            type="button"
+            disabled={saving || deleting}
+            onClick={() => onSave(form)}
+            className="btn-primary px-5 py-2 text-sm disabled:opacity-60"
+          >
+            {saving ? labels.saving : labels.saveModule}
+          </button>
+        </div>
       </div>
     </div>
   )

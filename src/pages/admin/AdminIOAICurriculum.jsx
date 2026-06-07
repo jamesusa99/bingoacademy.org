@@ -9,6 +9,7 @@ import { DEFAULT_ADMIN_PRODUCT_LINE, getProgramCurriculum, isCurriculumLine } fr
 import {
   createProgramCourse,
   deleteProgramLesson,
+  deleteProgramModule,
   fetchCurriculumAdmin,
   saveProgramLessonConfig,
   saveProgramModuleConfig,
@@ -32,6 +33,7 @@ export default function AdminIOAICurriculum() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
+  const [deletingModuleId, setDeletingModuleId] = useState(null)
   const editorRef = useRef(null)
 
   const i18nRoot = `pages.${config.i18nKey}`
@@ -124,8 +126,11 @@ export default function AdminIOAICurriculum() {
       videoFileMeta: c.t(`${i18nRoot}.videoFileMeta`),
       videoDurationTooLong: c.t(`${i18nRoot}.videoDurationTooLong`),
       deleteLesson: c.t(`${i18nRoot}.deleteLesson`),
+      deleteModule: c.t(`${i18nRoot}.deleteModule`),
       confirmDeleteLesson: (title) => c.t(`${i18nRoot}.confirmDeleteLesson`, { title }),
+      confirmDeleteModule: (title) => c.t(`${i18nRoot}.confirmDeleteModule`, { title }),
       lessonDeleted: c.t(`${i18nRoot}.lessonDeleted`),
+      moduleDeleted: c.t(`${i18nRoot}.moduleDeleted`),
       deleting: c.t(`${i18nRoot}.deleting`),
       editModule: c.t(`${i18nRoot}.editModule`),
       saveModule: c.t(`${i18nRoot}.saveModule`),
@@ -301,6 +306,26 @@ export default function AdminIOAICurriculum() {
     }
   }
 
+  const handleDeleteModule = async () => {
+    if (!editingModule) return
+    const title = editingModule.moduleTitle || editingModule.moduleSlug || editingModule.moduleDbId
+    if (!confirm(labels.confirmDeleteModule(title))) return
+    setDeletingModuleId(editingModule.moduleDbId)
+    setError(null)
+    try {
+      await deleteProgramModule(productLine, { moduleDbId: editingModule.moduleDbId })
+      setSuccess(labels.moduleDeleted)
+      sessionStorage.removeItem(`admin-curriculum-module-${editingModule.moduleDbId}`)
+      closeModuleEditor()
+      clearAdminUiDraft(uiKey)
+      await load()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setDeletingModuleId(null)
+    }
+  }
+
   const handleSaveModule = async (form) => {
     if (!editingModule) return
     setSaving(true)
@@ -414,7 +439,9 @@ export default function AdminIOAICurriculum() {
             productLine={productLine}
             labels={labels}
             saving={saving}
+            deleting={deletingModuleId === editingModule.moduleDbId}
             onSave={handleSaveModule}
+            onDelete={handleDeleteModule}
             onClose={closeModuleEditor}
           />
         </div>

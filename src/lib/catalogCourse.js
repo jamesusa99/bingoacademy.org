@@ -26,10 +26,16 @@ export function defaultLabMaterialsSubForLine(lineId) {
 }
 
 export function isLabMaterialsCatalogRow(row) {
-  if (!row?.line || !row?.sub) return true
+  if (!row?.line || !row?.sub) return false
   if (VIDEO_COURSE_SUB_BY_LINE[row.line] === row.sub) return false
-  if (row.sub === 'books') return false
+  if (row.sub === 'books' || row.sub === 'module' || row.sub === 'bundle') return false
   return true
+}
+
+/** Frontend catalog course object — lab / material kit (not video lesson or L3 module) */
+export function isLabMaterialCatalogCourse(course) {
+  if (!course?.line || !course?.sub) return false
+  return isLabMaterialsCatalogRow({ line: course.line, sub: course.sub })
 }
 
 /** Map Supabase courses_catalog row → frontend course object */

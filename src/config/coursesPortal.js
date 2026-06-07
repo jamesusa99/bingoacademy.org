@@ -128,5 +128,10 @@ export const COURSES_PORTAL = {
   watchLesson: 'Watch lesson',
   purchaseModuleToUnlock: 'Purchase unit to unlock',
   freeTrialLesson: 'Free trial',
+  labMaterialDefaultDesc: 'Hands-on lab session or material kit for this program. Purchase to unlock access.',
+  labMaterialIoaiAddonNote:
+    'This item can also be selected as an optional add-on when you purchase a related IOAI course unit.',
+  browseIoaiUnits: 'Browse IOAI course units',
+  backToLabs: 'Back to labs & kits',
   ioaiLegacyNote: 'Looking for the interactive curriculum tree?',
 }

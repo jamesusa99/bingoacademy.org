@@ -763,6 +763,56 @@ export async function saveIOAIModuleConfig(moduleDbId, patch, ctx) {
   return saveProgramModuleConfig('ioai', moduleDbId, patch, ctx)
 }
 
+/** Delete L3 module, its L4 lessons (DB cascade), and linked catalog rows. Lab/material rows keep module_id=NULL. */
+export async function deleteProgramModule(productLine, { moduleDbId } = {}) {
+  if (!isCurriculumLine(productLine)) throw new Error('Invalid product line')
+  if (!moduleDbId) throw new Error('Missing module id')
+
+  const { data: mod, error } = await supabase
+    .from('modules')
+    .select(
+      `
+      id, catalog_slug,
+      theme:themes ( level:course_levels ( product_line ) ),
+      lessons ( id, slug, catalog_slug )
+    `
+    )
+    .eq('id', moduleDbId)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  if (!mod) throw new Error('Module not found')
+  if (mod.theme?.level?.product_line !== productLine) {
+    throw new Error('Module does not belong to this product line')
+  }
+
+  const modSlug = mod.catalog_slug?.trim()
+  if (modSlug) {
+    try {
+      await deleteCatalogCourse(modSlug)
+    } catch (err) {
+      if (err?.status !== 404) throw err
+    }
+  }
+
+  for (const lesson of mod.lessons || []) {
+    const slug = (lesson.catalog_slug || lesson.slug)?.trim()
+    if (!slug) continue
+    try {
+      await deleteCatalogCourse(slug)
+    } catch (err) {
+      if (err?.status !== 404) throw err
+    }
+  }
+
+  return adminDelete('modules', moduleDbId)
+}
+
+/** @deprecated use deleteProgramModule('ioai', input) */
+export async function deleteIOAIModule(input) {
+  return deleteProgramModule('ioai', input)
+}
+
 /** Delete a curriculum lesson and its linked L4 catalog row (if any). */
 export async function deleteProgramLesson(_productLine, { lessonId, catalogSlug } = {}) {
   if (!lessonId) throw new Error('Missing lesson id')
