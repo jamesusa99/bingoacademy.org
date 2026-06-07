@@ -128,11 +128,6 @@ export const COURSES_PORTAL = {
   watchLesson: 'Watch lesson',
   purchaseModuleToUnlock: 'Purchase unit to unlock',
   freeTrialLesson: 'Free trial',
-  lessonIncludesExperiments: (n) => `Includes ${n} experiment${n === 1 ? '' : 's'}`,
-  lessonExperimentsHeading: 'Lesson experiments',
-  lessonExperimentsDesc: 'Interactive labs included with this course unit — no extra charge.',
-  openExperiment: 'Open experiment',
-  lessonMaterialsHeading: 'Lesson materials',
   labMaterialDefaultDesc: 'Hands-on lab session or material kit for this program. Purchase to unlock access.',
   labMaterialIoaiAddonNote:
     'This item can also be selected as an optional add-on when you purchase a related IOAI course unit.',

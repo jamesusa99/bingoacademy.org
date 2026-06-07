@@ -10,7 +10,6 @@ import {
   listLabMaterialsForModule,
   mapLabMaterialRow,
 } from '../lib/ioaiCommerce.mjs'
-import { mapExperimentCountsByLessonId } from '../lib/ioaiExperiments.mjs'
 
 function sortByOrder(a, b) {
   return (a.sort_order ?? 0) - (b.sort_order ?? 0)
@@ -110,7 +109,6 @@ export function registerIoaiRoutes(app) {
       .from('ioai_bundles')
       .select('slug, bundle_type, title, cover_url, intro_html, price_cents, compare_at_cents, currency, marketing_tags, status, sort_order')
       .eq('status', 'live')
-      .neq('bundle_type', 'lab_pack')
       .order('sort_order')
 
     const fullBundle = (bundles || []).find((b) => b.slug === IOAI_FULL_BUNDLE_SLUG) || null
@@ -164,21 +162,9 @@ export function registerIoaiRoutes(app) {
     const extrasPriceCents = labMaterials.reduce((sum, row) => sum + (row.priceCents || 0), 0)
     const totalPriceCents = mod.price_cents ?? 0
 
-    const lessonIds = (mod.lessons || []).map((l) => l.id).filter(Boolean)
-    const expCounts = await mapExperimentCountsByLessonId(admin, lessonIds)
-
-    const lessons = [...(mod.lessons || [])]
-      .filter((l) => l.status !== 'hidden' && l.status !== 'draft')
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-      .map((lesson) => ({
-        ...lesson,
-        experimentCount: expCounts.get(lesson.id) || 0,
-      }))
-
     return res.json({
       module: {
         ...mod,
-        lessons,
         extrasPriceCents: extrasPriceCents || null,
         totalPriceCents: totalPriceCents > 0 ? totalPriceCents : null,
         labMaterials,

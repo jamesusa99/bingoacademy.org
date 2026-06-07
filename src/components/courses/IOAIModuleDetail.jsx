@@ -66,15 +66,6 @@ export default function IOAIModuleDetail({
   const labMaterials = detail?.labMaterials || []
   const currency = mod?.currency || detail?.currency || 'usd'
 
-  const lessonExperimentCounts = useMemo(() => {
-    const map = new Map()
-    for (const lesson of detail?.lessons || []) {
-      const key = lesson.catalog_slug || lesson.slug
-      if (key) map.set(key, lesson.experimentCount || 0)
-    }
-    return map
-  }, [detail?.lessons])
-
   const selectedAddonSlugs = useMemo(() => [...selectedAddons], [selectedAddons])
 
   const selectedExtrasCents = useMemo(
@@ -238,11 +229,6 @@ export default function IOAIModuleDetail({
                     {lesson.trialEnabled ? (
                       <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded mt-1 inline-block">
                         {COURSES_PORTAL.freeTrialLesson}
-                      </span>
-                    ) : null}
-                    {(lessonExperimentCounts.get(lesson.id) || 0) > 0 ? (
-                      <span className="text-[10px] text-violet-700 bg-violet-50 px-2 py-0.5 rounded mt-1 inline-block ml-1">
-                        {COURSES_PORTAL.lessonIncludesExperiments(lessonExperimentCounts.get(lesson.id))}
                       </span>
                     ) : null}
                   </div>

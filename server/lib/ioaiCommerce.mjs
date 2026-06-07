@@ -398,11 +398,6 @@ export async function grantBundleEntitlement(admin, { userId, bundleSlug, orderI
   if (bundleErr) return { granted: [], error: bundleErr.message }
   granted.push(bundle.slug)
 
-  // Lab packs grant pack slug only — experiments unlocked via pack bindings, not L3 modules
-  if (bundle.bundle_type === 'lab_pack') {
-    return { granted: [...new Set(granted)] }
-  }
-
   const moduleSlugs = await listBundleModuleCatalogSlugs(admin, bundle.slug)
   for (const moduleSlug of moduleSlugs) {
     const { error } = await admin.from('course_enrollments').upsert(
