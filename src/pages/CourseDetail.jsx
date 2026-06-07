@@ -32,6 +32,7 @@ import CourseLessonList from '../components/courses/CourseLessonList'
 import CourseTrackOverview from '../components/courses/CourseTrackOverview'
 import CoursePreviewBar from '../components/courses/CoursePreviewBar'
 import LabMaterialCourseDetail from '../components/courses/LabMaterialCourseDetail'
+import LessonExperimentsSection from '../components/courses/LessonExperimentsSection'
 import PageContent from '../components/PageContent'
 import { confirmCheckoutSession } from '../lib/checkout'
 import { labMaterialTypeLabel, normalizeLabMaterialSub } from '../config/labMaterials'
@@ -355,6 +356,9 @@ export default function CourseDetail() {
                   moduleContext={moduleContext}
                   {...purchaseProps}
                 />
+                {progLine === 'ioai' && hasAccess ? (
+                  <LessonExperimentsSection lessonSlug={item.id} hasAccess={hasAccess} />
+                ) : null}
               </div>
               <div className="lg:col-span-2">
                 <CourseLessonList

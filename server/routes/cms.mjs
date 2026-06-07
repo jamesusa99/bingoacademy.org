@@ -21,6 +21,12 @@ export const CMS_TABLES = new Set([
   'themes',
   'modules',
   'lessons',
+  'ioai_experiments',
+  'ioai_experiment_materials',
+  'lesson_experiment_bindings',
+  'lesson_materials',
+  'ioai_bundle_experiments',
+  'ioai_bundle_recommended_modules',
 ])
 
 export function registerCmsRoutes(app, { verifyAdminUser }) {

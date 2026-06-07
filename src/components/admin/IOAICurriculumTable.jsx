@@ -5,6 +5,7 @@ import { COURSE_STATUS } from '../../config/coursesCatalog'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
 import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
 import CurriculumVideoUpload from './CurriculumVideoUpload'
+import LessonExperimentsPanel from './LessonExperimentsPanel'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
@@ -533,6 +534,8 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
       <CurriculumCatalogFields form={form} set={set} labels={labels} />
 
       <p className="text-[10px] text-slate-400">{labels.lessonCatalogPriceHint}</p>
+
+      <LessonExperimentsPanel lessonId={row.lessonId} disabled={saving || deleting} />
 
       <div className="flex flex-wrap justify-between gap-2 pt-2">
         {onDelete ? (

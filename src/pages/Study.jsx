@@ -14,6 +14,7 @@ import {
   isIOAITrackId,
 } from '../lib/ioaiCourseStructure'
 import { getTrackProgressStats, getLessonProgress, getContinueLessonId } from '../lib/learningProgress'
+import MyLabPacksSection from '../components/profile/MyLabPacksSection'
 
 function ProgressBar({ percent }) {
   return (
@@ -96,6 +97,8 @@ export default function Study() {
       <p className="text-slate-600 mb-8">
         Your enrolled courses — watch lessons, take notes, and track progress.
       </p>
+
+      <MyLabPacksSection />
 
       <section className="mb-10">
         <h2 className="section-title">My Courses</h2>

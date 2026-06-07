@@ -19,6 +19,7 @@
     "clear:courses": "node scripts/clear-courses-data.mjs",
     "clear:enrollments": "node scripts/clear-user-enrollments.mjs",
     "migrate:ioai-commerce": "node scripts/migrate-ioai-commerce.mjs",
+    "seed:ioai-experiments": "node scripts/seed-ioai-experiments.mjs",
     "seed:force": "node scripts/seed-supabase.mjs -- --force",
     "lint": "eslint .",
     "preview": "vite preview"

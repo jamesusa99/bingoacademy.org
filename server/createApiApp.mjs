@@ -9,6 +9,7 @@ import { registerCatalogRoutes } from './routes/catalog.mjs'
 import { registerStreamRoutes } from './routes/stream.mjs'
 import { registerPaymentRoutes } from './routes/payments.mjs'
 import { registerIoaiRoutes } from './routes/ioai.mjs'
+import { registerIoaiExperimentsRoutes } from './routes/ioaiExperiments.mjs'
 
 /** Express app for /api/* (admin, webhooks). Used by local server and Vercel serverless. */
 export function createApiApp() {
@@ -26,6 +27,7 @@ export function createApiApp() {
   registerStreamRoutes(app, { verifyAdminUser })
   registerPaymentRoutes(app)
   registerIoaiRoutes(app)
+  registerIoaiExperimentsRoutes(app, { verifyAdminUser })
 
   return app
 }

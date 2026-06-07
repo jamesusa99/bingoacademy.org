@@ -15,6 +15,8 @@ export const ADMIN_NAV_GROUPS = [
     items: [
       { path: '/admin/home', labelKey: 'nav.homePortal', icon: '🏠' },
       { path: ADMIN_LABS_MATERIALS_PATH, labelKey: 'nav.courses', icon: '🧪' },
+      { path: '/admin/ioai/experiments', labelKey: 'nav.ioaiExperiments', icon: '🔬' },
+      { path: '/admin/ioai/lab-packs', labelKey: 'nav.ioaiLabPacks', icon: '📦' },
       { path: '/admin/curriculum/ioai', labelKey: 'nav.ioaiCurriculum', icon: '🏆' },
       { path: '/admin/curriculum/general', labelKey: 'nav.generalCurriculum', icon: '🌐' },
       { path: '/admin/curriculum/k12', labelKey: 'nav.k12Curriculum', icon: '🏫' },
