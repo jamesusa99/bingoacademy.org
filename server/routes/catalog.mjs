@@ -53,6 +53,28 @@ async function persistCatalogOrder(admin, orderedSlugs) {
   if (failed?.error) throw failed.error
 }
 
+async function renameCatalogSlug(admin, previousSlug, row) {
+  const { data: taken } = await admin.from('courses_catalog').select('slug').eq('slug', row.slug).maybeSingle()
+  if (taken && taken.slug !== previousSlug) {
+    return { error: 'Slug already in use' }
+  }
+
+  const { data, error } = await admin
+    .from('courses_catalog')
+    .update(row)
+    .eq('slug', previousSlug)
+    .select()
+    .maybeSingle()
+
+  if (error) return { error: error.message }
+  if (!data) return { error: 'Catalog row not found' }
+
+  await admin.from('course_enrollments').update({ course_slug: row.slug }).eq('course_slug', previousSlug)
+  await admin.from('video_assets').update({ catalog_slug: row.slug }).eq('catalog_slug', previousSlug)
+
+  return { row: data }
+}
+
 export function registerCatalogRoutes(app, { verifyAdminUser }) {
   app.post('/api/admin/courses-catalog', async (req, res) => {
     const auth = await verifyAdminUser(req)
@@ -67,6 +89,13 @@ export function registerCatalogRoutes(app, { verifyAdminUser }) {
     if (!row.slug) return res.status(400).json({ error: 'slug is required' })
     if (!row.line) return res.status(400).json({ error: 'line is required' })
     if (!row.name) return res.status(400).json({ error: 'name is required' })
+
+    const previousSlug = req.body?.previousSlug?.trim() || req.body?.previous_slug?.trim() || null
+    if (previousSlug && previousSlug !== row.slug) {
+      const renamed = await renameCatalogSlug(admin, previousSlug, row)
+      if (renamed.error) return res.status(400).json({ error: renamed.error })
+      return res.json({ row: renamed.row })
+    }
 
     const { data, error } = await admin.from('courses_catalog').upsert(row, { onConflict: 'slug' }).select()
     if (error) return res.status(400).json({ error: error.message })

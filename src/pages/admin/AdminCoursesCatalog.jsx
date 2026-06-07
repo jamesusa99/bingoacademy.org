@@ -172,19 +172,33 @@ export default function AdminCoursesCatalog() {
       if (!payload.slug) throw new Error(t('pages.coursesCatalog.slugRequired'))
       if (!payload.module_id) throw new Error(t('pages.coursesCatalog.moduleRequired'))
       payload.lesson_id = null
+      if (editingSlug) payload.previousSlug = editingSlug
+      const { previousSlug, ...rowPayload } = payload
 
       let savedRow = null
       try {
         const result = await saveCatalogCourse(payload)
         savedRow = result?.row ?? null
       } catch (apiErr) {
-        const { data, error: dbErr } = await supabase
-          .from('courses_catalog')
-          .upsert(payload, { onConflict: 'slug' })
-          .select()
-          .maybeSingle()
+        const rename = editingSlug && editingSlug !== rowPayload.slug
+        const { data, error: dbErr } = rename
+          ? await supabase
+              .from('courses_catalog')
+              .update(rowPayload)
+              .eq('slug', editingSlug)
+              .select()
+              .maybeSingle()
+          : await supabase
+              .from('courses_catalog')
+              .upsert(rowPayload, { onConflict: 'slug' })
+              .select()
+              .maybeSingle()
         if (dbErr) throw apiErr
         savedRow = data
+      }
+
+      if (rowPayload.module_id && savedRow?.module_id !== rowPayload.module_id) {
+        throw new Error(t('pages.coursesCatalog.moduleBindingNotSaved'))
       }
 
       if (savedRow) {
@@ -192,11 +206,9 @@ export default function AdminCoursesCatalog() {
       }
 
       setSuccess(editingSlug ? t('pages.coursesCatalog.courseUpdated') : t('pages.coursesCatalog.courseSaved'))
-      if (!editingSlug) {
-        setEditingSlug(payload.slug)
-      }
-      if (payload.module_id) {
-        await resyncModuleCatalogPrice(payload.line, payload.module_id).catch(() => {})
+      setEditingSlug(rowPayload.slug)
+      if (rowPayload.module_id) {
+        await resyncModuleCatalogPrice(rowPayload.line, rowPayload.module_id).catch(() => {})
       }
       await fetchItems()
     } catch (e) {
@@ -253,10 +265,12 @@ export default function AdminCoursesCatalog() {
             <input
               value={form.slug}
               onChange={(e) => set('slug', e.target.value)}
-              disabled={!!editingSlug}
               placeholder={labels.phSlug}
-              className={`${inputClass} font-mono disabled:bg-slate-50`}
+              className={`${inputClass} font-mono`}
             />
+            {editingSlug && editingSlug !== form.slug?.trim() ? (
+              <p className="text-[10px] text-amber-700 mt-1">{t('pages.coursesCatalog.slugRenameHint')}</p>
+            ) : null}
           </Field>
           <Field label={`${labels.colProductLine} *`}>
             <select value={form.line} onChange={(e) => handleLineChange(e.target.value)} className={inputClass}>
