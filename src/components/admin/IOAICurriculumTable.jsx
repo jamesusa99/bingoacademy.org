@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
 import { ExternalLink, Pencil, Plus, Trash2, Video } from 'lucide-react'
+import { getProgramCurriculum } from '../../config/programCurriculum'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
 import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
@@ -244,7 +245,12 @@ function LessonRow({ row, labels, deletingId, onEditLesson, onDeleteLesson }) {
   )
 }
 
-export function IOAIModuleEditor({ group, productLine, labels, saving, deleting, onSave, onDelete, onClose }) {
+export function IOAIModuleEditor(props) {
+  return <ProgramModuleEditor {...props} />
+}
+
+/** L3 module editor — shared by ioai, general, and k12 curriculum admin */
+export function ProgramModuleEditor({ group, productLine, labels, saving, deleting, onSave, onDelete, onClose }) {
   const draftKey = `admin-curriculum-module-${group.moduleDbId}`
   const [form, setForm] = useAdminFormDraft(draftKey, {
     title: group.moduleTitle || '',
@@ -261,9 +267,15 @@ export function IOAIModuleEditor({ group, productLine, labels, saving, deleting,
   })
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
-  const storePreview = group.catalogSlug
-    ? `/courses/module/${encodeURIComponent(group.catalogSlug)}`
-    : null
+  const catalogSlug = form.catalog_slug?.trim() || group.catalogSlug || ''
+  const storePreview = useMemo(() => {
+    if (!catalogSlug) return null
+    const config = getProgramCurriculum(productLine)
+    if (productLine === 'ioai') {
+      return `/courses/module/${encodeURIComponent(catalogSlug)}`
+    }
+    return config.frontendPath || `/curriculum?line=${productLine}`
+  }, [catalogSlug, productLine])
 
   return (
     <div className="card p-5 sm:p-6 border-2 border-amber-400/40 space-y-4">

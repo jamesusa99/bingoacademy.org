@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
-import IOAICurriculumTable, { IOAILessonEditor, IOAIModuleEditor } from '../../components/admin/IOAICurriculumTable'
+import IOAICurriculumTable, { IOAILessonEditor, ProgramModuleEditor } from '../../components/admin/IOAICurriculumTable'
 import IOAIAddCourseForm from '../../components/admin/IOAIAddCourseForm'
 import { ADMIN_LABS_MATERIALS_PATH } from '../../config/adminNav'
 import { DEFAULT_ADMIN_PRODUCT_LINE, getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
@@ -433,7 +433,7 @@ export default function AdminIOAICurriculum() {
 
       {editingModule ? (
         <div ref={editorRef} className="scroll-mt-24">
-          <IOAIModuleEditor
+          <ProgramModuleEditor
             key={editingModule.moduleDbId}
             group={editingModule}
             productLine={productLine}

@@ -782,7 +782,7 @@ export async function deleteProgramModule(productLine, { moduleDbId } = {}) {
 
   if (error) throw new Error(error.message)
   if (!mod) throw new Error('Module not found')
-  if (mod.theme?.level?.product_line !== productLine) {
+  if (mod.theme?.level?.product_line && mod.theme.level.product_line !== productLine) {
     throw new Error('Module does not belong to this product line')
   }
 
