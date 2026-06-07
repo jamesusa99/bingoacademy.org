@@ -9,7 +9,6 @@ import {
   mapLabExtrasByModuleId,
   listLabMaterialsForModule,
   mapLabMaterialRow,
-  resolveModuleTotalPriceCents,
 } from '../lib/ioaiCommerce.mjs'
 
 function sortByOrder(a, b) {
@@ -42,7 +41,6 @@ function mapStoreTree(levels, extrasByModuleId = new Map()) {
           .map((mod) => {
             const extrasCents = extrasByModuleId.get(mod.id) || 0
             const baseCents = mod.price_cents ?? 0
-            const totalCents = baseCents + extrasCents
             return {
             id: mod.slug,
             catalogSlug: mod.catalog_slug,
@@ -51,7 +49,7 @@ function mapStoreTree(levels, extrasByModuleId = new Map()) {
             introHtml: mod.intro_html || mod.summary || '',
             priceCents: baseCents || null,
             extrasPriceCents: extrasCents || null,
-            totalPriceCents: totalCents > 0 ? totalCents : null,
+            totalPriceCents: baseCents > 0 ? baseCents : null,
             compareAtCents: mod.compare_at_cents ?? null,
             currency: mod.currency || 'usd',
             marketingTags: mod.marketing_tags || [],
@@ -162,7 +160,7 @@ export function registerIoaiRoutes(app) {
 
     const labMaterials = (await listLabMaterialsForModule(admin, mod.id)).map(mapLabMaterialRow).filter(Boolean)
     const extrasPriceCents = labMaterials.reduce((sum, row) => sum + (row.priceCents || 0), 0)
-    const totalPriceCents = await resolveModuleTotalPriceCents(admin, mod)
+    const totalPriceCents = mod.price_cents ?? 0
 
     return res.json({
       module: {

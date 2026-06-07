@@ -23,7 +23,7 @@ export async function initiateCoursePurchase({
 
   if (!stripeCheckout) {
     if (purchaseType === 'ioai_track') onDemoUnlock?.track?.()
-    else onDemoUnlock?.lesson?.()
+    else onDemoUnlock?.lesson?.(course.id)
     return
   }
 

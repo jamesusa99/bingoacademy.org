@@ -4,7 +4,8 @@ import {
   getModuleByCatalogSlug,
   isBundlePurchasable,
   isModulePurchasable,
-  resolveModuleTotalPriceCents,
+  resolveModuleCheckoutPriceCents,
+  validateModuleAddonSlugs,
 } from './ioaiCommerce.mjs'
 import { parsePriceStringToCents } from './priceUtils.mjs'
 
@@ -40,7 +41,7 @@ function isIoaiLessonSlug(slug) {
 }
 
 /** Resolve Stripe line item for checkout */
-export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, course }) {
+export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, course, addonSlugs = [] }) {
   const slug = courseSlug?.trim()
   if (!slug) return { error: 'courseSlug is required' }
 
@@ -72,14 +73,23 @@ export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, co
   if (purchaseType === 'module') {
     const mod = admin ? await getModuleByCatalogSlug(admin, slug) : null
     if (!mod) return { error: 'Module not found' }
-    const totalCents = admin ? await resolveModuleTotalPriceCents(admin, mod) : mod.price_cents
-    if (!isModulePurchasable(mod, totalCents)) return { error: 'This module is not available for purchase' }
+    const validation = admin ? await validateModuleAddonSlugs(admin, mod.id, addonSlugs) : { ok: true, slugs: [] }
+    if (!validation.ok) return { error: validation.error }
+    const totalCents = admin
+      ? await resolveModuleCheckoutPriceCents(admin, mod, validation.slugs)
+      : mod.price_cents
+    if (!isModulePurchasable(mod, mod.price_cents ?? 0)) {
+      return { error: 'This module is not available for purchase' }
+    }
+    const addonLabel =
+      validation.slugs.length > 0 ? ` (+ ${validation.slugs.length} add-on${validation.slugs.length === 1 ? '' : 's'})` : ''
     return {
       purchaseType: 'module',
       returnSlug: mod.catalog_slug,
       amountCents: totalCents,
       currency: (mod.currency || 'usd').toLowerCase(),
-      productName: mod.title || mod.catalog_slug,
+      productName: `${mod.title || mod.catalog_slug}${addonLabel}`,
+      addonSlugs: validation.slugs,
     }
   }
 

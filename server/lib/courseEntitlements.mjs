@@ -18,11 +18,16 @@ export const CHECKOUT_PRICING = {
 }
 
 /** Grant enrollment rows after successful payment */
-export async function grantCourseEntitlements(admin, { userId, purchaseType, courseSlug, orderId = null }) {
+export async function grantCourseEntitlements(admin, { userId, purchaseType, courseSlug, addonSlugs = [], orderId = null }) {
   if (!admin || !userId) return { granted: [] }
 
   if (purchaseType === 'module') {
-    return grantModuleEntitlement(admin, { userId, moduleCatalogSlug: courseSlug, orderId })
+    return grantModuleEntitlement(admin, {
+      userId,
+      moduleCatalogSlug: courseSlug,
+      addonSlugs,
+      orderId,
+    })
   }
 
   if (purchaseType === 'bundle' || purchaseType === 'ioai_track') {

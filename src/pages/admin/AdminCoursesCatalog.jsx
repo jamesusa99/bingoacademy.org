@@ -83,6 +83,8 @@ export default function AdminCoursesCatalog() {
       colPriceCents: t('pages.coursesCatalog.colPriceCents'),
       colPriceCentsHint: t('pages.coursesCatalog.colPriceCentsHint'),
       colCurrency: t('pages.coursesCatalog.colCurrency'),
+      colPurchasable: t('pages.coursesCatalog.colPurchasable'),
+      colPurchasableHint: t('pages.coursesCatalog.colPurchasableHint'),
       phSlug: t('pages.coursesCatalog.phSlug'),
       phPrice: t('pages.coursesCatalog.phPrice'),
       phPriceCents: t('pages.coursesCatalog.phPriceCents'),
@@ -355,6 +357,17 @@ export default function AdminCoursesCatalog() {
               placeholder={labels.phCurrency}
               className={inputClass}
             />
+          </Field>
+          <Field label={labels.colPurchasable}>
+            <select
+              value={form.purchasable === false || form.purchasable === 'false' ? 'false' : 'true'}
+              onChange={(e) => set('purchasable', e.target.value === 'true')}
+              className={inputClass}
+            >
+              <option value="true">{t('pages.coursesCatalog.purchasableYes')}</option>
+              <option value="false">{t('pages.coursesCatalog.purchasableNo')}</option>
+            </select>
+            <p className="text-[10px] text-slate-500 mt-1">{labels.colPurchasableHint}</p>
           </Field>
           <Field label={labels.colDescription} className="sm:col-span-2 lg:col-span-3">
             <textarea

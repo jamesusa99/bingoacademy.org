@@ -4,6 +4,7 @@ import { IOAI_FULL_BUNDLE_SLUG } from './ioaiAccess'
 
 export async function purchaseIoaiModule({
   catalogSlug,
+  addonSlugs = [],
   stripeCheckout,
   isAuthenticated,
   navigate,
@@ -19,7 +20,7 @@ export async function purchaseIoaiModule({
   }
 
   if (!stripeCheckout) {
-    onDemoUnlock?.module?.(catalogSlug)
+    onDemoUnlock?.module?.(catalogSlug, addonSlugs)
     return
   }
 
@@ -28,6 +29,7 @@ export async function purchaseIoaiModule({
     const { url } = await startCourseCheckout({
       courseSlug: catalogSlug,
       purchaseType: 'module',
+      addonSlugs,
       returnPath,
     })
     if (url) window.location.href = url

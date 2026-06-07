@@ -16,7 +16,8 @@ import { PAGE_SEO } from '../../config/programs'
 function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate }) {
   const [loading, setLoading] = useState(false)
   const owned = hasModule(mod.catalogSlug)
-  const price = formatIoaiPrice(mod.totalPriceCents ?? mod.priceCents, mod.currency)
+  const price = formatIoaiPrice(mod.priceCents ?? mod.totalPriceCents, mod.currency)
+  const hasOptionalAddons = (mod.extrasPriceCents ?? 0) > 0
   const detailPath = `/courses/module/${encodeURIComponent(mod.catalogSlug)}`
 
   const buy = (e) => {
@@ -75,8 +76,8 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
         <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-700/80 mt-auto">
           <div>
             <span className="text-lg font-bold text-cyan-400">{price}</span>
-            {mod.extrasPriceCents > 0 ? (
-              <p className="text-[10px] text-slate-500 mt-0.5">{COURSES_PORTAL.modulePriceIncludesExtras}</p>
+            {hasOptionalAddons ? (
+              <p className="text-[10px] text-slate-500 mt-0.5">{COURSES_PORTAL.moduleOptionalAddons}</p>
             ) : null}
           </div>
           {owned ? (
@@ -135,7 +136,7 @@ export default function IOAICoursesModuleView({ line }) {
     () =>
       buildHeroStats(
         modules.map((m) => ({
-          priceNumeric: (m.totalPriceCents ?? m.priceCents) != null ? (m.totalPriceCents ?? m.priceCents) / 100 : null,
+          priceNumeric: (m.priceCents ?? m.totalPriceCents) != null ? (m.priceCents ?? m.totalPriceCents) / 100 : null,
           students: 800,
           rating: 4.9,
         }))

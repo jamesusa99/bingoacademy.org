@@ -693,16 +693,14 @@ export async function saveProgramModuleConfig(productLine, moduleDbId, patch, gr
     updated_at: new Date().toISOString(),
   })
 
-  const extrasCents = await sumLabExtrasForModule(moduleDbId)
-  const totalCents = (priceCents || 0) + extrasCents
+  const baseCents = priceCents ?? 0
 
-  if (catalogSlug && totalCents > 0) {
+  if (catalogSlug && baseCents > 0) {
     await saveCatalogCourse(
       buildModuleCatalogPayload(
         productLine,
         { ...groupContext, moduleTitle: patch.title?.trim() || groupContext.moduleTitle },
-        { ...patch, catalog_slug: catalogSlug, price_cents: priceCents },
-        { totalPriceCents: totalCents }
+        { ...patch, catalog_slug: catalogSlug, price_cents: priceCents }
       )
     )
   }
@@ -710,7 +708,7 @@ export async function saveProgramModuleConfig(productLine, moduleDbId, patch, gr
   return data
 }
 
-/** Re-sync module courses_catalog row after lab/material price or binding changes */
+/** Re-sync module courses_catalog row (base price only; labs are optional add-ons) */
 export async function resyncModuleCatalogPrice(productLine, moduleDbId) {
   if (!isCurriculumLine(productLine) || !moduleDbId) return
 
@@ -741,10 +739,8 @@ export async function resyncModuleCatalogPrice(productLine, moduleDbId) {
     sortOrder: mod.sort_order ?? 0,
   }
 
-  const extrasCents = await sumLabExtrasForModule(moduleDbId)
   const baseCents = mod.price_cents ?? 0
-  const totalCents = baseCents + extrasCents
-  if (totalCents <= 0) return
+  if (baseCents <= 0) return
 
   await saveCatalogCourse(
     buildModuleCatalogPayload(
@@ -759,8 +755,7 @@ export async function resyncModuleCatalogPrice(productLine, moduleDbId) {
         cover_url: mod.cover_url || '',
         status: mod.status || COURSE_STATUS.LIVE,
         sort_order: mod.sort_order ?? 0,
-      },
-      { totalPriceCents: totalCents }
+      }
     )
   )
 }

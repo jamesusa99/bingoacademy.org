@@ -1,5 +1,6 @@
 import { getSupabaseAdmin, getSupabaseConfig } from '../lib/supabaseAdmin.mjs'
 import { grantCourseEntitlements } from '../lib/courseEntitlements.mjs'
+import { parseAddonSlugs } from '../lib/ioaiCommerce.mjs'
 import {
   STREAM_DEFAULT_MAX_DURATION_SECONDS,
   STREAM_MAX_FILE_BYTES,
@@ -155,13 +156,13 @@ export async function upsertOrderFromStripe(session) {
 
   if (session.payment_status === 'paid' && userId) {
     const purchaseType = metadata.purchase_type || 'course'
-    if (purchaseType === 'course' || purchaseType === 'lesson' || purchaseType === 'ioai_track') {
-      await grantCourseEntitlements(admin, {
-        userId,
-        purchaseType,
-        courseSlug: metadata.course_slug,
-        orderId: orderRow?.id ?? null,
-      })
-    }
+    const addonSlugs = parseAddonSlugs(metadata.addon_slugs)
+    await grantCourseEntitlements(admin, {
+      userId,
+      purchaseType,
+      courseSlug: metadata.course_slug,
+      addonSlugs,
+      orderId: orderRow?.id ?? null,
+    })
   }
 }

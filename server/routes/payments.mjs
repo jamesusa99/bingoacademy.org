@@ -15,6 +15,7 @@ import {
   resolveCheckoutQuote,
   resolveCoursePriceCents,
 } from '../lib/coursePricing.mjs'
+import { parseAddonSlugs } from '../lib/ioaiCommerce.mjs'
 import { resolveMallCartLineItems } from '../lib/mallCheckout.mjs'
 import { upsertOrderFromStripe } from './admin.mjs'
 
@@ -105,7 +106,7 @@ export function registerPaymentRoutes(app) {
       return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
     }
 
-    const { courseSlug, purchaseType = 'course' } = req.body || {}
+    const { courseSlug, purchaseType = 'course', addonSlugs = [] } = req.body || {}
     if (!courseSlug?.trim()) {
       return res.status(400).json({ error: 'courseSlug is required' })
     }
@@ -116,6 +117,7 @@ export function registerPaymentRoutes(app) {
       courseSlug,
       purchaseType,
       course,
+      addonSlugs,
     })
     if (quote.error) {
       return res.status(quote.error === 'Course not found in catalog' ? 404 : 400).json({
@@ -154,6 +156,7 @@ export function registerPaymentRoutes(app) {
           product_name: quote.productName,
           course_slug: courseSlug.trim(),
           purchase_type: quote.purchaseType,
+          addon_slugs: JSON.stringify(quote.addonSlugs || []),
           user_id: auth.user.id,
         },
       })
@@ -307,6 +310,7 @@ export function registerPaymentRoutes(app) {
         userId: auth.user.id,
         purchaseType,
         courseSlug: session.metadata?.course_slug,
+        addonSlugs: parseAddonSlugs(session.metadata?.addon_slugs),
       })
 
       const slugs = await listEnrollmentSlugs(admin, auth.user.id)

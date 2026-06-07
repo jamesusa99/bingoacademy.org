@@ -86,6 +86,14 @@ export function formToCatalogPayload(form) {
   }
 
   const sub = normalizeLabMaterialSub(form.sub, form.line)
+  const priceCents =
+    form.price_cents !== '' && form.price_cents != null ? parseInt(form.price_cents, 10) || null : null
+  const purchasableExplicit =
+    form.purchasable === true || form.purchasable === 'true'
+      ? true
+      : form.purchasable === false || form.purchasable === 'false'
+        ? false
+        : null
 
   return {
     slug: form.slug?.trim(),
@@ -100,9 +108,9 @@ export function formToCatalogPayload(form) {
     name_en: form.name_en?.trim() || null,
     description: form.description?.trim() || null,
     price: form.price?.trim() || null,
-    price_cents: form.price_cents !== '' && form.price_cents != null ? parseInt(form.price_cents, 10) || null : null,
+    price_cents: priceCents,
     currency: form.currency?.trim()?.toLowerCase() || 'usd',
-    purchasable: form.purchasable === '' || form.purchasable == null ? null : !!form.purchasable,
+    purchasable: purchasableExplicit ?? (priceCents != null && priceCents > 0),
     hours: form.hours?.trim() || null,
     badge: form.badge?.trim() || null,
     audience: form.audience?.trim() || null,
@@ -176,7 +184,7 @@ const EMPTY_FORM = {
   price: '',
   price_cents: '',
   currency: 'usd',
-  purchasable: '',
+  purchasable: true,
   hours: '12 sessions',
   badge: '',
   audience: '',

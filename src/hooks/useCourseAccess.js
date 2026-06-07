@@ -21,9 +21,13 @@ export function useCourseAccess(courseId) {
     [courseId, checkAccess]
   )
 
-  const unlockLesson = useCallback(() => {
-    if (courseId) unlockLessonById(courseId)
-  }, [courseId, unlockLessonById])
+  const unlockLesson = useCallback(
+    (slug) => {
+      const id = slug || courseId
+      if (id) unlockLessonById(id)
+    },
+    [courseId, unlockLessonById]
+  )
 
   const setCheckoutLoading = useCallback(
     (busy) => setCheckoutSlug(busy ? courseId : null),

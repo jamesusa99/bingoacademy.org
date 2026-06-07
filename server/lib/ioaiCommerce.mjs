@@ -56,10 +56,70 @@ export async function sumLabMaterialsPriceCents(admin, moduleId) {
   return sumCatalogRowsPriceCents(rows)
 }
 
+/** L3 base price only — lab/material add-ons are optional at checkout */
 export async function resolveModuleTotalPriceCents(admin, mod) {
   if (!mod) return 0
+  return mod.price_cents ?? 0
+}
+
+export function parseAddonSlugs(raw) {
+  if (!raw) return []
+  if (Array.isArray(raw)) return [...new Set(raw.map((s) => String(s).trim()).filter(Boolean))]
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (!trimmed) return []
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) return parseAddonSlugs(parsed)
+    } catch {
+      /* comma-separated fallback */
+    }
+    return [...new Set(trimmed.split(',').map((s) => s.trim()).filter(Boolean))]
+  }
+  return []
+}
+
+/** Validate optional lab/material slugs bound to an L3 module */
+export async function validateModuleAddonSlugs(admin, moduleId, addonSlugs = []) {
+  const slugs = parseAddonSlugs(addonSlugs)
+  if (!slugs.length) return { ok: true, slugs: [] }
+  if (!admin || !moduleId) return { ok: false, error: 'Module not found' }
+
+  const available = await listLabMaterialsForModule(admin, moduleId)
+  const bySlug = new Map(available.map((row) => [row.slug, row]))
+  const validated = []
+
+  for (const slug of slugs) {
+    if (!bySlug.has(slug)) {
+      return { ok: false, error: `Add-on not available for this unit: ${slug}` }
+    }
+    validated.push(slug)
+  }
+
+  return { ok: true, slugs: validated }
+}
+
+export async function resolveSelectedAddonsPriceCents(admin, moduleId, addonSlugs = []) {
+  const validation = await validateModuleAddonSlugs(admin, moduleId, addonSlugs)
+  if (!validation.ok) return 0
+
+  const available = await listLabMaterialsForModule(admin, moduleId)
+  const bySlug = new Map(available.map((row) => [row.slug, row]))
+  let sum = 0
+  for (const slug of validation.slugs) {
+    const row = bySlug.get(slug)
+    const cents =
+      row?.price_cents != null && row.price_cents > 0 ? row.price_cents : parsePriceStringToCents(row?.price)
+    sum += cents || 0
+  }
+  return sum
+}
+
+/** Module checkout total = base + selected optional add-ons */
+export async function resolveModuleCheckoutPriceCents(admin, mod, addonSlugs = []) {
+  if (!mod) return 0
   const base = mod.price_cents ?? 0
-  const extras = mod.id ? await sumLabMaterialsPriceCents(admin, mod.id) : 0
+  const extras = mod.id ? await resolveSelectedAddonsPriceCents(admin, mod.id, addonSlugs) : 0
   return base + extras
 }
 
@@ -281,25 +341,40 @@ export async function userHasLessonAccess(admin, userId, lessonSlug, { enrolledS
   return userHasModuleAccess(admin, userId, mod.catalog_slug, { enrolledSlugs })
 }
 
-export async function grantModuleEntitlement(admin, { userId, moduleCatalogSlug, orderId = null }) {
+export async function grantModuleEntitlement(admin, { userId, moduleCatalogSlug, addonSlugs = [], orderId = null }) {
   if (!admin || !userId || !moduleCatalogSlug?.trim()) return { granted: [] }
 
   const mod = await getModuleByCatalogSlug(admin, moduleCatalogSlug.trim())
   if (!mod) return { granted: [], error: 'Module not found' }
   if (mod.status !== 'live') return { granted: [], error: 'Module is not available for purchase' }
 
-  const { error } = await admin.from('course_enrollments').upsert(
-    {
-      user_id: userId,
-      course_slug: mod.catalog_slug,
-      source: 'stripe',
-      order_id: orderId,
-    },
-    { onConflict: 'user_id,course_slug' }
-  )
+  const validation = await validateModuleAddonSlugs(admin, mod.id, addonSlugs)
+  if (!validation.ok) return { granted: [], error: validation.error }
 
-  if (error) return { granted: [], error: error.message }
-  return { granted: [mod.catalog_slug] }
+  const granted = []
+  const rows = [
+    mod.catalog_slug,
+    ...validation.slugs,
+  ]
+
+  for (const slug of rows) {
+    const { error } = await admin.from('course_enrollments').upsert(
+      {
+        user_id: userId,
+        course_slug: slug,
+        source: 'stripe',
+        order_id: orderId,
+      },
+      { onConflict: 'user_id,course_slug' }
+    )
+    if (!error) granted.push(slug)
+  }
+
+  if (!granted.includes(mod.catalog_slug)) {
+    return { granted: [], error: 'Failed to grant module access' }
+  }
+
+  return { granted: [...new Set(granted)] }
 }
 
 export async function grantBundleEntitlement(admin, { userId, bundleSlug, orderId = null }) {

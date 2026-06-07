@@ -44,10 +44,10 @@ export async function fetchMyEnrollments() {
   return authFetch('/api/me/enrollments')
 }
 
-export async function startCourseCheckout({ courseSlug, purchaseType, returnPath }) {
+export async function startCourseCheckout({ courseSlug, purchaseType, returnPath, addonSlugs = [] }) {
   return authFetch('/api/checkout/course', {
     method: 'POST',
-    body: JSON.stringify({ courseSlug, purchaseType, returnPath }),
+    body: JSON.stringify({ courseSlug, purchaseType, returnPath, addonSlugs }),
   })
 }
 

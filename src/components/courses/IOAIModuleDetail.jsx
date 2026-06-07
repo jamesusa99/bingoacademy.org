@@ -13,7 +13,7 @@ import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { labMaterialTypeLabel } from '../../config/labMaterials'
 
 /**
- * L3 module detail: purchase unit + L4 lessons + bound labs/materials.
+ * L3 module detail: purchase unit + optional lab add-ons + L4 lessons.
  * @param {{ catalogSlug: string, backHref?: string, backLabel?: string }} props
  */
 export default function IOAIModuleDetail({
@@ -29,6 +29,7 @@ export default function IOAIModuleDetail({
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [detail, setDetail] = useState(null)
   const [detailLoading, setDetailLoading] = useState(true)
+  const [selectedAddons, setSelectedAddons] = useState(() => new Set())
 
   useEffect(() => {
     fetchPaymentsConfig()
@@ -39,6 +40,7 @@ export default function IOAIModuleDetail({
   useEffect(() => {
     let cancelled = false
     setDetailLoading(true)
+    setSelectedAddons(new Set())
     fetchIoaiModule(catalogSlug)
       .then((mod) => {
         if (!cancelled) setDetail(mod)
@@ -61,27 +63,50 @@ export default function IOAIModuleDetail({
   const mod = found?.module
   const coverUrl = mod?.coverUrl || detail?.cover_url || null
   const baseCents = mod?.priceCents ?? detail?.price_cents ?? null
-  const extrasCents = detail?.extrasPriceCents ?? mod?.extrasPriceCents ?? null
-  const totalCents =
-    detail?.totalPriceCents ?? mod?.totalPriceCents ?? (baseCents != null ? baseCents + (extrasCents || 0) : null)
-  const price = totalCents != null ? formatIoaiPrice(totalCents, mod?.currency || detail?.currency) : null
+  const labMaterials = detail?.labMaterials || []
+  const currency = mod?.currency || detail?.currency || 'usd'
+
+  const selectedAddonSlugs = useMemo(() => [...selectedAddons], [selectedAddons])
+
+  const selectedExtrasCents = useMemo(
+    () =>
+      labMaterials.reduce((sum, item) => {
+        if (!selectedAddons.has(item.slug)) return sum
+        return sum + (item.priceCents || 0)
+      }, 0),
+    [labMaterials, selectedAddons]
+  )
+
+  const totalCents = baseCents != null ? baseCents + selectedExtrasCents : null
+  const price = totalCents != null ? formatIoaiPrice(totalCents, currency) : null
   const compare = mod?.compareAtCents
-    ? formatIoaiPrice(mod.compareAtCents, mod?.currency)
+    ? formatIoaiPrice(mod.compareAtCents, mod.currency)
     : detail?.compare_at_cents
       ? formatIoaiPrice(detail.compare_at_cents, detail?.currency)
       : null
-  const labMaterials = detail?.labMaterials || []
+  const availableExtrasCents = labMaterials.reduce((sum, item) => sum + (item.priceCents || 0), 0)
+
+  const toggleAddon = (slug) => {
+    setSelectedAddons((prev) => {
+      const next = new Set(prev)
+      if (next.has(slug)) next.delete(slug)
+      else next.add(slug)
+      return next
+    })
+  }
 
   const buy = () => {
     purchaseIoaiModule({
       catalogSlug,
+      addonSlugs: selectedAddonSlugs,
       stripeCheckout,
       isAuthenticated,
       navigate,
       setCheckoutLoading,
       onDemoUnlock: {
-        module: (slug) => {
+        module: (slug, addons = []) => {
           purchaseCourseSlug(slug)
+          for (const addon of addons) purchaseCourseSlug(addon)
           window.location.reload()
         },
       },
@@ -128,15 +153,15 @@ export default function IOAIModuleDetail({
             <p className="text-xs text-slate-500 mt-2">
               {COURSES_PORTAL.moduleLessonCount(mod.lessons?.length || 0)}
               {labMaterials.length > 0
-                ? ` · ${labMaterials.length} lab${labMaterials.length === 1 ? '' : 's'} & kit${labMaterials.length === 1 ? '' : 's'}`
+                ? ` · ${labMaterials.length} optional add-on${labMaterials.length === 1 ? '' : 's'}`
                 : ''}
             </p>
             <div className="flex flex-wrap items-center gap-3 mt-4">
               {compare ? <span className="text-sm text-slate-400 line-through">{compare}</span> : null}
               <span className="text-xl font-bold text-primary">{price}</span>
-              {extrasCents > 0 ? (
+              {availableExtrasCents > 0 && selectedExtrasCents === 0 ? (
                 <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
-                  {COURSES_PORTAL.modulePriceIncludesExtras}
+                  {COURSES_PORTAL.moduleOptionalAddons}
                 </span>
               ) : null}
               {owned ? (
@@ -154,16 +179,23 @@ export default function IOAIModuleDetail({
                 </button>
               )}
             </div>
-            {extrasCents > 0 && baseCents != null ? (
+            {baseCents != null ? (
               <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500">
                 <div>
                   <dt className="inline">{COURSES_PORTAL.moduleBasePrice}: </dt>
-                  <dd className="inline font-medium">{formatIoaiPrice(baseCents, mod.currency)}</dd>
+                  <dd className="inline font-medium">{formatIoaiPrice(baseCents, currency)}</dd>
                 </div>
-                <div>
-                  <dt className="inline">{COURSES_PORTAL.moduleExtrasPrice}: </dt>
-                  <dd className="inline font-medium">{formatIoaiPrice(extrasCents, mod.currency)}</dd>
-                </div>
+                {selectedExtrasCents > 0 ? (
+                  <div>
+                    <dt className="inline">{COURSES_PORTAL.moduleExtrasPrice}: </dt>
+                    <dd className="inline font-medium">{formatIoaiPrice(selectedExtrasCents, currency)}</dd>
+                  </div>
+                ) : availableExtrasCents > 0 ? (
+                  <div>
+                    <dt className="inline">{COURSES_PORTAL.moduleExtrasPrice}: </dt>
+                    <dd className="inline font-medium">{COURSES_PORTAL.moduleSelectAddonsHint}</dd>
+                  </div>
+                ) : null}
               </dl>
             ) : null}
           </div>
@@ -221,39 +253,66 @@ export default function IOAIModuleDetail({
             <h2 className="text-sm font-semibold text-bingo-dark mb-1">{COURSES_PORTAL.moduleLabsHeading}</h2>
             <p className="text-xs text-slate-500 mb-3">{COURSES_PORTAL.moduleLabsDesc}</p>
             <ul className="space-y-2">
-              {labMaterials.map((item) => (
-                <li key={item.slug} className="card p-4 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex gap-3 min-w-0">
-                    {item.thumbnailUrl ? (
-                      <img
-                        src={item.thumbnailUrl}
-                        alt=""
-                        className="w-12 h-12 rounded-lg object-cover shrink-0"
-                      />
-                    ) : (
-                      <span className="w-12 h-12 rounded-lg bg-primary/10 text-primary text-lg flex items-center justify-center shrink-0">
-                        📦
-                      </span>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
-                        {labMaterialTypeLabel(item.sub, 'ioai')}
-                      </p>
-                      <p className="font-medium text-sm text-bingo-dark">{item.name}</p>
-                      {item.description ? (
-                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{item.description}</p>
+              {labMaterials.map((item) => {
+                const addonOwned = enrolledSlugs.includes(item.slug)
+                const selected = selectedAddons.has(item.slug)
+                const itemPrice =
+                  item.priceCents != null
+                    ? formatIoaiPrice(item.priceCents, item.currency || currency)
+                    : item.price || null
+                return (
+                  <li key={item.slug} className="card p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex gap-3 min-w-0 flex-1 items-start">
+                      {!owned && item.priceCents ? (
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleAddon(item.slug)}
+                          aria-label={`Add ${item.name} to purchase`}
+                          className="mt-1 rounded border-slate-300 text-primary focus:ring-primary/30 shrink-0"
+                        />
                       ) : null}
+                      {item.thumbnailUrl ? (
+                        <img
+                          src={item.thumbnailUrl}
+                          alt=""
+                          className="w-12 h-12 rounded-lg object-cover shrink-0"
+                        />
+                      ) : (
+                        <span className="w-12 h-12 rounded-lg bg-primary/10 text-primary text-lg flex items-center justify-center shrink-0">
+                          📦
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                          {labMaterialTypeLabel(item.sub, 'ioai')}
+                        </p>
+                        <p className="font-medium text-sm text-bingo-dark">{item.name}</p>
+                        {item.description ? (
+                          <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{item.description}</p>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                  {item.priceCents || item.price ? (
-                    <span className="text-sm font-semibold text-primary shrink-0">
-                      {item.priceCents
-                        ? formatIoaiPrice(item.priceCents, item.currency)
-                        : item.price}
-                    </span>
-                  ) : null}
-                </li>
-              ))}
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {itemPrice ? (
+                        <span className="text-sm font-semibold text-primary">{itemPrice}</span>
+                      ) : null}
+                      {addonOwned ? (
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          Purchased
+                        </span>
+                      ) : (
+                        <Link
+                          to={`/courses/detail/${encodeURIComponent(item.slug)}`}
+                          className="text-[10px] font-semibold text-primary hover:underline"
+                        >
+                          Buy separately →
+                        </Link>
+                      )}
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           </section>
         ) : null}

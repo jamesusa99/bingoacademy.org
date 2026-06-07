@@ -3,10 +3,12 @@ import { Link, useSearchParams } from 'react-router-dom'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import PageMeta from '../components/PageMeta'
-import IOAITrainingLabHub from './labs/IOAITrainingLabHub'
+import { LabMaterialCardActions } from '../components/labs/LabMaterialPurchaseButton'
 import { getProductLine, subcategoryLabel, isCourseComingSoon } from '../config/products'
 import { getProductLabTracks, PRODUCT_LABS_INTRO, labsPath } from '../config/productLabs'
 import { PRODUCT_LABS_PORTAL } from '../config/productLabsPortal'
+import { normalizeLabMaterialSub } from '../config/labMaterials'
+import { isLabMaterialsCatalogRow } from '../lib/catalogCourse'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
 
 export default function ProductLabs() {
@@ -21,20 +23,27 @@ export default function ProductLabs() {
   const activeTrack = tracks.find((t) => t.lineId === activeLine) ?? tracks[0]
 
   const countFor = (lineId, subId) =>
-    courses.filter((c) => c.line === lineId && c.sub === subId).length
+    courses.filter(
+      (c) =>
+        c.line === lineId &&
+        isLabMaterialsCatalogRow({ line: c.line, sub: c.sub }) &&
+        normalizeLabMaterialSub(c.sub, c.line) === normalizeLabMaterialSub(subId, lineId)
+    ).length
 
   const activeModule = activeTrack?.modules.find((m) => m.id === subParam)
   const moduleItems = useMemo(() => {
     if (!subParam || !activeTrack) return []
-    return courses.filter((c) => c.line === activeTrack.lineId && c.sub === subParam)
+    const normalizedSub = normalizeLabMaterialSub(subParam, activeTrack.lineId)
+    return courses.filter(
+      (c) =>
+        c.line === activeTrack.lineId &&
+        isLabMaterialsCatalogRow({ line: c.line, sub: c.sub }) &&
+        normalizeLabMaterialSub(c.sub, c.line) === normalizedSub
+    )
   }, [courses, subParam, activeTrack])
 
   const setLine = (lineId) => {
-    setParams(subParam && !(lineParam === 'ioai' && subParam === 'online-lab') ? { line: lineId, sub: subParam } : { line: lineId })
-  }
-
-  if (lineParam === 'ioai' && subParam === 'online-lab') {
-    return <IOAITrainingLabHub />
+    setParams(subParam ? { line: lineId, sub: subParam } : { line: lineId })
   }
 
   useEffect(() => {
@@ -173,16 +182,7 @@ export default function ProductLabs() {
                     <div key={item.id} className="card p-5 flex flex-col h-full hover:shadow-md transition">
                       <h3 className="font-semibold text-bingo-dark text-sm">{item.name}</h3>
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2 flex-1">{item.desc}</p>
-                      <div className="flex gap-2 mt-4 flex-wrap">
-                        <Link to={`/courses/detail/${item.id}`} className="btn-primary text-xs px-3 py-2 min-h-[40px] inline-flex items-center">
-                          View details
-                        </Link>
-                        {!soon && (
-                          <Link to="/mall" className="text-xs px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 min-h-[40px] inline-flex items-center">
-                            Mall
-                          </Link>
-                        )}
-                      </div>
+                      <LabMaterialCardActions item={item} soon={soon} />
                     </div>
                   )
                 })}
