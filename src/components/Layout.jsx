@@ -44,7 +44,7 @@ export default function Layout({ children }) {
     { type: 'link', path: '/exploration', label: 'AI Exploration' },
     { type: 'sep' },
     { type: 'link', path: '/showcase', label: 'Achievements' },
-    { type: 'link', path: '/cert', label: 'Pricing' },
+    { type: 'link', path: '/cert', label: 'Certification' },
     { type: 'link', path: '/community', label: 'Community' },
     { type: 'sep' },
     { type: 'link', path: '/mall', label: 'AI Mall' },
@@ -189,7 +189,7 @@ export default function Layout({ children }) {
               <Link to="/exploration" className="block hover:text-white">AI Exploration (free games)</Link>
               <Link to="/compare" className="block hover:text-white">Compare Programs</Link>
               <Link to="/showcase" className="block hover:text-white">Achievements</Link>
-              <Link to="/cert" className="block hover:text-white">Pricing & Certification</Link>
+              <Link to="/cert" className="block hover:text-white">Certification</Link>
               <Link to="/mall" className="block hover:text-white">AI Mall</Link>
             </div>
             <div>

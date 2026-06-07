@@ -21,7 +21,7 @@ export const mainNavGroups = [
   ],
   [
     { path: '/showcase', label: 'Achievements' },
-    { path: '/cert', label: 'Pricing' },
+    { path: '/cert', label: 'Certification' },
     { path: '/community', label: 'Community' },
   ],
   [
@@ -43,7 +43,7 @@ export const mainNav = [
   { path: '/labs', label: 'Labs' },
   { path: '/exploration', label: 'Explore' },
   { path: '/showcase', label: 'Achievements' },
-  { path: '/cert', label: 'Pricing' },
+  { path: '/cert', label: 'Certification' },
   { path: '/community', label: 'Community' },
   { path: '/mall', label: 'Mall' },
   { path: '/profile', label: 'Profile' },

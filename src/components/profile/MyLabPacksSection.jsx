@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FlaskConical, ExternalLink, Download } from 'lucide-react'
-import { fetchMyIoaiLabAccess } from '../lib/ioaiExperimentsClient'
+import { fetchMyIoaiLabAccess } from '../../lib/ioaiExperimentsClient'
 
 export default function MyLabPacksSection() {
   const [packs, setPacks] = useState([])
