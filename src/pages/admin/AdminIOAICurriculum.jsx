@@ -309,10 +309,10 @@ export default function AdminIOAICurriculum() {
   }, [load, showAddForm, editingRow, editingModule, saving])
 
   useEffect(() => {
-    if (editingRow && editorRef.current) {
+    if ((editingRow || editingModule) && editorRef.current) {
       editorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-  }, [editingRow?.lessonId])
+  }, [editingRow?.lessonId, editingModule?.moduleDbId])
 
   if (!isCurriculumLine(lineParam)) {
     return <Navigate to={`/admin/curriculum/${DEFAULT_ADMIN_PRODUCT_LINE}`} replace />
