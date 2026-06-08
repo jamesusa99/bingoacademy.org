@@ -24,6 +24,8 @@ export default function CourseStreamVideo({
   onPause,
   onEnded,
   onTimeUpdate,
+  onSeeking,
+  onSeeked,
 }) {
   const internalRef = useRef(null)
   const hlsRef = useRef(null)
@@ -94,6 +96,8 @@ export default function CourseStreamVideo({
       onPause={onPause}
       onEnded={onEnded}
       onTimeUpdate={onTimeUpdate}
+      onSeeking={onSeeking}
+      onSeeked={onSeeked}
     />
   )
 }

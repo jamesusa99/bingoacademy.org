@@ -6,6 +6,7 @@ import { IOAI_MODULE_PREVIEW_SECONDS } from '../../config/ioaiPreview'
 import { LESSON_SEGMENTS, getCheckpointQuestion } from '../../config/lessonSegments'
 import { useLessonProgress } from '../../hooks/useLearningProgress'
 import { useStreamPlayback } from '../../hooks/useStreamPlayback'
+import { useVideoPreviewLimit } from '../../hooks/useVideoPreviewLimit'
 import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import { getAdjacentLessons } from '../../lib/ioaiCourseStructure'
 import VideoPlayerControls from './VideoPlayerControls'
@@ -203,21 +204,25 @@ export default function SegmentPlayer({
     lessonSlug: course.id,
     fetchToken: hasAccess || canPreviewVideo || previewMode,
     adminPreview: Boolean(previewMode),
+    limitPreview: canPreviewVideo,
   })
 
   const previewSeconds = course?.previewSeconds ?? streamPreviewSeconds ?? IOAI_MODULE_PREVIEW_SECONDS
 
-  const [playing, setPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [previewEnded, setPreviewEnded] = useState(false)
-  const [duration, setDuration] = useState(0)
+  const preview = useVideoPreviewLimit({
+    enabled: canPreviewVideo,
+    previewSeconds,
+    videoReadyKey: playbackSrc || '',
+  })
+
+  const useIframe = Boolean(iframeSrc && !playbackSrc && hasAccess)
 
   const segmentIndex = progress.currentSegment
   const currentSegment = LESSON_SEGMENTS[segmentIndex]
   const productLine = isCurriculumLine(course?.line) ? course.line : 'ioai'
   const { next: nextLessonId } = getAdjacentLessons(course.id, courses, curriculumTree, productLine)
 
-  const showLock = !hasAccess && (previewEnded || currentTime >= previewSeconds - 0.5)
+  const showLock = !hasAccess && preview.showLock
 
   useEffect(() => {
     if (!startAtVideo) return
@@ -227,49 +232,25 @@ export default function SegmentPlayer({
   }, [startAtVideo, hasAccess, canPreviewVideo, course.id, goToSegment, segmentIndex])
 
   useEffect(() => {
-    setPreviewEnded(false)
-    setCurrentTime(0)
-    setPlaying(false)
-  }, [course?.id, hasAccess, segmentIndex])
-
-  useEffect(() => {
-    if (segmentIndex !== 1) return undefined
+    if (segmentIndex !== 1 || !hasAccess) return undefined
     const video = videoRef.current
     if (!video) return undefined
 
     const onTimeUpdate = () => {
-      setCurrentTime(video.currentTime)
-      if (!hasAccess && video.currentTime >= previewSeconds) {
-        video.pause()
-        video.currentTime = previewSeconds
-        setPreviewEnded(true)
-        setPlaying(false)
-        return
-      }
-      if (hasAccess) saveVideoPosition(video.currentTime)
+      saveVideoPosition(video.currentTime)
     }
 
     video.addEventListener('timeupdate', onTimeUpdate)
     return () => video.removeEventListener('timeupdate', onTimeUpdate)
-  }, [segmentIndex, hasAccess, previewSeconds, course?.id, saveVideoPosition])
+  }, [segmentIndex, hasAccess, course?.id, saveVideoPosition, playbackSrc])
 
   const handlePlay = useCallback(() => {
-    const video = videoRef.current
-    if (!video) return
-    if (!hasAccess && previewEnded) return
-    video.play().catch(() => {})
-    setPlaying(true)
-  }, [hasAccess, previewEnded])
+    preview.play(videoRef.current)
+  }, [preview])
 
   const handleReplayPreview = useCallback(() => {
-    const video = videoRef.current
-    if (!video || hasAccess) return
-    video.currentTime = 0
-    setPreviewEnded(false)
-    setCurrentTime(0)
-    video.play().catch(() => {})
-    setPlaying(true)
-  }, [hasAccess])
+    preview.replay(videoRef.current)
+  }, [preview])
 
   const goNextSegment = useCallback(() => {
     if (currentSegment) completeSegment(currentSegment.id)
@@ -281,14 +262,16 @@ export default function SegmentPlayer({
   }, [goToSegment, segmentIndex])
 
   const handleVideoEnded = useCallback(() => {
-    setPlaying(false)
+    preview.setPlaying(false)
     if (hasAccess) {
       completeSegment('video')
       goToSegment(2)
     }
-  }, [hasAccess, completeSegment, goToSegment])
+  }, [hasAccess, completeSegment, goToSegment, preview.setPlaying])
 
-  const previewProgress = duration ? Math.min(100, (previewSeconds / duration) * 100) : 0
+  const previewProgress = preview.previewProgress
+  const currentTime = preview.currentTime
+  const duration = preview.duration
 
   return (
     <section className="segment-player mb-6">
@@ -332,7 +315,7 @@ export default function SegmentPlayer({
                 </div>
               ) : null}
 
-              {!videoLoading && iframeSrc && !playbackSrc ? (
+              {!videoLoading && useIframe ? (
                 <iframe
                   title={course.nameEn || course.name}
                   src={iframeSrc}
@@ -344,6 +327,7 @@ export default function SegmentPlayer({
 
               {!videoLoading && playbackSrc ? (
                 <CourseStreamVideo
+                  key={playbackSrc}
                   videoRef={videoRef}
                   src={playbackSrc}
                   poster={poster}
@@ -351,17 +335,19 @@ export default function SegmentPlayer({
                   playsInline
                   preload="metadata"
                   controls={hasAccess}
-                  controlsList={hasAccess ? undefined : 'nodownload noplaybackrate'}
+                  controlsList={hasAccess ? undefined : 'nodownload noplaybackrate nofullscreen'}
                   onLoadedMetadata={(e) => {
-                    const d = e.currentTarget.duration || 0
-                    setDuration(d)
+                    preview.setDuration(e.currentTarget.duration || 0)
                     if (hasAccess && progress.videoPosition > 0) {
                       e.currentTarget.currentTime = progress.videoPosition
                     }
                   }}
-                  onPlay={() => setPlaying(true)}
-                  onPause={() => setPlaying(false)}
+                  onPlay={() => preview.setPlaying(true)}
+                  onPause={() => preview.setPlaying(false)}
                   onEnded={handleVideoEnded}
+                  onTimeUpdate={canPreviewVideo ? preview.onTimeUpdate : undefined}
+                  onSeeking={canPreviewVideo ? preview.onSeeking : undefined}
+                  onSeeked={canPreviewVideo ? preview.onSeeked : undefined}
                 />
               ) : null}
 
@@ -371,7 +357,7 @@ export default function SegmentPlayer({
                 </div>
               ) : null}
 
-              {!playing && !showLock && playbackSrc && !videoLoading ? (
+              {!preview.playing && !showLock && playbackSrc && !videoLoading ? (
                 <button
                   type="button"
                   onClick={handlePlay}
@@ -384,7 +370,7 @@ export default function SegmentPlayer({
                 </button>
               ) : null}
 
-              {(hasAccess || playing) ? <VideoPlayerControls videoRef={videoRef} /> : null}
+              {hasAccess ? <VideoPlayerControls videoRef={videoRef} /> : null}
 
               {showLock ? (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-sm p-6 text-center">

@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Loader2, Lock, Play, RotateCcw } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { useStreamPlayback } from '../../hooks/useStreamPlayback'
+import { useVideoPreviewLimit } from '../../hooks/useVideoPreviewLimit'
 import CourseStreamVideo from './CourseStreamVideo'
 import ModuleCoverImage from './ModuleCoverImage'
-
 import { IOAI_MODULE_PREVIEW_SECONDS } from '../../config/ioaiPreview'
 
 function formatTime(seconds) {
@@ -41,63 +41,16 @@ export default function IOAIModuleHeroVideo({
       : null,
     lessonSlug: lesson?.id,
     fetchToken: Boolean(canPlayFull || canPreview),
+    limitPreview: canPreview,
   })
 
-  const [playing, setPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [previewEnded, setPreviewEnded] = useState(false)
-  const [duration, setDuration] = useState(0)
+  const preview = useVideoPreviewLimit({
+    enabled: canPreview,
+    previewSeconds,
+    videoReadyKey: playbackSrc || '',
+  })
 
-  const hasAccess = canPlayFull
-  const showLock = canPreview && (previewEnded || currentTime >= previewSeconds - 0.5)
-  const previewProgress = duration ? Math.min(100, (previewSeconds / duration) * 100) : 0
-
-  useEffect(() => {
-    setPreviewEnded(false)
-    setCurrentTime(0)
-    setPlaying(false)
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0
-      videoRef.current.pause()
-    }
-  }, [lesson?.id, owned])
-
-  useEffect(() => {
-    if (!canPreview) return undefined
-    const video = videoRef.current
-    if (!video) return undefined
-
-    const onTimeUpdate = () => {
-      setCurrentTime(video.currentTime)
-      if (video.currentTime >= previewSeconds) {
-        video.pause()
-        video.currentTime = previewSeconds
-        setPreviewEnded(true)
-        setPlaying(false)
-      }
-    }
-
-    video.addEventListener('timeupdate', onTimeUpdate)
-    return () => video.removeEventListener('timeupdate', onTimeUpdate)
-  }, [canPreview, previewSeconds, lesson?.id])
-
-  const handlePlay = useCallback(() => {
-    const video = videoRef.current
-    if (!video) return
-    if (canPreview && previewEnded) return
-    video.play().catch(() => {})
-    setPlaying(true)
-  }, [canPreview, previewEnded])
-
-  const handleReplayPreview = useCallback(() => {
-    const video = videoRef.current
-    if (!video || !canPreview) return
-    video.currentTime = 0
-    setPreviewEnded(false)
-    setCurrentTime(0)
-    video.play().catch(() => {})
-    setPlaying(true)
-  }, [canPreview])
+  const useIframe = Boolean(iframeSrc && !playbackSrc && canPlayFull)
 
   if (!lesson?.cloudflareVideoId) {
     return (
@@ -134,7 +87,7 @@ export default function IOAIModuleHeroVideo({
           </div>
         ) : null}
 
-        {!videoLoading && videoError && !playbackSrc && !iframeSrc ? (
+        {!videoLoading && videoError && !playbackSrc && !useIframe ? (
           <div className="absolute inset-0">
             <ModuleCoverImage
               coverUrl={coverUrl}
@@ -147,7 +100,7 @@ export default function IOAIModuleHeroVideo({
           </div>
         ) : null}
 
-        {!videoLoading && iframeSrc && !playbackSrc ? (
+        {!videoLoading && useIframe ? (
           <iframe
             title={lesson.title}
             src={iframeSrc}
@@ -159,26 +112,30 @@ export default function IOAIModuleHeroVideo({
 
         {!videoLoading && playbackSrc ? (
           <CourseStreamVideo
+            key={playbackSrc}
             videoRef={videoRef}
             src={playbackSrc}
             poster={poster || coverUrl}
             className="w-full h-full object-contain"
             playsInline
             preload="metadata"
-            controls={hasAccess}
-            controlsList={hasAccess ? undefined : 'nodownload noplaybackrate'}
-            onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
-            onPlay={() => setPlaying(true)}
-            onPause={() => setPlaying(false)}
-            onEnded={() => setPlaying(false)}
+            controls={canPlayFull}
+            controlsList={canPlayFull ? undefined : 'nodownload noplaybackrate nofullscreen'}
+            onLoadedMetadata={(e) => preview.setDuration(e.currentTarget.duration || 0)}
+            onPlay={() => preview.setPlaying(true)}
+            onPause={() => preview.setPlaying(false)}
+            onEnded={() => preview.setPlaying(false)}
+            onTimeUpdate={canPreview ? preview.onTimeUpdate : undefined}
+            onSeeking={canPreview ? preview.onSeeking : undefined}
+            onSeeked={canPreview ? preview.onSeeked : undefined}
           />
         ) : null}
 
-        {!playing && !showLock && playbackSrc && !videoLoading ? (
+        {!preview.playing && !preview.showLock && playbackSrc && !videoLoading ? (
           <button
             type="button"
-            onClick={handlePlay}
-            className="absolute inset-0 flex items-center justify-center bg-black/25 hover:bg-black/35 transition group"
+            onClick={() => preview.play(videoRef.current)}
+            className="absolute inset-0 flex items-center justify-center bg-black/25 hover:bg-black/35 transition group z-10"
             aria-label={canPlayFull ? COURSES_PORTAL.moduleContinueWatching : COURSES_PORTAL.moduleWatchPreview}
           >
             <span className="w-16 h-16 rounded-full bg-white/95 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
@@ -187,8 +144,8 @@ export default function IOAIModuleHeroVideo({
           </button>
         ) : null}
 
-        {showLock ? (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-sm p-6 text-center">
+        {preview.showLock ? (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-sm p-6 text-center">
             <Lock className="w-10 h-10 text-amber-400 mb-3" aria-hidden />
             <p className="text-lg font-bold text-white mb-1">{COURSES_PORTAL.previewEndedTitle}</p>
             <p className="text-sm text-slate-400 max-w-sm mb-4">{COURSES_PORTAL.moduleUnlockAllDesc}</p>
@@ -203,7 +160,7 @@ export default function IOAIModuleHeroVideo({
               </button>
               <button
                 type="button"
-                onClick={handleReplayPreview}
+                onClick={() => preview.replay(videoRef.current)}
                 className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-800"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -214,24 +171,24 @@ export default function IOAIModuleHeroVideo({
         ) : null}
       </div>
 
-      {canPreview && duration > 0 && !showLock ? (
+      {canPreview && preview.duration > 0 && !preview.showLock ? (
         <div className="relative h-1.5 bg-slate-800">
           <div
             className="absolute inset-y-0 left-0 bg-cyan-500/80 transition-all"
-            style={{ width: `${Math.min(100, (currentTime / duration) * 100)}%` }}
+            style={{ width: `${Math.min(100, (preview.currentTime / preview.duration) * 100)}%` }}
           />
           <div
             className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-10"
-            style={{ left: `${previewProgress}%` }}
+            style={{ left: `${preview.previewProgress}%` }}
             title={COURSES_PORTAL.previewCutoff(previewSeconds)}
           />
         </div>
       ) : null}
 
-      {canPreview && !showLock ? (
+      {canPreview && !preview.showLock ? (
         <div className="px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
           <span>
-            {formatTime(currentTime)} / {formatTime(previewSeconds)} {COURSES_PORTAL.previewLabel}
+            {formatTime(preview.currentTime)} / {formatTime(previewSeconds)} {COURSES_PORTAL.previewLabel}
           </span>
           <span className="text-amber-400/90">{COURSES_PORTAL.previewUpgradeHint}</span>
         </div>

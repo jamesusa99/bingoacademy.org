@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Lock, Play, RotateCcw, Loader2 } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { IOAI_MODULE_PREVIEW_SECONDS } from '../../config/ioaiPreview'
 import { useStreamPlayback } from '../../hooks/useStreamPlayback'
+import { useVideoPreviewLimit } from '../../hooks/useVideoPreviewLimit'
 import CoursePurchasePanel from './CoursePurchasePanel'
 import CourseStreamVideo from './CourseStreamVideo'
 
@@ -38,69 +39,18 @@ export default function CourseVideoPlayer({
     course,
     lessonSlug: course?.id,
     fetchToken: hasAccess || canPreviewVideo,
+    limitPreview: canPreviewVideo,
   })
 
   const previewSeconds = course?.previewSeconds ?? streamPreviewSeconds ?? IOAI_MODULE_PREVIEW_SECONDS
-  const [playing, setPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [previewEnded, setPreviewEnded] = useState(false)
-  const [duration, setDuration] = useState(0)
 
-  const previewLimit = hasAccess ? duration : previewSeconds
-  const showLock = !hasAccess && (previewEnded || currentTime >= previewSeconds - 0.5)
+  const preview = useVideoPreviewLimit({
+    enabled: canPreviewVideo,
+    previewSeconds,
+    videoReadyKey: playbackSrc || '',
+  })
 
-  useEffect(() => {
-    setPreviewEnded(false)
-    setCurrentTime(0)
-    setPlaying(false)
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0
-      videoRef.current.pause()
-    }
-  }, [course?.id, hasAccess])
-
-  useEffect(() => {
-    if (hasAccess) return undefined
-    const video = videoRef.current
-    if (!video) return undefined
-
-    const onTimeUpdate = () => {
-      setCurrentTime(video.currentTime)
-      if (video.currentTime >= previewSeconds) {
-        video.pause()
-        video.currentTime = previewSeconds
-        setPreviewEnded(true)
-        setPlaying(false)
-      }
-    }
-
-    video.addEventListener('timeupdate', onTimeUpdate)
-    return () => video.removeEventListener('timeupdate', onTimeUpdate)
-  }, [hasAccess, previewSeconds, course?.id])
-
-  const handlePlay = useCallback(() => {
-    const video = videoRef.current
-    if (!video) return
-    if (!hasAccess && previewEnded) return
-    video.play().catch(() => {})
-    setPlaying(true)
-  }, [hasAccess, previewEnded])
-
-  const handleReplayPreview = useCallback(() => {
-    const video = videoRef.current
-    if (!video || hasAccess) return
-    video.currentTime = 0
-    setPreviewEnded(false)
-    setCurrentTime(0)
-    video.play().catch(() => {})
-    setPlaying(true)
-  }, [hasAccess])
-
-  const previewProgress = hasAccess
-    ? 100
-    : duration
-      ? Math.min(100, (previewSeconds / duration) * 100)
-      : 0
+  const useIframe = Boolean(iframeSrc && !playbackSrc && hasAccess)
 
   return (
     <section className="course-video-player mb-6">
@@ -132,13 +82,13 @@ export default function CourseVideoPlayer({
             </div>
           ) : null}
 
-          {!videoLoading && videoError && !playbackSrc && !iframeSrc ? (
+          {!videoLoading && videoError && !playbackSrc && !useIframe ? (
             <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
               <p className="text-sm text-amber-300 max-w-sm">{videoError}</p>
             </div>
           ) : null}
 
-          {!videoLoading && iframeSrc && !playbackSrc ? (
+          {!videoLoading && useIframe ? (
             <iframe
               title={course.nameEn || course.name}
               src={iframeSrc}
@@ -150,6 +100,7 @@ export default function CourseVideoPlayer({
 
           {!videoLoading && playbackSrc ? (
             <CourseStreamVideo
+              key={playbackSrc}
               videoRef={videoRef}
               src={playbackSrc}
               poster={poster}
@@ -157,18 +108,21 @@ export default function CourseVideoPlayer({
               playsInline
               preload="metadata"
               controls={hasAccess}
-              controlsList={hasAccess ? undefined : 'nodownload noplaybackrate'}
-              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
-              onPlay={() => setPlaying(true)}
-              onPause={() => setPlaying(false)}
-              onEnded={() => setPlaying(false)}
+              controlsList={hasAccess ? undefined : 'nodownload noplaybackrate nofullscreen'}
+              onLoadedMetadata={(e) => preview.setDuration(e.currentTarget.duration || 0)}
+              onPlay={() => preview.setPlaying(true)}
+              onPause={() => preview.setPlaying(false)}
+              onEnded={() => preview.setPlaying(false)}
+              onTimeUpdate={canPreviewVideo ? preview.onTimeUpdate : undefined}
+              onSeeking={canPreviewVideo ? preview.onSeeking : undefined}
+              onSeeked={canPreviewVideo ? preview.onSeeked : undefined}
             />
           ) : null}
 
-          {!playing && !showLock && playbackSrc && !videoLoading ? (
+          {!preview.playing && !preview.showLock && playbackSrc && !videoLoading ? (
             <button
               type="button"
-              onClick={handlePlay}
+              onClick={() => preview.play(videoRef.current)}
               className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition group"
               aria-label={COURSES_PORTAL.watchPreview}
             >
@@ -178,7 +132,7 @@ export default function CourseVideoPlayer({
             </button>
           ) : null}
 
-          {showLock ? (
+          {preview.showLock ? (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-sm p-6 text-center">
               <Lock className="w-10 h-10 text-amber-400 mb-3" aria-hidden />
               <p className="text-lg font-bold text-white mb-1">{COURSES_PORTAL.previewEndedTitle}</p>
@@ -193,7 +147,7 @@ export default function CourseVideoPlayer({
                 </button>
                 <button
                   type="button"
-                  onClick={handleReplayPreview}
+                  onClick={() => preview.replay(videoRef.current)}
                   className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-800"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -204,24 +158,24 @@ export default function CourseVideoPlayer({
           ) : null}
         </div>
 
-        {!hasAccess && duration > 0 ? (
+        {!hasAccess && preview.duration > 0 ? (
           <div className="relative h-1.5 bg-slate-800">
             <div
               className="absolute inset-y-0 left-0 bg-cyan-500/80 transition-all"
-              style={{ width: `${Math.min(100, (currentTime / duration) * 100)}%` }}
+              style={{ width: `${Math.min(100, (preview.currentTime / preview.duration) * 100)}%` }}
             />
             <div
               className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-10"
-              style={{ left: `${previewProgress}%` }}
+              style={{ left: `${preview.previewProgress}%` }}
               title={COURSES_PORTAL.previewCutoff(previewSeconds)}
             />
           </div>
         ) : null}
 
-        {!hasAccess && !showLock ? (
+        {!hasAccess && !preview.showLock ? (
           <div className="px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
             <span>
-              {formatTime(currentTime)} / {hasAccess ? formatTime(duration) : formatTime(previewSeconds)}{' '}
+              {formatTime(preview.currentTime)} / {formatTime(previewSeconds)}{' '}
               {COURSES_PORTAL.previewLabel}
             </span>
             <span className="text-amber-400/90">{COURSES_PORTAL.previewUpgradeHint}</span>

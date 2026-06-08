@@ -68,6 +68,41 @@ export function buildStreamWatchUrl(uid) {
   return `https://${host}/${encodeURIComponent(uid.trim())}/watch`
 }
 
+/** HLS + optional iframe URLs for token API (preview mode skips iframe). */
+export function buildStreamPlaybackSources(videoId, token = null, { previewOnly = false } = {}) {
+  const uid = videoId?.trim()
+  if (!uid) return { playbackSrc: null, iframeSrc: null }
+
+  const manifest = buildStreamManifestUrl(uid)
+  const iframeBase = `https://iframe.cloudflarestream.com/${encodeURIComponent(uid)}`
+
+  if (token && manifest) {
+    return {
+      playbackSrc: `${manifest}?token=${encodeURIComponent(token)}`,
+      iframeSrc: previewOnly ? null : `${iframeBase}?token=${encodeURIComponent(token)}`,
+    }
+  }
+
+  if (manifest) {
+    return {
+      playbackSrc: manifest,
+      iframeSrc: previewOnly ? null : iframeBase,
+    }
+  }
+
+  if (token) {
+    return {
+      playbackSrc: null,
+      iframeSrc: previewOnly ? null : `${iframeBase}?token=${encodeURIComponent(token)}`,
+    }
+  }
+
+  return {
+    playbackSrc: null,
+    iframeSrc: previewOnly ? null : iframeBase,
+  }
+}
+
 function streamHeaders() {
   return {
     Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,

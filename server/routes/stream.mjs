@@ -6,6 +6,7 @@ import {
   signStreamToken,
   streamVideoToPlayback,
   syncStreamPlayback,
+  buildStreamPlaybackSources,
 } from '../lib/cloudflareStream.mjs'
 import { verifyAuthUser } from '../lib/supabaseAuth.mjs'
 import { listEnrollmentSlugs } from '../lib/courseEntitlements.mjs'
@@ -127,23 +128,28 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
     if (isStreamSigningConfigured()) {
       const token = signStreamToken(videoId)
       if (token) {
+        const sources = buildStreamPlaybackSources(videoId, token, { previewOnly })
         return res.json({
           token,
           videoId,
           signed: true,
           previewOnly,
           previewSeconds: IOAI_MODULE_PREVIEW_SECONDS,
+          playbackSrc: sources.playbackSrc,
+          iframeSrc: sources.iframeSrc,
         })
       }
     }
 
+    const sources = buildStreamPlaybackSources(videoId, null, { previewOnly })
     return res.json({
       token: null,
       videoId,
       signed: false,
-      iframeSrc: `https://iframe.cloudflarestream.com/${encodeURIComponent(videoId)}`,
       previewOnly,
       previewSeconds: IOAI_MODULE_PREVIEW_SECONDS,
+      playbackSrc: sources.playbackSrc,
+      iframeSrc: sources.iframeSrc,
     })
   })
 
