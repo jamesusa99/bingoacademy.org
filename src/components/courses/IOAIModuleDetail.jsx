@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Award, Clock, Headphones, ShieldCheck, Video } from 'lucide-react'
 import PageContent from '../PageContent'
 import PageMeta from '../PageMeta'
 import { useAuth } from '../../contexts/AuthContext'
 import { useIOAIAccess, useIOAIStore } from '../../hooks/useIOAIStore'
 import { buildLessonModuleMap, findModule, fetchIoaiModule, formatIoaiPrice } from '../../lib/ioaiStore'
-import { hasIoaiLessonAccess } from '../../lib/ioaiAccess'
 import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig, confirmCheckoutSession } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { labMaterialTypeLabel } from '../../config/labMaterials'
-import LessonStreamPlayer from './LessonStreamPlayer'
-import ModuleCoverImage from './ModuleCoverImage'
+import IOAIModuleHeroVideo from './IOAIModuleHeroVideo'
+import IOAIModuleInfoCards, { buildModuleInfoContent } from './IOAIModuleInfoCards'
+import IOAIModuleLessonList from './IOAIModuleLessonList'
+
+const LESSON_DURATION_MINUTES = 14
 
 /**
  * L3 module detail: purchase unit + optional lab add-ons + L4 lessons.
@@ -95,18 +98,28 @@ export default function IOAIModuleDetail({
       return {
         ...lesson,
         cloudflareVideoId: api?.cloudflare_video_id || lesson.cloudflareVideoId || null,
+        contentGoals: api?.content_goals || lesson.contentGoals || '',
+        knowledgePoints: api?.knowledge_points || lesson.knowledgePoints || '',
+        previewSeconds: 15,
       }
     })
   }, [mod?.lessons, detail?.lessons])
 
-  const firstVideoLesson = useMemo(
-    () => lessons.find((l) => l.cloudflareVideoId) || null,
-    [lessons]
-  )
+  const heroLesson = useMemo(() => {
+    if (owned) {
+      return lessons.find((l) => l.cloudflareVideoId) || null
+    }
+    return (
+      lessons.find((l) => l.trialEnabled && l.cloudflareVideoId) ||
+      lessons.find((l) => l.cloudflareVideoId) ||
+      null
+    )
+  }, [lessons, owned])
 
   const baseCents = mod?.priceCents ?? detail?.price_cents ?? null
   const labMaterials = detail?.labMaterials || []
   const currency = mod?.currency || detail?.currency || 'usd'
+  const marketingTags = detail?.marketing_tags || mod?.marketingTags || []
 
   const selectedAddonSlugs = useMemo(() => [...selectedAddons], [selectedAddons])
 
@@ -127,6 +140,20 @@ export default function IOAIModuleDetail({
       ? formatIoaiPrice(detail.compare_at_cents, detail?.currency)
       : null
   const availableExtrasCents = labMaterials.reduce((sum, item) => sum + (item.priceCents || 0), 0)
+
+  const moduleInfo = useMemo(
+    () => buildModuleInfoContent({ mod, detail, lessons, marketingTags }),
+    [mod, detail, lessons, marketingTags]
+  )
+
+  const totalMinutes = lessons.length * LESSON_DURATION_MINUTES
+  const categoryLabel = found?.theme?.categoryLabel || found?.theme?.title || ''
+  const levelLabel = found?.level?.title || COURSES_PORTAL.moduleLevelBeginner
+  const subtitle =
+    mod?.summary ||
+    detail?.summary ||
+    moduleInfo.intro ||
+    COURSES_PORTAL.ioaiModuleCardDesc
 
   const toggleAddon = (slug) => {
     setSelectedAddons((prev) => {
@@ -155,6 +182,8 @@ export default function IOAIModuleDetail({
     })
   }
 
+  const firstWatchableLesson = lessons.find((l) => l.cloudflareVideoId)
+
   if (storeLoading || detailLoading) {
     return (
       <PageContent className="py-12">
@@ -177,160 +206,127 @@ export default function IOAIModuleDetail({
   return (
     <div className="w-full">
       <PageMeta title={`${mod.title} · IOAI`} />
-      <PageContent className="py-8">
-        <Link to={backHref} className="text-xs text-primary hover:underline">
+      <PageContent className="py-8 max-w-6xl mx-auto">
+        <Link to={backHref} className="text-sm text-primary hover:underline inline-flex items-center gap-1">
           ← {backLabel}
         </Link>
 
-        <header className="mt-4 mb-6 card overflow-hidden">
-          <ModuleCoverImage
-            coverUrl={mod?.coverUrl || detail?.cover_url}
-            alt=""
-            className="w-full h-44 sm:h-52 object-cover"
-          />
-          <div className="p-6">
-            <p className="text-[10px] uppercase tracking-wide text-slate-500">
-              {found.level.emoji} {found.level.title} · {found.theme.categoryLabel || found.theme.title}
-            </p>
-            <h1 className="text-2xl font-bold text-bingo-dark mt-1">{mod.title}</h1>
-            {mod.introHtml ? <p className="text-sm text-slate-600 mt-3 max-w-2xl">{mod.introHtml}</p> : null}
-            <p className="text-xs text-slate-500 mt-2">
-              {COURSES_PORTAL.moduleLessonCount(lessons.length || 0)}
-              {labMaterials.length > 0
-                ? ` · ${labMaterials.length} optional add-on${labMaterials.length === 1 ? '' : 's'}`
-                : ''}
-            </p>
-            <div className="flex flex-wrap items-center gap-3 mt-4">
-              {compare ? <span className="text-sm text-slate-400 line-through">{compare}</span> : null}
-              <span className="text-xl font-bold text-primary">{price}</span>
-              {availableExtrasCents > 0 && selectedExtrasCents === 0 ? (
-                <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
-                  {COURSES_PORTAL.moduleOptionalAddons}
+        {/* Hero */}
+        <header className="mt-6 mb-8">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 items-start">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                {found.level.emoji} {categoryLabel}
+              </span>
+
+              <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mt-4 tracking-tight">
+                {mod.title}
+              </h1>
+
+              <p className="text-base text-slate-600 mt-3 leading-relaxed max-w-xl">{subtitle}</p>
+
+              <div className="flex flex-wrap items-center gap-4 mt-5 text-sm text-slate-500">
+                <span className="inline-flex items-center gap-1.5">
+                  <Video className="w-4 h-4 text-primary" aria-hidden />
+                  {COURSES_PORTAL.moduleLessonCount(lessons.length || 0)}
                 </span>
-              ) : null}
-              {owned ? (
-                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
-                  {COURSES_PORTAL.moduleUnlocked}
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden />
+                  {levelLabel}
                 </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={buy}
-                  disabled={checkoutLoading || accessLoading}
-                  className="btn-primary text-sm px-4 py-2 disabled:opacity-60"
-                >
-                  {checkoutLoading ? COURSES_PORTAL.redirecting : COURSES_PORTAL.buyModule(price)}
-                </button>
-              )}
-            </div>
-            {baseCents != null ? (
-              <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500">
-                <div>
-                  <dt className="inline">{COURSES_PORTAL.moduleBasePrice}: </dt>
-                  <dd className="inline font-medium">{formatIoaiPrice(baseCents, currency)}</dd>
-                </div>
-                {selectedExtrasCents > 0 ? (
-                  <div>
-                    <dt className="inline">{COURSES_PORTAL.moduleExtrasPrice}: </dt>
-                    <dd className="inline font-medium">{formatIoaiPrice(selectedExtrasCents, currency)}</dd>
-                  </div>
-                ) : availableExtrasCents > 0 ? (
-                  <div>
-                    <dt className="inline">{COURSES_PORTAL.moduleExtrasPrice}: </dt>
-                    <dd className="inline font-medium">{COURSES_PORTAL.moduleSelectAddonsHint}</dd>
-                  </div>
+                {lessons.length > 0 ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-primary" aria-hidden />
+                    {COURSES_PORTAL.moduleTotalDuration(totalMinutes)}
+                  </span>
                 ) : null}
-              </dl>
-            ) : null}
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <div className="flex flex-wrap items-end gap-3">
+                  {compare ? (
+                    <span className="text-base text-slate-400 line-through pb-1">{compare}</span>
+                  ) : null}
+                  <span className="text-3xl font-bold text-primary">{price}</span>
+                  {availableExtrasCents > 0 && selectedExtrasCents === 0 ? (
+                    <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-1 rounded-full mb-1">
+                      {COURSES_PORTAL.moduleOptionalAddons}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  {owned ? (
+                    <>
+                      <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full">
+                        {COURSES_PORTAL.moduleUnlocked}
+                      </span>
+                      {firstWatchableLesson ? (
+                        <Link
+                          to={`/courses/detail/${encodeURIComponent(firstWatchableLesson.id)}?from=ioai&play=1`}
+                          className="text-sm font-semibold text-primary hover:underline"
+                        >
+                          {COURSES_PORTAL.moduleContinueLesson} →
+                        </Link>
+                      ) : null}
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={buy}
+                      disabled={checkoutLoading || accessLoading}
+                      className="btn-primary text-sm px-6 py-2.5 disabled:opacity-60"
+                    >
+                      {checkoutLoading ? COURSES_PORTAL.redirecting : COURSES_PORTAL.buyModule(price)}
+                    </button>
+                  )}
+                </div>
+
+                {baseCents != null ? (
+                  <p className="text-xs text-slate-500 mt-3">
+                    {COURSES_PORTAL.moduleBasePrice}: {formatIoaiPrice(baseCents, currency)}
+                    {availableExtrasCents > 0
+                      ? ` · ${COURSES_PORTAL.moduleSelectAddonsFootnote}`
+                      : null}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            <IOAIModuleHeroVideo
+              lesson={heroLesson}
+              owned={owned}
+              coverUrl={mod?.coverUrl || detail?.cover_url}
+              moduleTitle={mod.title}
+              onBuy={buy}
+              checkoutLoading={checkoutLoading}
+            />
           </div>
         </header>
 
-        {owned && firstVideoLesson ? (
-          <section className="mb-8">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <h2 className="text-sm font-semibold text-bingo-dark">{COURSES_PORTAL.moduleWatchNow}</h2>
-              <Link
-                to={`/courses/detail/${encodeURIComponent(firstVideoLesson.id)}?from=ioai&play=1`}
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                {COURSES_PORTAL.moduleContinueLesson} →
-              </Link>
-            </div>
-            <p className="text-xs text-slate-500 mb-3">{firstVideoLesson.title}</p>
-            <LessonStreamPlayer
-              lessonSlug={firstVideoLesson.id}
-              cloudflareUid={firstVideoLesson.cloudflareVideoId}
-              lessonTitle={firstVideoLesson.title}
-              fetchToken={owned}
-            />
-          </section>
-        ) : null}
+        <IOAIModuleInfoCards
+          intro={moduleInfo.intro}
+          objectives={moduleInfo.objectives}
+          outcomes={moduleInfo.outcomes}
+        />
 
-        {owned && !firstVideoLesson ? (
-          <p className="text-sm text-slate-500 mb-6">{COURSES_PORTAL.moduleNoVideoYet}</p>
-        ) : null}
-
-        <h2 className="text-sm font-semibold text-bingo-dark mb-3">{COURSES_PORTAL.moduleLessonsHeading}</h2>
-        <ul className="space-y-2 mb-8">
-          {lessons.map((lesson, index) => {
-            const canWatch =
-              owned ||
-              hasIoaiLessonAccess(lesson.id, {
-                moduleSlugs,
-                enrolledSlugs,
-                lessonModuleMap,
-                trialEnabled: lesson.trialEnabled,
-              })
-            return (
-              <li
-                key={lesson.id}
-                className={`card p-4 flex flex-wrap items-center justify-between gap-3 ${
-                  canWatch ? '' : 'opacity-75'
-                }`}
-              >
-                <div className="flex gap-3 min-w-0">
-                  <span className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">
-                    {index + 1}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm text-bingo-dark">{lesson.title}</p>
-                    {lesson.intro ? <p className="text-xs text-slate-500 mt-0.5">{lesson.intro}</p> : null}
-                    {lesson.trialEnabled ? (
-                      <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded mt-1 inline-block">
-                        {COURSES_PORTAL.freeTrialLesson}
-                      </span>
-                    ) : null}
-                    {lesson.cloudflareVideoId ? (
-                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded mt-1 inline-block ml-1">
-                        {COURSES_PORTAL.lessonVideoConfigured}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded mt-1 inline-block ml-1">
-                        {COURSES_PORTAL.lessonVideoMissing}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {canWatch ? (
-                  <Link
-                    to={`/courses/detail/${encodeURIComponent(lesson.id)}?from=ioai&play=1`}
-                    className="text-xs font-semibold text-primary px-3 py-1.5 rounded-lg border border-primary/30"
-                  >
-                    {COURSES_PORTAL.watchLesson}
-                  </Link>
-                ) : (
-                  <span className="text-xs text-slate-400">{COURSES_PORTAL.purchaseModuleToUnlock}</span>
-                )}
-              </li>
-            )
-          })}
-        </ul>
+        <IOAIModuleLessonList
+          lessons={lessons}
+          owned={owned}
+          moduleSlugs={moduleSlugs}
+          enrolledSlugs={enrolledSlugs}
+          lessonModuleMap={lessonModuleMap}
+          price={price}
+          onBuy={buy}
+          checkoutLoading={checkoutLoading}
+          accessLoading={accessLoading}
+        />
 
         {labMaterials.length > 0 ? (
-          <section>
-            <h2 className="text-sm font-semibold text-bingo-dark mb-1">{COURSES_PORTAL.moduleLabsHeading}</h2>
-            <p className="text-xs text-slate-500 mb-3">{COURSES_PORTAL.moduleLabsDesc}</p>
-            <ul className="space-y-2">
+          <section className="mb-8">
+            <h2 className="text-lg font-bold text-bingo-dark mb-1">{COURSES_PORTAL.moduleLabsHeading}</h2>
+            <p className="text-sm text-slate-500 mb-4">{COURSES_PORTAL.moduleLabsDesc}</p>
+            <ul className="space-y-3">
               {labMaterials.map((item) => {
                 const addonOwned = enrolledSlugs.includes(item.slug)
                 const selected = selectedAddons.has(item.slug)
@@ -394,6 +390,21 @@ export default function IOAIModuleDetail({
             </ul>
           </section>
         ) : null}
+
+        {/* Trust signals */}
+        <footer className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-200">
+          {[
+            { icon: ShieldCheck, label: COURSES_PORTAL.moduleTrustGuarantee },
+            { icon: Clock, label: COURSES_PORTAL.moduleTrustLifetime },
+            { icon: Award, label: COURSES_PORTAL.moduleTrustCertificate },
+            { icon: Headphones, label: COURSES_PORTAL.moduleTrustSupport },
+          ].map(({ icon: Icon, label }) => (
+            <div key={label} className="flex flex-col items-center text-center gap-2 py-3">
+              <Icon className="w-5 h-5 text-primary" aria-hidden />
+              <span className="text-xs text-slate-600 leading-snug">{label}</span>
+            </div>
+          ))}
+        </footer>
       </PageContent>
     </div>
   )
