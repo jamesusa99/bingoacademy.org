@@ -2,6 +2,9 @@ import { parsePriceStringToCents } from './priceUtils.mjs'
 
 export const IOAI_FULL_BUNDLE_SLUG = 'ioai-competition-system'
 
+/** L4 preview length when L3 unit is not purchased (seconds). */
+export const IOAI_MODULE_PREVIEW_SECONDS = 15
+
 export function sumCatalogRowsPriceCents(rows) {
   return (rows || []).reduce((sum, row) => {
     const cents =
@@ -317,6 +320,33 @@ export async function userHasModuleAccess(admin, userId, moduleCatalogSlug, { en
   if (!moduleCatalogSlug?.trim()) return false
   const unlocked = await resolveUnlockedModuleSlugs(admin, userId, enrolledSlugs)
   return unlocked.has(moduleCatalogSlug.trim())
+}
+
+/** IOAI L4 with configured video — preview allowed before L3 purchase (client caps playback). */
+export async function userCanPreviewLesson(admin, lessonSlug) {
+  if (!admin || !lessonSlug?.trim()) return false
+
+  const { data: lesson } = await admin
+    .from('lessons')
+    .select(
+      `
+      status, cloudflare_video_id,
+      module:modules (
+        status,
+        theme:themes (
+          level:course_levels ( product_line )
+        )
+      )
+    `
+    )
+    .or(`slug.eq.${lessonSlug.trim()},catalog_slug.eq.${lessonSlug.trim()}`)
+    .maybeSingle()
+
+  if (!lesson || lesson.status === 'hidden' || lesson.status === 'draft') return false
+  if (!lesson.cloudflare_video_id?.trim()) return false
+  if (lesson.module?.status !== 'live') return false
+  if (lesson.module?.theme?.level?.product_line !== 'ioai') return false
+  return true
 }
 
 export async function userHasLessonAccess(admin, userId, lessonSlug, { enrolledSlugs } = {}) {

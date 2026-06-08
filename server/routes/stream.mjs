@@ -9,7 +9,11 @@ import {
 } from '../lib/cloudflareStream.mjs'
 import { verifyAuthUser } from '../lib/supabaseAuth.mjs'
 import { listEnrollmentSlugs } from '../lib/courseEntitlements.mjs'
-import { userHasLessonAccess } from '../lib/ioaiCommerce.mjs'
+import {
+  IOAI_MODULE_PREVIEW_SECONDS,
+  userCanPreviewLesson,
+  userHasLessonAccess,
+} from '../lib/ioaiCommerce.mjs'
 
 async function applyPlaybackToCatalog(admin, catalogSlug, playback) {
   const patch = {
@@ -73,17 +77,15 @@ async function linkLessonVideo(admin, catalogSlug, cloudflareUid) {
 }
 
 export function registerStreamRoutes(app, { verifyAdminUser }) {
-  /** Signed playback token — requires auth + course access */
+  /** Signed playback token — full access when purchased; IOAI L4 preview otherwise. */
   app.post('/api/video/token', async (req, res) => {
-    const auth = await verifyAuthUser(req)
-    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
 
     const { cloudflareVideoId, cloudflare_video_id, lessonSlug } = req.body || {}
     const videoId = (cloudflareVideoId || cloudflare_video_id || '').trim()
     if (!videoId) return res.status(400).json({ error: 'cloudflareVideoId is required' })
 
-    const admin = auth.admin
-    const slugs = await listEnrollmentSlugs(admin, auth.user.id)
     const slug = lessonSlug?.trim()
     const adminPreview = Boolean(req.body?.adminPreview)
 
@@ -92,20 +94,46 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
       if (!adminAuth.ok) {
         return res.status(adminAuth.status).json({ error: adminAuth.error })
       }
-    } else {
-      const allowed = slug
-        ? await userHasLessonAccess(admin, auth.user.id, slug, { enrolledSlugs: slugs })
-        : false
+    } else if (slug) {
+      const auth = await verifyAuthUser(req)
+      let hasFull = false
 
-      if (!allowed) {
+      if (auth.ok) {
+        const slugs = await listEnrollmentSlugs(auth.admin, auth.user.id)
+        hasFull = await userHasLessonAccess(auth.admin, auth.user.id, slug, { enrolledSlugs: slugs })
+      }
+
+      const canPreview = !hasFull ? await userCanPreviewLesson(admin, slug) : false
+
+      if (!hasFull && !canPreview) {
         return res.status(403).json({ error: 'Purchase the unit or full track to watch this lesson' })
+      }
+    } else {
+      return res.status(400).json({ error: 'lessonSlug is required' })
+    }
+
+    let previewOnly = false
+    if (!adminPreview && slug) {
+      const auth = await verifyAuthUser(req)
+      if (auth.ok) {
+        const slugs = await listEnrollmentSlugs(auth.admin, auth.user.id)
+        const hasFull = await userHasLessonAccess(auth.admin, auth.user.id, slug, { enrolledSlugs: slugs })
+        previewOnly = !hasFull
+      } else {
+        previewOnly = true
       }
     }
 
     if (isStreamSigningConfigured()) {
       const token = signStreamToken(videoId)
       if (token) {
-        return res.json({ token, videoId, signed: true })
+        return res.json({
+          token,
+          videoId,
+          signed: true,
+          previewOnly,
+          previewSeconds: IOAI_MODULE_PREVIEW_SECONDS,
+        })
       }
     }
 
@@ -114,6 +142,8 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
       videoId,
       signed: false,
       iframeSrc: `https://iframe.cloudflarestream.com/${encodeURIComponent(videoId)}`,
+      previewOnly,
+      previewSeconds: IOAI_MODULE_PREVIEW_SECONDS,
     })
   })
 

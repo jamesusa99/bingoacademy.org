@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Lock, Play, RotateCcw, Loader2 } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
+import { IOAI_MODULE_PREVIEW_SECONDS } from '../../config/ioaiPreview'
 import { useStreamPlayback } from '../../hooks/useStreamPlayback'
 import CoursePurchasePanel from './CoursePurchasePanel'
 import CourseStreamVideo from './CourseStreamVideo'
@@ -23,11 +24,12 @@ export default function CourseVideoPlayer({
   setCheckoutLoading,
 }) {
   const videoRef = useRef(null)
+  const canPreviewVideo = Boolean(course?.cloudflareUid) && !hasAccess
   const {
     playbackSrc,
     iframeSrc,
     poster,
-    previewSeconds,
+    previewSeconds: streamPreviewSeconds,
     isStream,
     hasCustomVideo,
     loading: videoLoading,
@@ -35,8 +37,10 @@ export default function CourseVideoPlayer({
   } = useStreamPlayback({
     course,
     lessonSlug: course?.id,
-    fetchToken: hasAccess,
+    fetchToken: hasAccess || canPreviewVideo,
   })
+
+  const previewSeconds = course?.previewSeconds ?? streamPreviewSeconds ?? IOAI_MODULE_PREVIEW_SECONDS
   const [playing, setPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [previewEnded, setPreviewEnded] = useState(false)

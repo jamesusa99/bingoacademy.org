@@ -10,6 +10,7 @@ import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig, confirmCheckoutSession } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
+import { IOAI_MODULE_PREVIEW_SECONDS } from '../../config/ioaiPreview'
 import { labMaterialTypeLabel } from '../../config/labMaterials'
 import IOAIModuleHeroVideo from './IOAIModuleHeroVideo'
 import IOAIModuleInfoCards, { buildModuleInfoContent } from './IOAIModuleInfoCards'
@@ -100,21 +101,14 @@ export default function IOAIModuleDetail({
         cloudflareVideoId: api?.cloudflare_video_id || lesson.cloudflareVideoId || null,
         contentGoals: api?.content_goals || lesson.contentGoals || '',
         knowledgePoints: api?.knowledge_points || lesson.knowledgePoints || '',
-        previewSeconds: 15,
+        previewSeconds: IOAI_MODULE_PREVIEW_SECONDS,
       }
     })
   }, [mod?.lessons, detail?.lessons])
 
   const heroLesson = useMemo(() => {
-    if (owned) {
-      return lessons.find((l) => l.cloudflareVideoId) || null
-    }
-    return (
-      lessons.find((l) => l.trialEnabled && l.cloudflareVideoId) ||
-      lessons.find((l) => l.cloudflareVideoId) ||
-      null
-    )
-  }, [lessons, owned])
+    return lessons.find((l) => l.cloudflareVideoId) || null
+  }, [lessons])
 
   const baseCents = mod?.priceCents ?? detail?.price_cents ?? null
   const labMaterials = detail?.labMaterials || []

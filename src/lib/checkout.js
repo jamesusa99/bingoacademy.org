@@ -70,10 +70,26 @@ export async function startIOAIMasterclassCheckout() {
 }
 
 export async function fetchVideoStreamToken({ cloudflareVideoId, lessonSlug, adminPreview = false }) {
-  return authFetch('/api/video/token', {
+  const headers = { 'Content-Type': 'application/json' }
+  if (isSupabaseConfigured) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`
+    }
+  }
+
+  const res = await fetch('/api/video/token', {
     method: 'POST',
+    headers,
     body: JSON.stringify({ cloudflareVideoId, lessonSlug, adminPreview }),
   })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(body.error || `Request failed (${res.status})`)
+  }
+  return body
 }
 
 export async function confirmCheckoutSession(sessionId) {

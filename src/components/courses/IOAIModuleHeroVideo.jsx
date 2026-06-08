@@ -5,7 +5,7 @@ import { useStreamPlayback } from '../../hooks/useStreamPlayback'
 import CourseStreamVideo from './CourseStreamVideo'
 import ModuleCoverImage from './ModuleCoverImage'
 
-const DEFAULT_PREVIEW_SECONDS = 15
+import { IOAI_MODULE_PREVIEW_SECONDS } from '../../config/ioaiPreview'
 
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60)
@@ -14,7 +14,7 @@ function formatTime(seconds) {
 }
 
 /**
- * Hero media: full lesson when owned, short preview when trial, cover image otherwise.
+ * Hero media: full lesson when purchased, 15s preview when not.
  */
 export default function IOAIModuleHeroVideo({
   lesson,
@@ -26,8 +26,8 @@ export default function IOAIModuleHeroVideo({
 }) {
   const videoRef = useRef(null)
   const canPlayFull = owned && lesson?.cloudflareVideoId
-  const canPreview = !owned && lesson?.trialEnabled && lesson?.cloudflareVideoId
-  const previewSeconds = lesson?.previewSeconds ?? DEFAULT_PREVIEW_SECONDS
+  const canPreview = !owned && lesson?.cloudflareVideoId
+  const previewSeconds = lesson?.previewSeconds ?? IOAI_MODULE_PREVIEW_SECONDS
 
   const {
     playbackSrc,

@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, Clock, Lock, Play } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
-import { hasIoaiLessonAccess } from '../../lib/ioaiAccess'
+import { hasIoaiLessonAccess, canPreviewIoaiLesson } from '../../lib/ioaiAccess'
 
 const LESSON_DURATION_MINUTES = 14
 
-function lessonCanWatch(lesson, { owned, moduleSlugs, enrolledSlugs, lessonModuleMap }) {
+function lessonHasFullAccess(lesson, { owned, moduleSlugs, enrolledSlugs, lessonModuleMap }) {
   return (
     owned ||
     hasIoaiLessonAccess(lesson.id, {
@@ -35,14 +35,14 @@ export default function IOAIModuleLessonList({
   const unlockedCount = useMemo(
     () =>
       lessons.filter((lesson) =>
-        lessonCanWatch(lesson, { owned, moduleSlugs, enrolledSlugs, lessonModuleMap })
+        lessonHasFullAccess(lesson, { owned, moduleSlugs, enrolledSlugs, lessonModuleMap })
       ).length,
     [lessons, owned, moduleSlugs, enrolledSlugs, lessonModuleMap]
   )
 
   const defaultExpanded = useMemo(() => {
     const firstUnlocked = lessons.find((lesson) =>
-      lessonCanWatch(lesson, { owned, moduleSlugs, enrolledSlugs, lessonModuleMap })
+      lessonHasFullAccess(lesson, { owned, moduleSlugs, enrolledSlugs, lessonModuleMap })
     )
     return firstUnlocked?.id || lessons[0]?.id || null
   }, [lessons, owned, moduleSlugs, enrolledSlugs, lessonModuleMap])
@@ -66,8 +66,13 @@ export default function IOAIModuleLessonList({
 
       <div className="card divide-y divide-slate-100 overflow-hidden">
         {lessons.map((lesson, index) => {
-          const canWatch = lessonCanWatch(lesson, {
+          const canWatch = lessonHasFullAccess(lesson, {
             owned,
+            moduleSlugs,
+            enrolledSlugs,
+            lessonModuleMap,
+          })
+          const canPreview = canPreviewIoaiLesson(lesson, {
             moduleSlugs,
             enrolledSlugs,
             lessonModuleMap,
@@ -130,7 +135,7 @@ export default function IOAIModuleLessonList({
                         <Play className="w-3.5 h-3.5" aria-hidden />
                         {COURSES_PORTAL.watchLesson}
                       </Link>
-                    ) : lesson.trialEnabled && lesson.cloudflareVideoId ? (
+                    ) : canPreview ? (
                       <Link
                         to={lessonPath}
                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary px-3 py-1.5 rounded-lg border border-primary/30 hover:bg-primary/5 transition"

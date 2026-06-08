@@ -26,6 +26,7 @@ import {
 import { buildLessonModuleMapFromTree, hasIoaiLessonAccess } from '../lib/ioaiAccess'
 import { useIOAIAccess } from '../hooks/useIOAIStore'
 import { buildModuleCatalogSlug, formatIoaiPrice } from '../lib/ioaiStore'
+import { IOAI_MODULE_PREVIEW_SECONDS } from '../config/ioaiPreview'
 import { getContinueLessonId } from '../lib/learningProgress'
 import CourseComingSoon from '../components/CourseComingSoon'
 import CourseVideoPlayer from '../components/courses/CourseVideoPlayer'
@@ -69,11 +70,15 @@ export default function CourseDetail() {
 
   const displayCourse = useMemo(() => {
     if (!item) return null
+    const cloudflareUid = item.cloudflareUid || lessonInTree?.cloudflareVideoId || null
+    const previewSeconds =
+      progLine === 'ioai' && cloudflareUid ? IOAI_MODULE_PREVIEW_SECONDS : item.previewSeconds ?? 90
     return {
       ...item,
-      cloudflareUid: item.cloudflareUid || lessonInTree?.cloudflareVideoId || null,
+      cloudflareUid,
+      previewSeconds,
     }
-  }, [item, lessonInTree])
+  }, [item, lessonInTree, progLine])
 
   const lessonModuleMap = useMemo(() => buildLessonModuleMapFromTree(tree), [tree])
 

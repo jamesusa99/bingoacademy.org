@@ -37,3 +37,17 @@ export function hasIoaiLessonAccess(
   if (!moduleSlug) return hasFullIOAITrack(enrolledSlugs)
   return hasIoaiModuleAccess(moduleSlug, { moduleSlugs, enrolledSlugs })
 }
+
+/** True when lesson has video but the L3 unit is not fully unlocked. */
+export function canPreviewIoaiLesson(
+  lesson,
+  { moduleSlugs = [], enrolledSlugs = getPurchasedSlugs(), lessonModuleMap } = {}
+) {
+  if (!lesson?.cloudflareVideoId) return false
+  return !hasIoaiLessonAccess(lesson.id || lesson.slug, {
+    moduleSlugs,
+    enrolledSlugs,
+    lessonModuleMap,
+    trialEnabled: Boolean(lesson.trialEnabled),
+  })
+}

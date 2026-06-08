@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Lock, Play, RotateCcw, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
+import { IOAI_MODULE_PREVIEW_SECONDS } from '../../config/ioaiPreview'
 import { LESSON_SEGMENTS, getCheckpointQuestion } from '../../config/lessonSegments'
 import { useLessonProgress } from '../../hooks/useLearningProgress'
 import { useStreamPlayback } from '../../hooks/useStreamPlayback'
@@ -188,20 +189,23 @@ export default function SegmentPlayer({
   const videoRef = useRef(null)
   const { progress, completeSegment, saveVideoPosition, goToSegment, completeLesson } =
     useLessonProgress(course.id)
+  const canPreviewVideo = Boolean(course?.cloudflareUid) && !hasAccess && !previewMode
   const {
     playbackSrc,
     iframeSrc,
     poster,
-    previewSeconds,
+    previewSeconds: streamPreviewSeconds,
     hasCustomVideo,
     loading: videoLoading,
     error: videoError,
   } = useStreamPlayback({
     course,
     lessonSlug: course.id,
-    fetchToken: hasAccess,
+    fetchToken: hasAccess || canPreviewVideo || previewMode,
     adminPreview: Boolean(previewMode),
   })
+
+  const previewSeconds = course?.previewSeconds ?? streamPreviewSeconds ?? IOAI_MODULE_PREVIEW_SECONDS
 
   const [playing, setPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -216,10 +220,11 @@ export default function SegmentPlayer({
   const showLock = !hasAccess && (previewEnded || currentTime >= previewSeconds - 0.5)
 
   useEffect(() => {
-    if (!startAtVideo || !hasAccess) return
+    if (!startAtVideo) return
+    if (!hasAccess && !canPreviewVideo) return
     if (segmentIndex !== 0) return
     goToSegment(1)
-  }, [startAtVideo, hasAccess, course.id, goToSegment, segmentIndex])
+  }, [startAtVideo, hasAccess, canPreviewVideo, course.id, goToSegment, segmentIndex])
 
   useEffect(() => {
     setPreviewEnded(false)
