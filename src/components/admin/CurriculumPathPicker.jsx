@@ -83,7 +83,14 @@ function LockedNewField({ label, text, hint }) {
  * L1 stage → L2 category → L3 module (nested containment).
  * New L1 forces new L2 + L3; new L2 forces new L3.
  */
-export default function CurriculumPathPicker({ levels, labels, value, onChange, showNewPanels = true }) {
+export default function CurriculumPathPicker({
+  levels,
+  labels,
+  value,
+  onChange,
+  showNewPanels = true,
+  levelsLoading = false,
+}) {
   const {
     stageChoice = '',
     themeChoice = '',
@@ -244,7 +251,7 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
   const levelsLoadingHint = labels.levelsLoadingHint || 'Loading curriculum tree…'
   const noModulesHint = labels.noModulesForStage || 'No modules in this category — choose “+ New module”.'
 
-  const treeLoading = sortedLevels.length === 0
+  const treeLoading = levelsLoading
 
   const handleStageChange = (nextStage) => {
     markUserEdited()

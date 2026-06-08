@@ -96,6 +96,7 @@ function RowActions({ children, className = '' }) {
 export default function IOAICurriculumTable({
   moduleGroups = [],
   loading,
+  refreshing = false,
   labels,
   onEditModule,
   onEditLesson,
@@ -142,6 +143,9 @@ export default function IOAICurriculumTable({
 
   return (
     <div className="space-y-4">
+      {refreshing ? (
+        <p className="text-xs text-slate-500 text-center py-1">{labels.loading}</p>
+      ) : null}
       <div className="flex flex-wrap gap-2">
         <button
           type="button"

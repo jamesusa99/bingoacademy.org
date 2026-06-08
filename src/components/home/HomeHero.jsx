@@ -35,7 +35,7 @@ export default function HomeHero() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-4">Learn AI by Doing</h1>
           <p className="text-lg sm:text-xl text-slate-300 font-medium">From Curiosity to Certified Outcomes</p>
           <p className="text-sm text-slate-400 mt-3 max-w-xl mx-auto">
-            Three clear paths — self-study literacy, IOAI competition training, or K12 classroom delivery.
+            Three clear paths — IOAI competition training, self-study literacy or K12 classroom delivery.
           </p>
         </div>
 

@@ -39,6 +39,7 @@ const FORM_INIT = {
 export default function IOAIAddCourseForm({
   productLine = DEFAULT_ADMIN_PRODUCT_LINE,
   levels,
+  levelsLoading = false,
   labels,
   saving,
   onSave,
@@ -106,7 +107,13 @@ export default function IOAIAddCourseForm({
         </button>
       </div>
 
-      <CurriculumPathPicker levels={levels} labels={labels} value={form.path} onChange={setPath} />
+      <CurriculumPathPicker
+        levels={levels}
+        levelsLoading={levelsLoading}
+        labels={labels}
+        value={form.path}
+        onChange={setPath}
+      />
 
       <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200">
         <Field label={labels.colLesson}>

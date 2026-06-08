@@ -30,7 +30,9 @@ export default function AdminIOAICurriculum() {
   const [rows, setRows] = useState([])
   const [moduleGroups, setModuleGroups] = useState([])
   const [levels, setLevels] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const hasLoadedOnceRef = useRef(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [editingRow, setEditingRow] = useState(null)
@@ -254,8 +256,12 @@ export default function AdminIOAICurriculum() {
     setEditingModule(null)
   }
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async ({ background = false } = {}) => {
+    if (background) {
+      setRefreshing(true)
+    } else if (!hasLoadedOnceRef.current) {
+      setInitialLoading(true)
+    }
     setError(null)
     try {
       const [{ rows: next, moduleGroups: groups, levels: tree }, catalogRes] = await Promise.all([
@@ -270,13 +276,17 @@ export default function AdminIOAICurriculum() {
       return { rows: next, moduleGroups: groups, levels: tree }
     } catch (e) {
       setError(e.message)
-      setRows([])
-      setModuleGroups([])
-      setLevels([])
-      setCatalogItems([])
+      if (!background) {
+        setRows([])
+        setModuleGroups([])
+        setLevels([])
+        setCatalogItems([])
+      }
       return { rows: [], moduleGroups: [], levels: [] }
     } finally {
-      setLoading(false)
+      hasLoadedOnceRef.current = true
+      setInitialLoading(false)
+      setRefreshing(false)
     }
   }, [productLine])
 
@@ -286,7 +296,9 @@ export default function AdminIOAICurriculum() {
 
   useEffect(() => {
     const refreshIfVisible = () => {
-      if (document.visibilityState === 'visible') load()
+      if (document.visibilityState !== 'visible') return
+      if (showAddForm || editingRow || editingModule || saving) return
+      load({ background: true })
     }
     window.addEventListener('focus', refreshIfVisible)
     document.addEventListener('visibilitychange', refreshIfVisible)
@@ -294,7 +306,7 @@ export default function AdminIOAICurriculum() {
       window.removeEventListener('focus', refreshIfVisible)
       document.removeEventListener('visibilitychange', refreshIfVisible)
     }
-  }, [load])
+  }, [load, showAddForm, editingRow, editingModule, saving])
 
   useEffect(() => {
     if (editingRow && editorRef.current) {
@@ -525,19 +537,16 @@ export default function AdminIOAICurriculum() {
       </div>
 
       {showAddForm ? (
-        loading ? (
-          <div className="card p-6 text-sm text-slate-500">{labels.loading}</div>
-        ) : (
-          <IOAIAddCourseForm
-            key={addFormKey}
-            productLine={productLine}
-            levels={levels}
-            labels={labels}
-            saving={saving}
-            onSave={handleAddCourse}
-            onClose={() => setShowAddForm(false)}
-          />
-        )
+        <IOAIAddCourseForm
+          key={addFormKey}
+          productLine={productLine}
+          levels={levels}
+          levelsLoading={initialLoading && levels.length === 0}
+          labels={labels}
+          saving={saving}
+          onSave={handleAddCourse}
+          onClose={() => setShowAddForm(false)}
+        />
       ) : null}
 
       {editingModule ? (
@@ -579,7 +588,8 @@ export default function AdminIOAICurriculum() {
 
       <IOAICurriculumTable
         moduleGroups={moduleGroups}
-        loading={loading}
+        loading={initialLoading}
+        refreshing={refreshing}
         labels={labels}
         deletingId={deletingId}
         onEditModule={(group) => {
