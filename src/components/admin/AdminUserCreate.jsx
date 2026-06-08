@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createAdminUser } from '../../lib/admin/users'
 import { logAdminAction } from '../../lib/admin/auth'
 import AdminAlert from './AdminAlert'
+import AdminField from './AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const ROLES = ['user', 'editor', 'admin']
@@ -75,28 +76,26 @@ export default function AdminUserCreate({ onClose, onCreated }) {
 
           <p className="text-sm text-slate-600">{c.t('pages.users.create.hint')}</p>
 
-          <label className="block text-xs font-medium text-slate-600">
-            {c.t('pages.users.create.email')}
+          <AdminField label={c.t('pages.users.create.email')} required>
             <input
               type="email"
               required
               value={form.email}
               onChange={(e) => set('email', e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
-          </label>
-          <label className="block text-xs font-medium text-slate-600">
-            {c.t('pages.users.create.password')}
+          </AdminField>
+          <AdminField label={c.t('pages.users.create.password')} required>
             <input
               type="password"
               required
               minLength={6}
               value={form.password}
               onChange={(e) => set('password', e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               autoComplete="new-password"
             />
-          </label>
+          </AdminField>
           <label className="flex items-center gap-2 text-sm text-slate-600">
             <input
               type="checkbox"
@@ -108,29 +107,26 @@ export default function AdminUserCreate({ onClose, onCreated }) {
 
           <hr className="border-slate-100" />
 
-          <label className="block text-xs font-medium text-slate-600">
-            {c.t('pages.users.create.fullName')}
+          <AdminField label={c.t('pages.users.create.fullName')}>
             <input
               value={form.full_name}
               onChange={(e) => set('full_name', e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
-          </label>
-          <label className="block text-xs font-medium text-slate-600">
-            {c.t('pages.users.create.phone')}
+          </AdminField>
+          <AdminField label={c.t('pages.users.create.phone')}>
             <input
               value={form.phone}
               onChange={(e) => set('phone', e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
-          </label>
+          </AdminField>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block text-xs font-medium text-slate-600">
-              {c.t('pages.users.create.role')}
+            <AdminField label={c.t('pages.users.create.role')}>
               <select
                 value={form.role}
                 onChange={(e) => set('role', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               >
                 {ROLES.map((r) => (
                   <option key={r} value={r}>
@@ -143,13 +139,12 @@ export default function AdminUserCreate({ onClose, onCreated }) {
                   {c.t('pages.users.create.roleUserWarn')}
                 </span>
               ) : null}
-            </label>
-            <label className="block text-xs font-medium text-slate-600">
-              {c.t('pages.users.create.status')}
+            </AdminField>
+            <AdminField label={c.t('pages.users.create.status')}>
               <select
                 value={form.status}
                 onChange={(e) => set('status', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               >
                 {STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -157,14 +152,13 @@ export default function AdminUserCreate({ onClose, onCreated }) {
                   </option>
                 ))}
               </select>
-            </label>
+            </AdminField>
           </div>
-          <label className="block text-xs font-medium text-slate-600">
-            {c.t('pages.users.create.memberTier')}
+          <AdminField label={c.t('pages.users.create.memberTier')}>
             <select
               value={form.member_tier}
               onChange={(e) => set('member_tier', e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
               {MEMBER_TIERS.map((t) => (
                 <option key={t} value={t}>
@@ -172,24 +166,22 @@ export default function AdminUserCreate({ onClose, onCreated }) {
                 </option>
               ))}
             </select>
-          </label>
+          </AdminField>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block text-xs font-medium text-slate-600">
-              {c.t('pages.users.create.school')}
+            <AdminField label={c.t('pages.users.create.school')}>
               <input
                 value={form.school}
                 onChange={(e) => set('school', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               />
-            </label>
-            <label className="block text-xs font-medium text-slate-600">
-              {c.t('pages.users.create.grade')}
+            </AdminField>
+            <AdminField label={c.t('pages.users.create.grade')}>
               <input
                 value={form.grade}
                 onChange={(e) => set('grade', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               />
-            </label>
+            </AdminField>
           </div>
         </div>
 

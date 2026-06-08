@@ -2,15 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ImagePlus, Loader2, Trash2, Upload } from 'lucide-react'
 import { uploadAdminImageFile } from '../../lib/admin/mediaUpload'
 import { resolveModuleCoverUrl } from '../../config/moduleCover'
-
-function Field({ label, children }) {
-  return (
-    <div>
-      <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
-      {children}
-    </div>
-  )
-}
+import AdminField from './AdminField'
 
 export default function ModuleCoverUpload({
   value,
@@ -117,7 +109,7 @@ export default function ModuleCoverUpload({
       : labels.moduleCoverDropzone
 
   return (
-    <Field label={labels.moduleCover}>
+    <AdminField label={labels.moduleCover}>
       <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 space-y-3">
         <div
           role="button"
@@ -245,6 +237,6 @@ export default function ModuleCoverUpload({
         <p className="text-[10px] text-slate-400 leading-relaxed">{labels.moduleCoverHint}</p>
         {!hasCustom ? <p className="text-[10px] text-slate-500">{labels.moduleCoverDefaultHint}</p> : null}
       </div>
-    </Field>
+    </AdminField>
   )
 }

@@ -29,6 +29,8 @@ export const adminPagesZh = {
     no: '否',
     addNew: '+ 新建',
     previewOnSite: '在网站预览 →',
+    fieldRequired: '必填',
+    fieldOptional: '选填',
   },
   pages: {
     home: {
@@ -908,6 +910,8 @@ export const adminPagesEn = {
     no: 'No',
     addNew: '+ New',
     previewOnSite: 'Preview on site →',
+    fieldRequired: 'Required',
+    fieldOptional: 'Optional',
   },
   pages: {
     home: {

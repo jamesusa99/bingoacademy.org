@@ -1,19 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { resolveCurriculumPathDisplay } from '../../lib/videoCurriculum'
+import AdminField from './AdminField'
 
 export const CURRICULUM_NEW = '__new__'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
 const readOnlyClass = 'w-full rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700'
-
-function Field({ label, children }) {
-  return (
-    <div>
-      <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
-      {children}
-    </div>
-  )
-}
 
 function sortByOrder(rows) {
   return [...(rows || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
@@ -72,10 +64,10 @@ function ReadOnlyValue({ value, mono = false }) {
 
 function LockedNewField({ label, text, hint }) {
   return (
-    <Field label={label}>
+    <AdminField label={label} showBadge={false}>
       <ReadOnlyValue value={text} />
       {hint ? <p className="text-[10px] text-emerald-700 mt-1">{hint}</p> : null}
-    </Field>
+    </AdminField>
   )
 }
 
@@ -301,7 +293,7 @@ export default function CurriculumPathPicker({
       )}
 
       <div className="grid sm:grid-cols-3 gap-4">
-        <Field label={labels.colStage}>
+        <AdminField label={labels.colStage} required>
           <select
             className={inputClass}
             value={stageChoice}
@@ -317,12 +309,12 @@ export default function CurriculumPathPicker({
             ))}
             <option value={CURRICULUM_NEW}>{labels.newStage}</option>
           </select>
-        </Field>
+        </AdminField>
 
         {isNewStage ? (
           <LockedNewField label={labels.colCategory} text={labels.newCategory} hint={lockedCategoryHint} />
         ) : (
-          <Field label={labels.colCategory}>
+          <AdminField label={labels.colCategory} required>
             <select
               className={inputClass}
               value={themeChoice}
@@ -337,13 +329,13 @@ export default function CurriculumPathPicker({
               ))}
               <option value={CURRICULUM_NEW}>{labels.newCategory}</option>
             </select>
-          </Field>
+          </AdminField>
         )}
 
         {isNewStage || isNewCategory ? (
           <LockedNewField label={labels.colModule} text={labels.newModule} hint={lockedModuleHint} />
         ) : (
-          <Field label={labels.colModule}>
+          <AdminField label={labels.colModule} required>
             <select
               className={inputClass}
               value={moduleChoice}
@@ -363,7 +355,7 @@ export default function CurriculumPathPicker({
               ) : null}
               <option value={CURRICULUM_NEW}>{labels.newModule}</option>
             </select>
-          </Field>
+          </AdminField>
         )}
       </div>
 
@@ -390,7 +382,7 @@ export default function CurriculumPathPicker({
       {showNewPanels && isNewStage ? (
         <PanelShell title={newStagePanelTitle} variant="new" hint={labels.newStagePanelHint}>
           <div className="grid sm:grid-cols-3 gap-4">
-            <Field label={labels.newStageTitle}>
+            <AdminField label={labels.newStageTitle} required>
               <input
                 className={inputClass}
                 value={newStage.title}
@@ -400,8 +392,8 @@ export default function CurriculumPathPicker({
                 }}
                 placeholder={labels.phStageTitle}
               />
-            </Field>
-            <Field label={labels.newStageSlug}>
+            </AdminField>
+            <AdminField label={labels.newStageSlug}>
               <input
                 className={inputClass}
                 value={newStage.slug}
@@ -411,8 +403,8 @@ export default function CurriculumPathPicker({
                 }}
                 placeholder={labels.phStageSlug || 'intro'}
               />
-            </Field>
-            <Field label={labels.newStageEmoji}>
+            </AdminField>
+            <AdminField label={labels.newStageEmoji}>
               <input
                 className={inputClass}
                 value={newStage.emoji}
@@ -422,21 +414,21 @@ export default function CurriculumPathPicker({
                 }}
                 placeholder="🟢"
               />
-            </Field>
+            </AdminField>
           </div>
         </PanelShell>
       ) : showNewPanels && selectedLevel ? (
         <PanelShell title={selectedStagePanelTitle} hint={selectedHint}>
           <div className="grid sm:grid-cols-3 gap-4">
-            <Field label={labels.newStageTitle || labels.colStage}>
+            <AdminField label={labels.newStageTitle || labels.colStage} showBadge={false}>
               <ReadOnlyValue value={`${selectedLevel.emoji ? `${selectedLevel.emoji} ` : ''}${selectedLevel.title}`} />
-            </Field>
-            <Field label={labels.newStageSlug || 'Slug'}>
+            </AdminField>
+            <AdminField label={labels.newStageSlug || 'Slug'} showBadge={false}>
               <ReadOnlyValue value={selectedLevel.slug} mono />
-            </Field>
-            <Field label={labels.newStageEmoji || 'Emoji'}>
+            </AdminField>
+            <AdminField label={labels.newStageEmoji || 'Emoji'} showBadge={false}>
               <ReadOnlyValue value={selectedLevel.emoji || '—'} />
-            </Field>
+            </AdminField>
           </div>
         </PanelShell>
       ) : null}
@@ -448,7 +440,7 @@ export default function CurriculumPathPicker({
           hint={isNewStage ? lockedCategoryHint : labels.newCategoryPanelHint}
         >
           <div className="grid sm:grid-cols-2 gap-4">
-            <Field label={labels.newCategoryTitle}>
+            <AdminField label={labels.newCategoryTitle} required>
               <input
                 className={inputClass}
                 value={newTheme.category_label || newTheme.title}
@@ -461,8 +453,8 @@ export default function CurriculumPathPicker({
                 }}
                 placeholder={labels.phCategoryTitle}
               />
-            </Field>
-            <Field label={labels.newCategorySlug}>
+            </AdminField>
+            <AdminField label={labels.newCategorySlug}>
               <input
                 className={inputClass}
                 value={newTheme.slug}
@@ -472,18 +464,18 @@ export default function CurriculumPathPicker({
                 }}
                 placeholder={labels.phCategorySlug || 'math'}
               />
-            </Field>
+            </AdminField>
           </div>
         </PanelShell>
       ) : showNewPanels && selectedTheme ? (
         <PanelShell title={selectedCategoryPanelTitle} hint={selectedHint}>
           <div className="grid sm:grid-cols-2 gap-4">
-            <Field label={labels.newCategoryTitle || labels.colCategory}>
+            <AdminField label={labels.newCategoryTitle || labels.colCategory} showBadge={false}>
               <ReadOnlyValue value={selectedTheme.category_label || selectedTheme.title} />
-            </Field>
-            <Field label={labels.newCategorySlug || 'Slug'}>
+            </AdminField>
+            <AdminField label={labels.newCategorySlug || 'Slug'} showBadge={false}>
               <ReadOnlyValue value={selectedTheme.slug} mono />
-            </Field>
+            </AdminField>
           </div>
         </PanelShell>
       ) : null}
@@ -497,7 +489,7 @@ export default function CurriculumPathPicker({
           }
         >
           <div className="grid sm:grid-cols-2 gap-4">
-            <Field label={labels.newModuleTitle}>
+            <AdminField label={labels.newModuleTitle} required>
               <input
                 className={inputClass}
                 value={newModule.title}
@@ -507,8 +499,8 @@ export default function CurriculumPathPicker({
                 }}
                 placeholder={labels.phModuleTitle}
               />
-            </Field>
-            <Field label={labels.newModuleSlug}>
+            </AdminField>
+            <AdminField label={labels.newModuleSlug}>
               <input
                 className={inputClass}
                 value={newModule.slug}
@@ -518,19 +510,19 @@ export default function CurriculumPathPicker({
                 }}
                 placeholder={labels.phModuleSlugExample || 'part-1'}
               />
-            </Field>
+            </AdminField>
           </div>
         </PanelShell>
       ) : showNewPanels && selectedModule ? (
         <PanelShell title={selectedModulePanelTitle} hint={selectedHint}>
           <div className="grid sm:grid-cols-3 gap-4">
-            <Field label={labels.newModuleTitle || labels.colModule}>
+            <AdminField label={labels.newModuleTitle || labels.colModule} showBadge={false}>
               <ReadOnlyValue value={selectedModule.title} />
-            </Field>
-            <Field label={labels.newModuleSlug || 'Slug'}>
+            </AdminField>
+            <AdminField label={labels.newModuleSlug || 'Slug'} showBadge={false}>
               <ReadOnlyValue value={selectedModule.slug} mono />
-            </Field>
-            <Field label={labels.moduleLessonCountLabel || labels.colLesson || 'Lessons'}>
+            </AdminField>
+            <AdminField label={labels.moduleLessonCountLabel || labels.colLesson || 'Lessons'} showBadge={false}>
               <ReadOnlyValue
                 value={
                   typeof labels.moduleLessonCount === 'function'
@@ -538,7 +530,7 @@ export default function CurriculumPathPicker({
                     : String(selectedModule.lessons?.length ?? 0)
                 }
               />
-            </Field>
+            </AdminField>
           </div>
         </PanelShell>
       ) : null}

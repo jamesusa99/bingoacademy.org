@@ -32,6 +32,8 @@ export function useAdminCrud() {
       no: t('crud.no'),
       addNew: t('crud.addNew'),
       previewOnSite: t('crud.previewOnSite'),
+      fieldRequired: t('crud.fieldRequired'),
+      fieldOptional: t('crud.fieldOptional'),
       confirmDelete: (what) => t('crud.confirmDelete', { what: what || t('crud.thisItem') }),
       confirmDeleteGeneric: () => t('crud.confirmDeleteGeneric'),
       editItem: (item) => t('crud.editItem', { item }),

@@ -37,14 +37,7 @@ function statusLabel(status, t) {
   return status || '—'
 }
 
-function Field({ label, children, className = '' }) {
-  return (
-    <div className={className}>
-      <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
-      {children}
-    </div>
-  )
-}
+import AdminField from '../../components/admin/AdminField'
 
 const inputClass = 'w-full rounded-xl border border-slate-200 px-3 py-2 text-sm'
 
@@ -287,7 +280,7 @@ export default function AdminCoursesCatalog() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Field label={`${labels.colSlug} *`}>
+          <AdminField label={labels.colSlug} required>
             <input
               value={form.slug}
               onChange={(e) => set('slug', e.target.value)}
@@ -297,8 +290,8 @@ export default function AdminCoursesCatalog() {
             {editingSlug && editingSlug !== form.slug?.trim() ? (
               <p className="text-[10px] text-amber-700 mt-1">{t('pages.coursesCatalog.slugRenameHint')}</p>
             ) : null}
-          </Field>
-          <Field label={`${labels.colProductLine} *`}>
+          </AdminField>
+          <AdminField label={labels.colProductLine} required>
             <select value={form.line} onChange={(e) => handleLineChange(e.target.value)} className={inputClass}>
               {CURRICULUM_LINES.map((lineId) => {
                 const config = getProgramCurriculum(lineId)
@@ -309,8 +302,8 @@ export default function AdminCoursesCatalog() {
                 )
               })}
             </select>
-          </Field>
-          <Field label={`${labels.colType} *`}>
+          </AdminField>
+          <AdminField label={labels.colType} required>
             <select value={form.sub} onChange={(e) => handleSubChange(e.target.value)} className={inputClass}>
               {labSubs.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -318,8 +311,8 @@ export default function AdminCoursesCatalog() {
                 </option>
               ))}
             </select>
-          </Field>
-          <Field label={`${labels.colModule} *`} className="sm:col-span-2 lg:col-span-3">
+          </AdminField>
+          <AdminField label={labels.colModule} required className="sm:col-span-2 lg:col-span-3">
             <select
               value={form.module_id}
               onChange={(e) => set('module_id', e.target.value)}
@@ -335,8 +328,8 @@ export default function AdminCoursesCatalog() {
             {!moduleOptions.length ? (
               <p className="text-[10px] text-amber-600 mt-1">{t('pages.coursesCatalog.noModulesForLine')}</p>
             ) : null}
-          </Field>
-          <Field label={labels.colStatus}>
+          </AdminField>
+          <AdminField label={labels.colStatus}>
             <select value={form.status} onChange={(e) => set('status', e.target.value)} className={inputClass}>
               {STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -344,27 +337,27 @@ export default function AdminCoursesCatalog() {
                 </option>
               ))}
             </select>
-          </Field>
-          <Field label={labels.colSortOrder}>
+          </AdminField>
+          <AdminField label={labels.colSortOrder}>
             <input
               type="number"
               value={form.sort_order}
               onChange={(e) => set('sort_order', e.target.value)}
               className={inputClass}
             />
-          </Field>
-          <Field label={`${labels.colName} *`} className="sm:col-span-2 lg:col-span-3">
+          </AdminField>
+          <AdminField label={labels.colName} required className="sm:col-span-2 lg:col-span-3">
             <input value={form.name} onChange={(e) => set('name', e.target.value)} className={inputClass} />
-          </Field>
-          <Field label={labels.colPrice}>
+          </AdminField>
+          <AdminField label={labels.colPrice}>
             <input
               value={form.price}
               onChange={(e) => set('price', e.target.value)}
               placeholder={labels.phPrice}
               className={inputClass}
             />
-          </Field>
-          <Field label={labels.colPriceCents}>
+          </AdminField>
+          <AdminField label={labels.colPriceCents}>
             <input
               type="number"
               value={form.price_cents}
@@ -373,16 +366,16 @@ export default function AdminCoursesCatalog() {
               className={inputClass}
             />
             <p className="text-[10px] text-slate-500 mt-1">{labels.colPriceCentsHint}</p>
-          </Field>
-          <Field label={labels.colCurrency}>
+          </AdminField>
+          <AdminField label={labels.colCurrency}>
             <input
               value={form.currency}
               onChange={(e) => set('currency', e.target.value)}
               placeholder={labels.phCurrency}
               className={inputClass}
             />
-          </Field>
-          <Field label={labels.colPurchasable}>
+          </AdminField>
+          <AdminField label={labels.colPurchasable}>
             <select
               value={form.purchasable === false || form.purchasable === 'false' ? 'false' : 'true'}
               onChange={(e) => set('purchasable', e.target.value === 'true')}
@@ -392,15 +385,15 @@ export default function AdminCoursesCatalog() {
               <option value="false">{t('pages.coursesCatalog.purchasableNo')}</option>
             </select>
             <p className="text-[10px] text-slate-500 mt-1">{labels.colPurchasableHint}</p>
-          </Field>
-          <Field label={labels.colDescription} className="sm:col-span-2 lg:col-span-3">
+          </AdminField>
+          <AdminField label={labels.colDescription} className="sm:col-span-2 lg:col-span-3">
             <textarea
               value={form.description}
               onChange={(e) => set('description', e.target.value)}
               rows={3}
               className={inputClass}
             />
-          </Field>
+          </AdminField>
         </div>
 
         <div className="flex gap-2 mt-6">

@@ -2,19 +2,11 @@ import { Plus } from 'lucide-react'
 import CurriculumPathPicker, { CURRICULUM_NEW, curriculumInputClass } from './CurriculumPathPicker'
 import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
 import CurriculumVideoUpload from './CurriculumVideoUpload'
+import AdminField from './AdminField'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
 import { DEFAULT_ADMIN_PRODUCT_LINE } from '../../config/programCurriculum'
 
 const textareaClass = `${curriculumInputClass} min-h-[72px] resize-y`
-
-function Field({ label, children }) {
-  return (
-    <div>
-      <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
-      {children}
-    </div>
-  )
-}
 
 const PATH_INIT = {
   stageChoice: '',
@@ -116,41 +108,41 @@ export default function IOAIAddCourseForm({
       />
 
       <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200">
-        <Field label={labels.colLesson}>
+        <AdminField label={labels.colLesson} required>
           <input
             className={curriculumInputClass}
             value={form.lessonTitle}
             onChange={(e) => setField('lessonTitle', e.target.value)}
             placeholder={labels.phLessonTitle}
           />
-        </Field>
-        <Field label={labels.lessonSlug}>
+        </AdminField>
+        <AdminField label={labels.lessonSlug}>
           <input
             className={curriculumInputClass}
             value={form.lessonSlug}
             onChange={(e) => setField('lessonSlug', e.target.value)}
             placeholder={labels.phLessonSlug}
           />
-        </Field>
+        </AdminField>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <Field label={labels.colKnowledge}>
+        <AdminField label={labels.colKnowledge}>
           <textarea
             className={textareaClass}
             value={form.knowledgePoints}
             onChange={(e) => setField('knowledgePoints', e.target.value)}
             placeholder={labels.phKnowledge}
           />
-        </Field>
-        <Field label={labels.colGoals}>
+        </AdminField>
+        <AdminField label={labels.colGoals}>
           <textarea
             className={textareaClass}
             value={form.contentGoals}
             onChange={(e) => setField('contentGoals', e.target.value)}
             placeholder={labels.phGoals}
           />
-        </Field>
+        </AdminField>
       </div>
 
       <CurriculumVideoUpload

@@ -5,15 +5,7 @@ import { fetchStreamUploadLimits } from '../../lib/admin/api'
 import { formatBytes } from '../../lib/streamUpload'
 import { formatDuration, readVideoFileMeta } from '../../lib/videoFileMeta'
 import AdminStreamVideoPreview from './AdminStreamVideoPreview'
-
-function Field({ label, children }) {
-  return (
-    <div>
-      <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
-      {children}
-    </div>
-  )
-}
+import AdminField from './AdminField'
 
 function replaceTokens(template, vars) {
   if (!template) return ''
@@ -141,7 +133,7 @@ export default function CurriculumVideoUpload({
   })
 
   return (
-    <Field label={labels.uploadVideo}>
+    <AdminField label={labels.uploadVideo}>
       <input
         ref={inputRef}
         type="file"
@@ -248,6 +240,6 @@ export default function CurriculumVideoUpload({
         {info ? <p className="text-xs text-emerald-700">{info}</p> : null}
         {error ? <p className="text-xs text-red-600">{error}</p> : null}
       </div>
-    </Field>
+    </AdminField>
   )
 }

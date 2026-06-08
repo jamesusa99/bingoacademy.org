@@ -1,17 +1,9 @@
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import { curriculumInputClass } from './CurriculumPathPicker'
-
-function Field({ label, children }) {
-  return (
-    <div>
-      <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
-      {children}
-    </div>
-  )
-}
+import AdminField from './AdminField'
 
 /** Price, status, sort order — synced to courses_catalog (same as Lab和材料管理) */
-export default function CurriculumCatalogFields({ form, set, labels }) {
+export default function CurriculumCatalogFields({ form, set, labels, moduleCatalog = false }) {
   return (
     <div className="space-y-3 pt-2 border-t border-slate-100">
       <div>
@@ -21,7 +13,7 @@ export default function CurriculumCatalogFields({ form, set, labels }) {
         ) : null}
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Field label={labels.colStatus}>
+        <AdminField label={labels.colStatus} required={moduleCatalog}>
           <select
             value={form.status || COURSE_STATUS.LIVE}
             onChange={(e) => set('status', e.target.value)}
@@ -31,24 +23,24 @@ export default function CurriculumCatalogFields({ form, set, labels }) {
             <option value={COURSE_STATUS.COMING_SOON}>{labels.statusComingSoon}</option>
             <option value={COURSE_STATUS.OFFLINE}>{labels.statusOffline}</option>
           </select>
-        </Field>
-        <Field label={labels.colSortOrder}>
+        </AdminField>
+        <AdminField label={labels.colSortOrder}>
           <input
             type="number"
             value={form.sort_order ?? 0}
             onChange={(e) => set('sort_order', e.target.value)}
             className={curriculumInputClass}
           />
-        </Field>
-        <Field label={labels.colPrice}>
+        </AdminField>
+        <AdminField label={labels.colPrice} required={moduleCatalog}>
           <input
             value={form.price || ''}
             onChange={(e) => set('price', e.target.value)}
             placeholder={labels.phPrice || '$299'}
             className={curriculumInputClass}
           />
-        </Field>
-        <Field label={labels.colPriceCents}>
+        </AdminField>
+        <AdminField label={labels.colPriceCents} required={moduleCatalog}>
           <input
             type="number"
             value={form.price_cents ?? ''}
@@ -56,16 +48,16 @@ export default function CurriculumCatalogFields({ form, set, labels }) {
             placeholder={labels.phPriceCents || '29900'}
             className={curriculumInputClass}
           />
-        </Field>
-        <Field label={labels.colCurrency}>
+        </AdminField>
+        <AdminField label={labels.colCurrency}>
           <input
             value={form.currency || 'usd'}
             onChange={(e) => set('currency', e.target.value)}
             placeholder={labels.phCurrency || 'usd'}
             className={curriculumInputClass}
           />
-        </Field>
-        <Field label={labels.colRating}>
+        </AdminField>
+        <AdminField label={labels.colRating}>
           <input
             type="number"
             step="0.1"
@@ -75,15 +67,15 @@ export default function CurriculumCatalogFields({ form, set, labels }) {
             onChange={(e) => set('rating', e.target.value)}
             className={curriculumInputClass}
           />
-        </Field>
-        <Field label={labels.colStudents}>
+        </AdminField>
+        <AdminField label={labels.colStudents}>
           <input
             type="number"
             value={form.students ?? ''}
             onChange={(e) => set('students', e.target.value)}
             className={curriculumInputClass}
           />
-        </Field>
+        </AdminField>
       </div>
     </div>
   )

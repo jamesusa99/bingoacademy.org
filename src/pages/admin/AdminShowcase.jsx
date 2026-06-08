@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
+
+const AWARD_REQUIRED = new Set(['student', 'result'])
 
 const AWARD_FIELD_KEYS = [
   'student',
@@ -131,14 +134,18 @@ export default function AdminShowcase() {
           <h3 className="font-semibold text-bingo-dark mb-4">{editing ? c.t('pages.showcase.editCase') : c.t('pages.showcase.addCaseForm')}</h3>
           <div className="grid sm:grid-cols-2 gap-4">
             {fields.map(({ key, label, placeholder, textarea }) => (
-              <div key={key} className={textarea ? 'sm:col-span-2' : ''}>
-                <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
+              <AdminField
+                key={key}
+                label={label}
+                required={AWARD_REQUIRED.has(key)}
+                className={textarea ? 'sm:col-span-2' : ''}
+              >
                 {textarea ? (
                   <textarea value={awardForm[key] ?? ''} onChange={(e) => setAwardForm((f) => ({ ...f, [key]: e.target.value }))} rows={2} placeholder={placeholder} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
                 ) : (
                   <input type={key === 'sort_order' ? 'number' : 'text'} value={awardForm[key] ?? ''} onChange={(e) => setAwardForm((f) => ({ ...f, [key]: e.target.value }))} placeholder={placeholder} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
                 )}
-              </div>
+              </AdminField>
             ))}
           </div>
           <div className="flex gap-2 mt-4">

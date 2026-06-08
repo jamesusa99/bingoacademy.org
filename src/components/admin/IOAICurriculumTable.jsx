@@ -10,20 +10,12 @@ import AdminStreamVideoPreview from './AdminStreamVideoPreview'
 import DragHandle from './DragHandle'
 import ModuleLabMaterialsOrder from './ModuleLabMaterialsOrder'
 import ModuleCoverUpload from './ModuleCoverUpload'
+import AdminField from './AdminField'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
 const textareaClass = `${inputClass} min-h-[88px] resize-y`
 const COLLAPSE_CHAR_THRESHOLD = 72
-
-function Field({ label, children }) {
-  return (
-    <div>
-      <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
-      {children}
-    </div>
-  )
-}
 
 function CollapsibleText({ text, labels, emptyClassName = 'text-slate-300 italic' }) {
   const [expanded, setExpanded] = useState(false)
@@ -461,36 +453,36 @@ export function ProgramModuleEditor({
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <Field label={labels.colModule}>
+        <AdminField label={labels.colModule} required>
           <input className={inputClass} value={form.title} onChange={(e) => set('title', e.target.value)} />
-        </Field>
-        <Field label={labels.moduleCatalogSlug}>
+        </AdminField>
+        <AdminField label={labels.moduleCatalogSlug}>
           <input
             className={inputClass}
             value={form.catalog_slug}
             onChange={(e) => set('catalog_slug', e.target.value)}
             placeholder={labels.phModuleCatalogSlug}
           />
-        </Field>
+        </AdminField>
       </div>
 
-      <Field label={labels.moduleSummaryLabel}>
+      <AdminField label={labels.moduleSummaryLabel}>
         <textarea
           className={textareaClass}
           value={form.summary}
           onChange={(e) => set('summary', e.target.value)}
           placeholder={labels.phModuleSummary}
         />
-      </Field>
+      </AdminField>
 
-      <Field label={labels.moduleIntro}>
+      <AdminField label={labels.moduleIntro}>
         <textarea
           className={`${textareaClass} min-h-[64px]`}
           value={form.intro_html}
           onChange={(e) => set('intro_html', e.target.value)}
           placeholder={labels.phModuleIntro}
         />
-      </Field>
+      </AdminField>
 
       <ModuleCoverUpload
         value={form.cover_url}
@@ -499,7 +491,7 @@ export function ProgramModuleEditor({
         disabled={saving || deleting}
       />
 
-      <CurriculumCatalogFields form={form} set={set} labels={moduleCatalogLabels} />
+      <CurriculumCatalogFields form={form} set={set} labels={moduleCatalogLabels} moduleCatalog />
 
       <ModuleEditorLessonList
         group={group}
@@ -657,45 +649,45 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <Field label={labels.colStage}>
+        <AdminField label={labels.colStage} showBadge={false}>
           <input className={inputClass} value={row.stage} readOnly disabled />
-        </Field>
-        <Field label={labels.colCategory}>
+        </AdminField>
+        <AdminField label={labels.colCategory} showBadge={false}>
           <input className={inputClass} value={row.category} readOnly disabled />
-        </Field>
-        <Field label={labels.colModule}>
+        </AdminField>
+        <AdminField label={labels.colModule} showBadge={false}>
           <input className={inputClass} value={row.module} readOnly disabled />
-        </Field>
-        <Field label={labels.colLesson}>
+        </AdminField>
+        <AdminField label={labels.colLesson} required>
           <input className={inputClass} value={form.title} onChange={(e) => set('title', e.target.value)} />
-        </Field>
+        </AdminField>
       </div>
 
-      <Field label={labels.colKnowledge}>
+      <AdminField label={labels.colKnowledge}>
         <textarea
           className={textareaClass}
           value={form.knowledge_points}
           onChange={(e) => set('knowledge_points', e.target.value)}
           placeholder={labels.phKnowledge}
         />
-      </Field>
+      </AdminField>
 
-      <Field label={labels.colGoals}>
+      <AdminField label={labels.colGoals}>
         <textarea
           className={textareaClass}
           value={form.content_goals}
           onChange={(e) => set('content_goals', e.target.value)}
           placeholder={labels.phGoals}
         />
-      </Field>
+      </AdminField>
 
-      <Field label={labels.catalogSlug}>
+      <AdminField label={labels.catalogSlug}>
         <input
           className={inputClass}
           value={form.catalog_slug}
           onChange={(e) => set('catalog_slug', e.target.value)}
         />
-      </Field>
+      </AdminField>
 
       <CurriculumVideoUpload
         productLine={productLine}

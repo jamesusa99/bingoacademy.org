@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 import AdminAlert from '../../components/admin/AdminAlert'
+import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
+
+const STAT_REQUIRED = new Set(['value', 'label'])
+const TEST_REQUIRED = new Set(['quote', 'name'])
 
 export default function AdminHome() {
   const c = useAdminCrud()
@@ -145,15 +149,14 @@ export default function AdminHome() {
             ) : null}
             <div className="grid sm:grid-cols-2 gap-4">
               {['icon', 'value', 'label', 'sort_order'].map((k) => (
-                <div key={k}>
-                  <label className="text-xs font-medium text-slate-600 block mb-1">{k}</label>
+                <AdminField key={k} label={k} required={STAT_REQUIRED.has(k)}>
                   <input
                     type={k === 'sort_order' ? 'number' : 'text'}
                     value={formStats[k] ?? ''}
                     onChange={(e) => setFormStats((f) => ({ ...f, [k]: e.target.value }))}
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
                   />
-                </div>
+                </AdminField>
               ))}
             </div>
             <div className="flex gap-2 mt-4">
@@ -219,25 +222,23 @@ export default function AdminHome() {
           <div className="card p-6">
             <h2 className="font-semibold text-bingo-dark mb-4">{editingTest ? c.t('pages.home.editTestimonial') : c.t('pages.home.addTestimonial')}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-slate-600 block mb-1">quote</label>
+              <AdminField label="quote" required className="sm:col-span-2">
                 <textarea
                   value={formTest.quote}
                   onChange={(e) => setFormTest((f) => ({ ...f, quote: e.target.value }))}
                   rows={3}
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
                 />
-              </div>
+              </AdminField>
               {['name', 'role', 'stars', 'sort_order'].map((k) => (
-                <div key={k}>
-                  <label className="text-xs font-medium text-slate-600 block mb-1">{k}</label>
+                <AdminField key={k} label={k} required={TEST_REQUIRED.has(k)}>
                   <input
                     type={['stars', 'sort_order'].includes(k) ? 'number' : 'text'}
                     value={formTest[k] ?? ''}
                     onChange={(e) => setFormTest((f) => ({ ...f, [k]: e.target.value }))}
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
                   />
-                </div>
+                </AdminField>
               ))}
             </div>
             <div className="flex gap-2 mt-4">
