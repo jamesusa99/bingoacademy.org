@@ -6,12 +6,14 @@ import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
 import { useDragReorder } from '../../hooks/useDragReorder'
 import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
 import CurriculumVideoUpload from './CurriculumVideoUpload'
+import AdminStreamVideoPreview from './AdminStreamVideoPreview'
 import DragHandle from './DragHandle'
 import ModuleLabMaterialsOrder from './ModuleLabMaterialsOrder'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
 const textareaClass = `${inputClass} min-h-[88px] resize-y`
+const COLLAPSE_CHAR_THRESHOLD = 72
 
 function Field({ label, children }) {
   return (
@@ -19,6 +21,74 @@ function Field({ label, children }) {
       <label className="text-xs font-medium text-slate-600 block mb-1">{label}</label>
       {children}
     </div>
+  )
+}
+
+function CollapsibleText({ text, labels, emptyClassName = 'text-slate-300 italic' }) {
+  const [expanded, setExpanded] = useState(false)
+  if (!text?.trim()) {
+    return <span className={emptyClassName}>{labels.notSet}</span>
+  }
+  const trimmed = text.trim()
+  const collapsible = trimmed.length > COLLAPSE_CHAR_THRESHOLD || trimmed.includes('\n')
+
+  return (
+    <div className="max-w-xs">
+      <p className={`text-xs text-slate-600 whitespace-pre-wrap break-words ${expanded ? '' : 'line-clamp-2'}`}>
+        {trimmed}
+      </p>
+      {collapsible ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="text-[10px] font-semibold text-primary hover:underline mt-1"
+        >
+          {expanded ? labels.collapseContent : labels.expandContent}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+function LessonVideoCell({ row, labels }) {
+  const [showPreview, setShowPreview] = useState(false)
+  const hasVideo = Boolean(row.cloudflareVideoId?.trim())
+
+  if (!hasVideo) {
+    return <span className="text-xs text-amber-600 font-medium">{labels.noVideo}</span>
+  }
+
+  return (
+    <div className="space-y-2 min-w-[7rem]">
+      <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
+        <Video className="w-3.5 h-3.5 shrink-0" aria-hidden />
+        {labels.videoOk}
+      </span>
+      <button
+        type="button"
+        onClick={() => setShowPreview((v) => !v)}
+        className="block text-[10px] font-semibold text-primary hover:underline"
+      >
+        {showPreview ? labels.hidePreview : labels.previewVideo}
+      </button>
+      {showPreview ? (
+        <AdminStreamVideoPreview
+          uid={row.cloudflareVideoId}
+          labels={labels}
+          className="w-56 sm:w-64"
+        />
+      ) : null}
+    </div>
+  )
+}
+
+function RowActions({ children, className = '' }) {
+  return (
+    <td
+      className={`p-3 sticky right-0 bg-inherit shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.06)] align-top group-hover:bg-slate-50/80 ${className}`.trim()}
+    >
+      <div className="flex flex-col gap-1 min-w-[5.5rem]">{children}</div>
+    </td>
   )
 }
 
@@ -106,9 +176,11 @@ export default function IOAICurriculumTable({
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colModulePrice}</th>
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colLesson}</th>
               <th className="p-3 font-semibold min-w-[140px]">{labels.colKnowledge}</th>
-              <th className="p-3 font-semibold min-w-[160px]">{labels.colGoals}</th>
-              <th className="p-3 font-semibold w-24">{labels.colVideo}</th>
-              <th className="p-3 w-32 sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.08)]" />
+              <th className="p-3 font-semibold min-w-[180px]">{labels.colGoals}</th>
+              <th className="p-3 font-semibold min-w-[7rem]">{labels.colVideo}</th>
+              <th className="p-3 font-semibold w-28 sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.08)]">
+                {labels.colActions}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -141,33 +213,32 @@ export default function IOAICurriculumTable({
                         {labels.moduleLessonCount(group.lessons?.length || 0)}
                       </p>
                     </td>
-                    <td className="p-3 text-xs text-slate-400 italic" colSpan={3}>
-                      {labels.moduleContainsLessons}
-                    </td>
-                    <td className="p-3 sticky right-0 bg-primary/5 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.06)]">
-                      <div className="flex flex-col gap-1">
-                        {onEditModule ? (
-                          <button
-                            type="button"
-                            onClick={() => onEditModule(group)}
-                            className="inline-flex items-center gap-1 text-primary text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-primary/10 min-h-[36px]"
-                          >
-                            <Pencil className="w-3.5 h-3.5 shrink-0" />
-                            {labels.editModule}
-                          </button>
-                        ) : null}
-                        {onAddLessonToModule ? (
-                          <button
-                            type="button"
-                            onClick={() => onAddLessonToModule(group)}
-                            className="inline-flex items-center gap-1 text-slate-600 text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-slate-100 min-h-[36px]"
-                          >
-                            <Plus className="w-3.5 h-3.5 shrink-0" />
-                            {labels.addLessonToModule}
-                          </button>
-                        ) : null}
-                      </div>
-                    </td>
+                    <td className="p-3 text-xs text-slate-400 italic">{labels.moduleContainsLessons}</td>
+                    <td className="p-3" />
+                    <td className="p-3" />
+                    <td className="p-3" />
+                    <RowActions className="!bg-primary/5 group-hover:!bg-primary/5">
+                      {onEditModule ? (
+                        <button
+                          type="button"
+                          onClick={() => onEditModule(group)}
+                          className="inline-flex items-center gap-1 text-primary text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-primary/10 min-h-[36px]"
+                        >
+                          <Pencil className="w-3.5 h-3.5 shrink-0" />
+                          {labels.editModule}
+                        </button>
+                      ) : null}
+                      {onAddLessonToModule ? (
+                        <button
+                          type="button"
+                          onClick={() => onAddLessonToModule(group)}
+                          className="inline-flex items-center gap-1 text-slate-600 text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-slate-100 min-h-[36px]"
+                        >
+                          <Plus className="w-3.5 h-3.5 shrink-0" />
+                          {labels.addLessonToModule}
+                        </button>
+                      ) : null}
+                    </RowActions>
                   </tr>
                   {(group.lessons || []).length > 0 || onReorderLessons ? (
                     <ModuleLessonRows
@@ -247,58 +318,44 @@ function LessonRow({ row, labels, deletingId, onEditLesson, onDeleteLesson, drag
       <td className="p-3 pl-4 w-10">
         {dragProps ? <DragHandle label={labels.dragHint} /> : null}
       </td>
-      <td className="p-3 pl-2" colSpan={3}>
-        <p className="font-medium text-bingo-dark">{row.lessonTitle}</p>
+      <td className="p-3" />
+      <td className="p-3" />
+      <td className="p-3" />
+      <td className="p-3 text-[10px] text-slate-400 italic whitespace-nowrap">{labels.lessonIncludedInModule}</td>
+      <td className="p-3">
+        <p className="font-medium text-bingo-dark text-sm">{row.lessonTitle}</p>
         <p className="text-[10px] font-mono text-slate-400 mt-0.5">{row.lessonSlug}</p>
       </td>
-      <td className="p-3 text-[10px] text-slate-400 italic">{labels.lessonIncludedInModule}</td>
-      <td className="p-3 text-xs text-slate-600">
-        {row.knowledgePoints ? (
-          <span className="line-clamp-2">{row.knowledgePoints}</span>
-        ) : (
-          <span className="text-slate-300 italic">{labels.notSet}</span>
-        )}
+      <td className="p-3">
+        <CollapsibleText text={row.knowledgePoints} labels={labels} />
       </td>
-      <td className="p-3 text-xs text-slate-600">
-        {row.contentGoals ? (
-          <span className="line-clamp-2">{row.contentGoals}</span>
-        ) : (
-          <span className="text-slate-300 italic">{labels.notSet}</span>
-        )}
+      <td className="p-3">
+        <CollapsibleText text={row.contentGoals} labels={labels} />
       </td>
-      <td className="p-3 text-xs">
-        {row.cloudflareVideoId ? (
-          <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
-            <Video className="w-3.5 h-3.5" />
-            {labels.videoOk}
-          </span>
-        ) : (
-          <span className="text-amber-600">{labels.noVideo}</span>
-        )}
+      <td className="p-3">
+        <LessonVideoCell row={row} labels={labels} />
       </td>
-      <td className="p-3 sticky right-0 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.06)] group-hover:bg-slate-50/80">
-        <div className="flex flex-col gap-1">
+      <RowActions>
+        <button
+          type="button"
+          onClick={() => onEditLesson(row)}
+          className="inline-flex items-center gap-1 text-primary text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-primary/5 min-h-[36px]"
+        >
+          <Pencil className="w-3.5 h-3.5 shrink-0" />
+          {labels.editLesson}
+        </button>
+        {onDeleteLesson ? (
           <button
             type="button"
-            onClick={() => onEditLesson(row)}
-            className="inline-flex items-center gap-1 text-primary text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-primary/5 min-h-[36px]"
+            disabled={deletingId === row.lessonId}
+            onClick={() => onDeleteLesson(row)}
+            className="inline-flex items-center gap-1 text-red-600 text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-red-50 min-h-[36px] disabled:opacity-50"
           >
-            <Pencil className="w-3.5 h-3.5 shrink-0" />
-            {labels.editLesson}
+            <Trash2 className="w-3.5 h-3.5 shrink-0" />
+            {deletingId === row.lessonId ? labels.deleting : labels.deleteLesson}
           </button>
-          {onDeleteLesson ? (
-            <button
-              type="button"
-              disabled={deletingId === row.lessonId}
-              onClick={() => onDeleteLesson(row)}
-              className="inline-flex items-center gap-1 text-red-600 text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-red-50 min-h-[36px] disabled:opacity-50"
-            >
-              <Trash2 className="w-3.5 h-3.5 shrink-0" />
-              {deletingId === row.lessonId ? labels.deleting : labels.deleteLesson}
-            </button>
-          ) : null}
-        </div>
-      </td>
+        ) : null}
+      </RowActions>
     </tr>
   )
 }
