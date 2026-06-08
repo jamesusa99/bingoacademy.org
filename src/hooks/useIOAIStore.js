@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { fetchMyEnrollments } from '../lib/checkout'
+import { hasIoaiModuleAccess } from '../lib/ioaiAccess'
 import { fetchMyIoaiAccess, fetchIoaiStore } from '../lib/ioaiStore'
 
 export function useIOAIStore() {
@@ -47,10 +49,28 @@ export function useIOAIAccess() {
     }
     setLoading(true)
     try {
-      const data = await fetchMyIoaiAccess()
-      setModuleSlugs(data.moduleSlugs || [])
-      setEnrolledSlugs(data.enrolledSlugs || [])
-      setHasFullTrack(Boolean(data.hasFullTrack))
+      const [data, enrollments] = await Promise.all([
+        fetchMyIoaiAccess().catch(() => ({})),
+        fetchMyEnrollments().catch(() => ({ slugs: [] })),
+      ])
+      const enrolledSlugs = [
+        ...new Set([
+          ...(data.enrolledSlugs || data.slugs || []),
+          ...(enrollments.slugs || []),
+        ]),
+      ]
+      const moduleSlugs = data.moduleSlugs?.length
+        ? data.moduleSlugs
+        : enrolledSlugs.filter((slug) => slug.startsWith('ioai-') && !slug.includes('competition-system'))
+      setModuleSlugs(moduleSlugs)
+      setEnrolledSlugs(enrolledSlugs)
+      setHasFullTrack(
+        Boolean(
+          data.hasFullTrack ||
+            enrolledSlugs.includes('ioai-competition-system') ||
+            enrolledSlugs.includes('ioai-track')
+        )
+      )
     } catch {
       setModuleSlugs([])
       setEnrolledSlugs([])
@@ -65,8 +85,10 @@ export function useIOAIAccess() {
   }, [reload])
 
   const hasModule = useCallback(
-    (catalogSlug) => Boolean(catalogSlug && moduleSlugs.includes(catalogSlug)),
-    [moduleSlugs]
+    (catalogSlug) =>
+      hasFullTrack ||
+      hasIoaiModuleAccess(catalogSlug, { moduleSlugs, enrolledSlugs }),
+    [moduleSlugs, enrolledSlugs, hasFullTrack]
   )
 
   return {

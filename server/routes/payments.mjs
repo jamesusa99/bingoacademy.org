@@ -7,7 +7,6 @@ import {
   IOAI_FULL_BUNDLE_SLUG,
   listEnrollmentSlugs,
   revokeUserEnrollments,
-  userHasIOAIAccess,
 } from '../lib/courseEntitlements.mjs'
 import {
   getCatalogCourseBySlug,
@@ -86,15 +85,6 @@ export function registerPaymentRoutes(app) {
       console.error('[enrollments/reset]', err)
       return res.status(502).json({ error: err.message || 'Failed to reset enrollments' })
     }
-  })
-
-  app.get('/api/me/ioai-access', async (req, res) => {
-    const auth = await verifyAuthUser(req)
-    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
-
-    const hasAccess = await userHasIOAIAccess(auth.admin, auth.user.id)
-    const slugs = await listEnrollmentSlugs(auth.admin, auth.user.id)
-    return res.json({ hasAccess, slugs })
   })
 
   app.post('/api/checkout/course', async (req, res) => {

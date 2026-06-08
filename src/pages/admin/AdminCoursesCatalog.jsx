@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import {
@@ -62,6 +62,7 @@ export default function AdminCoursesCatalog() {
   const [lineFilter, setLineFilter] = useState(DEFAULT_ADMIN_PRODUCT_LINE)
   const [typeFilter, setTypeFilter] = useState('all')
   const [levelsByLine, setLevelsByLine] = useState({ ioai: [], general: [], k12: [] })
+  const editorRef = useRef(null)
 
   const labSubs = useMemo(() => labMaterialsSubcategoriesForLine(form.line), [form.line])
   const labItems = useMemo(() => items.filter(isLabMaterialsCatalogRow), [items])
@@ -131,6 +132,12 @@ export default function AdminCoursesCatalog() {
   useEffect(() => {
     fetchItems()
   }, [])
+
+  useEffect(() => {
+    if (editingSlug && editorRef.current) {
+      editorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [editingSlug])
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
 
@@ -269,7 +276,7 @@ export default function AdminCoursesCatalog() {
         </AdminAlert>
       ) : null}
 
-      <div className="card p-6 mb-6">
+      <div ref={editorRef} className="card p-6 mb-6 scroll-mt-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="font-semibold text-bingo-dark">
             {editingSlug ? t('pages.coursesCatalog.editCourse', { slug: editingSlug }) : t('pages.coursesCatalog.addCourse')}

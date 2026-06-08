@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PageContent from '../PageContent'
 import PageMeta from '../PageMeta'
 import { useAuth } from '../../contexts/AuthContext'
@@ -7,7 +7,7 @@ import { useIOAIAccess, useIOAIStore } from '../../hooks/useIOAIStore'
 import { buildLessonModuleMap, findModule, fetchIoaiModule, formatIoaiPrice } from '../../lib/ioaiStore'
 import { hasIoaiLessonAccess } from '../../lib/ioaiAccess'
 import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
-import { fetchPaymentsConfig } from '../../lib/checkout'
+import { fetchPaymentsConfig, confirmCheckoutSession } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { labMaterialTypeLabel } from '../../config/labMaterials'
@@ -22,8 +22,9 @@ export default function IOAIModuleDetail({
   backLabel = COURSES_PORTAL.backToCourses,
 }) {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { levels, loading: storeLoading } = useIOAIStore()
-  const { moduleSlugs, enrolledSlugs, hasModule, loading: accessLoading } = useIOAIAccess()
+  const { moduleSlugs, enrolledSlugs, hasModule, loading: accessLoading, reload: reloadAccess } = useIOAIAccess()
   const { isAuthenticated } = useAuth()
   const [stripeCheckout, setStripeCheckout] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
@@ -36,6 +37,27 @@ export default function IOAIModuleDetail({
       .then((c) => setStripeCheckout(Boolean(c.stripeCheckout)))
       .catch(() => setStripeCheckout(false))
   }, [])
+
+  useEffect(() => {
+    const checkout = searchParams.get('checkout')
+    const sessionId = searchParams.get('session_id')
+    if (checkout !== 'success' || !sessionId) return
+
+    confirmCheckoutSession(sessionId)
+      .then(() => reloadAccess())
+      .catch(() => {})
+      .finally(() => {
+        setSearchParams(
+          (prev) => {
+            const next = new URLSearchParams(prev)
+            next.delete('checkout')
+            next.delete('session_id')
+            return next
+          },
+          { replace: true }
+        )
+      })
+  }, [searchParams, setSearchParams, reloadAccess])
 
   useEffect(() => {
     let cancelled = false
