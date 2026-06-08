@@ -5,7 +5,7 @@ import PageContent from '../PageContent'
 import PageMeta from '../PageMeta'
 import { useAuth } from '../../contexts/AuthContext'
 import { useIOAIAccess, useIOAIStore } from '../../hooks/useIOAIStore'
-import { buildLessonModuleMap, findModule, fetchIoaiModule, formatIoaiPrice } from '../../lib/ioaiStore'
+import { buildLessonModuleMap, findModule, fetchIoaiModule, formatIoaiPrice, resolveLessonCatalogSlug } from '../../lib/ioaiStore'
 import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig, confirmCheckoutSession } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
@@ -90,20 +90,31 @@ export default function IOAIModuleDetail({
   const mod = found?.module
 
   const lessons = useMemo(() => {
-    const storeList = mod?.lessons || []
-    const apiBySlug = new Map(
-      (detail?.lessons || []).map((l) => [l.slug || l.catalog_slug, l])
-    )
-    return storeList.map((lesson) => {
-      const api = apiBySlug.get(lesson.id)
+    const mapLesson = (lesson, fromApi = false) => {
+      const catalogSlug = resolveLessonCatalogSlug(lesson)
       return {
-        ...lesson,
-        cloudflareVideoId: api?.cloudflare_video_id || lesson.cloudflareVideoId || null,
-        contentGoals: api?.content_goals || lesson.contentGoals || '',
-        knowledgePoints: api?.knowledge_points || lesson.knowledgePoints || '',
+        id: catalogSlug,
+        catalogSlug,
+        title: lesson.title,
+        intro: lesson.intro || '',
+        trialEnabled: Boolean(fromApi ? lesson.trial_enabled : lesson.trialEnabled),
+        sortOrder: lesson.sort_order ?? lesson.sortOrder ?? 0,
+        cloudflareVideoId:
+          lesson.cloudflare_video_id || lesson.cloudflareVideoId || null,
+        contentGoals: lesson.content_goals || lesson.contentGoals || '',
+        knowledgePoints: lesson.knowledge_points || lesson.knowledgePoints || '',
         previewSeconds: IOAI_MODULE_PREVIEW_SECONDS,
       }
-    })
+    }
+
+    const apiLessons = (detail?.lessons || [])
+      .filter((l) => l.status !== 'hidden' && l.status !== 'draft')
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map((l) => mapLesson(l, true))
+
+    if (apiLessons.length) return apiLessons
+
+    return (mod?.lessons || []).map((l) => mapLesson(l, false))
   }, [mod?.lessons, detail?.lessons])
 
   const heroLesson = useMemo(() => {
@@ -113,7 +124,6 @@ export default function IOAIModuleDetail({
   const baseCents = mod?.priceCents ?? detail?.price_cents ?? null
   const labMaterials = detail?.labMaterials || []
   const currency = mod?.currency || detail?.currency || 'usd'
-  const marketingTags = detail?.marketing_tags || mod?.marketingTags || []
 
   const selectedAddonSlugs = useMemo(() => [...selectedAddons], [selectedAddons])
 
@@ -136,8 +146,8 @@ export default function IOAIModuleDetail({
   const availableExtrasCents = labMaterials.reduce((sum, item) => sum + (item.priceCents || 0), 0)
 
   const moduleInfo = useMemo(
-    () => buildModuleInfoContent({ mod, detail, lessons, marketingTags }),
-    [mod, detail, lessons, marketingTags]
+    () => buildModuleInfoContent({ mod, detail }),
+    [mod, detail]
   )
 
   const totalMinutes = lessons.length * LESSON_DURATION_MINUTES

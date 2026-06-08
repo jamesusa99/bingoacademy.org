@@ -3,7 +3,7 @@ import { parsePriceStringToCents } from './priceUtils.mjs'
 export const IOAI_FULL_BUNDLE_SLUG = 'ioai-competition-system'
 
 /** L4 preview length when L3 unit is not purchased (seconds). */
-export const IOAI_MODULE_PREVIEW_SECONDS = 15
+export const IOAI_MODULE_PREVIEW_SECONDS = 30
 
 export function sumCatalogRowsPriceCents(rows) {
   return (rows || []).reduce((sum, row) => {

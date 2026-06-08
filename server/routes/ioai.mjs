@@ -46,7 +46,10 @@ function mapStoreTree(levels, extrasByModuleId = new Map()) {
             catalogSlug: mod.catalog_slug,
             title: mod.title,
             coverUrl: mod.cover_url || null,
-            introHtml: mod.intro_html || mod.summary || '',
+            summary: mod.summary || '',
+            learningObjectives: mod.learning_objectives || '',
+            learningOutcomes: mod.learning_outcomes || '',
+            introHtml: mod.summary || '',
             priceCents: baseCents || null,
             extrasPriceCents: extrasCents || null,
             totalPriceCents: baseCents > 0 ? baseCents : null,
@@ -57,14 +60,19 @@ function mapStoreTree(levels, extrasByModuleId = new Map()) {
             lessons: [...(mod.lessons || [])]
               .filter((l) => l.status !== 'hidden' && l.status !== 'draft')
               .sort(sortByOrder)
-              .map((lesson) => ({
-                id: lesson.slug,
-                title: lesson.title,
-                intro: lesson.intro || '',
-                trialEnabled: Boolean(lesson.trial_enabled),
-                sortOrder: lesson.sort_order ?? 0,
-                cloudflareVideoId: lesson.cloudflare_video_id || null,
-              })),
+              .map((lesson) => {
+                const catalogSlug = lesson.catalog_slug || lesson.slug
+                return {
+                  id: catalogSlug,
+                  catalogSlug,
+                  slug: lesson.slug,
+                  title: lesson.title,
+                  intro: lesson.intro || '',
+                  trialEnabled: Boolean(lesson.trial_enabled),
+                  sortOrder: lesson.sort_order ?? 0,
+                  cloudflareVideoId: lesson.cloudflare_video_id || null,
+                }
+              }),
           }})
       })),
   }))
@@ -86,10 +94,10 @@ export function registerIoaiRoutes(app) {
         themes (
           id, slug, title, category_label, cover_url, intro_html, status, hidden, sort_order,
           modules (
-            id, slug, title, summary, cover_url, intro_html, catalog_slug,
+            id, slug, title, summary, learning_objectives, learning_outcomes, cover_url, intro_html, catalog_slug,
             price_cents, compare_at_cents, currency, marketing_tags, status, sort_order,
             lessons (
-              id, slug, title, intro, trial_enabled, status, sort_order
+              id, slug, title, intro, trial_enabled, status, sort_order, catalog_slug, cloudflare_video_id
             )
           )
         )
@@ -142,7 +150,7 @@ export function registerIoaiRoutes(app) {
       .from('modules')
       .select(
         `
-        id, slug, title, summary, cover_url, intro_html, catalog_slug,
+        id, slug, title, summary, learning_objectives, learning_outcomes, cover_url, intro_html, catalog_slug,
         price_cents, compare_at_cents, currency, marketing_tags, status,
         theme:themes (
           slug, title, category_label, intro_html,

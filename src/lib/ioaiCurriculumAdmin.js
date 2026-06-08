@@ -24,6 +24,8 @@ const CURRICULUM_ADMIN_SELECT = `
       slug,
       title,
       summary,
+      learning_objectives,
+      learning_outcomes,
       sort_order,
       catalog_slug,
       price_cents,
@@ -73,7 +75,7 @@ export function flattenCurriculumForAdmin(levels) {
             categorySlug: theme.slug,
             themeTitle: theme.title,
             lessonTitle: lesson.title,
-            lessonSlug: lesson.slug,
+            lessonSlug: lesson.catalog_slug || lesson.slug,
             knowledgePoints: lesson.knowledge_points || '',
             contentGoals: lesson.content_goals || '',
             cloudflareVideoId: lesson.cloudflare_video_id || '',
@@ -109,7 +111,7 @@ export function groupModulesForAdmin(levels) {
           categorySlug: theme.slug,
           themeTitle: theme.title,
           lessonTitle: lesson.title,
-          lessonSlug: lesson.slug,
+          lessonSlug: lesson.catalog_slug || lesson.slug,
           knowledgePoints: lesson.knowledge_points || '',
           contentGoals: lesson.content_goals || '',
           cloudflareVideoId: lesson.cloudflare_video_id || '',
@@ -129,6 +131,8 @@ export function groupModulesForAdmin(levels) {
           moduleTitle: mod.title,
           moduleSlug: mod.slug,
           moduleSummary: mod.summary || '',
+          learningObjectives: mod.learning_objectives || '',
+          learningOutcomes: mod.learning_outcomes || '',
           catalogSlug: mod.catalog_slug || '',
           coverUrl: mod.cover_url || '',
           priceCents: mod.price_cents ?? null,
@@ -395,13 +399,13 @@ async function findOrCreateModule(themeId, { moduleId, newModule }) {
   })
 }
 
-async function ensureUniqueLessonSlug(baseSlug) {
+async function ensureUniqueLessonSlug(baseSlug, excludeLessonId = null) {
   let slug = baseSlug
   let suffix = 1
   while (true) {
     const { data, error } = await supabase.from('lessons').select('id').eq('slug', slug).maybeSingle()
     if (error) throw new Error(error.message)
-    if (!data) return slug
+    if (!data || (excludeLessonId && data.id === excludeLessonId)) return slug
     suffix += 1
     slug = `${baseSlug}-${suffix}`
   }
@@ -588,8 +592,24 @@ export async function saveProgramLessonConfig(productLine, lessonId, patch) {
   const catalogSlug = patch.catalog_slug?.trim() || null
   const cloudflareUid = patch.cloudflare_video_id?.trim() || null
 
+  const { data: existing, error: fetchErr } = await supabase
+    .from('lessons')
+    .select('id, slug, catalog_slug')
+    .eq('id', lessonId)
+    .maybeSingle()
+  if (fetchErr) throw new Error(fetchErr.message)
+  if (!existing) throw new Error('Lesson not found')
+
+  const previousCatalogSlug = (existing.catalog_slug || existing.slug || '').trim() || null
+  let lessonSlug = existing.slug
+
+  if (catalogSlug && catalogSlug !== previousCatalogSlug) {
+    lessonSlug = await ensureUniqueLessonSlug(catalogSlug, lessonId)
+  }
+
   const data = await adminUpdate('lessons', lessonId, {
     title: patch.title,
+    slug: lessonSlug,
     knowledge_points: patch.knowledge_points ?? null,
     content_goals: patch.content_goals ?? null,
     cloudflare_video_id: cloudflareUid,
@@ -598,7 +618,11 @@ export async function saveProgramLessonConfig(productLine, lessonId, patch) {
   })
 
   if (catalogSlug) {
-    await saveCatalogCourse(catalogPatchFromForm(productLine, catalogSlug, patch))
+    await saveCatalogCourse({
+      ...catalogPatchFromForm(productLine, catalogSlug, patch),
+      previousSlug:
+        previousCatalogSlug && previousCatalogSlug !== catalogSlug ? previousCatalogSlug : undefined,
+    })
     if (cloudflareUid) {
       await assignStreamToCourse({ catalogSlug, uid: cloudflareUid })
     }
@@ -695,13 +719,22 @@ export async function saveProgramModuleConfig(productLine, moduleDbId, patch, gr
     )
   }
 
+  const summary = patch.summary?.trim()
+  const learningObjectives = patch.learning_objectives?.trim()
+  const learningOutcomes = patch.learning_outcomes?.trim()
+
+  if (!summary) throw new Error('Module summary (模块简介) is required')
+  if (!learningObjectives) throw new Error('Learning objectives (学习目标) is required')
+  if (!learningOutcomes) throw new Error('Learning outcomes (学习收获) is required')
+
   const data = await adminUpdate('modules', moduleDbId, {
     title: patch.title?.trim(),
-    summary: patch.summary?.trim() || null,
+    summary,
+    learning_objectives: learningObjectives,
+    learning_outcomes: learningOutcomes,
     catalog_slug: catalogSlug,
     price_cents: priceCents,
     currency: (patch.currency || 'usd').trim().toLowerCase(),
-    intro_html: patch.intro_html?.trim() || null,
     cover_url: patch.cover_url?.trim() || null,
     status: patch.status || 'live',
     sort_order: parseInt(patch.sort_order, 10) || 0,

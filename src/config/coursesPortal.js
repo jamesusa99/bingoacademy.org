@@ -142,6 +142,7 @@ export const COURSES_PORTAL = {
   moduleIntroTitle: 'Module overview',
   moduleObjectivesTitle: 'Learning objectives',
   moduleOutcomesTitle: 'What you\'ll gain',
+  moduleInfoEmpty: 'Not available yet.',
   moduleLessonListTitle: 'Lessons',
   moduleUnlockedProgress: (unlocked, total) => `${unlocked}/${total} lessons unlocked`,
   moduleTotalDuration: (min) => `Total ${min} min`,

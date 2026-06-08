@@ -58,10 +58,11 @@ export function mapDbCurriculumToTree(rows) {
         priceCents: mod.price_cents ?? null,
         currency: mod.currency || 'usd',
         lessons: [...(mod.lessons || [])].sort(sortByOrder).map((lesson) => ({
-          id: lesson.slug,
+          id: lesson.catalog_slug || lesson.slug,
+          catalogSlug: lesson.catalog_slug || lesson.slug,
+          slug: lesson.slug,
           title: lesson.title,
           cloudflareVideoId: lesson.cloudflare_video_id || null,
-          catalogSlug: lesson.catalog_slug || lesson.slug,
           knowledgePoints: lesson.knowledge_points || '',
           contentGoals: lesson.content_goals || '',
         })),

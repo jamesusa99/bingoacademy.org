@@ -2,6 +2,27 @@ import { authFetch } from './checkout'
 
 export const IOAI_FULL_BUNDLE_SLUG = 'ioai-competition-system'
 
+/** Canonical courses_catalog slug used in /courses/detail/:id routes */
+export function resolveLessonCatalogSlug(lesson) {
+  if (!lesson) return ''
+  return (
+    lesson.catalogSlug ||
+    lesson.catalog_slug ||
+    lesson.slug ||
+    lesson.id ||
+    ''
+  )
+    .trim()
+}
+
+function registerLessonModuleKeys(map, lesson, moduleCatalogSlug) {
+  const primary = resolveLessonCatalogSlug(lesson)
+  if (!primary || !moduleCatalogSlug) return
+  map.set(primary, moduleCatalogSlug)
+  const legacy = (lesson.slug || lesson.id || '').trim()
+  if (legacy && legacy !== primary) map.set(legacy, moduleCatalogSlug)
+}
+
 export function buildModuleCatalogSlug(levelSlug, themeSlug, moduleSlug) {
   const slugifyPart = (value) => {
     if (!value || typeof value !== 'string') return null
@@ -68,7 +89,7 @@ export function buildLessonModuleMap(levels) {
       for (const mod of theme.modules || []) {
         if (!mod.catalogSlug) continue
         for (const lesson of mod.lessons || []) {
-          map.set(lesson.id, mod.catalogSlug)
+          registerLessonModuleKeys(map, lesson, mod.catalogSlug)
         }
       }
     }

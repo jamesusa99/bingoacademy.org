@@ -1,6 +1,15 @@
 import { getPurchasedSlugs, hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from './courseAccess'
+import { resolveLessonCatalogSlug } from './ioaiStore'
 
 export const IOAI_FULL_BUNDLE_SLUG = IOAI_FULL_TRACK_SLUG
+
+function registerLessonModuleKeys(map, lesson, moduleCatalogSlug) {
+  const primary = resolveLessonCatalogSlug(lesson)
+  if (!primary || !moduleCatalogSlug) return
+  map.set(primary, moduleCatalogSlug)
+  const legacy = (lesson.slug || lesson.id || '').trim()
+  if (legacy && legacy !== primary) map.set(legacy, moduleCatalogSlug)
+}
 
 /** lessonId → L3 module catalog_slug from curriculum tree (DB or store shape) */
 export function buildLessonModuleMapFromTree(tree) {
@@ -11,8 +20,7 @@ export function buildLessonModuleMapFromTree(tree) {
         const catalogSlug = mod.catalogSlug || mod.catalog_slug
         if (!catalogSlug) continue
         for (const lesson of mod.lessons || []) {
-          const lessonId = lesson.id || lesson.slug
-          if (lessonId) map.set(lessonId, catalogSlug)
+          registerLessonModuleKeys(map, lesson, catalogSlug)
         }
       }
     }
@@ -44,7 +52,7 @@ export function canPreviewIoaiLesson(
   { moduleSlugs = [], enrolledSlugs = getPurchasedSlugs(), lessonModuleMap } = {}
 ) {
   if (!lesson?.cloudflareVideoId) return false
-  return !hasIoaiLessonAccess(lesson.id || lesson.slug, {
+  return !hasIoaiLessonAccess(resolveLessonCatalogSlug(lesson), {
     moduleSlugs,
     enrolledSlugs,
     lessonModuleMap,

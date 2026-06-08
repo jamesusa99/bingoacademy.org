@@ -6,6 +6,7 @@ import {
   parseIOAILessonSlug,
 } from '../data/ioaiCurriculum'
 import { buildCurriculumSummary } from './ioaiCurriculumDb'
+import { resolveLessonCatalogSlug } from './ioaiStore'
 import { getProgramCurriculum, isCurriculumLine } from '../config/programCurriculum'
 
 export const IOAI_TRACK_ID = 'ioai-competition-system'
@@ -148,7 +149,7 @@ export function getAllIOAILessonIds(courses = null, curriculumTree = null) {
 }
 
 function mergeLessonMeta(lesson, courses, level, theme, mod) {
-  const lessonId = lesson.id || lesson.slug
+  const lessonId = resolveLessonCatalogSlug(lesson)
   const row = courses?.find((c) => c.id === lessonId)
   const staticMeta = findIOAICurriculumLesson(lessonId)
   const parsed = parseIOAILessonSlug(lessonId)
@@ -246,7 +247,10 @@ export function findLessonInTree(lessonId, curriculumTree = null) {
   for (const level of curriculumTree) {
     for (const theme of level.themes || []) {
       for (const mod of theme.modules || []) {
-        const lesson = (mod.lessons || []).find((l) => (l.id || l.slug) === lessonId)
+        const lesson = (mod.lessons || []).find((l) => {
+          const primary = resolveLessonCatalogSlug(l)
+          return primary === lessonId || l.slug === lessonId || l.id === lessonId
+        })
         if (lesson) {
           return {
             lesson,

@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import { ChevronDown, Clock, Lock, Play } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { hasIoaiLessonAccess, canPreviewIoaiLesson } from '../../lib/ioaiAccess'
+import { resolveLessonCatalogSlug } from '../../lib/ioaiStore'
 
 const LESSON_DURATION_MINUTES = 14
 
 function lessonHasFullAccess(lesson, { owned, moduleSlugs, enrolledSlugs, lessonModuleMap }) {
   return (
     owned ||
-    hasIoaiLessonAccess(lesson.id, {
+    hasIoaiLessonAccess(resolveLessonCatalogSlug(lesson), {
       moduleSlugs,
       enrolledSlugs,
       lessonModuleMap,
@@ -77,14 +78,15 @@ export default function IOAIModuleLessonList({
             enrolledSlugs,
             lessonModuleMap,
           })
-          const expanded = expandedId === lesson.id
-          const lessonPath = `/courses/detail/${encodeURIComponent(lesson.id)}?from=ioai&play=1`
+          const lessonSlug = resolveLessonCatalogSlug(lesson)
+          const expanded = expandedId === lessonSlug
+          const lessonPath = `/courses/detail/${encodeURIComponent(lessonSlug)}?from=ioai&play=1`
 
           return (
-            <article key={lesson.id} className={canWatch ? '' : 'bg-slate-50/60'}>
+            <article key={lessonSlug} className={canWatch ? '' : 'bg-slate-50/60'}>
               <button
                 type="button"
-                onClick={() => setExpandedId(expanded ? null : lesson.id)}
+                onClick={() => setExpandedId(expanded ? null : lessonSlug)}
                 className="w-full flex items-center gap-3 px-4 sm:px-5 py-4 text-left hover:bg-slate-50/80 transition"
               >
                 <span

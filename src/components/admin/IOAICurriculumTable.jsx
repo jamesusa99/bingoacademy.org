@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { ExternalLink, Pencil, Plus, Trash2, Video } from 'lucide-react'
 import { getProgramCurriculum } from '../../config/programCurriculum'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
@@ -321,7 +321,7 @@ function LessonRow({ row, labels, deletingId, onEditLesson, onDeleteLesson, drag
       <td className="p-3 text-[10px] text-slate-400 italic whitespace-nowrap">{labels.lessonIncludedInModule}</td>
       <td className="p-3">
         <p className="font-medium text-bingo-dark text-sm">{row.lessonTitle}</p>
-        <p className="text-[10px] font-mono text-slate-400 mt-0.5">{row.lessonSlug}</p>
+        <p className="text-[10px] font-mono text-slate-400 mt-0.5">{row.catalogSlug || row.lessonSlug}</p>
       </td>
       <td className="p-3">
         <CollapsibleText text={row.knowledgePoints} labels={labels} />
@@ -365,7 +365,8 @@ function buildModuleFormState(group) {
   return {
     title: group.moduleTitle || '',
     summary: group.moduleSummary || '',
-    intro_html: group.introHtml || '',
+    learning_objectives: group.learningObjectives || '',
+    learning_outcomes: group.learningOutcomes || '',
     cover_url: group.coverUrl || '',
     catalog_slug: group.catalogSlug || '',
     ...CATALOG_FORM_DEFAULTS,
@@ -396,10 +397,6 @@ export function ProgramModuleEditor({
 }) {
   const draftKey = `admin-curriculum-module-${group.moduleDbId}`
   const [form, setForm] = useAdminFormDraft(draftKey, buildModuleFormState(group))
-
-  useEffect(() => {
-    setForm(buildModuleFormState(group))
-  }, [group.moduleDbId, group.catalogSlug, group.catalogPriceCents, group.catalogPrice, group.catalogStatus, group.catalogSortOrder, group.catalogRating, group.catalogStudents, group.moduleTitle, group.priceCents, setForm])
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const catalogSlug = form.catalog_slug?.trim() || group.catalogSlug || ''
@@ -466,7 +463,7 @@ export function ProgramModuleEditor({
         </AdminField>
       </div>
 
-      <AdminField label={labels.moduleSummaryLabel}>
+      <AdminField label={labels.moduleSummaryLabel} required>
         <textarea
           className={textareaClass}
           value={form.summary}
@@ -475,12 +472,21 @@ export function ProgramModuleEditor({
         />
       </AdminField>
 
-      <AdminField label={labels.moduleIntro}>
+      <AdminField label={labels.moduleObjectivesLabel} required>
         <textarea
-          className={`${textareaClass} min-h-[64px]`}
-          value={form.intro_html}
-          onChange={(e) => set('intro_html', e.target.value)}
-          placeholder={labels.phModuleIntro}
+          className={`${textareaClass} min-h-[80px]`}
+          value={form.learning_objectives}
+          onChange={(e) => set('learning_objectives', e.target.value)}
+          placeholder={labels.phModuleObjectives}
+        />
+      </AdminField>
+
+      <AdminField label={labels.moduleOutcomesLabel} required>
+        <textarea
+          className={`${textareaClass} min-h-[80px]`}
+          value={form.learning_outcomes}
+          onChange={(e) => set('learning_outcomes', e.target.value)}
+          placeholder={labels.phModuleOutcomes}
         />
       </AdminField>
 
@@ -569,7 +575,7 @@ function ModuleEditorLessonList({ group, labels, onReorderLessons }) {
               >
                 {onReorderLessons ? <DragHandle label={labels.dragHint} className="w-7 h-7" /> : null}
                 <span className="font-mono truncate">
-                  {lesson.lessonTitle} · {lesson.lessonSlug}
+                  {lesson.lessonTitle} · {lesson.catalogSlug || lesson.lessonSlug}
                 </span>
               </li>
             )

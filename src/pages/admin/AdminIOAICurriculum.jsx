@@ -173,8 +173,11 @@ export default function AdminIOAICurriculum() {
       phModuleCatalogSlug: c.t(`${i18nRoot}.phModuleCatalogSlug`),
       moduleSummaryLabel: c.t(`${i18nRoot}.moduleSummaryLabel`),
       phModuleSummary: c.t(`${i18nRoot}.phModuleSummary`),
-      moduleIntro: c.t(`${i18nRoot}.moduleIntro`),
-      phModuleIntro: c.t(`${i18nRoot}.phModuleIntro`),
+      moduleObjectivesLabel: c.t(`${i18nRoot}.moduleObjectivesLabel`),
+      phModuleObjectives: c.t(`${i18nRoot}.phModuleObjectives`),
+      moduleOutcomesLabel: c.t(`${i18nRoot}.moduleOutcomesLabel`),
+      phModuleOutcomes: c.t(`${i18nRoot}.phModuleOutcomes`),
+      moduleFieldsRequired: c.t(`${i18nRoot}.moduleFieldsRequired`),
       moduleCover: c.t(`${i18nRoot}.moduleCover`),
       phModuleCover: c.t(`${i18nRoot}.phModuleCover`),
       moduleCoverHint: c.t(`${i18nRoot}.moduleCoverHint`),
@@ -197,6 +200,8 @@ export default function AdminIOAICurriculum() {
       lessonCatalogPriceHint: c.t(`${i18nRoot}.lessonCatalogPriceHint`),
       addLessonToModule: c.t(`${i18nRoot}.addLessonToModule`),
       previewModule: c.t(`${i18nRoot}.previewModule`),
+      refreshData: c.t(`${i18nRoot}.refreshData`),
+      refreshing: c.t(`${i18nRoot}.refreshing`),
       moduleSummary: (modules, lessons) => c.t(`${i18nRoot}.moduleSummaryStats`, { modules, lessons }),
       dragHint: c.t(`${i18nRoot}.dragHint`),
       savingOrder: c.t(`${i18nRoot}.savingOrder`),
@@ -220,39 +225,44 @@ export default function AdminIOAICurriculum() {
   }, [uiKey])
 
   useEffect(() => {
-    if (!rows.length || editingRow) return
+    if (editingRow || editingModule) return
     const ui = readAdminUiDraft(uiKey)
-    if (!ui?.editingLessonId) return
-    const row = rows.find((r) => r.lessonId === ui.editingLessonId)
-    if (row) setEditingRow(row)
-  }, [rows, uiKey, editingRow])
-
-  useEffect(() => {
-    if (!editingRow?.lessonId || !rows.length) return
-    const fresh = rows.find((r) => r.lessonId === editingRow.lessonId)
-    if (!fresh) return
-    if (
-      fresh.cloudflareVideoId !== editingRow.cloudflareVideoId ||
-      fresh.lessonTitle !== editingRow.lessonTitle ||
-      fresh.knowledgePoints !== editingRow.knowledgePoints
-    ) {
-      setEditingRow(fresh)
+    if (ui?.editingLessonId && rows.length) {
+      const row = rows.find((r) => r.lessonId === ui.editingLessonId)
+      if (row) {
+        setEditingRow(row)
+        return
+      }
     }
-  }, [rows, editingRow?.lessonId])
+    if (ui?.editingModuleId && moduleGroups.length) {
+      const group = moduleGroups.find((g) => g.moduleDbId === ui.editingModuleId)
+      if (group) setEditingModule(group)
+    }
+  }, [rows, moduleGroups, uiKey, editingRow, editingModule])
 
   useEffect(() => {
     writeAdminUiDraft(uiKey, {
       showAddForm,
       editingLessonId: editingRow?.lessonId || null,
+      editingModuleId: editingModule?.moduleDbId || null,
     })
-  }, [showAddForm, editingRow, uiKey])
+  }, [showAddForm, editingRow, editingModule, uiKey])
 
   const closeEditor = () => {
-    writeAdminUiDraft(uiKey, { showAddForm, editingLessonId: null })
+    writeAdminUiDraft(uiKey, {
+      showAddForm,
+      editingLessonId: null,
+      editingModuleId: editingModule?.moduleDbId || null,
+    })
     setEditingRow(null)
   }
 
   const closeModuleEditor = () => {
+    writeAdminUiDraft(uiKey, {
+      showAddForm,
+      editingLessonId: editingRow?.lessonId || null,
+      editingModuleId: null,
+    })
     setEditingModule(null)
   }
 
@@ -293,20 +303,6 @@ export default function AdminIOAICurriculum() {
   useEffect(() => {
     load()
   }, [load])
-
-  useEffect(() => {
-    const refreshIfVisible = () => {
-      if (document.visibilityState !== 'visible') return
-      if (showAddForm || editingRow || editingModule || saving) return
-      load({ background: true })
-    }
-    window.addEventListener('focus', refreshIfVisible)
-    document.addEventListener('visibilitychange', refreshIfVisible)
-    return () => {
-      window.removeEventListener('focus', refreshIfVisible)
-      document.removeEventListener('visibilitychange', refreshIfVisible)
-    }
-  }, [load, showAddForm, editingRow, editingModule, saving])
 
   useEffect(() => {
     if ((editingRow || editingModule) && editorRef.current) {
@@ -399,6 +395,10 @@ export default function AdminIOAICurriculum() {
 
   const handleSaveModule = async (form) => {
     if (!editingModule) return
+    if (!form.summary?.trim() || !form.learning_objectives?.trim() || !form.learning_outcomes?.trim()) {
+      setError(labels.moduleFieldsRequired)
+      return
+    }
     setSaving(true)
     setError(null)
     try {
@@ -497,13 +497,21 @@ export default function AdminIOAICurriculum() {
       <AdminPageHeader titleKey={`${i18nRoot}.title`} descriptionKey={`${i18nRoot}.desc`} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-3 text-sm">
+        <div className="flex flex-wrap gap-3 text-sm items-center">
           <Link to={ADMIN_LABS_MATERIALS_PATH} className="text-primary hover:underline">
             ← {c.t(`${i18nRoot}.backCatalog`)}
           </Link>
           <Link to={config.frontendPath} target="_blank" rel="noreferrer" className="text-slate-600 hover:text-primary">
             {c.t(`${i18nRoot}.viewFrontend`)} ↗
           </Link>
+          <button
+            type="button"
+            onClick={() => load({ background: true })}
+            disabled={refreshing || initialLoading}
+            className="text-slate-600 hover:text-primary disabled:opacity-50"
+          >
+            {refreshing ? labels.refreshing : labels.refreshData}
+          </button>
         </div>
         {!showAddForm && !editingRow && !editingModule ? (
           <button
@@ -593,7 +601,6 @@ export default function AdminIOAICurriculum() {
         labels={labels}
         deletingId={deletingId}
         onEditModule={(group) => {
-          sessionStorage.removeItem(`admin-curriculum-module-${group.moduleDbId}`)
           setShowAddForm(false)
           setEditingRow(null)
           setEditingModule(group)
