@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 function toDb(row) {
@@ -33,6 +34,7 @@ function fromDb(row) {
 }
 
 const INIT = { name: '', type: 'ai', stage: '', students: '', award: '', enrolled: '0', whitelist: true, aiCourse: true, desc: '' }
+const EVENT_REQUIRED = new Set(['name', 'students'])
 
 export default function AdminEvents() {
   const c = useAdminCrud()
@@ -114,8 +116,7 @@ export default function AdminEvents() {
         <h2 className="font-semibold text-bingo-dark mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           {['name','type','stage','students','award','enrolled','desc'].map((k) => (
-            <div key={k}>
-              <label className="text-xs font-medium text-slate-600 block mb-1">{k}</label>
+            <AdminField key={k} label={k} required={EVENT_REQUIRED.has(k)}>
               {k === 'desc' ? (
                 <textarea value={form[k]} onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))} rows={2} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
               ) : (
@@ -126,16 +127,14 @@ export default function AdminEvents() {
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
                 />
               )}
-            </div>
+            </AdminField>
           ))}
-          <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.events.whitelist')}</label>
+          <AdminField label={c.t('pages.events.whitelist')}>
             <label className="flex items-center gap-2"><input type="checkbox" checked={form.whitelist} onChange={(e) => setForm((f) => ({ ...f, whitelist: e.target.checked }))} /> {c.yes}</label>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.events.aiCourse')}</label>
+          </AdminField>
+          <AdminField label={c.t('pages.events.aiCourse')}>
             <label className="flex items-center gap-2"><input type="checkbox" checked={form.aiCourse} onChange={(e) => setForm((f) => ({ ...f, aiCourse: e.target.checked }))} /> {c.yes}</label>
-          </div>
+          </AdminField>
         </div>
         <div className="flex gap-2 mt-4">
           <button onClick={handleSave} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>

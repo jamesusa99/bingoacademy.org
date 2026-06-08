@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const fields = ['title', 'company', 'level', 'salary', 'location', 'skill', 'course_linked', 'sort_order']
+const CAREER_REQUIRED = new Set(['title', 'company'])
 
 export default function AdminCareer() {
   const c = useAdminCrud()
@@ -73,8 +75,7 @@ export default function AdminCareer() {
         <h2 className="font-semibold mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           {fields.map((k) => (
-            <div key={k}>
-              <label className="text-xs font-medium text-slate-600 block mb-1">{k}</label>
+            <AdminField key={k} label={k} required={CAREER_REQUIRED.has(k)}>
               {k === 'course_linked' ? (
                 <label className="flex items-center gap-2">
                   <input
@@ -92,7 +93,7 @@ export default function AdminCareer() {
                   className="w-full rounded-xl border px-3 py-2 text-sm"
                 />
               )}
-            </div>
+            </AdminField>
           ))}
         </div>
         <div className="flex gap-2 mt-4">

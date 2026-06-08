@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 function toDbThread(row) {
@@ -115,30 +116,25 @@ export default function AdminForum() {
       <div className="card p-6 mb-6">
         <h2 className="font-semibold text-bingo-dark mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
         <div className="space-y-4">
-          <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">{c.title}</label>
+          <AdminField label={c.title} required>
             <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.forum.content')}</label>
+          </AdminField>
+          <AdminField label={c.t('pages.forum.content')} required>
             <textarea value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} rows={3} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
-          </div>
+          </AdminField>
           <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.forum.author')}</label>
+            <AdminField label={c.t('pages.forum.author')}>
               <input value={form.author} onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.forum.category')}</label>
+            </AdminField>
+            <AdminField label={c.t('pages.forum.category')}>
               <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white">
                 {['Discussion','Parent Experience','Competition','Course Q&A','Resources','Other'].map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
-            </div>
+            </AdminField>
           </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">{c.t('pages.forum.imageUrl')}</label>
+          <AdminField label={c.t('pages.forum.imageUrl')}>
             <input value={form.image} onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))} placeholder="https://..." className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
-          </div>
+          </AdminField>
         </div>
         <div className="flex gap-2 mt-4">
           <button type="button" onClick={handleSave} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 export default function AdminCharity() {
@@ -91,10 +92,18 @@ export default function AdminCharity() {
           <div className="card p-6">
             <h2 className="font-semibold mb-4">{c.t('pages.charity.editReport')}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
-              <div><label className="text-xs font-medium text-slate-600 block mb-1">type</label><select value={formReport.type} onChange={(e) => setFormReport((f) => ({ ...f, type: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm"><option value="Trending">Trending</option><option value="Industry">Industry</option><option value="Honor">Honor</option></select></div>
-              <div><label className="text-xs font-medium text-slate-600 block mb-1">report_date</label><input value={formReport.report_date} onChange={(e) => setFormReport((f) => ({ ...f, report_date: e.target.value }))} placeholder="2025-02" className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
-              <div className="sm:col-span-2"><label className="text-xs font-medium text-slate-600 block mb-1">text</label><input value={formReport.text} onChange={(e) => setFormReport((f) => ({ ...f, text: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
-              <div><label className="text-xs font-medium text-slate-600 block mb-1">sort_order</label><input type="number" value={formReport.sort_order} onChange={(e) => setFormReport((f) => ({ ...f, sort_order: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
+              <AdminField label="type">
+                <select value={formReport.type} onChange={(e) => setFormReport((f) => ({ ...f, type: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm"><option value="Trending">Trending</option><option value="Industry">Industry</option><option value="Honor">Honor</option></select>
+              </AdminField>
+              <AdminField label="report_date">
+                <input value={formReport.report_date} onChange={(e) => setFormReport((f) => ({ ...f, report_date: e.target.value }))} placeholder="2025-02" className="w-full rounded-xl border px-3 py-2 text-sm" />
+              </AdminField>
+              <AdminField label="text" required className="sm:col-span-2">
+                <input value={formReport.text} onChange={(e) => setFormReport((f) => ({ ...f, text: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" />
+              </AdminField>
+              <AdminField label="sort_order">
+                <input type="number" value={formReport.sort_order} onChange={(e) => setFormReport((f) => ({ ...f, sort_order: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" />
+              </AdminField>
             </div>
             <div className="flex gap-2 mt-4">
               <button type="button" onClick={saveReport} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>
@@ -112,9 +121,15 @@ export default function AdminCharity() {
           <div className="card p-6">
             <h2 className="font-semibold mb-4">{c.t('pages.charity.editProject')}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
-              <div><label className="text-xs font-medium text-slate-600 block mb-1">title</label><input value={formProject.title} onChange={(e) => setFormProject((f) => ({ ...f, title: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
-              <div><label className="text-xs font-medium text-slate-600 block mb-1">sort_order</label><input type="number" value={formProject.sort_order} onChange={(e) => setFormProject((f) => ({ ...f, sort_order: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
-              <div className="sm:col-span-2"><label className="text-xs font-medium text-slate-600 block mb-1">desc</label><textarea value={formProject.desc} onChange={(e) => setFormProject((f) => ({ ...f, desc: e.target.value }))} rows={2} className="w-full rounded-xl border px-3 py-2 text-sm" /></div>
+              <AdminField label="title" required>
+                <input value={formProject.title} onChange={(e) => setFormProject((f) => ({ ...f, title: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" />
+              </AdminField>
+              <AdminField label="sort_order">
+                <input type="number" value={formProject.sort_order} onChange={(e) => setFormProject((f) => ({ ...f, sort_order: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" />
+              </AdminField>
+              <AdminField label="desc" className="sm:col-span-2">
+                <textarea value={formProject.desc} onChange={(e) => setFormProject((f) => ({ ...f, desc: e.target.value }))} rows={2} className="w-full rounded-xl border px-3 py-2 text-sm" />
+              </AdminField>
             </div>
             <div className="flex gap-2 mt-4">
               <button type="button" onClick={saveProject} className="btn-primary px-5 py-2 rounded-xl text-sm">{c.save}</button>

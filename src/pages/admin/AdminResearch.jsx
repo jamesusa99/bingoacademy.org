@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const campFields = ['title','age','icon','direction','core','highlight','outcome','ratio','competition','price','weeks','sort_order']
 const facultyFields = ['name','team','area','exp','philosophy','type','sort_order']
+const CAMP_REQUIRED = new Set(['title'])
+const FACULTY_REQUIRED = new Set(['name'])
 
 export default function AdminResearch() {
   const c = useAdminCrud()
@@ -97,10 +100,14 @@ export default function AdminResearch() {
             <h2 className="font-semibold mb-4">{c.t('pages.research.editCamp')}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {campFields.map((k) => (
-                <div key={k} className={['core','highlight','outcome','ratio','competition'].includes(k) ? 'sm:col-span-2' : ''}>
-                  <label className="text-xs font-medium text-slate-600 block mb-1">{k}</label>
+                <AdminField
+                  key={k}
+                  label={k}
+                  required={CAMP_REQUIRED.has(k)}
+                  className={['core','highlight','outcome','ratio','competition'].includes(k) ? 'sm:col-span-2' : ''}
+                >
                   {['core','highlight','outcome','ratio','competition'].includes(k) ? <textarea value={formCamp[k] ?? ''} onChange={(e) => setFormCamp((f) => ({ ...f, [k]: e.target.value }))} rows={2} className="w-full rounded-xl border px-3 py-2 text-sm" /> : <input type={k === 'sort_order' ? 'number' : 'text'} value={formCamp[k] ?? ''} onChange={(e) => setFormCamp((f) => ({ ...f, [k]: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" />}
-                </div>
+                </AdminField>
               ))}
             </div>
             <div className="flex gap-2 mt-4">
@@ -120,10 +127,14 @@ export default function AdminResearch() {
             <h2 className="font-semibold mb-4">{c.t('pages.research.editFaculty')}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {facultyFields.map((k) => (
-                <div key={k} className={['exp','philosophy'].includes(k) ? 'sm:col-span-2' : ''}>
-                  <label className="text-xs font-medium text-slate-600 block mb-1">{k}</label>
+                <AdminField
+                  key={k}
+                  label={k}
+                  required={FACULTY_REQUIRED.has(k)}
+                  className={['exp','philosophy'].includes(k) ? 'sm:col-span-2' : ''}
+                >
                   {['exp','philosophy'].includes(k) ? <textarea value={formFaculty[k] ?? ''} onChange={(e) => setFormFaculty((f) => ({ ...f, [k]: e.target.value }))} rows={2} className="w-full rounded-xl border px-3 py-2 text-sm" /> : <input type={k === 'sort_order' ? 'number' : 'text'} value={formFaculty[k] ?? ''} onChange={(e) => setFormFaculty((f) => ({ ...f, [k]: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" />}
-                </div>
+                </AdminField>
               ))}
             </div>
             <div className="flex gap-2 mt-4">

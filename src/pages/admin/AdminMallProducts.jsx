@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const TYPES = ['event','cert','material','lab','training']
 const fields = ['name','type','tag','price','b_price','desc','deadline','sort_order']
+const MALL_PRODUCT_REQUIRED = new Set(['name'])
 
 export default function AdminMallProducts() {
   const c = useAdminCrud()
@@ -56,12 +58,18 @@ export default function AdminMallProducts() {
       <div className="card p-6 mb-6">
         <h2 className="font-semibold mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div><label className="text-xs font-medium text-slate-600 block mb-1">type</label><select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm">{TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
+          <AdminField label="type">
+            <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm">{TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select>
+          </AdminField>
           {fields.filter((k) => k !== 'type').map((k) => (
-            <div key={k} className={k === 'desc' ? 'sm:col-span-2' : ''}>
-              <label className="text-xs font-medium text-slate-600 block mb-1">{k}</label>
+            <AdminField
+              key={k}
+              label={k}
+              required={MALL_PRODUCT_REQUIRED.has(k)}
+              className={k === 'desc' ? 'sm:col-span-2' : ''}
+            >
               {k === 'desc' ? <textarea value={form[k] ?? ''} onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))} rows={2} className="w-full rounded-xl border px-3 py-2 text-sm" /> : <input type={['price','sort_order'].includes(k) ? 'number' : 'text'} value={form[k] ?? ''} onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" />}
-            </div>
+            </AdminField>
           ))}
         </div>
         <div className="flex gap-2 mt-4">

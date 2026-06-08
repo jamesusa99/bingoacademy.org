@@ -130,6 +130,7 @@ export default function CurriculumVideoUpload({
   const hint = replaceTokens(labels.videoUploadHint, {
     maxGb: limits.maxFileGb ?? 30,
     maxHours: limits.maxDurationHours ?? Math.round(maxDuration / 3600),
+    basicMaxMb: limits.basicMaxFileMb ?? 200,
   })
 
   return (

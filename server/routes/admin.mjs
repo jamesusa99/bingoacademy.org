@@ -6,6 +6,7 @@ import {
   STREAM_CLOUDFLARE_MAX_DURATION_SECONDS,
   STREAM_MAX_FILE_BYTES,
   STREAM_RECOMMENDED_MAX_FILE_BYTES,
+  STREAM_BASIC_UPLOAD_MAX_BYTES,
   fetchStreamVideo,
   isStreamConfigured,
   streamVideoToPlayback,
@@ -55,6 +56,8 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
     res.json({
       maxFileBytes: STREAM_MAX_FILE_BYTES,
       recommendedMaxFileBytes: STREAM_RECOMMENDED_MAX_FILE_BYTES,
+      basicMaxFileBytes: STREAM_BASIC_UPLOAD_MAX_BYTES,
+      basicMaxFileMb: Math.round(STREAM_BASIC_UPLOAD_MAX_BYTES / (1024 * 1024)),
       maxDurationSeconds,
       maxDurationHours: Math.round(maxDurationSeconds / 3600),
       maxFileGb: 30,
@@ -131,9 +134,65 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
       limits: {
         maxFileBytes: STREAM_MAX_FILE_BYTES,
         recommendedMaxFileBytes: STREAM_RECOMMENDED_MAX_FILE_BYTES,
+        basicMaxFileBytes: STREAM_BASIC_UPLOAD_MAX_BYTES,
         maxDurationSeconds: maxDurationSeconds,
       },
     })
+  })
+
+  /** Tus upload provisioning for files over 200 MB (Cloudflare direct creator uploads) */
+  app.post('/api/admin/stream/tus-create', async (req, res) => {
+    const auth = await verifyAdminUser(req)
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error })
+    }
+
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
+    const apiToken = process.env.CLOUDFLARE_API_TOKEN
+    if (!accountId || !apiToken) {
+      return res.status(503).json({ error: 'Cloudflare Stream not configured' })
+    }
+
+    const uploadLength = req.headers['upload-length']
+    if (!uploadLength) {
+      return res.status(400).json({ error: 'Upload-Length header is required' })
+    }
+
+    let uploadMetadata = String(req.headers['upload-metadata'] || '').trim()
+    const maxDuration = req.headers['x-stream-max-duration']
+    if (maxDuration) {
+      const encoded = Buffer.from(String(maxDuration).trim()).toString('base64')
+      const part = `maxDurationSeconds ${encoded}`
+      uploadMetadata = uploadMetadata ? `${uploadMetadata},${part}` : part
+    }
+
+    const cfRes = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/stream?direct_user=true`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          'Tus-Resumable': '1.0.0',
+          'Upload-Length': String(uploadLength),
+          ...(uploadMetadata ? { 'Upload-Metadata': uploadMetadata } : {}),
+        },
+      }
+    )
+
+    const location = cfRes.headers.get('Location')
+    if (!cfRes.ok || !location) {
+      const detail = await cfRes.text().catch(() => '')
+      console.error('[stream tus-create]', cfRes.status, detail.slice(0, 300))
+      return res.status(502).json({
+        error: cloudflareStreamErrorMessage(
+          detail ? { errors: [{ message: detail.slice(0, 200) }] } : {}
+        ),
+      })
+    }
+
+    res.setHeader('Access-Control-Expose-Headers', 'Location')
+    res.setHeader('Location', location)
+    return res.status(201).end()
   })
 }
 

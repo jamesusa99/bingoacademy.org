@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
+import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const fields = ['name','title','photo','tag','intro','awards','type','sort_order']
 const fieldLabels = { name:'Name', title:'Title', photo:'Photo URL', tag:'Tag', intro:'Bio', awards:'Awards', type:'Type', sort_order:'Sort order' }
+const MENTOR_REQUIRED = new Set(['name', 'title'])
 
 export default function AdminMentors() {
   const c = useAdminCrud()
@@ -57,10 +59,14 @@ export default function AdminMentors() {
         <h2 className="font-semibold mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           {fields.map((k) => (
-            <div key={k} className={['intro','awards'].includes(k) ? 'sm:col-span-2' : ''}>
-              <label className="text-xs font-medium text-slate-600 block mb-1">{fieldLabels[k] ?? k}</label>
+            <AdminField
+              key={k}
+              label={fieldLabels[k] ?? k}
+              required={MENTOR_REQUIRED.has(k)}
+              className={['intro','awards'].includes(k) ? 'sm:col-span-2' : ''}
+            >
               {['intro','awards'].includes(k) ? <textarea value={form[k] ?? ''} onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))} rows={2} className="w-full rounded-xl border px-3 py-2 text-sm" /> : <input type={k === 'sort_order' ? 'number' : 'text'} value={form[k] ?? ''} onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))} className="w-full rounded-xl border px-3 py-2 text-sm" />}
-            </div>
+            </AdminField>
           ))}
         </div>
         <div className="flex gap-2 mt-4">
