@@ -241,6 +241,26 @@ export function getAdjacentLessons(lessonId, courses = null, curriculumTree = nu
   }
 }
 
+export function findLessonInTree(lessonId, curriculumTree = null) {
+  if (!lessonId || !curriculumTree?.length) return null
+  for (const level of curriculumTree) {
+    for (const theme of level.themes || []) {
+      for (const mod of theme.modules || []) {
+        const lesson = (mod.lessons || []).find((l) => (l.id || l.slug) === lessonId)
+        if (lesson) {
+          return {
+            lesson,
+            mod,
+            theme,
+            level,
+          }
+        }
+      }
+    }
+  }
+  return null
+}
+
 export function findModuleForLesson(lessonId, curriculumTree = null) {
   const tree = curriculumTree?.length ? curriculumTree : staticCurriculum
   for (const level of tree) {

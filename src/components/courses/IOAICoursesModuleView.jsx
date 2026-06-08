@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import CoursesHero, { buildHeroStats } from './CoursesHero'
 import PageMeta from '../PageMeta'
 import { PAGE_SEO } from '../../config/programs'
+import ModuleCoverImage from './ModuleCoverImage'
 
 function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate }) {
   const [loading, setLoading] = useState(false)
@@ -45,11 +46,11 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
           className="course-card-dark__thumb bg-gradient-to-br from-amber-500/80 via-orange-600/70 to-amber-950 flex items-center justify-center overflow-hidden"
           aria-hidden
         >
-          {mod.coverUrl ? (
-            <img src={mod.coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          ) : (
-            <span className="text-5xl opacity-90 drop-shadow-lg">{mod.levelEmoji || '🏆'}</span>
-          )}
+          <ModuleCoverImage
+            coverUrl={mod.coverUrl}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
         </div>
       </Link>
 

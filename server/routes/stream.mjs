@@ -8,7 +8,8 @@ import {
   syncStreamPlayback,
 } from '../lib/cloudflareStream.mjs'
 import { verifyAuthUser } from '../lib/supabaseAuth.mjs'
-import { listEnrollmentSlugs, userHasIOAIAccess } from '../lib/courseEntitlements.mjs'
+import { listEnrollmentSlugs } from '../lib/courseEntitlements.mjs'
+import { userHasLessonAccess } from '../lib/ioaiCommerce.mjs'
 
 async function applyPlaybackToCatalog(admin, catalogSlug, playback) {
   const patch = {
@@ -82,14 +83,23 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
     if (!videoId) return res.status(400).json({ error: 'cloudflareVideoId is required' })
 
     const admin = auth.admin
-    const masterclass = await userHasIOAIAccess(admin, auth.user.id)
     const slugs = await listEnrollmentSlugs(admin, auth.user.id)
     const slug = lessonSlug?.trim()
-    const hasLesson = slug && slugs.includes(slug)
-    const hasViaTrack = masterclass && slug?.startsWith('ioai-')
+    const adminPreview = Boolean(req.body?.adminPreview)
 
-    if (!masterclass && !hasLesson && !hasViaTrack) {
-      return res.status(403).json({ error: 'Unlock IOAI Masterclass to watch this lesson' })
+    if (adminPreview) {
+      const adminAuth = await verifyAdminUser(req)
+      if (!adminAuth.ok) {
+        return res.status(adminAuth.status).json({ error: adminAuth.error })
+      }
+    } else {
+      const allowed = slug
+        ? await userHasLessonAccess(admin, auth.user.id, slug, { enrolledSlugs: slugs })
+        : false
+
+      if (!allowed) {
+        return res.status(403).json({ error: 'Purchase the unit or full track to watch this lesson' })
+      }
     }
 
     if (isStreamSigningConfigured()) {

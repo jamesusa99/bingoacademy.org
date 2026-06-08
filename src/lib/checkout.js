@@ -69,10 +69,10 @@ export async function startIOAIMasterclassCheckout() {
   })
 }
 
-export async function fetchVideoStreamToken({ cloudflareVideoId, lessonSlug }) {
+export async function fetchVideoStreamToken({ cloudflareVideoId, lessonSlug, adminPreview = false }) {
   return authFetch('/api/video/token', {
     method: 'POST',
-    body: JSON.stringify({ cloudflareVideoId, lessonSlug }),
+    body: JSON.stringify({ cloudflareVideoId, lessonSlug, adminPreview }),
   })
 }
 

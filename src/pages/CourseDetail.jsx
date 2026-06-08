@@ -21,7 +21,10 @@ import {
   buildProgramCurriculum,
   getProgramCurriculumSummary,
   findModuleForLesson,
+  findLessonInTree,
 } from '../lib/ioaiCourseStructure'
+import { buildLessonModuleMapFromTree, hasIoaiLessonAccess } from '../lib/ioaiAccess'
+import { useIOAIAccess } from '../hooks/useIOAIStore'
 import { buildModuleCatalogSlug, formatIoaiPrice } from '../lib/ioaiStore'
 import { getContinueLessonId } from '../lib/learningProgress'
 import CourseComingSoon from '../components/CourseComingSoon'
@@ -57,6 +60,32 @@ export default function CourseDetail() {
   )
   const loading = catalogLoading || (progLine ? treeLoading : false)
   const { isAuthenticated } = useAuth()
+  const { moduleSlugs, enrolledSlugs, hasFullTrack: hasIoaiFullTrack } = useIOAIAccess()
+
+  const lessonInTree = useMemo(
+    () => (progLine && id ? findLessonInTree(id, tree)?.lesson : null),
+    [progLine, id, tree]
+  )
+
+  const displayCourse = useMemo(() => {
+    if (!item) return null
+    return {
+      ...item,
+      cloudflareUid: item.cloudflareUid || lessonInTree?.cloudflareVideoId || null,
+    }
+  }, [item, lessonInTree])
+
+  const lessonModuleMap = useMemo(() => buildLessonModuleMapFromTree(tree), [tree])
+
+  const ioaiLessonAccess = useMemo(() => {
+    if (!id || !progLine) return false
+    return hasIoaiLessonAccess(id, {
+      moduleSlugs,
+      enrolledSlugs,
+      lessonModuleMap,
+      trialEnabled: Boolean(lessonInTree?.trialEnabled),
+    })
+  }, [id, progLine, moduleSlugs, enrolledSlugs, lessonModuleMap, lessonInTree?.trialEnabled])
 
   const moduleContext = useMemo(() => {
     if (!item?.id || isLabMaterial) return null
@@ -77,6 +106,7 @@ export default function CourseDetail() {
   }, [reload, reloadTree, progLine])
 
   const previewMode = searchParams.get('preview') === '1'
+  const startAtVideo = searchParams.get('play') === '1'
   const fromAdmin = searchParams.get('from') === 'admin' || previewMode
   const adminReloadToken = searchParams.get('reload')
 
@@ -103,6 +133,8 @@ export default function CourseDetail() {
     checkoutLoading,
     setCheckoutLoading,
   } = useCourseAccess(item?.id)
+
+  const effectiveHasAccess = hasAccess || ioaiLessonAccess || hasIoaiFullTrack || previewMode
 
   useEffect(() => {
     const status = searchParams.get('checkout')
@@ -286,7 +318,7 @@ export default function CourseDetail() {
                 <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
                   {COURSES_PORTAL.statusComingSoon}
                 </span>
-              ) : hasAccess ? (
+              ) : effectiveHasAccess ? (
                 <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
                   {COURSES_PORTAL.videoFullBadge}
                 </span>
@@ -319,10 +351,10 @@ export default function CourseDetail() {
         <>
           {showTrackOverview ? (
             <>
-              {!hasAccess ? (
+              {!effectiveHasAccess ? (
                 <CoursePurchasePanel
                   course={item}
-                  hasAccess={hasAccess}
+                  hasAccess={effectiveHasAccess}
                   hasTrack={hasTrack}
                   onUnlockLesson={unlockLesson}
                   onUnlockTrack={unlockTrack}
@@ -333,7 +365,7 @@ export default function CourseDetail() {
               <CourseTrackOverview
                 track={item}
                 purchasedSlugs={purchased}
-                hasAccess={hasAccess}
+                hasAccess={effectiveHasAccess}
                 courses={courses}
                 curriculum={curriculum}
                 summary={summary}
@@ -345,14 +377,16 @@ export default function CourseDetail() {
             <div className="grid lg:grid-cols-5 gap-6 mb-6">
               <div className="lg:col-span-3">
                 <SegmentPlayer
-                  course={item}
-                  hasAccess={hasAccess}
+                  course={displayCourse || item}
+                  hasAccess={effectiveHasAccess}
                   hasTrack={hasTrack}
                   onUnlockLesson={unlockLesson}
                   onUnlockTrack={unlockTrack}
                   courses={courses}
                   curriculumTree={tree}
                   moduleContext={moduleContext}
+                  previewMode={previewMode}
+                  startAtVideo={startAtVideo}
                   {...purchaseProps}
                 />
               </div>
@@ -369,8 +403,8 @@ export default function CourseDetail() {
 
           {showLegacyVideo ? (
             <CourseVideoPlayer
-              course={item}
-              hasAccess={hasAccess}
+              course={displayCourse || item}
+              hasAccess={effectiveHasAccess}
               hasTrack={hasTrack}
               onUnlockLesson={unlockLesson}
               onUnlockTrack={unlockTrack}
@@ -442,7 +476,7 @@ export default function CourseDetail() {
           {!showTrackOverview && !showSegmentLearning && !showLegacyVideo ? (
             <CoursePurchasePanel
               course={item}
-              hasAccess={hasAccess}
+              hasAccess={effectiveHasAccess}
               hasTrack={hasTrack}
               onUnlockLesson={unlockLesson}
               onUnlockTrack={unlockTrack}
@@ -452,7 +486,7 @@ export default function CourseDetail() {
           ) : null}
 
           <div className="flex flex-wrap gap-3 justify-center mt-6">
-            {hasAccess ? (
+            {effectiveHasAccess ? (
               <Link
                 to={
                   isTrack

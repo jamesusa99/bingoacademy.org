@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Lock, Play, RotateCcw, ChevronLeft, ChevronRight, Check } from 'lucide-react'
+import { Lock, Play, RotateCcw, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
-import { getCourseVideo } from '../../config/courseVideo'
 import { LESSON_SEGMENTS, getCheckpointQuestion } from '../../config/lessonSegments'
 import { useLessonProgress } from '../../hooks/useLearningProgress'
+import { useStreamPlayback } from '../../hooks/useStreamPlayback'
 import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import { getAdjacentLessons } from '../../lib/ioaiCourseStructure'
 import VideoPlayerControls from './VideoPlayerControls'
@@ -182,11 +182,26 @@ export default function SegmentPlayer({
   courses = null,
   curriculumTree = null,
   moduleContext = null,
+  previewMode = false,
+  startAtVideo = false,
 }) {
   const videoRef = useRef(null)
-  const { url, poster, previewSeconds, isStream, hasCustomVideo } = getCourseVideo(course)
   const { progress, completeSegment, saveVideoPosition, goToSegment, completeLesson } =
     useLessonProgress(course.id)
+  const {
+    playbackSrc,
+    iframeSrc,
+    poster,
+    previewSeconds,
+    hasCustomVideo,
+    loading: videoLoading,
+    error: videoError,
+  } = useStreamPlayback({
+    course,
+    lessonSlug: course.id,
+    fetchToken: hasAccess,
+    adminPreview: Boolean(previewMode),
+  })
 
   const [playing, setPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -199,6 +214,12 @@ export default function SegmentPlayer({
   const { next: nextLessonId } = getAdjacentLessons(course.id, courses, curriculumTree, productLine)
 
   const showLock = !hasAccess && (previewEnded || currentTime >= previewSeconds - 0.5)
+
+  useEffect(() => {
+    if (!startAtVideo || !hasAccess) return
+    if (segmentIndex !== 0) return
+    goToSegment(1)
+  }, [startAtVideo, hasAccess, course.id, goToSegment, segmentIndex])
 
   useEffect(() => {
     setPreviewEnded(false)
@@ -293,28 +314,59 @@ export default function SegmentPlayer({
                 </span>
               </div>
 
-              <CourseStreamVideo
-                videoRef={videoRef}
-                src={url}
-                poster={poster}
-                className="w-full h-full object-contain"
-                playsInline
-                preload="metadata"
-                controls={hasAccess}
-                controlsList={hasAccess ? undefined : 'nodownload noplaybackrate'}
-                onLoadedMetadata={(e) => {
-                  const d = e.currentTarget.duration || 0
-                  setDuration(d)
-                  if (hasAccess && progress.videoPosition > 0) {
-                    e.currentTarget.currentTime = progress.videoPosition
-                  }
-                }}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onEnded={handleVideoEnded}
-              />
+              {videoLoading ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400">
+                  <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+                  <p className="text-xs">Loading video…</p>
+                </div>
+              ) : null}
 
-              {!playing && !showLock ? (
+              {!videoLoading && videoError && !playbackSrc && !iframeSrc ? (
+                <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
+                  <p className="text-sm text-amber-300 max-w-sm">{videoError}</p>
+                </div>
+              ) : null}
+
+              {!videoLoading && iframeSrc && !playbackSrc ? (
+                <iframe
+                  title={course.nameEn || course.name}
+                  src={iframeSrc}
+                  className="absolute inset-0 w-full h-full border-0"
+                  allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : null}
+
+              {!videoLoading && playbackSrc ? (
+                <CourseStreamVideo
+                  videoRef={videoRef}
+                  src={playbackSrc}
+                  poster={poster}
+                  className="w-full h-full object-contain"
+                  playsInline
+                  preload="metadata"
+                  controls={hasAccess}
+                  controlsList={hasAccess ? undefined : 'nodownload noplaybackrate'}
+                  onLoadedMetadata={(e) => {
+                    const d = e.currentTarget.duration || 0
+                    setDuration(d)
+                    if (hasAccess && progress.videoPosition > 0) {
+                      e.currentTarget.currentTime = progress.videoPosition
+                    }
+                  }}
+                  onPlay={() => setPlaying(true)}
+                  onPause={() => setPlaying(false)}
+                  onEnded={handleVideoEnded}
+                />
+              ) : null}
+
+              {!videoLoading && !playbackSrc && !iframeSrc && !videoError && hasCustomVideo && !hasAccess ? (
+                <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-slate-400 text-sm">
+                  Purchase this unit to watch the full lesson video.
+                </div>
+              ) : null}
+
+              {!playing && !showLock && playbackSrc && !videoLoading ? (
                 <button
                   type="button"
                   onClick={handlePlay}

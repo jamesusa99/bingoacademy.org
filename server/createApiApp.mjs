@@ -9,12 +9,15 @@ import { registerCatalogRoutes } from './routes/catalog.mjs'
 import { registerStreamRoutes } from './routes/stream.mjs'
 import { registerPaymentRoutes } from './routes/payments.mjs'
 import { registerIoaiRoutes } from './routes/ioai.mjs'
+import { registerMediaRoutes } from './routes/media.mjs'
 
 /** Express app for /api/* (admin, webhooks). Used by local server and Vercel serverless. */
 export function createApiApp() {
   const app = express()
 
   registerStripeWebhook(app)
+
+  registerMediaRoutes(app, { verifyAdminUser })
 
   app.use(express.json({ limit: '1mb' }))
 

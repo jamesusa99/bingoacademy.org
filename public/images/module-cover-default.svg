@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Module cover">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="55%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#7c2d12"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <circle cx="520" cy="80" r="120" fill="#ffffff" opacity="0.08"/>
+  <circle cx="120" cy="300" r="90" fill="#ffffff" opacity="0.06"/>
+  <g transform="translate(320 180)">
+    <rect x="-56" y="-40" width="112" height="88" rx="12" fill="#ffffff" opacity="0.18"/>
+    <path d="M-28-8h56v8H-28zM-28 8h40v8h-40zM-28 24h48v8H-28z" fill="#ffffff" opacity="0.85"/>
+    <circle cx="0" cy="-56" r="18" fill="#ffffff" opacity="0.9"/>
+  </g>
+  <text x="320" y="290" text-anchor="middle" fill="#ffffff" opacity="0.92" font-family="system-ui,sans-serif" font-size="22" font-weight="700">IOAI Module</text>
+</svg>

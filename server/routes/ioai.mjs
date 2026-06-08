@@ -63,6 +63,7 @@ function mapStoreTree(levels, extrasByModuleId = new Map()) {
                 intro: lesson.intro || '',
                 trialEnabled: Boolean(lesson.trial_enabled),
                 sortOrder: lesson.sort_order ?? 0,
+                cloudflareVideoId: lesson.cloudflare_video_id || null,
               })),
           }})
       })),

@@ -11,6 +11,8 @@ import { fetchPaymentsConfig, confirmCheckoutSession } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { labMaterialTypeLabel } from '../../config/labMaterials'
+import LessonStreamPlayer from './LessonStreamPlayer'
+import ModuleCoverImage from './ModuleCoverImage'
 
 /**
  * L3 module detail: purchase unit + optional lab add-ons + L4 lessons.
@@ -81,9 +83,27 @@ export default function IOAIModuleDetail({
   const found = useMemo(() => findModule(levels, catalogSlug), [levels, catalogSlug])
   const lessonModuleMap = useMemo(() => buildLessonModuleMap(levels), [levels])
   const owned = hasModule(catalogSlug)
-
   const mod = found?.module
-  const coverUrl = mod?.coverUrl || detail?.cover_url || null
+
+  const lessons = useMemo(() => {
+    const storeList = mod?.lessons || []
+    const apiBySlug = new Map(
+      (detail?.lessons || []).map((l) => [l.slug || l.catalog_slug, l])
+    )
+    return storeList.map((lesson) => {
+      const api = apiBySlug.get(lesson.id)
+      return {
+        ...lesson,
+        cloudflareVideoId: api?.cloudflare_video_id || lesson.cloudflareVideoId || null,
+      }
+    })
+  }, [mod?.lessons, detail?.lessons])
+
+  const firstVideoLesson = useMemo(
+    () => lessons.find((l) => l.cloudflareVideoId) || null,
+    [lessons]
+  )
+
   const baseCents = mod?.priceCents ?? detail?.price_cents ?? null
   const labMaterials = detail?.labMaterials || []
   const currency = mod?.currency || detail?.currency || 'usd'
@@ -163,9 +183,11 @@ export default function IOAIModuleDetail({
         </Link>
 
         <header className="mt-4 mb-6 card overflow-hidden">
-          {coverUrl ? (
-            <img src={coverUrl} alt="" className="w-full h-44 sm:h-52 object-cover" />
-          ) : null}
+          <ModuleCoverImage
+            coverUrl={mod?.coverUrl || detail?.cover_url}
+            alt=""
+            className="w-full h-44 sm:h-52 object-cover"
+          />
           <div className="p-6">
             <p className="text-[10px] uppercase tracking-wide text-slate-500">
               {found.level.emoji} {found.level.title} · {found.theme.categoryLabel || found.theme.title}
@@ -173,7 +195,7 @@ export default function IOAIModuleDetail({
             <h1 className="text-2xl font-bold text-bingo-dark mt-1">{mod.title}</h1>
             {mod.introHtml ? <p className="text-sm text-slate-600 mt-3 max-w-2xl">{mod.introHtml}</p> : null}
             <p className="text-xs text-slate-500 mt-2">
-              {COURSES_PORTAL.moduleLessonCount(mod.lessons?.length || 0)}
+              {COURSES_PORTAL.moduleLessonCount(lessons.length || 0)}
               {labMaterials.length > 0
                 ? ` · ${labMaterials.length} optional add-on${labMaterials.length === 1 ? '' : 's'}`
                 : ''}
@@ -223,9 +245,34 @@ export default function IOAIModuleDetail({
           </div>
         </header>
 
+        {owned && firstVideoLesson ? (
+          <section className="mb-8">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h2 className="text-sm font-semibold text-bingo-dark">{COURSES_PORTAL.moduleWatchNow}</h2>
+              <Link
+                to={`/courses/detail/${encodeURIComponent(firstVideoLesson.id)}?from=ioai&play=1`}
+                className="text-xs font-semibold text-primary hover:underline"
+              >
+                {COURSES_PORTAL.moduleContinueLesson} →
+              </Link>
+            </div>
+            <p className="text-xs text-slate-500 mb-3">{firstVideoLesson.title}</p>
+            <LessonStreamPlayer
+              lessonSlug={firstVideoLesson.id}
+              cloudflareUid={firstVideoLesson.cloudflareVideoId}
+              lessonTitle={firstVideoLesson.title}
+              fetchToken={owned}
+            />
+          </section>
+        ) : null}
+
+        {owned && !firstVideoLesson ? (
+          <p className="text-sm text-slate-500 mb-6">{COURSES_PORTAL.moduleNoVideoYet}</p>
+        ) : null}
+
         <h2 className="text-sm font-semibold text-bingo-dark mb-3">{COURSES_PORTAL.moduleLessonsHeading}</h2>
         <ul className="space-y-2 mb-8">
-          {(mod.lessons || []).map((lesson, index) => {
+          {lessons.map((lesson, index) => {
             const canWatch =
               owned ||
               hasIoaiLessonAccess(lesson.id, {
@@ -253,11 +300,20 @@ export default function IOAIModuleDetail({
                         {COURSES_PORTAL.freeTrialLesson}
                       </span>
                     ) : null}
+                    {lesson.cloudflareVideoId ? (
+                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded mt-1 inline-block ml-1">
+                        {COURSES_PORTAL.lessonVideoConfigured}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded mt-1 inline-block ml-1">
+                        {COURSES_PORTAL.lessonVideoMissing}
+                      </span>
+                    )}
                   </div>
                 </div>
                 {canWatch ? (
                   <Link
-                    to={`/courses/detail/${encodeURIComponent(lesson.id)}?from=ioai`}
+                    to={`/courses/detail/${encodeURIComponent(lesson.id)}?from=ioai&play=1`}
                     className="text-xs font-semibold text-primary px-3 py-1.5 rounded-lg border border-primary/30"
                   >
                     {COURSES_PORTAL.watchLesson}
