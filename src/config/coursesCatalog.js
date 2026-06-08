@@ -1,6 +1,6 @@
 /**
  * Full course catalogue — IOAI priority; self-study & classroom marked coming-soon.
- * @typedef {'live' | 'coming-soon'} CourseStatus
+ * @typedef {'live' | 'coming-soon' | 'offline'} CourseStatus
  * @typedef {'video' | 'camp' | 'self-study' | 'classroom' | 'lab' | 'materials' | 'books'} DeliveryType
  */
 
@@ -9,6 +9,7 @@ import { buildIOAIVideoCatalogEntries } from './ioaiCourseSystem.js'
 export const COURSE_STATUS = {
   LIVE: 'live',
   COMING_SOON: 'coming-soon',
+  OFFLINE: 'offline',
 }
 
 /** Legacy IOAI video slugs replaced by the 110-lesson competition system */
@@ -375,6 +376,16 @@ export function getCourseById(id) {
 
 export function isCourseComingSoon(course) {
   return course?.status === COURSE_STATUS.COMING_SOON
+}
+
+export function isCourseOffline(course) {
+  return course?.status === COURSE_STATUS.OFFLINE
+}
+
+/** Visible on storefront lists (excludes offline). */
+export function isCourseListedOnStorefront(course) {
+  if (!course) return false
+  return course.status === COURSE_STATUS.LIVE || course.status === COURSE_STATUS.COMING_SOON
 }
 
 export function coursesByLine(lineId, { featuredOnly = false } = {}) {

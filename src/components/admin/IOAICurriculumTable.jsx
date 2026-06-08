@@ -3,8 +3,11 @@ import { ExternalLink, Pencil, Plus, Trash2, Video } from 'lucide-react'
 import { getProgramCurriculum } from '../../config/programCurriculum'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
+import { useDragReorder } from '../../hooks/useDragReorder'
 import CurriculumCatalogFields, { CATALOG_FORM_DEFAULTS } from './CurriculumCatalogFields'
 import CurriculumVideoUpload from './CurriculumVideoUpload'
+import DragHandle from './DragHandle'
+import ModuleLabMaterialsOrder from './ModuleLabMaterialsOrder'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
@@ -26,6 +29,7 @@ export default function IOAICurriculumTable({
   onEditModule,
   onEditLesson,
   onDeleteLesson,
+  onReorderLessons,
   deletingId,
   onAddCourse,
   onAddLessonToModule,
@@ -95,6 +99,7 @@ export default function IOAICurriculumTable({
         <table className="w-full text-sm min-w-[1100px]">
           <thead className="bg-slate-50 text-left text-slate-600 border-b border-slate-200">
             <tr>
+              <th className="p-3 w-10" aria-label={labels.dragHint} />
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colStage}</th>
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colCategory}</th>
               <th className="p-3 font-semibold whitespace-nowrap">{labels.colModule}</th>
@@ -114,6 +119,7 @@ export default function IOAICurriculumTable({
               return (
                 <Fragment key={group.moduleDbId}>
                   <tr className="border-t-2 border-primary/20 bg-primary/5 align-top">
+                    <td className="p-3 w-10" />
                     <td className="p-3 whitespace-nowrap">
                       <span className="text-xs text-slate-400 block">{group.stageEmoji}</span>
                       <span className="font-medium text-bingo-dark">{group.stage}</span>
@@ -163,16 +169,27 @@ export default function IOAICurriculumTable({
                       </div>
                     </td>
                   </tr>
-                  {(group.lessons || []).map((row) => (
-                    <LessonRow
-                      key={row.lessonId}
-                      row={row}
+                  {(group.lessons || []).length > 0 || onReorderLessons ? (
+                    <ModuleLessonRows
+                      group={group}
                       labels={labels}
                       deletingId={deletingId}
                       onEditLesson={onEditLesson}
                       onDeleteLesson={onDeleteLesson}
+                      onReorderLessons={onReorderLessons}
                     />
-                  ))}
+                  ) : (
+                    (group.lessons || []).map((row) => (
+                      <LessonRow
+                        key={row.lessonId}
+                        row={row}
+                        labels={labels}
+                        deletingId={deletingId}
+                        onEditLesson={onEditLesson}
+                        onDeleteLesson={onDeleteLesson}
+                      />
+                    ))
+                  )}
                 </Fragment>
               )
             })}
@@ -186,10 +203,51 @@ export default function IOAICurriculumTable({
   )
 }
 
-function LessonRow({ row, labels, deletingId, onEditLesson, onDeleteLesson }) {
+function ModuleLessonRows({ group, labels, deletingId, onEditLesson, onDeleteLesson, onReorderLessons }) {
+  const lessons = useMemo(
+    () => [...(group.lessons || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    [group.lessons]
+  )
+  const drag = useDragReorder({
+    items: lessons,
+    getKey: (row) => row.lessonId,
+    onReorder: (next) => onReorderLessons(group.moduleDbId, next),
+  })
+
   return (
-    <tr className="border-t border-slate-100 hover:bg-slate-50/80 align-top group bg-white">
-      <td className="p-3 pl-6" colSpan={3}>
+    <>
+      {drag.saving ? (
+        <tr className="bg-primary/5">
+          <td colSpan={10} className="px-3 py-2 text-xs text-primary">
+            {labels.savingOrder}
+          </td>
+        </tr>
+      ) : null}
+      {lessons.map((row) => (
+        <LessonRow
+          key={row.lessonId}
+          row={row}
+          labels={labels}
+          deletingId={deletingId}
+          onEditLesson={onEditLesson}
+          onDeleteLesson={onDeleteLesson}
+          dragProps={drag.rowProps(row)}
+        />
+      ))}
+    </>
+  )
+}
+
+function LessonRow({ row, labels, deletingId, onEditLesson, onDeleteLesson, dragProps }) {
+  return (
+    <tr
+      {...(dragProps || {})}
+      className={`border-t border-slate-100 hover:bg-slate-50/80 align-top group bg-white ${dragProps?.className || ''}`}
+    >
+      <td className="p-3 pl-4 w-10">
+        {dragProps ? <DragHandle label={labels.dragHint} /> : null}
+      </td>
+      <td className="p-3 pl-2" colSpan={3}>
         <p className="font-medium text-bingo-dark">{row.lessonTitle}</p>
         <p className="text-[10px] font-mono text-slate-400 mt-0.5">{row.lessonSlug}</p>
       </td>
@@ -268,7 +326,20 @@ function buildModuleFormState(group) {
 }
 
 /** L3 module editor — shared by ioai, general, and k12 curriculum admin */
-export function ProgramModuleEditor({ group, productLine, labels, saving, deleting, onSave, onDelete, onClose }) {
+export function ProgramModuleEditor({
+  group,
+  productLine,
+  labels,
+  saving,
+  deleting,
+  onSave,
+  onDelete,
+  onClose,
+  onReorderLessons,
+  moduleLabItems = [],
+  onReorderLabMaterials,
+  labsAdminHref,
+}) {
   const draftKey = `admin-curriculum-module-${group.moduleDbId}`
   const [form, setForm] = useAdminFormDraft(draftKey, buildModuleFormState(group))
 
@@ -278,6 +349,16 @@ export function ProgramModuleEditor({ group, productLine, labels, saving, deleti
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const catalogSlug = form.catalog_slug?.trim() || group.catalogSlug || ''
+  const moduleCatalogLabels = useMemo(
+    () => ({
+      ...labels,
+      catalogSectionTitle: labels.moduleCatalogSectionTitle,
+      catalogSectionHint: labels.moduleCatalogSectionHint,
+      colPrice: labels.colModulePrice,
+      colPriceCents: labels.colModulePriceCents,
+    }),
+    [labels]
+  )
   const storePreview = useMemo(() => {
     if (!catalogSlug) return null
     const config = getProgramCurriculum(productLine)
@@ -366,21 +447,21 @@ export function ProgramModuleEditor({ group, productLine, labels, saving, deleti
         <p className="text-[10px] text-slate-400 mt-1">{labels.moduleCoverHint}</p>
       </Field>
 
-      <CurriculumCatalogFields form={form} set={set} labels={labels} />
+      <CurriculumCatalogFields form={form} set={set} labels={moduleCatalogLabels} />
 
-      <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
-        <p className="text-xs font-semibold text-slate-600 mb-2">
-          {labels.moduleLessonsTitle(group.lessons?.length || 0)}
-        </p>
-        <ul className="text-xs text-slate-600 space-y-1 max-h-32 overflow-y-auto">
-          {(group.lessons || []).map((lesson) => (
-            <li key={lesson.lessonId} className="font-mono">
-              {lesson.lessonTitle} · {lesson.lessonSlug}
-            </li>
-          ))}
-        </ul>
-        <p className="text-[10px] text-slate-400 mt-2">{labels.moduleLessonsHint}</p>
-      </div>
+      <ModuleEditorLessonList
+        group={group}
+        labels={labels}
+        onReorderLessons={onReorderLessons}
+      />
+
+      <ModuleLabMaterialsOrder
+        items={moduleLabItems}
+        productLine={productLine}
+        labels={labels}
+        onReorder={onReorderLabMaterials}
+        labsAdminHref={labsAdminHref}
+      />
 
       <div className="flex flex-wrap justify-between gap-2 pt-2">
         {onDelete ? (
@@ -410,6 +491,52 @@ export function ProgramModuleEditor({ group, productLine, labels, saving, deleti
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function ModuleEditorLessonList({ group, labels, onReorderLessons }) {
+  const lessons = useMemo(
+    () => [...(group.lessons || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    [group.lessons]
+  )
+  const drag = useDragReorder({
+    items: lessons,
+    getKey: (row) => row.lessonId,
+    onReorder: onReorderLessons ? (next) => onReorderLessons(group.moduleDbId, next) : async () => {},
+    disabled: !onReorderLessons,
+  })
+
+  return (
+    <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
+      <p className="text-xs font-semibold text-slate-600 mb-2">
+        {labels.sectionLessons || labels.moduleLessonsTitle(lessons.length)}
+      </p>
+      {drag.saving ? <p className="text-xs text-primary mb-2">{labels.savingOrder}</p> : null}
+      {lessons.length ? (
+        <ul className="text-xs text-slate-600 space-y-1 max-h-48 overflow-y-auto">
+          {lessons.map((lesson) => {
+            const dragProps = onReorderLessons ? drag.rowProps(lesson) : null
+            return (
+              <li
+                key={lesson.lessonId}
+                {...(dragProps || {})}
+                className={`flex items-center gap-2 rounded-lg px-1 py-1 ${dragProps?.className || ''}`}
+              >
+                {onReorderLessons ? <DragHandle label={labels.dragHint} className="w-7 h-7" /> : null}
+                <span className="font-mono truncate">
+                  {lesson.lessonTitle} · {lesson.lessonSlug}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      ) : (
+        <p className="text-xs text-slate-400">{labels.notSet}</p>
+      )}
+      <p className="text-[10px] text-slate-400 mt-2">
+        {onReorderLessons ? labels.dragReorderHint : labels.moduleLessonsHint}
+      </p>
     </div>
   )
 }

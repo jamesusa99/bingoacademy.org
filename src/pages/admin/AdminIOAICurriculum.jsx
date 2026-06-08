@@ -6,11 +6,16 @@ import IOAICurriculumTable, { IOAILessonEditor, ProgramModuleEditor } from '../.
 import IOAIAddCourseForm from '../../components/admin/IOAIAddCourseForm'
 import { ADMIN_LABS_MATERIALS_PATH } from '../../config/adminNav'
 import { DEFAULT_ADMIN_PRODUCT_LINE, getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
+import { filterLabMaterialsForModule } from '../../config/labMaterials'
+import { isLabMaterialsCatalogRow } from '../../lib/catalogCourse'
+import { reorderScopedCatalogItems } from '../../lib/admin/catalog'
+import { supabase } from '../../lib/supabase'
 import {
   createProgramCourse,
   deleteProgramLesson,
   deleteProgramModule,
   fetchCurriculumAdmin,
+  reorderModuleLessons,
   saveProgramLessonConfig,
   saveProgramModuleConfig,
 } from '../../lib/ioaiCurriculumAdmin'
@@ -34,6 +39,7 @@ export default function AdminIOAICurriculum() {
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [deletingModuleId, setDeletingModuleId] = useState(null)
+  const [catalogItems, setCatalogItems] = useState([])
   const editorRef = useRef(null)
 
   const i18nRoot = `pages.${config.i18nKey}`
@@ -61,6 +67,7 @@ export default function AdminIOAICurriculum() {
       catalogSectionTitle: c.t(`${i18nRoot}.catalogSectionTitle`),
       statusLive: c.t('pages.coursesCatalog.statusLive'),
       statusComingSoon: c.t('pages.coursesCatalog.statusComingSoon'),
+      statusOffline: c.t('pages.coursesCatalog.statusOffline'),
       notSet: c.t(`${i18nRoot}.notSet`),
       noVideo: c.t(`${i18nRoot}.noVideo`),
       edit: c.t(`${i18nRoot}.edit`),
@@ -83,6 +90,7 @@ export default function AdminIOAICurriculum() {
       phModuleSlugExample: c.t(`${i18nRoot}.phModuleSlugExample`),
       videoOk: c.t(`${i18nRoot}.videoOk`),
       addCourse: c.t(`${i18nRoot}.addCourse`),
+      saveCourse: c.t(`${i18nRoot}.saveCourse`),
       addCourseTitle: c.t(`${i18nRoot}.addCourseTitle`),
       addCourseDesc: c.t(`${i18nRoot}.addCourseDesc`),
       newStage: c.t(`${i18nRoot}.newStage`),
@@ -108,6 +116,15 @@ export default function AdminIOAICurriculum() {
       draftHint: c.t(`${i18nRoot}.draftHint`),
       pathSummaryTitle: c.t(`${i18nRoot}.pathSummaryTitle`),
       pathSummaryEmpty: c.t(`${i18nRoot}.pathSummaryEmpty`),
+      selectedFromTreeHint: c.t(`${i18nRoot}.selectedFromTreeHint`),
+      newStagePanelTitle: c.t(`${i18nRoot}.newStagePanelTitle`),
+      newCategoryPanelTitle: c.t(`${i18nRoot}.newCategoryPanelTitle`),
+      newModulePanelTitle: c.t(`${i18nRoot}.newModulePanelTitle`),
+      selectedStagePanelTitle: c.t(`${i18nRoot}.selectedStagePanelTitle`),
+      selectedCategoryPanelTitle: c.t(`${i18nRoot}.selectedCategoryPanelTitle`),
+      selectedModulePanelTitle: c.t(`${i18nRoot}.selectedModulePanelTitle`),
+      levelsLoadingHint: c.t(`${i18nRoot}.levelsLoadingHint`),
+      noModulesForStage: c.t(`${i18nRoot}.noModulesForStage`),
       uploadVideo: c.t(`${i18nRoot}.uploadVideo`),
       chooseVideoFile: c.t(`${i18nRoot}.chooseVideoFile`),
       replaceVideo: c.t(`${i18nRoot}.replaceVideo`),
@@ -136,6 +153,9 @@ export default function AdminIOAICurriculum() {
       saveModule: c.t(`${i18nRoot}.saveModule`),
       moduleSaved: c.t(`${i18nRoot}.moduleSaved`),
       colModulePrice: c.t(`${i18nRoot}.colModulePrice`),
+      colModulePriceCents: c.t(`${i18nRoot}.colModulePriceCents`),
+      moduleCatalogSectionTitle: c.t(`${i18nRoot}.moduleCatalogSectionTitle`),
+      moduleCatalogSectionHint: c.t(`${i18nRoot}.moduleCatalogSectionHint`),
       modulePriceHint: c.t(`${i18nRoot}.modulePriceHint`),
       moduleCatalogSlug: c.t(`${i18nRoot}.moduleCatalogSlug`),
       phModuleCatalogSlug: c.t(`${i18nRoot}.phModuleCatalogSlug`),
@@ -155,6 +175,16 @@ export default function AdminIOAICurriculum() {
       addLessonToModule: c.t(`${i18nRoot}.addLessonToModule`),
       previewModule: c.t(`${i18nRoot}.previewModule`),
       moduleSummary: (modules, lessons) => c.t(`${i18nRoot}.moduleSummaryStats`, { modules, lessons }),
+      dragHint: c.t(`${i18nRoot}.dragHint`),
+      savingOrder: c.t(`${i18nRoot}.savingOrder`),
+      dragReorderHint: c.t(`${i18nRoot}.dragReorderHint`),
+      sectionLessons: c.t(`${i18nRoot}.sectionLessons`),
+      sectionLabs: c.t(`${i18nRoot}.sectionLabs`),
+      sectionMaterials: c.t(`${i18nRoot}.sectionMaterials`),
+      moduleExtrasTitle: c.t(`${i18nRoot}.moduleExtrasTitle`),
+      moduleLabsEmpty: c.t(`${i18nRoot}.moduleLabsEmpty`),
+      moduleMaterialsEmpty: c.t(`${i18nRoot}.moduleMaterialsEmpty`),
+      manageLabsLink: c.t(`${i18nRoot}.manageLabsLink`),
     }),
     [c, i18nRoot]
   )
@@ -207,15 +237,23 @@ export default function AdminIOAICurriculum() {
     setLoading(true)
     setError(null)
     try {
-      const { rows: next, moduleGroups: groups, levels: tree } = await fetchCurriculumAdmin(productLine)
+      const [{ rows: next, moduleGroups: groups, levels: tree }, catalogRes] = await Promise.all([
+        fetchCurriculumAdmin(productLine),
+        supabase.from('courses_catalog').select('*').order('sort_order'),
+      ])
+      if (catalogRes.error) throw new Error(catalogRes.error.message)
       setRows(next)
       setModuleGroups(groups)
       setLevels(tree)
+      setCatalogItems(catalogRes.data || [])
+      return { rows: next, moduleGroups: groups, levels: tree }
     } catch (e) {
       setError(e.message)
       setRows([])
       setModuleGroups([])
       setLevels([])
+      setCatalogItems([])
+      return { rows: [], moduleGroups: [], levels: [] }
     } finally {
       setLoading(false)
     }
@@ -354,6 +392,49 @@ export default function AdminIOAICurriculum() {
     }
   }
 
+  const labCatalogItems = useMemo(
+    () => catalogItems.filter(isLabMaterialsCatalogRow),
+    [catalogItems]
+  )
+
+  const moduleLabItems = useMemo(() => {
+    if (!editingModule?.moduleDbId) return []
+    const lessonIds = (editingModule.lessons || []).map((lesson) => lesson.lessonId)
+    return filterLabMaterialsForModule(
+      labCatalogItems,
+      editingModule.moduleDbId,
+      productLine,
+      lessonIds
+    )
+  }, [labCatalogItems, editingModule, productLine])
+
+  const handleReorderLessons = async (moduleDbId, orderedLessons) => {
+    setError(null)
+    try {
+      await reorderModuleLessons(
+        moduleDbId,
+        orderedLessons.map((lesson) => lesson.lessonId)
+      )
+      const { moduleGroups: groups } = await load()
+      setEditingModule((prev) => {
+        if (prev?.moduleDbId !== moduleDbId) return prev
+        return groups.find((group) => group.moduleDbId === moduleDbId) || prev
+      })
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  const handleReorderLabMaterials = async (reorderedItems) => {
+    setError(null)
+    try {
+      await reorderScopedCatalogItems(catalogItems, reorderedItems)
+      await load()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
   const handleAddLessonToModule = (group) => {
     writeAdminUiDraft(`admin-curriculum-add-${productLine}`, {
       path: {
@@ -421,14 +502,18 @@ export default function AdminIOAICurriculum() {
       </div>
 
       {showAddForm ? (
-        <IOAIAddCourseForm
-          productLine={productLine}
-          levels={levels}
-          labels={labels}
-          saving={saving}
-          onSave={handleAddCourse}
-          onClose={() => setShowAddForm(false)}
-        />
+        loading ? (
+          <div className="card p-6 text-sm text-slate-500">{labels.loading}</div>
+        ) : (
+          <IOAIAddCourseForm
+            productLine={productLine}
+            levels={levels}
+            labels={labels}
+            saving={saving}
+            onSave={handleAddCourse}
+            onClose={() => setShowAddForm(false)}
+          />
+        )
       ) : null}
 
       {editingModule ? (
@@ -443,6 +528,10 @@ export default function AdminIOAICurriculum() {
             onSave={handleSaveModule}
             onDelete={handleDeleteModule}
             onClose={closeModuleEditor}
+            onReorderLessons={handleReorderLessons}
+            moduleLabItems={moduleLabItems}
+            onReorderLabMaterials={handleReorderLabMaterials}
+            labsAdminHref={ADMIN_LABS_MATERIALS_PATH}
           />
         </div>
       ) : null}
@@ -481,6 +570,7 @@ export default function AdminIOAICurriculum() {
           setEditingRow(row)
         }}
         onDeleteLesson={handleDelete}
+        onReorderLessons={handleReorderLessons}
         onAddLessonToModule={handleAddLessonToModule}
         onAddCourse={() => {
           setEditingRow(null)

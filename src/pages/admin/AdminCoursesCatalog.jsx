@@ -9,7 +9,7 @@ import {
   isLabMaterialsCatalogRow,
   labMaterialsSubcategoriesForLine,
 } from '../../lib/catalogCourse'
-import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
+import { saveCatalogCourse, deleteCatalogCourse, reorderScopedCatalogItems } from '../../lib/admin/catalog'
 import AdminLabMaterialsGroupedList from '../../components/admin/AdminLabMaterialsGroupedList'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
@@ -26,12 +26,14 @@ function statusOptions(t) {
   return [
     { value: COURSE_STATUS.LIVE, label: t('pages.coursesCatalog.statusLive') },
     { value: COURSE_STATUS.COMING_SOON, label: t('pages.coursesCatalog.statusComingSoon') },
+    { value: COURSE_STATUS.OFFLINE, label: t('pages.coursesCatalog.statusOffline') },
   ]
 }
 
 function statusLabel(status, t) {
   if (status === COURSE_STATUS.COMING_SOON) return t('pages.coursesCatalog.statusComingSoonShort')
   if (status === COURSE_STATUS.LIVE) return t('pages.coursesCatalog.statusLiveShort')
+  if (status === COURSE_STATUS.OFFLINE) return t('pages.coursesCatalog.statusOfflineShort')
   return status || '—'
 }
 
@@ -103,6 +105,11 @@ export default function AdminCoursesCatalog() {
       edit: c.edit,
       delete: c.delete,
       statusLabel: (status) => statusLabel(status, t),
+      dragHint: t('pages.coursesCatalog.dragHint'),
+      savingOrder: t('pages.coursesCatalog.savingOrder'),
+      dragReorderHint: t('pages.coursesCatalog.dragReorderHint'),
+      sectionLabs: t('pages.coursesCatalog.sectionLabs'),
+      sectionMaterials: t('pages.coursesCatalog.sectionMaterials'),
     }),
     [t, c]
   )
@@ -231,6 +238,16 @@ export default function AdminCoursesCatalog() {
         setEditingSlug(null)
         setForm(CATALOG_FORM_EMPTY)
       }
+      await fetchItems()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  const handleReorderModuleItems = async (reorderedItems) => {
+    setError(null)
+    try {
+      await reorderScopedCatalogItems(items, reorderedItems)
       await fetchItems()
     } catch (e) {
       setError(e.message)
@@ -456,6 +473,7 @@ export default function AdminCoursesCatalog() {
             typeFilter={typeFilter}
             onEdit={startEdit}
             onDelete={handleDelete}
+            onReorderModuleItems={handleReorderModuleItems}
             labels={labels}
           />
         )}

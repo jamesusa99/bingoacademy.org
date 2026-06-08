@@ -658,7 +658,9 @@ function buildModuleCatalogPayload(productLine, group, patch, { totalPriceCents 
     status: patch.status || COURSE_STATUS.LIVE,
     delivery_type: 'video',
     featured: false,
-    purchasable: true,
+    purchasable:
+      patch.status !== COURSE_STATUS.OFFLINE &&
+      patch.status !== COURSE_STATUS.COMING_SOON,
     name: `${group.stage} · ${group.category} · ${title}`,
     name_en: title,
     description: patch.summary?.trim() || `${title} — ${lessonCount} lesson(s)`,
@@ -845,4 +847,17 @@ export async function deleteProgramLesson(_productLine, { lessonId, catalogSlug 
 /** @deprecated use deleteProgramLesson('ioai', input) */
 export async function deleteIOAILesson(input) {
   return deleteProgramLesson('ioai', input)
+}
+
+/** Persist lesson order within one L3 module (lessons.sort_order). */
+export async function reorderModuleLessons(moduleDbId, orderedLessonIds) {
+  if (!moduleDbId) throw new Error('Missing module id')
+  if (!Array.isArray(orderedLessonIds) || !orderedLessonIds.length) return
+
+  const updatedAt = new Date().toISOString()
+  await Promise.all(
+    orderedLessonIds.map((lessonId, sort_order) =>
+      adminUpdate('lessons', lessonId, { sort_order, updated_at: updatedAt })
+    )
+  )
 }

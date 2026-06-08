@@ -5,6 +5,7 @@ import {
   getProductLine,
   subcategoryLabel,
   isCourseComingSoon,
+  isCourseListedOnStorefront,
 } from '../config/products'
 import { isVideoCoursesSub, VIDEO_COURSE_SUB_BY_LINE } from '../config/courseListFilters'
 import { COURSES_PORTAL } from '../config/coursesPortal'
@@ -107,7 +108,7 @@ export default function Courses() {
   const purchase = usePurchasedCourses()
 
   const filtered = useMemo(() => {
-    let list = courses.filter((c) => c.line === line.id)
+    let list = courses.filter((c) => c.line === line.id && isCourseListedOnStorefront(c))
     if (subId) list = list.filter((c) => c.sub === subId)
     return list
   }, [courses, line.id, subId])

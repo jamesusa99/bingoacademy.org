@@ -3,6 +3,7 @@ import { grantCourseEntitlements } from '../lib/courseEntitlements.mjs'
 import { parseAddonSlugs } from '../lib/ioaiCommerce.mjs'
 import {
   STREAM_DEFAULT_MAX_DURATION_SECONDS,
+  STREAM_CLOUDFLARE_MAX_DURATION_SECONDS,
   STREAM_MAX_FILE_BYTES,
   STREAM_RECOMMENDED_MAX_FILE_BYTES,
   fetchStreamVideo,
@@ -34,6 +35,14 @@ export function getAdminHealth() {
     cloudflare: envFlag('CLOUDFLARE_ACCOUNT_ID') && envFlag('CLOUDFLARE_API_TOKEN'),
     openai: envFlag('OPENAI_API_KEY'),
   }
+}
+
+function cloudflareStreamErrorMessage(cfJson) {
+  const detail =
+    cfJson?.messages?.[0]?.message ||
+    cfJson?.errors?.[0]?.message ||
+    'Cloudflare API error'
+  return detail
 }
 
 export function registerAdminRoutes(app, { verifyAdminUser }) {
@@ -88,7 +97,11 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
       return res.status(503).json({ error: 'Cloudflare Stream not configured' })
     }
 
-    const { title, maxDurationSeconds = STREAM_DEFAULT_MAX_DURATION_SECONDS } = req.body || {}
+    const { title, maxDurationSeconds: requestedMax } = req.body || {}
+    const maxDurationSeconds = Math.min(
+      Math.max(1, parseInt(requestedMax, 10) || STREAM_DEFAULT_MAX_DURATION_SECONDS),
+      STREAM_CLOUDFLARE_MAX_DURATION_SECONDS
+    )
     const cfRes = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/stream/direct_upload`,
       {
@@ -108,7 +121,7 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
     const cfJson = await cfRes.json()
     if (!cfRes.ok || !cfJson.success) {
       console.error('[stream]', cfJson)
-      return res.status(502).json({ error: cfJson.errors?.[0]?.message || 'Cloudflare API error' })
+      return res.status(502).json({ error: cloudflareStreamErrorMessage(cfJson) })
     }
 
     const result = cfJson.result

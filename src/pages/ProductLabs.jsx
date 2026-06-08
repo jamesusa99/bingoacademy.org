@@ -4,7 +4,7 @@ import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import PageMeta from '../components/PageMeta'
 import { LabMaterialCardActions } from '../components/labs/LabMaterialPurchaseButton'
-import { getProductLine, subcategoryLabel, isCourseComingSoon } from '../config/products'
+import { getProductLine, subcategoryLabel, isCourseComingSoon, isCourseListedOnStorefront } from '../config/products'
 import { getProductLabTracks, PRODUCT_LABS_INTRO, labsPath } from '../config/productLabs'
 import { PRODUCT_LABS_PORTAL } from '../config/productLabsPortal'
 import { normalizeLabMaterialSub } from '../config/labMaterials'
@@ -25,6 +25,7 @@ export default function ProductLabs() {
   const countFor = (lineId, subId) =>
     courses.filter(
       (c) =>
+        isCourseListedOnStorefront(c) &&
         c.line === lineId &&
         isLabMaterialsCatalogRow({ line: c.line, sub: c.sub }) &&
         normalizeLabMaterialSub(c.sub, c.line) === normalizeLabMaterialSub(subId, lineId)
@@ -36,6 +37,7 @@ export default function ProductLabs() {
     const normalizedSub = normalizeLabMaterialSub(subParam, activeTrack.lineId)
     return courses.filter(
       (c) =>
+        isCourseListedOnStorefront(c) &&
         c.line === activeTrack.lineId &&
         isLabMaterialsCatalogRow({ line: c.line, sub: c.sub }) &&
         normalizeLabMaterialSub(c.sub, c.line) === normalizedSub

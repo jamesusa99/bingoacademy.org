@@ -12,7 +12,7 @@ import { resolveCurriculumLabels } from './videoCurriculum'
 const DEFAULT_LIMITS = {
   maxFileBytes: 30 * 1024 * 1024 * 1024,
   recommendedMaxFileBytes: 4 * 1024 * 1024 * 1024,
-  maxDurationSeconds: 43_200,
+  maxDurationSeconds: 36_000,
 }
 
 export { formatBytes, DEFAULT_LIMITS as CURRICULUM_VIDEO_LIMITS }

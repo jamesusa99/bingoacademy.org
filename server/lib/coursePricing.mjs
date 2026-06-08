@@ -20,7 +20,7 @@ export function resolveCoursePriceCents(course) {
 export function isCatalogCoursePurchasable(course, priceCents = resolveCoursePriceCents(course)) {
   if (!course) return false
   if (course.purchasable === false) return false
-  if (course.status === 'coming-soon') return false
+  if (course.status === 'coming-soon' || course.status === 'offline') return false
   if (course.purchasable === true) return priceCents != null && priceCents > 0
   return priceCents != null && priceCents > 0
 }

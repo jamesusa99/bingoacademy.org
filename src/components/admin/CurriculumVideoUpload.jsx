@@ -43,6 +43,7 @@ export default function CurriculumVideoUpload({
   const [limits, setLimits] = useState(CURRICULUM_VIDEO_LIMITS)
   const [localPreviewUrl, setLocalPreviewUrl] = useState(null)
   const [localMeta, setLocalMeta] = useState(null)
+  const [showLocalPreview, setShowLocalPreview] = useState(true)
   const [showStreamPreview, setShowStreamPreview] = useState(Boolean(cloudflareUid))
 
   useEffect(() => {
@@ -71,6 +72,7 @@ export default function CurriculumVideoUpload({
     }
     setLocalPreviewUrl(null)
     setLocalMeta(null)
+    setShowLocalPreview(true)
   }
 
   const pickAndUpload = () => {
@@ -94,6 +96,7 @@ export default function CurriculumVideoUpload({
       localPreviewRef.current = url
       setLocalPreviewUrl(url)
       setLocalMeta({ ...meta, size: file.size })
+      setShowLocalPreview(true)
     } catch {
       /* metadata optional */
     }
@@ -193,19 +196,32 @@ export default function CurriculumVideoUpload({
         )}
 
         {localPreviewUrl ? (
-          <div className="space-y-1">
-            <p className="text-[10px] font-semibold text-slate-500">{labels.localPreview}</p>
-            {localMeta ? (
-              <p className="text-[10px] text-slate-400">
-                {replaceTokens(labels.videoFileMeta, {
-                  size: formatBytes(localMeta.size ?? 0),
-                  duration: formatDuration(localMeta.durationSeconds),
-                })}
-              </p>
-            ) : null}
-            <div className="aspect-video rounded-lg overflow-hidden bg-black border border-slate-200">
-              <video src={localPreviewUrl} controls playsInline className="w-full h-full" preload="metadata" />
+          <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
+            <div className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-100 border-b border-slate-200">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-slate-600">{labels.localPreview}</p>
+                {localMeta ? (
+                  <p className="text-[10px] text-slate-400 truncate">
+                    {replaceTokens(labels.videoFileMeta, {
+                      size: formatBytes(localMeta.size ?? 0),
+                      duration: formatDuration(localMeta.durationSeconds),
+                    })}
+                  </p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLocalPreview((v) => !v)}
+                className="shrink-0 text-[10px] text-primary hover:underline"
+              >
+                {showLocalPreview ? labels.hidePreview : labels.previewVideo}
+              </button>
             </div>
+            {showLocalPreview ? (
+              <div className="aspect-video bg-black">
+                <video src={localPreviewUrl} controls playsInline className="w-full h-full" preload="metadata" />
+              </div>
+            ) : null}
           </div>
         ) : null}
 

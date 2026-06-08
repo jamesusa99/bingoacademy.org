@@ -14,7 +14,12 @@ function Field({ label, children }) {
 export default function CurriculumCatalogFields({ form, set, labels }) {
   return (
     <div className="space-y-3 pt-2 border-t border-slate-100">
-      <p className="text-xs font-semibold text-slate-500">{labels.catalogSectionTitle}</p>
+      <div>
+        <p className="text-xs font-semibold text-slate-500">{labels.catalogSectionTitle}</p>
+        {labels.catalogSectionHint ? (
+          <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{labels.catalogSectionHint}</p>
+        ) : null}
+      </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Field label={labels.colStatus}>
           <select
@@ -24,6 +29,7 @@ export default function CurriculumCatalogFields({ form, set, labels }) {
           >
             <option value={COURSE_STATUS.LIVE}>{labels.statusLive}</option>
             <option value={COURSE_STATUS.COMING_SOON}>{labels.statusComingSoon}</option>
+            <option value={COURSE_STATUS.OFFLINE}>{labels.statusOffline}</option>
           </select>
         </Field>
         <Field label={labels.colSortOrder}>

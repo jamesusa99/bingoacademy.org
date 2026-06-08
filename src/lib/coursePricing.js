@@ -56,7 +56,7 @@ export function isIoaiLessonOnlyCatalog(course) {
 
 /** Whether Stripe / demo checkout should be offered for this course */
 export function isPurchasableCourse(course) {
-  if (!course || course.status === 'coming-soon') return false
+  if (!course || course.status === 'coming-soon' || course.status === 'offline') return false
   if (isIoaiLessonOnlyCatalog(course)) return false
   if (course.sub === 'module') return true
   if (course.sub === 'bundle') return true

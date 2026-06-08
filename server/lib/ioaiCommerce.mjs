@@ -21,7 +21,7 @@ export async function listLabMaterialsForModule(admin, moduleId) {
     .from('courses_catalog')
     .select(LAB_MATERIAL_SELECT)
     .eq('module_id', moduleId)
-    .neq('status', 'coming-soon')
+    .eq('status', 'live')
     .order('sort_order')
 
   if (directErr) return []
@@ -36,7 +36,7 @@ export async function listLabMaterialsForModule(admin, moduleId) {
       .select(LAB_MATERIAL_SELECT)
       .in('lesson_id', lessonIds)
       .is('module_id', null)
-      .neq('status', 'coming-soon')
+      .eq('status', 'live')
       .order('sort_order')
     legacy = legacyRows || []
   }
@@ -137,7 +137,7 @@ export async function mapLabExtrasByModuleId(admin, moduleIds) {
     .from('courses_catalog')
     .select('module_id, price_cents, price')
     .in('module_id', moduleIds)
-    .neq('status', 'coming-soon')
+    .eq('status', 'live')
 
   for (const row of direct || []) {
     if (!row.module_id) continue
@@ -156,7 +156,7 @@ export async function mapLabExtrasByModuleId(admin, moduleIds) {
       .select('lesson_id, price_cents, price')
       .in('lesson_id', lessonIds)
       .is('module_id', null)
-      .neq('status', 'coming-soon')
+      .eq('status', 'live')
 
     for (const row of legacy || []) {
       const moduleId = lessonToModule.get(row.lesson_id)

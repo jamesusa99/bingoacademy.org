@@ -116,6 +116,33 @@ function resolveRowModuleId(row, lessonById) {
   return null
 }
 
+/** Lab/material catalog rows bound to one L3 module (module_id or legacy lesson_id). */
+export function filterLabMaterialsForModule(items, moduleDbId, productLine, lessonIds = []) {
+  if (!moduleDbId || !productLine) return []
+  const lessonSet = new Set(lessonIds)
+  return sortRows(
+    (items || []).filter((row) => {
+      if (row.line !== productLine) return false
+      if (row.module_id === moduleDbId) return true
+      if (row.module_id) return false
+      return row.lesson_id && lessonSet.has(row.lesson_id)
+    })
+  )
+}
+
+export function partitionLabAndMaterialItems(items, productLine) {
+  const labs = []
+  const materials = []
+  for (const row of sortRows(items)) {
+    if (deliveryTypeForLabSub(row.sub, productLine) === 'materials') {
+      materials.push(row)
+    } else {
+      labs.push(row)
+    }
+  }
+  return { labs, materials }
+}
+
 /** Group lab/material catalog rows under curriculum modules (L3) */
 export function groupLabMaterialsByModule(items, levelsByLine, lineFilter = 'all') {
   const lines = lineFilter === 'all' ? ['ioai', 'general', 'k12'] : [lineFilter]
@@ -133,7 +160,7 @@ export function groupLabMaterialsByModule(items, levelsByLine, lineFilter = 'all
     const lineItems = items.filter((row) => row.line === line)
 
     for (const [, modEntry] of moduleById) {
-      const bound = lineItems.filter((row) => resolveRowModuleId(row, lessonById) === modEntry.moduleId)
+      const bound = sortRows(lineItems.filter((row) => resolveRowModuleId(row, lessonById) === modEntry.moduleId))
       if (!bound.length) continue
       bound.forEach((row) => assignedIds.add(row.slug))
       groups.push({ line, module: modEntry, items: bound })

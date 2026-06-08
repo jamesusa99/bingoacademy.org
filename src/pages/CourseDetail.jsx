@@ -1,6 +1,6 @@
 import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { getProductLine, isCourseComingSoon, subcategoryLabel } from '../config/products'
+import { getProductLine, isCourseComingSoon, isCourseOffline, subcategoryLabel } from '../config/products'
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
 import { COURSES_PORTAL } from '../config/coursesPortal'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
@@ -156,7 +156,7 @@ export default function CourseDetail() {
     )
   }
 
-  if (!item) {
+  if (!item || (isCourseOffline(item) && !previewMode)) {
     return (
       <PageContent className="py-12 text-center">
         <p className="text-slate-600 mb-4">{COURSES_PORTAL.notFound}</p>

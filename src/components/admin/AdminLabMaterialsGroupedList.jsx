@@ -4,11 +4,25 @@ import {
   groupLabMaterialsByModule,
   labMaterialTypeLabel,
   normalizeLabMaterialSub,
+  partitionLabAndMaterialItems,
 } from '../../config/labMaterials'
+import { useDragReorder } from '../../hooks/useDragReorder'
+import DragHandle from './DragHandle'
 
-function ItemRow({ row, labels, onEdit, onDelete }) {
+function sortByOrder(rows) {
+  return [...rows].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+}
+
+function partitionModuleItems(items, productLine) {
+  return partitionLabAndMaterialItems(items, productLine)
+}
+
+function ItemRow({ row, labels, onEdit, onDelete, dragProps }) {
   return (
-    <tr className="border-t border-slate-100 hover:bg-slate-50/80">
+    <tr {...dragProps} className={`border-t border-slate-100 hover:bg-slate-50/80 ${dragProps.className || ''}`}>
+      <td className="p-2 w-10">
+        <DragHandle label={labels.dragHint} />
+      </td>
       <td className="p-3">
         <span className="text-xs font-medium text-slate-700">{labMaterialTypeLabel(row.sub, row.line)}</span>
       </td>
@@ -25,6 +39,70 @@ function ItemRow({ row, labels, onEdit, onDelete }) {
         </button>
       </td>
     </tr>
+  )
+}
+
+function ModuleDragTable({ items, sectionTitle, labels, onEdit, onDelete, onReorder }) {
+  const sorted = useMemo(() => sortByOrder(items), [items])
+
+  if (!sorted.length) return null
+
+  if (!onReorder) {
+    return (
+      <div className="mb-4 last:mb-0">
+        {sectionTitle ? (
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-2">{sectionTitle}</p>
+        ) : null}
+        <ModuleGroupTable items={sorted} labels={labels} onEdit={onEdit} onDelete={onDelete} />
+      </div>
+    )
+  }
+
+  const drag = useDragReorder({
+    items: sorted,
+    getKey: (row) => row.slug,
+    onReorder,
+  })
+
+  return (
+    <div className="mb-4 last:mb-0">
+      {sectionTitle ? (
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-2">{sectionTitle}</p>
+      ) : null}
+      {drag.saving ? (
+        <p className="text-xs text-primary bg-primary/5 border border-primary/10 rounded-lg px-3 py-2 mb-2">
+          {labels.savingOrder}
+        </p>
+      ) : null}
+      <div className="overflow-x-auto rounded-lg border border-slate-200">
+        <table className="w-full text-sm min-w-[680px]">
+          <thead className="bg-slate-50 text-left text-slate-600 text-xs">
+            <tr>
+              <th className="p-2 w-10" aria-label={labels.dragHint} />
+              <th className="p-2">{labels.colType}</th>
+              <th className="p-2">{labels.name}</th>
+              <th className="p-2">{labels.status}</th>
+              <th className="p-2">{labels.price}</th>
+              <th className="p-2">{labels.colSlug}</th>
+              <th className="p-2" />
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((row) => (
+              <ItemRow
+                key={row.slug}
+                row={row}
+                labels={labels}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                dragProps={drag.rowProps(row)}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[10px] text-slate-400 mt-1.5">{labels.dragReorderHint}</p>
+    </div>
   )
 }
 
@@ -45,7 +123,23 @@ function ModuleGroupTable({ items, labels, onEdit, onDelete }) {
         </thead>
         <tbody>
           {items.map((row) => (
-            <ItemRow key={row.slug} row={row} labels={labels} onEdit={onEdit} onDelete={onDelete} />
+            <tr key={row.slug} className="border-t border-slate-100 hover:bg-slate-50/80">
+              <td className="p-3">
+                <span className="text-xs font-medium text-slate-700">{labMaterialTypeLabel(row.sub, row.line)}</span>
+              </td>
+              <td className="p-3 font-medium">{row.name}</td>
+              <td className="p-3 text-slate-600">{labels.statusLabel(row.status)}</td>
+              <td className="p-3 text-slate-600">{row.price || '—'}</td>
+              <td className="p-3 text-xs font-mono text-slate-400">{row.slug}</td>
+              <td className="p-3 whitespace-nowrap text-xs">
+                <button type="button" onClick={() => onEdit(row)} className="text-primary mr-2">
+                  {labels.edit}
+                </button>
+                <button type="button" onClick={() => onDelete(row.slug)} className="text-red-600">
+                  {labels.delete}
+                </button>
+              </td>
+            </tr>
           ))}
         </tbody>
       </table>
@@ -61,6 +155,7 @@ export default function AdminLabMaterialsGroupedList({
   labels,
   onEdit,
   onDelete,
+  onReorderModuleItems,
 }) {
   const filtered = useMemo(() => {
     let rows = items
@@ -80,6 +175,10 @@ export default function AdminLabMaterialsGroupedList({
     return <p className="p-6 text-sm text-slate-500">{labels.noCourses}</p>
   }
 
+  const handleReorder =
+    onReorderModuleItems &&
+    ((next) => onReorderModuleItems(next))
+
   return (
     <div className="p-4 space-y-6">
       {groups.map(({ line, module, items: groupItems }) => {
@@ -88,6 +187,9 @@ export default function AdminLabMaterialsGroupedList({
           const cents = row.price_cents > 0 ? row.price_cents : null
           return sum + (cents || 0)
         }, 0)
+        const { labs, materials } = partitionModuleItems(groupItems, line)
+        const showSplit = handleReorder && typeFilter === 'all'
+
         return (
           <div key={`${line}-${module.moduleId}`} className="border-b border-slate-100 pb-6 last:border-0">
             <div className="mb-3">
@@ -108,7 +210,35 @@ export default function AdminLabMaterialsGroupedList({
                   : ''}
               </p>
             </div>
-            <ModuleGroupTable items={groupItems} labels={labels} onEdit={onEdit} onDelete={onDelete} />
+
+            {showSplit ? (
+              <>
+                <ModuleDragTable
+                  items={labs}
+                  sectionTitle={labels.sectionLabs}
+                  labels={labels}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onReorder={handleReorder}
+                />
+                <ModuleDragTable
+                  items={materials}
+                  sectionTitle={labels.sectionMaterials}
+                  labels={labels}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onReorder={handleReorder}
+                />
+              </>
+            ) : (
+              <ModuleDragTable
+                items={groupItems}
+                labels={labels}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onReorder={handleReorder || undefined}
+              />
+            )}
           </div>
         )
       })}

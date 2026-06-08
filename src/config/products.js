@@ -71,5 +71,7 @@ export {
   COURSE_STATUS,
   getCourseById,
   isCourseComingSoon,
+  isCourseOffline,
+  isCourseListedOnStorefront,
   coursesByLine,
 } from './coursesCatalog.js'
