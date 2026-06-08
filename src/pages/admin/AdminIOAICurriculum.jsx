@@ -36,6 +36,7 @@ export default function AdminIOAICurriculum() {
   const [editingRow, setEditingRow] = useState(null)
   const [editingModule, setEditingModule] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [addFormKey, setAddFormKey] = useState('new')
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [deletingModuleId, setDeletingModuleId] = useState(null)
@@ -472,6 +473,7 @@ export default function AdminIOAICurriculum() {
       cloudflareUid: '',
       syncCatalog: true,
     })
+    setAddFormKey(`module-${group.moduleDbId}-${Date.now()}`)
     setShowAddForm(true)
     setEditingRow(null)
     setEditingModule(null)
@@ -495,6 +497,7 @@ export default function AdminIOAICurriculum() {
           <button
             type="button"
             onClick={() => {
+              setAddFormKey(`new-${Date.now()}`)
               setShowAddForm(true)
               setEditingRow(null)
               setEditingModule(null)
@@ -526,6 +529,7 @@ export default function AdminIOAICurriculum() {
           <div className="card p-6 text-sm text-slate-500">{labels.loading}</div>
         ) : (
           <IOAIAddCourseForm
+            key={addFormKey}
             productLine={productLine}
             levels={levels}
             labels={labels}

@@ -2,7 +2,6 @@ import {
   createStreamUploadUrl,
   fetchStreamUploadLimits,
   syncStreamVideo,
-  assignStreamToCourse,
 } from './admin/api'
 import { adminInsert, adminUpdate } from './admin/db'
 import { formatBytes, uploadFileToStream } from './streamUpload'
@@ -20,6 +19,9 @@ export { formatBytes, DEFAULT_LIMITS as CURRICULUM_VIDEO_LIMITS }
 /**
  * Upload a local video file to Cloudflare Stream and register video_assets.
  * Returns the Cloudflare UID to store on the lesson.
+ *
+ * Catalog / lesson linking happens when the lesson is saved — not during upload —
+ * so uploads work before the lesson row exists in courses_catalog.
  */
 export async function uploadCurriculumVideo({
   file,
@@ -37,7 +39,7 @@ export async function uploadCurriculumVideo({
 
   let fileMeta = null
   try {
-    fileMeta = await readVideoFileMeta(file)
+    fileMeta = await readVideoFileMeta(file, { timeoutMs: 8000 })
   } catch {
     /* optional — still attempt upload if browser cannot read metadata */
   }
@@ -86,14 +88,13 @@ export async function uploadCurriculumVideo({
 
     await uploadFileToStream(uploadURL, file, { onProgress })
 
-    await syncStreamVideo({
-      videoAssetId: row.id,
-      wait: true,
-      catalogSlug: slug || undefined,
-    })
-
-    if (slug) {
-      await assignStreamToCourse({ catalogSlug: slug, uid })
+    try {
+      await syncStreamVideo({
+        videoAssetId: row.id,
+        wait: true,
+      })
+    } catch {
+      /* Cloudflare upload succeeded — playback sync can finish after lesson save */
     }
 
     return uid

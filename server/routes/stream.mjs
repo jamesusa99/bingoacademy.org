@@ -175,8 +175,11 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
 
     if (resolvedCatalogSlug) {
       const catalogResult = await applyPlaybackToCatalog(admin, resolvedCatalogSlug, playback)
-      if (!catalogResult.ok) return res.status(400).json({ error: catalogResult.error })
-      await linkLessonVideo(admin, resolvedCatalogSlug, playback.uid)
+      if (!catalogResult.ok) {
+        console.warn('[stream] catalog link skipped:', catalogResult.error)
+      } else {
+        await linkLessonVideo(admin, resolvedCatalogSlug, playback.uid)
+      }
     }
 
     return res.json({
@@ -248,7 +251,7 @@ export function registerStreamRoutes(app, { verifyAdminUser }) {
 
     const catalogResult = await applyPlaybackToCatalog(admin, slug, playback)
     if (!catalogResult.ok) {
-      return res.status(400).json({ error: catalogResult.error })
+      return res.status(404).json({ error: catalogResult.error })
     }
 
     await linkLessonVideo(admin, slug, playback.uid)

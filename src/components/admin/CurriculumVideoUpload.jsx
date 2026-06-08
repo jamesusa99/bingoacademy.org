@@ -89,28 +89,17 @@ export default function CurriculumVideoUpload({
     setError(null)
     setInfo(null)
 
-    let meta = null
-    try {
-      meta = await readVideoFileMeta(file)
-      const url = URL.createObjectURL(file)
-      localPreviewRef.current = url
-      setLocalPreviewUrl(url)
-      setLocalMeta({ ...meta, size: file.size })
-      setShowLocalPreview(true)
-    } catch {
-      /* metadata optional */
-    }
-
-    const maxDuration = limits.maxDurationSeconds || CURRICULUM_VIDEO_LIMITS.maxDurationSeconds
-    if (meta?.durationSeconds && meta.durationSeconds > maxDuration) {
-      setError(
-        replaceTokens(labels.videoDurationTooLong, {
-          duration: formatDuration(meta.durationSeconds),
-          max: formatDuration(maxDuration),
-        })
-      )
-      return
-    }
+    readVideoFileMeta(file, { timeoutMs: 8000 })
+      .then((meta) => {
+        const url = URL.createObjectURL(file)
+        localPreviewRef.current = url
+        setLocalPreviewUrl(url)
+        setLocalMeta({ ...meta, size: file.size })
+        setShowLocalPreview(true)
+      })
+      .catch(() => {
+        /* preview optional */
+      })
 
     setUploading(true)
     setProgress(0)
