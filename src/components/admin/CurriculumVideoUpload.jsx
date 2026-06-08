@@ -131,6 +131,7 @@ export default function CurriculumVideoUpload({
     maxGb: limits.maxFileGb ?? 30,
     maxHours: limits.maxDurationHours ?? Math.round(maxDuration / 3600),
     basicMaxMb: limits.basicMaxFileMb ?? 200,
+    tusMinMb: limits.tusMinFileMb ?? 50,
   })
 
   return (

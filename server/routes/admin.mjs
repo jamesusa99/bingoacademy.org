@@ -7,6 +7,7 @@ import {
   STREAM_MAX_FILE_BYTES,
   STREAM_RECOMMENDED_MAX_FILE_BYTES,
   STREAM_BASIC_UPLOAD_MAX_BYTES,
+  STREAM_TUS_RECOMMENDED_MIN_BYTES,
   fetchStreamVideo,
   isStreamConfigured,
   streamVideoToPlayback,
@@ -58,6 +59,8 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
       recommendedMaxFileBytes: STREAM_RECOMMENDED_MAX_FILE_BYTES,
       basicMaxFileBytes: STREAM_BASIC_UPLOAD_MAX_BYTES,
       basicMaxFileMb: Math.round(STREAM_BASIC_UPLOAD_MAX_BYTES / (1024 * 1024)),
+      tusMinFileBytes: STREAM_TUS_RECOMMENDED_MIN_BYTES,
+      tusMinFileMb: Math.round(STREAM_TUS_RECOMMENDED_MIN_BYTES / (1024 * 1024)),
       maxDurationSeconds,
       maxDurationHours: Math.round(maxDurationSeconds / 3600),
       maxFileGb: 30,
@@ -121,9 +124,19 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
       }
     )
 
-    const cfJson = await cfRes.json()
+    const rawBody = await cfRes.text()
+    let cfJson = null
+    try {
+      cfJson = rawBody ? JSON.parse(rawBody) : null
+    } catch {
+      console.error('[stream upload-url] non-JSON response', cfRes.status, rawBody.slice(0, 300))
+      return res.status(502).json({
+        error: `Cloudflare Stream API returned ${cfRes.status}. Check CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN (Stream:Edit).`,
+      })
+    }
+
     if (!cfRes.ok || !cfJson.success) {
-      console.error('[stream]', cfJson)
+      console.error('[stream upload-url]', cfJson)
       return res.status(502).json({ error: cloudflareStreamErrorMessage(cfJson) })
     }
 

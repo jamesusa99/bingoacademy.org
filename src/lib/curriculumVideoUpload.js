@@ -7,6 +7,7 @@ import { adminInsert, adminUpdate } from './admin/db'
 import {
   formatBytes,
   STREAM_BASIC_UPLOAD_MAX_BYTES,
+  STREAM_TUS_RECOMMENDED_MIN_BYTES,
   uploadVideoToCloudflare,
 } from './streamUpload'
 import { formatDuration, readVideoFileMeta } from './videoFileMeta'
@@ -16,6 +17,7 @@ const DEFAULT_LIMITS = {
   maxFileBytes: 30 * 1024 * 1024 * 1024,
   recommendedMaxFileBytes: 4 * 1024 * 1024 * 1024,
   basicMaxFileBytes: STREAM_BASIC_UPLOAD_MAX_BYTES,
+  tusMinFileBytes: STREAM_TUS_RECOMMENDED_MIN_BYTES,
   maxDurationSeconds: 36_000,
 }
 
@@ -39,6 +41,7 @@ export async function uploadCurriculumVideo({
   const limits = await fetchStreamUploadLimits().catch(() => DEFAULT_LIMITS)
   const maxDurationSeconds = limits.maxDurationSeconds || DEFAULT_LIMITS.maxDurationSeconds
   const basicMaxBytes = limits.basicMaxFileBytes || STREAM_BASIC_UPLOAD_MAX_BYTES
+  const tusMinBytes = limits.tusMinFileBytes || STREAM_TUS_RECOMMENDED_MIN_BYTES
 
   let fileMeta = null
   try {
@@ -72,7 +75,7 @@ export async function uploadCurriculumVideo({
   const curriculumMeta = resolveCurriculumLabels(levels, path)
   const slug = catalogSlug?.trim() || null
 
-  const useTus = file.size > basicMaxBytes
+  const useTus = file.size > basicMaxBytes || file.size >= tusMinBytes
   let uploadURL = null
   let basicUid = null
 
@@ -103,22 +106,18 @@ export async function uploadCurriculumVideo({
       uid: basicUid,
       maxDurationSeconds,
       onProgress,
-      onUid: registerAsset,
       basicMaxBytes,
+      tusMinBytes,
     })
 
-    if (!rowId) {
-      await registerAsset(uid)
-    }
+    await registerAsset(uid)
 
-    try {
-      await syncStreamVideo({
-        videoAssetId: rowId,
-        wait: true,
-      })
-    } catch {
-      /* upload succeeded — sync can finish after lesson save */
-    }
+    syncStreamVideo({
+      videoAssetId: rowId,
+      wait: false,
+    }).catch(() => {
+      /* encoding continues on Cloudflare — save lesson to finish linking */
+    })
 
     return uid
   } catch (err) {

@@ -4,6 +4,8 @@ import crypto from 'node:crypto'
 
 /** Cloudflare basic POST direct_upload — use tus above this size */
 export const STREAM_BASIC_UPLOAD_MAX_BYTES = 200 * 1024 * 1024
+/** Prefer tus at this size and above — more reliable than browser POST to Cloudflare */
+export const STREAM_TUS_RECOMMENDED_MIN_BYTES = 50 * 1024 * 1024
 /** Cloudflare direct upload: up to 30 GB per file (browser uploads: stay under ~4 GB). */
 export const STREAM_MAX_FILE_BYTES = 30 * 1024 * 1024 * 1024
 /** Practical limit for browser POST uploads (memory / timeouts). */

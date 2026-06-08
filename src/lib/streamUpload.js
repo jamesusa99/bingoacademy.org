@@ -5,6 +5,8 @@ import { supabase } from './supabase'
 
 /** Cloudflare basic direct_upload limit — larger files require tus */
 export const STREAM_BASIC_UPLOAD_MAX_BYTES = 200 * 1024 * 1024
+/** Prefer tus at this size+ — more reliable than single POST for ~50–200 MB files */
+export const STREAM_TUS_RECOMMENDED_MIN_BYTES = 50 * 1024 * 1024
 
 export function formatBytes(bytes) {
   if (bytes == null || Number.isNaN(bytes)) return '—'
@@ -143,7 +145,7 @@ export async function uploadFileToStreamTus(file, { onProgress, maxDurationSecon
 
     const upload = new tus.Upload(file, {
       endpoint: '/api/admin/stream/tus-create',
-      chunkSize: 50 * 1024 * 1024,
+      chunkSize: 8 * 1024 * 1024,
       retryDelays: [0, 2000, 5000, 10000, 20000],
       metadata: {
         filename: file.name,
@@ -199,8 +201,11 @@ export async function uploadVideoToCloudflare({
   onProgress,
   onUid,
   basicMaxBytes = STREAM_BASIC_UPLOAD_MAX_BYTES,
+  tusMinBytes = STREAM_TUS_RECOMMENDED_MIN_BYTES,
 }) {
-  if (file.size > basicMaxBytes) {
+  const useTus = file.size > basicMaxBytes || file.size >= tusMinBytes
+
+  if (useTus) {
     const uid = await uploadFileToStreamTus(file, {
       onProgress,
       maxDurationSeconds,
@@ -209,7 +214,9 @@ export async function uploadVideoToCloudflare({
     return { uid, method: 'tus' }
   }
 
-  onUid?.(basicUid)
+  if (onUid && basicUid) {
+    await Promise.resolve(onUid(basicUid))
+  }
   await uploadFileToStreamBasic(uploadURL, file, { onProgress })
   return { uid: basicUid, method: 'basic' }
 }

@@ -31,6 +31,14 @@ export async function adminFetch(path, options = {}) {
 
   if (!res.ok) {
     let message = body?.error || body?.message || `Request failed (${res.status})`
+    if (res.status === 502 && !body?.error) {
+      message =
+        'Server error (502). The upload may have succeeded — save the lesson and refresh. If it keeps failing, check Cloudflare Stream env vars on the server.'
+    }
+    if (res.status === 504 && !body?.error) {
+      message =
+        'Server timed out (504). Large uploads use resumable transfer — retry, or save if progress reached 100%.'
+    }
     if (res.status === 405) {
       message =
         'Admin API is not available for this request (405). Run npm run dev locally, or deploy with api/server.js and set SUPABASE_SERVICE_ROLE_KEY on Vercel.'
