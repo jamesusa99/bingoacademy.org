@@ -2,6 +2,9 @@
   "functions": {
     "api/server.js": {
       "maxDuration": 60
+    },
+    "api/admin/stream/tus-create.js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [

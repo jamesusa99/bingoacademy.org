@@ -12,6 +12,7 @@ import {
   isStreamConfigured,
   streamVideoToPlayback,
 } from '../lib/cloudflareStream.mjs'
+import { registerStreamTusCreateRoutes } from '../lib/handleStreamTusCreate.mjs'
 
 function envFlag(name) {
   const v = process.env[name]
@@ -153,60 +154,7 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
     })
   })
 
-  /** Tus upload provisioning for files over 200 MB (Cloudflare direct creator uploads) */
-  app.post('/api/admin/stream/tus-create', async (req, res) => {
-    const auth = await verifyAdminUser(req)
-    if (!auth.ok) {
-      return res.status(auth.status).json({ error: auth.error })
-    }
-
-    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
-    const apiToken = process.env.CLOUDFLARE_API_TOKEN
-    if (!accountId || !apiToken) {
-      return res.status(503).json({ error: 'Cloudflare Stream not configured' })
-    }
-
-    const uploadLength = req.headers['upload-length']
-    if (!uploadLength) {
-      return res.status(400).json({ error: 'Upload-Length header is required' })
-    }
-
-    let uploadMetadata = String(req.headers['upload-metadata'] || '').trim()
-    const maxDuration = req.headers['x-stream-max-duration']
-    if (maxDuration) {
-      const encoded = Buffer.from(String(maxDuration).trim()).toString('base64')
-      const part = `maxDurationSeconds ${encoded}`
-      uploadMetadata = uploadMetadata ? `${uploadMetadata},${part}` : part
-    }
-
-    const cfRes = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/stream?direct_user=true`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiToken}`,
-          'Tus-Resumable': '1.0.0',
-          'Upload-Length': String(uploadLength),
-          ...(uploadMetadata ? { 'Upload-Metadata': uploadMetadata } : {}),
-        },
-      }
-    )
-
-    const location = cfRes.headers.get('Location')
-    if (!cfRes.ok || !location) {
-      const detail = await cfRes.text().catch(() => '')
-      console.error('[stream tus-create]', cfRes.status, detail.slice(0, 300))
-      return res.status(502).json({
-        error: cloudflareStreamErrorMessage(
-          detail ? { errors: [{ message: detail.slice(0, 200) }] } : {}
-        ),
-      })
-    }
-
-    res.setHeader('Access-Control-Expose-Headers', 'Location')
-    res.setHeader('Location', location)
-    return res.status(201).end()
-  })
+  registerStreamTusCreateRoutes(app, { verifyAdminUser })
 }
 
 export async function upsertOrderFromStripe(session) {
