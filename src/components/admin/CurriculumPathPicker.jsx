@@ -70,9 +70,18 @@ function ReadOnlyValue({ value, mono = false }) {
   )
 }
 
+function LockedNewField({ label, text, hint }) {
+  return (
+    <Field label={label}>
+      <ReadOnlyValue value={text} />
+      {hint ? <p className="text-[10px] text-emerald-700 mt-1">{hint}</p> : null}
+    </Field>
+  )
+}
+
 /**
- * Shared stage → category → module picker (matches IOAI / Foundations / K12 course admin).
- * @param {{ levels: object[], labels: object, value: object, onChange: (patch: object) => void, showNewPanels?: boolean }} props
+ * L1 stage → L2 category → L3 module (nested containment).
+ * New L1 forces new L2 + L3; new L2 forces new L3.
  */
 export default function CurriculumPathPicker({ levels, labels, value, onChange, showNewPanels = true }) {
   const {
@@ -95,6 +104,10 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
     userEditedRef.current = true
   }
 
+  const isNewStage = stageChoice === CURRICULUM_NEW
+  const isNewCategory = themeChoice === CURRICULUM_NEW
+  const isNewModule = moduleChoice === CURRICULUM_NEW
+
   const selectedLevel = useMemo(
     () => sortedLevels.find((l) => l.id === stageChoice),
     [sortedLevels, stageChoice]
@@ -108,31 +121,28 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
   )
 
   const moduleOptions = useMemo(() => {
-    if (stageChoice === CURRICULUM_NEW) return []
-    if (themeChoice === CURRICULUM_NEW) return []
-    if (themeChoice && themeChoice !== CURRICULUM_NEW) {
+    if (isNewStage || isNewCategory) return []
+    if (themeChoice) {
       return stageModuleOptions.filter((option) => option.themeId === themeChoice)
     }
     return stageModuleOptions
-  }, [stageChoice, themeChoice, stageModuleOptions])
+  }, [isNewStage, isNewCategory, themeChoice, stageModuleOptions])
 
   const selectedTheme = useMemo(() => {
-    if (themeChoice && themeChoice !== CURRICULUM_NEW) {
+    if (!isNewCategory && themeChoice) {
       return themes.find((t) => t.id === themeChoice) || null
     }
-    const hit = stageModuleOptions.find((option) => option.moduleId === moduleChoice)
-    return hit?.theme || null
-  }, [themes, themeChoice, stageModuleOptions, moduleChoice])
+    return null
+  }, [themes, themeChoice, isNewCategory])
 
   const selectedModule = useMemo(() => {
-    if (moduleChoice && moduleChoice !== CURRICULUM_NEW) {
-      const hit = stageModuleOptions.find((option) => option.moduleId === moduleChoice)
-      return hit?.module || null
+    if (!isNewModule && moduleChoice) {
+      return stageModuleOptions.find((option) => option.moduleId === moduleChoice)?.module || null
     }
     return null
-  }, [stageModuleOptions, moduleChoice])
+  }, [stageModuleOptions, moduleChoice, isNewModule])
 
-  // Sync path when curriculum tree loads (avoid locking on stale "__new__" before levels arrive)
+  // Default to first existing path when tree loads
   useEffect(() => {
     const hasLevels = sortedLevels.length > 0
     const levelsJustLoaded = hasLevels && !hadLevelsRef.current
@@ -165,55 +175,52 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
     }
   }, [sortedLevels, stageChoice, themeChoice, moduleChoice, newStage, newTheme, newModule])
 
+  // L1 new → L2 + L3 must be new
   useEffect(() => {
-    if (!stageChoice || stageChoice === CURRICULUM_NEW) {
-      if (themeChoice !== CURRICULUM_NEW || moduleChoice !== CURRICULUM_NEW) {
+    if (!stageChoice) return
+    if (isNewStage) {
+      if (!isNewCategory || !isNewModule) {
         patch({ themeChoice: CURRICULUM_NEW, moduleChoice: CURRICULUM_NEW })
       }
       return
     }
 
-    if (themeChoice === CURRICULUM_NEW) return
-
-    if (themes.length === 0) {
-      if (themeChoice !== CURRICULUM_NEW) patch({ themeChoice: CURRICULUM_NEW, moduleChoice: CURRICULUM_NEW })
+    if (isNewCategory) {
+      if (!isNewModule) patch({ moduleChoice: CURRICULUM_NEW })
       return
     }
 
-    if (themeChoice && !themes.some((t) => t.id === themeChoice)) {
+    if (themes.length === 0 && !isNewCategory) {
+      patch({ themeChoice: CURRICULUM_NEW, moduleChoice: CURRICULUM_NEW })
+      return
+    }
+
+    if (themeChoice && !isNewCategory && !themes.some((t) => t.id === themeChoice)) {
       const firstTheme = themes[0]
-      const firstModule = sortByOrder(firstTheme.modules)[0]
+      const firstModule = sortByOrder(firstTheme?.modules)[0]
       patch({
         themeChoice: firstTheme.id,
         moduleChoice: firstModule?.id || CURRICULUM_NEW,
       })
     }
-  }, [stageChoice, themes, themeChoice, moduleChoice])
+  }, [stageChoice, isNewStage, isNewCategory, isNewModule, themes, themeChoice, moduleChoice])
 
+  // L2 existing → validate L3 against category
   useEffect(() => {
-    if (!stageChoice || stageChoice === CURRICULUM_NEW) return
-    if (themeChoice === CURRICULUM_NEW) {
-      if (moduleChoice !== CURRICULUM_NEW) patch({ moduleChoice: CURRICULUM_NEW })
-      return
-    }
-
-    if (moduleChoice === CURRICULUM_NEW) return
+    if (!stageChoice || isNewStage || isNewCategory) return
+    if (isNewModule) return
 
     if (moduleOptions.length === 0) {
-      if (moduleChoice !== CURRICULUM_NEW) patch({ moduleChoice: CURRICULUM_NEW })
+      patch({ moduleChoice: CURRICULUM_NEW })
       return
     }
 
     if (moduleChoice && moduleOptions.some((option) => option.moduleId === moduleChoice)) {
-      const hit = moduleOptions.find((option) => option.moduleId === moduleChoice)
-      if (hit && themeChoice !== hit.themeId) {
-        patch({ themeChoice: hit.themeId })
-      }
       return
     }
 
-    patch({ moduleChoice: moduleOptions[0].moduleId, themeChoice: moduleOptions[0].themeId })
-  }, [stageChoice, themeChoice, moduleChoice, moduleOptions])
+    patch({ moduleChoice: moduleOptions[0].moduleId })
+  }, [stageChoice, isNewStage, isNewCategory, isNewModule, moduleChoice, moduleOptions])
 
   const pathDisplay = useMemo(
     () => resolveCurriculumPathDisplay(sortedLevels, value),
@@ -222,24 +229,27 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
 
   const summaryTitle = labels.pathSummaryTitle || 'Selected path'
   const summaryEmpty = labels.pathSummaryEmpty || 'Choose stage, category, and module'
+  const hierarchyHint =
+    labels.pathHierarchyHint ||
+    'L1 stage → L2 category → L3 module. Creating a new upper level requires creating everything below it.'
   const selectedHint = labels.selectedFromTreeHint || 'Synced from the curriculum tree.'
-  const newStagePanelTitle = labels.newStagePanelTitle || labels.newStage || 'New stage'
-  const newCategoryPanelTitle = labels.newCategoryPanelTitle || labels.newCategory || 'New category'
-  const newModulePanelTitle = labels.newModulePanelTitle || labels.newModule || 'New module'
+  const lockedCategoryHint = labels.lockedNewCategoryHint || 'New stage — category must be created below.'
+  const lockedModuleHint = labels.lockedNewModuleHint || 'New stage or category — module must be created below.'
+  const newStagePanelTitle = labels.newStagePanelTitle || labels.newStage || 'New stage (L1)'
+  const newCategoryPanelTitle = labels.newCategoryPanelTitle || labels.newCategory || 'New category (L2)'
+  const newModulePanelTitle = labels.newModulePanelTitle || labels.newModule || 'New module (L3)'
   const selectedStagePanelTitle = labels.selectedStagePanelTitle || labels.colStage || 'Stage'
   const selectedCategoryPanelTitle = labels.selectedCategoryPanelTitle || labels.colCategory || 'Category'
   const selectedModulePanelTitle = labels.selectedModulePanelTitle || labels.colModule || 'Module'
   const levelsLoadingHint = labels.levelsLoadingHint || 'Loading curriculum tree…'
-  const noModulesHint = labels.noModulesForStage || 'No modules in this stage yet — create one below.'
+  const noModulesHint = labels.noModulesForStage || 'No modules in this category — choose “+ New module”.'
 
-  const showCategorySection = Boolean(stageChoice)
-  const showModuleSection = Boolean(stageChoice && stageChoice !== CURRICULUM_NEW)
   const treeLoading = sortedLevels.length === 0
 
   const handleStageChange = (nextStage) => {
     markUserEdited()
     if (nextStage === CURRICULUM_NEW) {
-      patch({ stageChoice: nextStage, themeChoice: CURRICULUM_NEW, moduleChoice: CURRICULUM_NEW })
+      patch({ stageChoice: CURRICULUM_NEW, themeChoice: CURRICULUM_NEW, moduleChoice: CURRICULUM_NEW })
       return
     }
     const level = sortedLevels.find((l) => l.id === nextStage)
@@ -255,7 +265,7 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
   const handleThemeChange = (nextTheme) => {
     markUserEdited()
     if (nextTheme === CURRICULUM_NEW) {
-      patch({ themeChoice: nextTheme, moduleChoice: CURRICULUM_NEW })
+      patch({ themeChoice: CURRICULUM_NEW, moduleChoice: CURRICULUM_NEW })
       return
     }
     const theme = themes.find((t) => t.id === nextTheme)
@@ -268,15 +278,7 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
 
   const handleModuleChange = (nextModule) => {
     markUserEdited()
-    if (nextModule === CURRICULUM_NEW) {
-      patch({ moduleChoice: nextModule })
-      return
-    }
-    const hit = stageModuleOptions.find((option) => option.moduleId === nextModule)
-    patch({
-      moduleChoice: nextModule,
-      ...(hit ? { themeChoice: hit.themeId } : {}),
-    })
+    patch({ moduleChoice: nextModule })
   }
 
   return (
@@ -285,7 +287,11 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
           {levelsLoadingHint}
         </p>
-      ) : null}
+      ) : (
+        <p className="text-[10px] text-slate-500 leading-relaxed bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+          {hierarchyHint}
+        </p>
+      )}
 
       <div className="grid sm:grid-cols-3 gap-4">
         <Field label={labels.colStage}>
@@ -306,49 +312,52 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
           </select>
         </Field>
 
-        <Field label={labels.colCategory}>
-          <select
-            className={inputClass}
-            value={themeChoice}
-            onChange={(e) => handleThemeChange(e.target.value)}
-            disabled={treeLoading || !stageChoice || stageChoice === CURRICULUM_NEW}
-          >
-            {!themeChoice ? <option value="">{summaryEmpty}</option> : null}
-            {stageChoice !== CURRICULUM_NEW &&
-              themes.map((t) => (
+        {isNewStage ? (
+          <LockedNewField label={labels.colCategory} text={labels.newCategory} hint={lockedCategoryHint} />
+        ) : (
+          <Field label={labels.colCategory}>
+            <select
+              className={inputClass}
+              value={themeChoice}
+              onChange={(e) => handleThemeChange(e.target.value)}
+              disabled={treeLoading || !stageChoice}
+            >
+              {!themeChoice ? <option value="">{summaryEmpty}</option> : null}
+              {themes.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.category_label || t.title}
                 </option>
               ))}
-            <option value={CURRICULUM_NEW}>{labels.newCategory}</option>
-          </select>
-        </Field>
+              <option value={CURRICULUM_NEW}>{labels.newCategory}</option>
+            </select>
+          </Field>
+        )}
 
-        <Field label={labels.colModule}>
-          <select
-            className={inputClass}
-            value={moduleChoice}
-            onChange={(e) => handleModuleChange(e.target.value)}
-            disabled={treeLoading || !stageChoice || stageChoice === CURRICULUM_NEW || themeChoice === CURRICULUM_NEW}
-          >
-            {!moduleChoice ? <option value="">{summaryEmpty}</option> : null}
-            {stageChoice !== CURRICULUM_NEW &&
-              themeChoice !== CURRICULUM_NEW &&
-              moduleOptions.map((option) => (
+        {isNewStage || isNewCategory ? (
+          <LockedNewField label={labels.colModule} text={labels.newModule} hint={lockedModuleHint} />
+        ) : (
+          <Field label={labels.colModule}>
+            <select
+              className={inputClass}
+              value={moduleChoice}
+              onChange={(e) => handleModuleChange(e.target.value)}
+              disabled={treeLoading || !themeChoice}
+            >
+              {!moduleChoice ? <option value="">{summaryEmpty}</option> : null}
+              {moduleOptions.map((option) => (
                 <option key={option.moduleId} value={option.moduleId}>
                   {option.label}
                 </option>
               ))}
-            {stageChoice !== CURRICULUM_NEW && themeChoice !== CURRICULUM_NEW && !moduleOptions.length ? (
-              <option value="" disabled>
-                {noModulesHint}
-              </option>
-            ) : null}
-            {stageChoice !== CURRICULUM_NEW && themeChoice !== CURRICULUM_NEW ? (
+              {!moduleOptions.length ? (
+                <option value="" disabled>
+                  {noModulesHint}
+                </option>
+              ) : null}
               <option value={CURRICULUM_NEW}>{labels.newModule}</option>
-            ) : null}
-          </select>
-        </Field>
+            </select>
+          </Field>
+        )}
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
@@ -371,8 +380,8 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
         )}
       </div>
 
-      {showNewPanels && stageChoice === CURRICULUM_NEW ? (
-        <PanelShell title={newStagePanelTitle} variant="new">
+      {showNewPanels && isNewStage ? (
+        <PanelShell title={newStagePanelTitle} variant="new" hint={labels.newStagePanelHint}>
           <div className="grid sm:grid-cols-3 gap-4">
             <Field label={labels.newStageTitle}>
               <input
@@ -425,8 +434,12 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
         </PanelShell>
       ) : null}
 
-      {showNewPanels && showCategorySection && themeChoice === CURRICULUM_NEW ? (
-        <PanelShell title={newCategoryPanelTitle} variant="new">
+      {showNewPanels && isNewCategory ? (
+        <PanelShell
+          title={newCategoryPanelTitle}
+          variant="new"
+          hint={isNewStage ? lockedCategoryHint : labels.newCategoryPanelHint}
+        >
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label={labels.newCategoryTitle}>
               <input
@@ -455,7 +468,7 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
             </Field>
           </div>
         </PanelShell>
-      ) : showNewPanels && selectedTheme && themeChoice !== CURRICULUM_NEW ? (
+      ) : showNewPanels && selectedTheme ? (
         <PanelShell title={selectedCategoryPanelTitle} hint={selectedHint}>
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label={labels.newCategoryTitle || labels.colCategory}>
@@ -468,8 +481,14 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
         </PanelShell>
       ) : null}
 
-      {showNewPanels && showModuleSection && moduleChoice === CURRICULUM_NEW ? (
-        <PanelShell title={newModulePanelTitle} variant="new">
+      {showNewPanels && isNewModule ? (
+        <PanelShell
+          title={newModulePanelTitle}
+          variant="new"
+          hint={
+            isNewStage ? lockedModuleHint : isNewCategory ? lockedModuleHint : labels.newModulePanelHint
+          }
+        >
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label={labels.newModuleTitle}>
               <input
@@ -495,7 +514,7 @@ export default function CurriculumPathPicker({ levels, labels, value, onChange, 
             </Field>
           </div>
         </PanelShell>
-      ) : showNewPanels && selectedModule && moduleChoice !== CURRICULUM_NEW ? (
+      ) : showNewPanels && selectedModule ? (
         <PanelShell title={selectedModulePanelTitle} hint={selectedHint}>
           <div className="grid sm:grid-cols-3 gap-4">
             <Field label={labels.newModuleTitle || labels.colModule}>
