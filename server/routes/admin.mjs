@@ -12,7 +12,6 @@ import {
   isStreamConfigured,
   streamVideoToPlayback,
 } from '../lib/cloudflareStream.mjs'
-import { registerStreamTusCreateRoutes } from '../lib/handleStreamTusCreate.mjs'
 
 function envFlag(name) {
   const v = process.env[name]
@@ -153,8 +152,6 @@ export function registerAdminRoutes(app, { verifyAdminUser }) {
       },
     })
   })
-
-  registerStreamTusCreateRoutes(app, { verifyAdminUser })
 }
 
 export async function upsertOrderFromStripe(session) {

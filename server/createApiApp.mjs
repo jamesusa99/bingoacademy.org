@@ -1,5 +1,6 @@
 import express from 'express'
 import { verifyAdminUser } from './lib/supabaseAdmin.mjs'
+import { registerStreamTusCreateRoutes } from './lib/handleStreamTusCreate.mjs'
 import { registerAdminRoutes } from './routes/admin.mjs'
 import { registerStripeWebhook } from './routes/stripe.mjs'
 import { registerUserAdminRoutes } from './routes/users.mjs'
@@ -16,6 +17,8 @@ export function createApiApp() {
   const app = express()
 
   registerStripeWebhook(app)
+
+  registerStreamTusCreateRoutes(app, { verifyAdminUser })
 
   registerMediaRoutes(app, { verifyAdminUser })
 

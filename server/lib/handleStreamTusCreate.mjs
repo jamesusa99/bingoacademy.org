@@ -19,57 +19,64 @@ function readHeader(req, name) {
  * Used by Express (local/Railway) and Vercel serverless entry.
  */
 export async function handleStreamTusCreate(req, res, { verifyAdminUser }) {
-  const auth = await verifyAdminUser(req)
-  if (!auth.ok) {
-    return res.status(auth.status).json({ error: auth.error })
-  }
-
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN
-  if (!accountId || !apiToken) {
-    return res.status(503).json({ error: 'Cloudflare Stream not configured' })
-  }
-
-  const uploadLength = readHeader(req, 'upload-length')
-  if (!uploadLength) {
-    return res.status(400).json({ error: 'Upload-Length header is required' })
-  }
-
-  let uploadMetadata = String(readHeader(req, 'upload-metadata') || '').trim()
-  const maxDuration = readHeader(req, 'x-stream-max-duration')
-  if (maxDuration) {
-    const encoded = Buffer.from(String(maxDuration).trim()).toString('base64')
-    const part = `maxDurationSeconds ${encoded}`
-    uploadMetadata = uploadMetadata ? `${uploadMetadata},${part}` : part
-  }
-
-  const cfRes = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${accountId}/stream?direct_user=true`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiToken}`,
-        'Tus-Resumable': '1.0.0',
-        'Upload-Length': String(uploadLength),
-        ...(uploadMetadata ? { 'Upload-Metadata': uploadMetadata } : {}),
-      },
+  try {
+    const auth = await verifyAdminUser(req)
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error })
     }
-  )
 
-  const location = cfRes.headers.get('Location')
-  if (!cfRes.ok || !location) {
-    const detail = await cfRes.text().catch(() => '')
-    console.error('[stream tus-create]', cfRes.status, detail.slice(0, 300))
-    return res.status(502).json({
-      error: cloudflareStreamErrorMessage(
-        detail ? { errors: [{ message: detail.slice(0, 200) }] } : {}
-      ),
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
+    const apiToken = process.env.CLOUDFLARE_API_TOKEN
+    if (!accountId || !apiToken) {
+      return res.status(503).json({ error: 'Cloudflare Stream not configured' })
+    }
+
+    const uploadLength = readHeader(req, 'upload-length')
+    if (!uploadLength) {
+      return res.status(400).json({ error: 'Upload-Length header is required' })
+    }
+
+    let uploadMetadata = String(readHeader(req, 'upload-metadata') || '').trim()
+    const maxDuration = readHeader(req, 'x-stream-max-duration')
+    if (maxDuration) {
+      const encoded = Buffer.from(String(maxDuration).trim()).toString('base64')
+      const part = `maxDurationSeconds ${encoded}`
+      uploadMetadata = uploadMetadata ? `${uploadMetadata},${part}` : part
+    }
+
+    const cfRes = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/stream?direct_user=true`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          'Tus-Resumable': '1.0.0',
+          'Upload-Length': String(uploadLength),
+          ...(uploadMetadata ? { 'Upload-Metadata': uploadMetadata } : {}),
+        },
+      }
+    )
+
+    const location = cfRes.headers.get('Location')
+    if (!cfRes.ok || !location) {
+      const detail = await cfRes.text().catch(() => '')
+      console.error('[stream tus-create]', cfRes.status, detail.slice(0, 300))
+      return res.status(502).json({
+        error: cloudflareStreamErrorMessage(
+          detail ? { errors: [{ message: detail.slice(0, 200) }] } : {}
+        ),
+      })
+    }
+
+    res.setHeader('Access-Control-Expose-Headers', 'Location')
+    res.setHeader('Location', location)
+    return res.status(201).end()
+  } catch (err) {
+    console.error('[stream tus-create]', err)
+    return res.status(500).json({
+      error: err instanceof Error ? err.message : 'Tus create failed',
     })
   }
-
-  res.setHeader('Access-Control-Expose-Headers', 'Location')
-  res.setHeader('Location', location)
-  return res.status(201).end()
 }
 
 export function setStreamTusCreateCors(res) {

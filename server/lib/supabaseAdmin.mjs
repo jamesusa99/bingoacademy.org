@@ -34,7 +34,13 @@ export async function verifyAdminUser(req) {
   }
 
   const secret = process.env.ADMIN_API_SECRET
-  const authHeader = req.headers.authorization || ''
+  const authHeader =
+    (typeof req.headers?.get === 'function'
+      ? req.headers.get('authorization') || req.headers.get('Authorization')
+      : null) ||
+    req.headers?.authorization ||
+    req.headers?.Authorization ||
+    ''
   if (secret && authHeader === `Bearer ${secret}`) {
     return { ok: true, user: { id: 'service', email: 'service@internal' }, via: 'secret' }
   }
