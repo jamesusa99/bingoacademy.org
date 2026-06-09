@@ -8,6 +8,9 @@ export const STREAM_BASIC_UPLOAD_MAX_BYTES = 200 * 1024 * 1024
 /** Prefer tus at this size+ — more reliable than single POST for ~50–200 MB files */
 export const STREAM_TUS_RECOMMENDED_MIN_BYTES = 50 * 1024 * 1024
 
+const TUS_CHUNK_BYTES = 5 * 1024 * 1024
+const TUS_MAX_ATTEMPTS = 3
+
 export function formatBytes(bytes) {
   if (bytes == null || Number.isNaN(bytes)) return '—'
   const gb = bytes / (1024 * 1024 * 1024)
@@ -29,6 +32,38 @@ export function extractStreamUidFromUrl(url) {
 
 function bytesFullySent(loaded, total) {
   return total > 0 && loaded >= total * 0.99
+}
+
+/** Stale tus-js-client fingerprints can trigger broken HEAD resume to Cloudflare. */
+function clearStaleTusStorage() {
+  try {
+    const keys = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key?.startsWith('tus::')) keys.push(key)
+    }
+    keys.forEach((key) => localStorage.removeItem(key))
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+function isTusResumeOrNetworkError(err) {
+  const msg = String(err?.message || err || '').toLowerCase()
+  return (
+    msg.includes('failed to resume') ||
+    msg.includes('response code: n/a') ||
+    (msg.includes('tus:') && msg.includes('head'))
+  )
+}
+
+function formatTusNetworkError(err, attempt, maxAttempts) {
+  const base =
+    '无法连接 Cloudflare 视频上传节点（upload.cloudflarestream.com），可能被网络、防火墙或地区限制拦截。请更换稳定网络或使用 VPN 后重试。'
+  if (attempt >= maxAttempts) {
+    return new Error(`${base} （已重试 ${maxAttempts} 次）`)
+  }
+  return err instanceof Error ? err : new Error(String(err || 'Tus upload failed'))
 }
 
 /**
@@ -131,36 +166,45 @@ export function uploadFileToStreamBasic(uploadURL, file, opts = {}) {
   })
 }
 
-/**
- * Resumable tus upload for files over 200 MB (Cloudflare requirement).
- * @returns {Promise<string>} Cloudflare video UID
- */
-export async function uploadFileToStreamTus(file, { onProgress, maxDurationSeconds, onUid } = {}) {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
+function runSingleTusUpload(file, { onProgress, maxDurationSeconds, onUid } = {}) {
   return new Promise((resolve, reject) => {
     let uidReported = false
+    let uploadRef = null
 
     const upload = new tus.Upload(file, {
       endpoint: '/api/admin/stream/tus-create',
-      chunkSize: 8 * 1024 * 1024,
-      retryDelays: [0, 2000, 5000, 10000, 20000],
+      chunkSize: TUS_CHUNK_BYTES,
+      retryDelays: [0, 1000, 3000, 5000, 10000],
+      /** Avoid stale localStorage resume → broken HEAD to expired Cloudflare URLs */
+      storeFingerprintForResuming: false,
+      removeFingerprintOnSuccess: true,
       metadata: {
         filename: file.name,
         filetype: file.type || 'video/mp4',
       },
-      onBeforeRequest: (req) => {
-        if (session?.access_token) {
-          req.setHeader('Authorization', `Bearer ${session.access_token}`)
+      onShouldRetry(err, retryAttempt) {
+        const method = err?.originalRequest?.getMethod?.()
+        const status = err?.originalResponse?.getStatus?.()
+        if (method === 'HEAD' && (status == null || status === 404 || status === 410)) {
+          return false
         }
-        if (maxDurationSeconds && req.getMethod() === 'POST') {
-          req.setHeader('X-Stream-Max-Duration', String(maxDurationSeconds))
+        return retryAttempt <= 5
+      },
+      onBeforeRequest: async (req) => {
+        if (req.getMethod() === 'POST') {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
+          if (session?.access_token) {
+            req.setHeader('Authorization', `Bearer ${session.access_token}`)
+          }
+          if (maxDurationSeconds) {
+            req.setHeader('X-Stream-Max-Duration', String(maxDurationSeconds))
+          }
         }
       },
       onUploadUrlAvailable: () => {
-        const uid = extractStreamUidFromUrl(upload.url)
+        const uid = extractStreamUidFromUrl(uploadRef?.url)
         if (uid && !uidReported) {
           uidReported = true
           onUid?.(uid)
@@ -175,7 +219,7 @@ export async function uploadFileToStreamTus(file, { onProgress, maxDurationSecon
         reject(err instanceof Error ? err : new Error(err?.message || 'Tus upload failed'))
       },
       onSuccess: () => {
-        const uid = extractStreamUidFromUrl(upload.url)
+        const uid = extractStreamUidFromUrl(uploadRef?.url)
         if (uid) {
           if (!uidReported) onUid?.(uid)
           resolve(uid)
@@ -185,8 +229,40 @@ export async function uploadFileToStreamTus(file, { onProgress, maxDurationSecon
       },
     })
 
+    uploadRef = upload
     upload.start()
   })
+}
+
+/**
+ * Resumable tus upload (≥50 MB). Retries with a fresh Cloudflare session if resume HEAD fails.
+ * @returns {Promise<string>} Cloudflare video UID
+ */
+export async function uploadFileToStreamTus(file, { onProgress, maxDurationSeconds, onUid } = {}) {
+  clearStaleTusStorage()
+
+  let lastErr = null
+  for (let attempt = 1; attempt <= TUS_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      if (attempt > 1) {
+        clearStaleTusStorage()
+        onProgress?.(0)
+      }
+      return await runSingleTusUpload(file, { onProgress, maxDurationSeconds, onUid })
+    } catch (err) {
+      lastErr = err
+      if (isTusResumeOrNetworkError(err) && attempt < TUS_MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 800 * attempt))
+        continue
+      }
+      if (isTusResumeOrNetworkError(err)) {
+        throw formatTusNetworkError(err, attempt, TUS_MAX_ATTEMPTS)
+      }
+      throw err instanceof Error ? err : new Error(String(err || 'Tus upload failed'))
+    }
+  }
+
+  throw formatTusNetworkError(lastErr, TUS_MAX_ATTEMPTS, TUS_MAX_ATTEMPTS)
 }
 
 /**
