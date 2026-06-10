@@ -15,6 +15,14 @@ function sortByOrder(a, b) {
   return (a.sort_order ?? 0) - (b.sort_order ?? 0)
 }
 
+function isPublicModuleStatus(status) {
+  return status === 'live' || status === 'coming-soon'
+}
+
+function isPublicModuleDetail(mod) {
+  return mod && isPublicModuleStatus(mod.status)
+}
+
 function mapStoreTree(levels, extrasByModuleId = new Map()) {
   return [...(levels || [])].sort(sortByOrder).map((level) => ({
     id: level.slug,
@@ -36,24 +44,26 @@ function mapStoreTree(levels, extrasByModuleId = new Map()) {
         introHtml: theme.intro_html || '',
         status: theme.status || 'live',
         modules: [...(theme.modules || [])]
-          .filter((m) => m.status === 'live')
+          .filter((m) => isPublicModuleStatus(m.status))
           .sort(sortByOrder)
           .map((mod) => {
-            const extrasCents = extrasByModuleId.get(mod.id) || 0
-            const baseCents = mod.price_cents ?? 0
+            const comingSoon = mod.status === 'coming-soon'
+            const extrasCents = comingSoon ? 0 : extrasByModuleId.get(mod.id) || 0
+            const baseCents = comingSoon ? null : mod.price_cents ?? 0
             return {
             id: mod.slug,
             catalogSlug: mod.catalog_slug,
             title: mod.title,
+            status: mod.status || 'live',
             coverUrl: mod.cover_url || null,
             summary: mod.summary || '',
             learningObjectives: mod.learning_objectives || '',
             learningOutcomes: mod.learning_outcomes || '',
             introHtml: mod.summary || '',
-            priceCents: baseCents || null,
-            extrasPriceCents: extrasCents || null,
-            totalPriceCents: baseCents > 0 ? baseCents : null,
-            compareAtCents: mod.compare_at_cents ?? null,
+            priceCents: comingSoon ? null : baseCents || null,
+            extrasPriceCents: comingSoon ? null : extrasCents || null,
+            totalPriceCents: comingSoon ? null : baseCents > 0 ? baseCents : null,
+            compareAtCents: comingSoon ? null : mod.compare_at_cents ?? null,
             currency: mod.currency || 'usd',
             marketingTags: mod.marketing_tags || [],
             lessonCount: mod.lessons?.length ?? 0,
@@ -166,18 +176,23 @@ export function registerIoaiRoutes(app) {
       .maybeSingle()
 
     if (error) return res.status(502).json({ error: error.message })
-    if (!mod) return res.status(404).json({ error: 'Module not found' })
+    if (!isPublicModuleDetail(mod)) return res.status(404).json({ error: 'Module not found' })
 
+    const comingSoon = mod.status === 'coming-soon'
     const labMaterials = (await listLabMaterialsForModule(admin, mod.id)).map(mapLabMaterialRow).filter(Boolean)
-    const extrasPriceCents = labMaterials.reduce((sum, row) => sum + (row.priceCents || 0), 0)
-    const totalPriceCents = mod.price_cents ?? 0
+    const extrasPriceCents = comingSoon
+      ? null
+      : labMaterials.reduce((sum, row) => sum + (row.priceCents || 0), 0)
+    const totalPriceCents = comingSoon ? null : mod.price_cents ?? 0
 
     return res.json({
       module: {
         ...mod,
+        price_cents: comingSoon ? null : mod.price_cents,
+        compare_at_cents: comingSoon ? null : mod.compare_at_cents,
         extrasPriceCents: extrasPriceCents || null,
         totalPriceCents: totalPriceCents > 0 ? totalPriceCents : null,
-        labMaterials,
+        labMaterials: comingSoon ? labMaterials.map((item) => ({ ...item, priceCents: null })) : labMaterials,
       },
     })
   })

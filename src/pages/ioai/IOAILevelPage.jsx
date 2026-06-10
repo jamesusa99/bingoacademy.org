@@ -4,16 +4,19 @@ import PageContent from '../../components/PageContent'
 import PageMeta from '../../components/PageMeta'
 import { useAuth } from '../../contexts/AuthContext'
 import { useIOAIAccess, useIOAIStore } from '../../hooks/useIOAIStore'
-import { findLevel, formatIoaiPrice } from '../../lib/ioaiStore'
+import { findLevel, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable } from '../../lib/ioaiStore'
 import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
+import { COURSES_PORTAL } from '../../config/coursesPortal'
 
 function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate }) {
   const [loading, setLoading] = useState(false)
   const owned = hasModule(mod.catalogSlug)
+  const comingSoon = isIoaiModuleComingSoon(mod)
+  const canPurchase = isIoaiModulePurchasable(mod)
   const price = formatIoaiPrice(mod.priceCents, mod.currency)
-  const compare = mod.compareAtCents ? formatIoaiPrice(mod.compareAtCents, mod.currency) : null
+  const compare = !comingSoon && mod.compareAtCents ? formatIoaiPrice(mod.compareAtCents, mod.currency) : null
 
   const buy = (e) => {
     e.preventDefault()
@@ -36,7 +39,14 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
   return (
     <div className="card p-4 flex flex-col h-full hover:shadow-md transition">
       <Link to={`/courses/module/${encodeURIComponent(mod.catalogSlug)}`} className="flex-1 flex flex-col">
-        <h3 className="font-semibold text-bingo-dark text-sm">{mod.title}</h3>
+        <h3 className="font-semibold text-bingo-dark text-sm">
+          {mod.title}
+          {comingSoon ? (
+            <span className="ml-1.5 inline-flex align-middle text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+              {COURSES_PORTAL.comingSoonBadge}
+            </span>
+          ) : null}
+        </h3>
         <p className="text-xs text-slate-600 mt-1 flex-1 line-clamp-2">{mod.introHtml || `${mod.lessonCount} lessons`}</p>
         {(mod.marketingTags || []).length ? (
           <div className="flex flex-wrap gap-1 mt-2">
@@ -60,6 +70,10 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
           >
             Owned
           </Link>
+        ) : comingSoon || !canPurchase ? (
+          <span className="text-xs font-semibold text-amber-700 px-3 py-1.5 rounded-lg border border-amber-200">
+            {COURSES_PORTAL.comingSoonBadge}
+          </span>
         ) : (
           <button
             type="button"

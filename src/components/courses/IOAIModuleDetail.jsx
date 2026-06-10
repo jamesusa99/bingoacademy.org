@@ -5,7 +5,7 @@ import PageContent from '../PageContent'
 import PageMeta from '../PageMeta'
 import { useAuth } from '../../contexts/AuthContext'
 import { useIOAIAccess, useIOAIStore } from '../../hooks/useIOAIStore'
-import { buildLessonModuleMap, findModule, fetchIoaiModule, formatIoaiPrice, resolveLessonCatalogSlug } from '../../lib/ioaiStore'
+import { buildLessonModuleMap, findModule, fetchIoaiModule, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable, mapDetailToFoundContext, mapDetailToStoreModule, resolveLessonCatalogSlug } from '../../lib/ioaiStore'
 import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig, confirmCheckoutSession } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
@@ -84,10 +84,19 @@ export default function IOAIModuleDetail({
     }
   }, [catalogSlug])
 
-  const found = useMemo(() => findModule(levels, catalogSlug), [levels, catalogSlug])
+  const storeMatch = useMemo(() => findModule(levels, catalogSlug), [levels, catalogSlug])
+  const mod = useMemo(
+    () => storeMatch?.module ?? mapDetailToStoreModule(detail),
+    [storeMatch, detail]
+  )
+  const found = useMemo(
+    () => storeMatch ?? mapDetailToFoundContext(detail),
+    [storeMatch, detail]
+  )
   const lessonModuleMap = useMemo(() => buildLessonModuleMap(levels), [levels])
   const owned = hasModule(catalogSlug)
-  const mod = found?.module
+  const comingSoon = isIoaiModuleComingSoon(mod ?? detail)
+  const canPurchase = isIoaiModulePurchasable(mod ?? detail) && !owned
 
   const lessons = useMemo(() => {
     const mapLesson = (lesson, fromApi = false) => {
@@ -121,7 +130,9 @@ export default function IOAIModuleDetail({
     return lessons.find((l) => l.cloudflareVideoId) || null
   }, [lessons])
 
-  const baseCents = mod?.priceCents ?? detail?.price_cents ?? null
+  const baseCents = comingSoon
+    ? null
+    : mod?.priceCents ?? detail?.price_cents ?? null
   const labMaterials = detail?.labMaterials || []
   const currency = mod?.currency || detail?.currency || 'usd'
 
@@ -129,21 +140,26 @@ export default function IOAIModuleDetail({
 
   const selectedExtrasCents = useMemo(
     () =>
-      labMaterials.reduce((sum, item) => {
-        if (!selectedAddons.has(item.slug)) return sum
-        return sum + (item.priceCents || 0)
-      }, 0),
-    [labMaterials, selectedAddons]
+      comingSoon
+        ? 0
+        : labMaterials.reduce((sum, item) => {
+            if (!selectedAddons.has(item.slug)) return sum
+            return sum + (item.priceCents || 0)
+          }, 0),
+    [comingSoon, labMaterials, selectedAddons]
   )
 
-  const totalCents = baseCents != null ? baseCents + selectedExtrasCents : null
-  const price = totalCents != null ? formatIoaiPrice(totalCents, currency) : null
-  const compare = mod?.compareAtCents
-    ? formatIoaiPrice(mod.compareAtCents, mod.currency)
-    : detail?.compare_at_cents
-      ? formatIoaiPrice(detail.compare_at_cents, detail?.currency)
-      : null
-  const availableExtrasCents = labMaterials.reduce((sum, item) => sum + (item.priceCents || 0), 0)
+  const totalCents = !comingSoon && baseCents != null ? baseCents + selectedExtrasCents : null
+  const price = formatIoaiPrice(totalCents, currency)
+  const compare =
+    !comingSoon && mod?.compareAtCents
+      ? formatIoaiPrice(mod.compareAtCents, mod.currency)
+      : !comingSoon && detail?.compare_at_cents
+        ? formatIoaiPrice(detail.compare_at_cents, detail?.currency)
+        : null
+  const availableExtrasCents = comingSoon
+    ? 0
+    : labMaterials.reduce((sum, item) => sum + (item.priceCents || 0), 0)
 
   const moduleInfo = useMemo(
     () => buildModuleInfoContent({ mod, detail }),
@@ -220,11 +236,16 @@ export default function IOAIModuleDetail({
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 items-start">
             <div>
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
-                {found.level.emoji} {categoryLabel}
+                {found?.level?.emoji ? `${found.level.emoji} ` : ''}{categoryLabel}
               </span>
 
               <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mt-4 tracking-tight">
                 {mod.title}
+                {comingSoon ? (
+                  <span className="ml-2 inline-flex align-middle text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
+                    {COURSES_PORTAL.comingSoonBadge}
+                  </span>
+                ) : null}
               </h1>
 
               <p className="text-base text-slate-600 mt-3 leading-relaxed max-w-xl">{subtitle}</p>
@@ -252,7 +273,7 @@ export default function IOAIModuleDetail({
                     <span className="text-base text-slate-400 line-through pb-1">{compare}</span>
                   ) : null}
                   <span className="text-3xl font-bold text-primary">{price}</span>
-                  {availableExtrasCents > 0 && selectedExtrasCents === 0 ? (
+                  {!comingSoon && availableExtrasCents > 0 && selectedExtrasCents === 0 ? (
                     <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-1 rounded-full mb-1">
                       {COURSES_PORTAL.moduleOptionalAddons}
                     </span>
@@ -274,11 +295,15 @@ export default function IOAIModuleDetail({
                         </Link>
                       ) : null}
                     </>
+                  ) : comingSoon ? (
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full">
+                      {COURSES_PORTAL.comingSoonBadge}
+                    </span>
                   ) : (
                     <button
                       type="button"
                       onClick={buy}
-                      disabled={checkoutLoading || accessLoading}
+                      disabled={checkoutLoading || accessLoading || !canPurchase}
                       className="btn-primary text-sm px-6 py-2.5 disabled:opacity-60"
                     >
                       {checkoutLoading ? COURSES_PORTAL.redirecting : COURSES_PORTAL.buyModule(price)}
@@ -286,7 +311,11 @@ export default function IOAIModuleDetail({
                   )}
                 </div>
 
-                {baseCents != null ? (
+                {comingSoon ? (
+                  <p className="text-xs text-amber-700 mt-3">{COURSES_PORTAL.moduleComingSoonHint}</p>
+                ) : null}
+
+                {!comingSoon && baseCents != null ? (
                   <p className="text-xs text-slate-500 mt-3">
                     {COURSES_PORTAL.moduleBasePrice}: {formatIoaiPrice(baseCents, currency)}
                     {availableExtrasCents > 0
@@ -304,6 +333,7 @@ export default function IOAIModuleDetail({
               moduleTitle={mod.title}
               onBuy={buy}
               checkoutLoading={checkoutLoading}
+              canPurchase={canPurchase}
             />
           </div>
         </header>
@@ -324,6 +354,8 @@ export default function IOAIModuleDetail({
           onBuy={buy}
           checkoutLoading={checkoutLoading}
           accessLoading={accessLoading}
+          canPurchase={canPurchase}
+          comingSoon={comingSoon}
         />
 
         {labMaterials.length > 0 ? (
@@ -341,7 +373,7 @@ export default function IOAIModuleDetail({
                 return (
                   <li key={item.slug} className="card p-4 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex gap-3 min-w-0 flex-1 items-start">
-                      {!owned && item.priceCents ? (
+                      {!owned && !comingSoon && item.priceCents ? (
                         <input
                           type="checkbox"
                           checked={selected}
@@ -372,12 +404,18 @@ export default function IOAIModuleDetail({
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
-                      {itemPrice ? (
+                      {itemPrice && !comingSoon ? (
                         <span className="text-sm font-semibold text-primary">{itemPrice}</span>
+                      ) : comingSoon ? (
+                        <span className="text-sm font-semibold text-slate-400">—</span>
                       ) : null}
                       {addonOwned ? (
                         <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                           Purchased
+                        </span>
+                      ) : comingSoon ? (
+                        <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                          {COURSES_PORTAL.comingSoonBadge}
                         </span>
                       ) : (
                         <Link

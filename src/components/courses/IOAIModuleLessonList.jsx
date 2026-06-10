@@ -32,6 +32,8 @@ export default function IOAIModuleLessonList({
   onBuy,
   checkoutLoading,
   accessLoading,
+  canPurchase = true,
+  comingSoon = false,
 }) {
   const unlockedCount = useMemo(
     () =>
@@ -169,18 +171,28 @@ export default function IOAIModuleLessonList({
                 <Lock className="w-5 h-5 text-slate-500" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold text-sm text-bingo-dark">{COURSES_PORTAL.moduleUnlockAllTitle}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{COURSES_PORTAL.moduleUnlockAllDesc}</p>
+                <p className="font-semibold text-sm text-bingo-dark">
+                  {comingSoon ? COURSES_PORTAL.comingSoonBadge : COURSES_PORTAL.moduleUnlockAllTitle}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {comingSoon ? COURSES_PORTAL.moduleComingSoonHint : COURSES_PORTAL.moduleUnlockAllDesc}
+                </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={onBuy}
-              disabled={checkoutLoading || accessLoading}
-              className="btn-primary text-sm px-5 py-2.5 shrink-0 disabled:opacity-60"
-            >
-              {checkoutLoading ? COURSES_PORTAL.redirecting : COURSES_PORTAL.buyModule(price)}
-            </button>
+            {canPurchase ? (
+              <button
+                type="button"
+                onClick={onBuy}
+                disabled={checkoutLoading || accessLoading}
+                className="btn-primary text-sm px-5 py-2.5 shrink-0 disabled:opacity-60"
+              >
+                {checkoutLoading ? COURSES_PORTAL.redirecting : COURSES_PORTAL.buyModule(price)}
+              </button>
+            ) : (
+              <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full shrink-0">
+                {COURSES_PORTAL.comingSoonBadge}
+              </span>
+            )}
           </div>
         ) : null}
       </div>

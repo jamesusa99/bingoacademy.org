@@ -322,6 +322,10 @@ export async function userHasModuleAccess(admin, userId, moduleCatalogSlug, { en
   return unlocked.has(moduleCatalogSlug.trim())
 }
 
+export function isPublicIoaiModuleStatus(status) {
+  return status === 'live' || status === 'coming-soon'
+}
+
 /** IOAI L4 with configured video — preview allowed before L3 purchase (client caps playback). */
 export async function userCanPreviewLesson(admin, lessonSlug) {
   if (!admin || !lessonSlug?.trim()) return false
@@ -344,7 +348,7 @@ export async function userCanPreviewLesson(admin, lessonSlug) {
 
   if (!lesson || lesson.status === 'hidden' || lesson.status === 'draft') return false
   if (!lesson.cloudflare_video_id?.trim()) return false
-  if (lesson.module?.status !== 'live') return false
+  if (!isPublicIoaiModuleStatus(lesson.module?.status)) return false
   if (lesson.module?.theme?.level?.product_line !== 'ioai') return false
   return true
 }

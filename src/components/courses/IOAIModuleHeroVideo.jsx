@@ -23,6 +23,7 @@ export default function IOAIModuleHeroVideo({
   moduleTitle,
   onBuy,
   checkoutLoading,
+  canPurchase = true,
 }) {
   const videoRef = useRef(null)
   const canPlayFull = owned && lesson?.cloudflareVideoId
@@ -150,14 +151,20 @@ export default function IOAIModuleHeroVideo({
             <p className="text-lg font-bold text-white mb-1">{COURSES_PORTAL.previewEndedTitle}</p>
             <p className="text-sm text-slate-400 max-w-sm mb-4">{COURSES_PORTAL.moduleUnlockAllDesc}</p>
             <div className="flex flex-wrap gap-2 justify-center">
-              <button
-                type="button"
-                onClick={onBuy}
-                disabled={checkoutLoading}
-                className="btn-primary text-sm px-4 py-2 disabled:opacity-60"
-              >
-                {checkoutLoading ? COURSES_PORTAL.redirecting : COURSES_PORTAL.buyModuleShort}
-              </button>
+              {canPurchase ? (
+                <button
+                  type="button"
+                  onClick={onBuy}
+                  disabled={checkoutLoading}
+                  className="btn-primary text-sm px-4 py-2 disabled:opacity-60"
+                >
+                  {checkoutLoading ? COURSES_PORTAL.redirecting : COURSES_PORTAL.buyModuleShort}
+                </button>
+              ) : (
+                <span className="text-sm font-semibold text-amber-200 bg-amber-500/20 px-4 py-2 rounded-lg">
+                  {COURSES_PORTAL.comingSoonBadge}
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => preview.replay(videoRef.current)}

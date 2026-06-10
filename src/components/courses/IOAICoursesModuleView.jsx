@@ -4,7 +4,7 @@ import { PRODUCT_LINES } from '../../config/products'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { useIOAIAccess, useIOAIStore } from '../../hooks/useIOAIStore'
-import { flattenIoaiModules, formatIoaiPrice } from '../../lib/ioaiStore'
+import { flattenIoaiModules, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable } from '../../lib/ioaiStore'
 import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
@@ -17,8 +17,10 @@ import ModuleCoverImage from './ModuleCoverImage'
 function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate }) {
   const [loading, setLoading] = useState(false)
   const owned = hasModule(mod.catalogSlug)
+  const comingSoon = isIoaiModuleComingSoon(mod)
+  const canPurchase = isIoaiModulePurchasable(mod)
   const price = formatIoaiPrice(mod.priceCents ?? mod.totalPriceCents, mod.currency)
-  const hasOptionalAddons = (mod.extrasPriceCents ?? 0) > 0
+  const hasOptionalAddons = !comingSoon && (mod.extrasPriceCents ?? 0) > 0
   const detailPath = `/courses/module/${encodeURIComponent(mod.catalogSlug)}`
 
   const buy = (e) => {
@@ -66,6 +68,11 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
         <Link to={detailPath}>
           <h3 className="font-semibold text-white text-sm leading-snug mb-1 group-hover:text-cyan-300 transition">
             {mod.title}
+            {comingSoon ? (
+              <span className="ml-1.5 inline-flex align-middle text-[10px] font-semibold text-amber-300/95 bg-amber-500/15 px-1.5 py-0.5 rounded">
+                {COURSES_PORTAL.comingSoonBadge}
+              </span>
+            ) : null}
           </h3>
         </Link>
         <p className="text-[10px] text-slate-500 mb-2">
@@ -88,6 +95,10 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
             >
               {COURSES_PORTAL.moduleUnlocked}
             </Link>
+          ) : comingSoon || !canPurchase ? (
+            <span className="text-xs font-semibold text-amber-300/90 px-3 py-1.5 rounded-lg border border-amber-500/30">
+              {COURSES_PORTAL.comingSoonBadge}
+            </span>
           ) : (
             <button
               type="button"

@@ -22,6 +22,8 @@ export const COURSES_PORTAL = {
   courseCount: (n) => `${n} course${n === 1 ? '' : 's'}`,
   emptyCategory: 'No courses in this category yet. Check back soon.',
   comingSoonBadge: 'Coming soon',
+  moduleComingSoonHint:
+    'This unit is not available for purchase yet. Browse the overview and lessons below to see what is included.',
   viewDetails: 'View details',
   materialsMall: 'Materials store',
   certTitle: 'Bingo AI Academy Certification',
