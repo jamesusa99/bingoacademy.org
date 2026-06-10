@@ -39,14 +39,7 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
   return (
     <div className="card p-4 flex flex-col h-full hover:shadow-md transition">
       <Link to={`/courses/module/${encodeURIComponent(mod.catalogSlug)}`} className="flex-1 flex flex-col">
-        <h3 className="font-semibold text-bingo-dark text-sm">
-          {mod.title}
-          {comingSoon ? (
-            <span className="ml-1.5 inline-flex align-middle text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
-              {COURSES_PORTAL.comingSoonBadge}
-            </span>
-          ) : null}
-        </h3>
+        <h3 className="font-semibold text-bingo-dark text-sm">{mod.title}</h3>
         <p className="text-xs text-slate-600 mt-1 flex-1 line-clamp-2">{mod.introHtml || `${mod.lessonCount} lessons`}</p>
         {(mod.marketingTags || []).length ? (
           <div className="flex flex-wrap gap-1 mt-2">

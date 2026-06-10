@@ -241,11 +241,6 @@ export default function IOAIModuleDetail({
 
               <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mt-4 tracking-tight">
                 {mod.title}
-                {comingSoon ? (
-                  <span className="ml-2 inline-flex align-middle text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
-                    {COURSES_PORTAL.comingSoonBadge}
-                  </span>
-                ) : null}
               </h1>
 
               <p className="text-base text-slate-600 mt-3 leading-relaxed max-w-xl">{subtitle}</p>

@@ -68,11 +68,6 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
         <Link to={detailPath}>
           <h3 className="font-semibold text-white text-sm leading-snug mb-1 group-hover:text-cyan-300 transition">
             {mod.title}
-            {comingSoon ? (
-              <span className="ml-1.5 inline-flex align-middle text-[10px] font-semibold text-amber-300/95 bg-amber-500/15 px-1.5 py-0.5 rounded">
-                {COURSES_PORTAL.comingSoonBadge}
-              </span>
-            ) : null}
           </h3>
         </Link>
         <p className="text-[10px] text-slate-500 mb-2">
