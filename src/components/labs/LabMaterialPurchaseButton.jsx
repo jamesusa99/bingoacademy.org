@@ -6,8 +6,9 @@ import { initiateCoursePurchase } from '../../lib/coursePurchase'
 import { useAuth } from '../../contexts/AuthContext'
 import { fetchPaymentsConfig } from '../../lib/checkout'
 import { useEffect } from 'react'
+import { LAB_EXPERIMENTS_PORTAL } from '../../config/labExperiments'
 
-export default function LabMaterialPurchaseButton({ item, compact = false }) {
+export default function LabMaterialPurchaseButton({ item, compact = false, sidebar = false }) {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
   const [stripeCheckout, setStripeCheckout] = useState(false)
@@ -31,6 +32,7 @@ export default function LabMaterialPurchaseButton({ item, compact = false }) {
       isAuthenticated,
       navigate,
       setCheckoutLoading: setLoading,
+      returnPath: `/labs/pack/${encodeURIComponent(item.id)}`,
       onDemoUnlock: {
         lesson: (courseId) => {
           purchaseCourseSlug(courseId || item.id)
@@ -40,14 +42,28 @@ export default function LabMaterialPurchaseButton({ item, compact = false }) {
     })
   }
 
+  const label = loading
+    ? '…'
+    : sidebar
+      ? priceLabel
+        ? `${LAB_EXPERIMENTS_PORTAL.buyPack} · ${priceLabel}`
+        : LAB_EXPERIMENTS_PORTAL.buyPack
+      : priceLabel
+        ? `Buy · ${priceLabel}`
+        : 'Buy now'
+
   return (
     <button
       type="button"
       onClick={buy}
       disabled={loading}
-      className={`${compact ? 'text-xs px-3 py-2 min-h-[40px]' : 'text-sm px-4 py-2'} btn-primary inline-flex items-center disabled:opacity-60`}
+      className={
+        sidebar
+          ? 'w-full rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold text-sm py-3 transition disabled:opacity-60'
+          : `${compact ? 'text-xs px-3 py-2 min-h-[40px]' : 'text-sm px-4 py-2'} btn-primary inline-flex items-center disabled:opacity-60`
+      }
     >
-      {loading ? '…' : priceLabel ? `Buy · ${priceLabel}` : 'Buy now'}
+      {label}
     </button>
   )
 }
@@ -62,7 +78,7 @@ export function LabMaterialCardActions({ item, soon }) {
         <span className="text-sm font-bold text-primary mr-auto">{priceLabel}</span>
       ) : null}
       <Link
-        to={`/courses/detail/${item.id}`}
+        to={`/labs/pack/${item.id}`}
         className="text-xs px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 min-h-[40px] inline-flex items-center"
       >
         View details

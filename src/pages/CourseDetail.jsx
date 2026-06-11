@@ -35,10 +35,9 @@ import SegmentPlayer from '../components/courses/SegmentPlayer'
 import CourseLessonList from '../components/courses/CourseLessonList'
 import CourseTrackOverview from '../components/courses/CourseTrackOverview'
 import CoursePreviewBar from '../components/courses/CoursePreviewBar'
-import LabMaterialCourseDetail from '../components/courses/LabMaterialCourseDetail'
 import PageContent from '../components/PageContent'
 import { confirmCheckoutSession } from '../lib/checkout'
-import { labMaterialTypeLabel, normalizeLabMaterialSub } from '../config/labMaterials'
+import { normalizeLabMaterialSub } from '../config/labMaterials'
 import { labsPath } from '../config/productLabs'
 
 export default function CourseDetail() {
@@ -224,71 +223,8 @@ export default function CourseDetail() {
     ? labsPath(item.line, normalizeLabMaterialSub(item.sub, item.line))
     : `/courses?line=${item.line}&sub=${item.sub}`
 
-  if (isLabMaterial && !comingSoon) {
-    return (
-      <PageContent className={`py-6 sm:py-8 ${pageWidth} mx-auto`}>
-        {previewMode ? <CoursePreviewBar course={item} fromAdmin={fromAdmin} /> : null}
-
-        {!previewMode ? (
-          <Link to={backHref} className="text-primary text-sm hover:underline">
-            ← {COURSES_PORTAL.backToLabs}
-          </Link>
-        ) : null}
-
-        <div className="card p-5 mt-4 mb-6">
-          <div className="flex gap-4 flex-wrap">
-            <div
-              className={`w-20 h-20 rounded-xl bg-gradient-to-br ${line.gradient} flex items-center justify-center text-3xl shrink-0 border ${line.border} overflow-hidden`}
-            >
-              {item.thumbnail ? (
-                <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
-              ) : (
-                line.icon
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
-                  {labMaterialTypeLabel(item.sub, item.line)}
-                </span>
-                {hasAccess ? (
-                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                    {COURSES_PORTAL.videoFullBadge}
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                    {COURSES_PORTAL.statusEnrolling}
-                  </span>
-                )}
-              </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-bingo-dark">{item.name}</h1>
-              {item.nameEn && item.nameEn !== item.name ? (
-                <p className="text-xs text-slate-500 mt-0.5">{item.nameEn}</p>
-              ) : null}
-              <p className="text-xs text-slate-500 mt-2">
-                {line.name} · {item.hours}
-                {item.price ? ` · ${item.price}` : ''}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {checkoutMessage ? (
-          <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-            {checkoutMessage}
-          </div>
-        ) : null}
-
-        <LabMaterialCourseDetail
-          item={item}
-          hasAccess={hasAccess}
-          hasTrack={hasTrack}
-          onUnlockLesson={unlockLesson}
-          onUnlockTrack={unlockTrack}
-          purchaseProps={purchaseProps}
-        />
-      </PageContent>
-    )
+  if (isLabMaterial) {
+    return <Navigate to={`/labs/pack/${encodeURIComponent(item.id)}`} replace />
   }
 
   const pageWidthDefault = isProgram ? 'max-w-6xl' : 'max-w-4xl'

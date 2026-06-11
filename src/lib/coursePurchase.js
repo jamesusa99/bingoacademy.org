@@ -11,10 +11,11 @@ export async function initiateCoursePurchase({
   navigate,
   setCheckoutLoading,
   onDemoUnlock,
+  returnPath: returnPathOverride,
 }) {
   if (!course?.id) return
 
-  const returnPath = `/courses/detail/${course.id}`
+  const returnPath = returnPathOverride || `/courses/detail/${course.id}`
 
   if (!isAuthenticated) {
     navigate(authLink('/login', returnPath))
@@ -32,6 +33,7 @@ export async function initiateCoursePurchase({
     const { url } = await startCourseCheckout({
       courseSlug: course.id,
       purchaseType,
+      returnPath,
     })
     if (url) window.location.href = url
   } catch (err) {

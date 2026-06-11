@@ -19,6 +19,11 @@ function pickCatalogPayload(body) {
     outcomes: Array.isArray(p.outcomes) ? p.outcomes : [],
     syllabus: Array.isArray(p.syllabus) ? p.syllabus : [],
     lab_slugs: Array.isArray(p.lab_slugs) ? p.lab_slugs : Array.isArray(p.labSlugs) ? p.labSlugs : [],
+    materials_list: Array.isArray(p.materials_list)
+      ? p.materials_list
+      : Array.isArray(p.materialsList)
+        ? p.materialsList
+        : [],
     sort_order: parseInt(p.sort_order, 10) || 0,
     category: p.category || 'ai-fundamentals',
     level: p.level || 'beginner',

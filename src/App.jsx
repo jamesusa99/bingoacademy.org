@@ -8,6 +8,7 @@ import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminCourses from './pages/admin/AdminCourses'
 import AdminCoursesCatalog from './pages/admin/AdminCoursesCatalog'
+import AdminLabPackExperiments from './pages/admin/AdminLabPackExperiments'
 import AdminIOAICurriculum from './pages/admin/AdminIOAICurriculum'
 import AdminEvents from './pages/admin/AdminEvents'
 import AdminForum from './pages/admin/AdminForum'
@@ -31,6 +32,8 @@ import ShowcaseMaterials from './pages/ShowcaseMaterials'
 import Courses from './pages/Courses'
 import IOAIModuleDetailPage from './pages/courses/IOAIModuleDetailPage'
 import ProductLabs from './pages/ProductLabs'
+import LabPackDetail from './pages/labs/LabPackDetail'
+import LabExperimentPage from './pages/labs/LabExperimentPage'
 import AIExploration from './pages/AIExploration'
 import IOAITrainingLabSession from './pages/labs/IOAITrainingLabSession'
 import AIHideAndSeekPage from './pages/lab/AIHideAndSeekPage'
@@ -39,6 +42,7 @@ import WordGravityPage from './pages/lab/WordGravityPage'
 import AIJailbreakAdventurePage from './pages/lab/AIJailbreakAdventurePage'
 import EvolveAICarPage from './pages/lab/EvolveAICarPage'
 import DoodleMonsterPage from './pages/lab/DoodleMonsterPage'
+import AICyberTennisPage from './pages/lab/AICyberTennisPage'
 import CourseDetail from './pages/CourseDetail'
 import Certification from './pages/Certification'
 import Mall from './pages/Mall'
@@ -109,6 +113,7 @@ export default function App() {
         <Route path="home" element={<AdminHome />} />
         <Route path="showcase" element={<AdminShowcase />} />
         <Route path="labs-materials" element={<AdminCoursesCatalog />} />
+        <Route path="labs-materials/:packSlug/experiments" element={<AdminLabPackExperiments />} />
         <Route path="courses" element={<Navigate to="/admin/labs-materials" replace />} />
         <Route path="curriculum/:line" element={<AdminIOAICurriculum />} />
         <Route path="ioai-curriculum" element={<Navigate to="/admin/curriculum/ioai" replace />} />
@@ -145,6 +150,8 @@ export default function App() {
         <Route path="ioai/l3/:moduleSlug" element={<IOAIModulePage />} />
         <Route path="curriculum" element={<Curriculum />} />
         <Route path="labs" element={<ProductLabs />} />
+        <Route path="labs/pack/:slug" element={<LabPackDetail />} />
+        <Route path="labs/pack/:slug/experiments/:experimentSlug" element={<LabExperimentPage />} />
         <Route path="exploration" element={<AIExploration />} />
         <Route path="exploration/hide-and-seek" element={<AIHideAndSeekPage />} />
         <Route path="exploration/virtual-conductor" element={<AIVirtualConductorPage />} />
@@ -152,6 +159,7 @@ export default function App() {
         <Route path="exploration/jailbreak-adventure" element={<AIJailbreakAdventurePage />} />
         <Route path="exploration/evolve-car" element={<EvolveAICarPage />} />
         <Route path="exploration/doodle-monsters" element={<DoodleMonsterPage />} />
+        <Route path="exploration/cyber-tennis" element={<AICyberTennisPage />} />
         <Route path="lab" element={<Navigate to="/labs" replace />} />
         <Route path="lab/hide-and-seek" element={<Navigate to="/exploration/hide-and-seek" replace />} />
         <Route path="lab/virtual-conductor" element={<Navigate to="/exploration/virtual-conductor" replace />} />
@@ -159,6 +167,7 @@ export default function App() {
         <Route path="lab/jailbreak-adventure" element={<Navigate to="/exploration/jailbreak-adventure" replace />} />
         <Route path="lab/evolve-car" element={<Navigate to="/exploration/evolve-car" replace />} />
         <Route path="lab/doodle-monsters" element={<Navigate to="/exploration/doodle-monsters" replace />} />
+        <Route path="lab/cyber-tennis" element={<Navigate to="/exploration/cyber-tennis" replace />} />
         <Route path="pricing" element={<Navigate to="/cert" replace />} />
         <Route
           path="programs/:slug"

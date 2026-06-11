@@ -12,6 +12,8 @@ import {
 } from '../lib/userProfile'
 import ProfileAccountForm from '../components/ProfileAccountForm'
 import CourseAccessReset from '../components/CourseAccessReset'
+import { fetchMyOrders } from '../lib/checkout'
+import { formatIoaiPrice } from '../lib/ioaiStore'
 
 // ─── Member tier data ──────────────────────────────────────────────
 
@@ -225,6 +227,103 @@ function scrollToProfileSection(id = 'settings') {
   requestAnimationFrame(() => attempt(24))
 }
 
+const ORDER_STATUS_LABELS = {
+  paid: 'Paid',
+  pending: 'Pending',
+  failed: 'Failed',
+  refunded: 'Refunded',
+  canceled: 'Canceled',
+}
+
+function formatOrderDate(value) {
+  if (!value) return '—'
+  try {
+    return new Date(value).toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return '—'
+  }
+}
+
+function ProfileOrdersSection({ orders, loading, error }) {
+  return (
+    <section id="orders" className="mb-8 scroll-mt-28">
+      <h2 className="section-title mb-4">My Orders</h2>
+      <div className="card overflow-hidden">
+        {loading ? (
+          <p className="p-6 text-sm text-slate-500">Loading orders…</p>
+        ) : error ? (
+          <p className="p-6 text-sm text-red-600">{error}</p>
+        ) : orders.length === 0 ? (
+          <div className="p-6">
+            <p className="text-sm text-slate-600">No orders yet.</p>
+            <p className="text-xs text-slate-500 mt-2">
+              Course purchases appear here after checkout completes.
+            </p>
+            <Link to="/courses?line=ioai" className="text-sm text-primary font-medium hover:underline mt-3 inline-block">
+              Browse courses →
+            </Link>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[640px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/80">
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Date</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Product</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Amount</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {orders.map((order) => {
+                  const statusLabel = ORDER_STATUS_LABELS[order.status] || order.status || '—'
+                  const amount =
+                    order.amount_cents != null
+                      ? formatIoaiPrice(order.amount_cents, order.currency || 'usd')
+                      : '—'
+                  const productName =
+                    order.product_name ||
+                    order.metadata?.product_name ||
+                    order.metadata?.course_slug ||
+                    'Course purchase'
+                  return (
+                    <tr key={order.id} className="hover:bg-slate-50/60">
+                      <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
+                        {formatOrderDate(order.created_at)}
+                      </td>
+                      <td className="py-3 px-4 text-bingo-dark font-medium">{productName}</td>
+                      <td className="py-3 px-4 text-slate-700">{amount}</td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            order.status === 'paid'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : order.status === 'pending'
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          {statusLabel}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 export default function Profile() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -236,6 +335,9 @@ export default function Profile() {
   const [profile, setProfile] = useState(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const [profileError, setProfileError] = useState('')
+  const [orders, setOrders] = useState([])
+  const [ordersLoading, setOrdersLoading] = useState(true)
+  const [ordersError, setOrdersError] = useState('')
 
   useEffect(() => {
     if (!user?.id) {
@@ -259,6 +361,36 @@ export default function Profile() {
       mounted = false
     }
   }, [user?.id])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setOrders([])
+      setOrdersLoading(false)
+      return
+    }
+
+    let mounted = true
+    setOrdersLoading(true)
+    setOrdersError('')
+
+    fetchMyOrders()
+      .then(({ orders: rows }) => {
+        if (!mounted) return
+        setOrders(rows || [])
+      })
+      .catch((err) => {
+        if (!mounted) return
+        setOrdersError(err.message || 'Failed to load orders')
+        setOrders([])
+      })
+      .finally(() => {
+        if (mounted) setOrdersLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [isAuthenticated, user?.id])
 
   const goToSettingsSection = useCallback(
     (e) => {
@@ -284,18 +416,23 @@ export default function Profile() {
   )
 
   useEffect(() => {
-    const wantScroll = pendingSettingsScroll.current || location.hash === '#settings'
-    if (!wantScroll) return
-    if (authLoading || !isAuthenticated) return
-    if (view !== 'home') return
+    if (authLoading || !isAuthenticated || view !== 'home') return
+
+    const hash = location.hash.replace('#', '')
+    const sectionId = pendingSettingsScroll.current
+      ? 'settings'
+      : hash === 'settings' || hash === 'orders'
+        ? hash
+        : null
+    if (!sectionId) return
 
     const timer = window.setTimeout(() => {
       pendingSettingsScroll.current = false
-      scrollToProfileSection('settings')
+      scrollToProfileSection(sectionId)
     }, 80)
 
     return () => window.clearTimeout(timer)
-  }, [location.hash, view, authLoading, isAuthenticated, profileLoading])
+  }, [location.hash, view, authLoading, isAuthenticated, profileLoading, ordersLoading])
 
   if (authLoading) {
     return (
@@ -337,7 +474,7 @@ export default function Profile() {
     { label: 'Awards / works', value: '3', unit: '', shareModule: 'My Works' },
     { label: 'Certificates', value: '2', unit: '', shareModule: 'My Certificates' },
     { label: 'Capability profile', value: 'Level 3', unit: '', shareModule: 'Capability Profile' },
-    { label: 'Orders', value: '12', unit: '', shareModule: 'My Orders' },
+    { label: 'Orders', value: String(orders.length), unit: '', shareModule: 'My Orders' },
     { label: 'Teaching kit stock', value: '2', unit: 'items', shareModule: null },
     { label: 'Charity points', value: '1,240', unit: 'pts', shareModule: null },
     { label: 'Commission balance', value: '$86', unit: '', shareModule: null },
@@ -579,6 +716,11 @@ export default function Profile() {
             <p className="text-xs text-slate-500 mt-3">Reminder 3 days before auto-renewal. You can turn off auto-renew at any time; current period is unaffected.</p>
           </div>
         </section>
+      )}
+
+      {/* ── My Orders ─────────────────────────────────────────────── */}
+      {view === 'home' && (
+        <ProfileOrdersSection orders={orders} loading={ordersLoading} error={ordersError} />
       )}
 
       {/* ── Account settings ──────────────────────────────────────── */}

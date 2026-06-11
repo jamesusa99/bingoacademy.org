@@ -44,6 +44,10 @@ export async function fetchMyEnrollments() {
   return authFetch('/api/me/enrollments')
 }
 
+export async function fetchMyOrders() {
+  return authFetch('/api/me/orders')
+}
+
 export async function startCourseCheckout({ courseSlug, purchaseType, returnPath, addonSlugs = [] }) {
   return authFetch('/api/checkout/course', {
     method: 'POST',

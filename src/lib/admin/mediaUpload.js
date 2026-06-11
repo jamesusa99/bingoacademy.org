@@ -43,6 +43,51 @@ function storageErrorHint(message) {
   return text || 'Upload failed'
 }
 
+function extForFile(file) {
+  const name = file?.name || ''
+  const dot = name.lastIndexOf('.')
+  if (dot >= 0) return name.slice(dot + 1).toLowerCase()
+  return extForType(file.type)
+}
+
+const LAB_ASSET_TYPES = new Set([
+  'text/html',
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/pdf',
+  'application/octet-stream',
+])
+const LAB_MAX_BYTES = 15 * 1024 * 1024
+
+async function uploadAdminFileViaStorage(file, folder) {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured')
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session?.access_token) {
+    throw new Error('Please sign in again to upload files')
+  }
+
+  const safeFolder = String(folder).replace(/[^a-z0-9-/_]/gi, '') || 'lab-assets'
+  const objectPath = `${safeFolder}/${Date.now()}-${randomSuffix()}.${extForFile(file)}`
+  const { error } = await supabase.storage.from('media').upload(objectPath, file, {
+    contentType: file.type || 'application/octet-stream',
+    upsert: false,
+    cacheControl: '3600',
+  })
+
+  if (error) {
+    throw new Error(storageErrorHint(error.message))
+  }
+
+  const { data } = supabase.storage.from('media').getPublicUrl(objectPath)
+  if (!data?.publicUrl) throw new Error('Upload failed')
+  return data.publicUrl
+}
+
 async function uploadAdminImageViaStorage(file, folder) {
   if (!isSupabaseConfigured) {
     throw new Error('Supabase is not configured')
@@ -105,4 +150,17 @@ export async function uploadAdminImageFile(file, { folder = 'modules' } = {}) {
       throw new Error(apiMsg || storageErr.message || 'Upload failed')
     }
   }
+}
+
+export async function uploadAdminLabAsset(file, { folder = 'lab-assets' } = {}) {
+  if (!file) throw new Error('No file selected')
+  const ext = extForFile(file)
+  const allowedExt = new Set(['html', 'htm', 'zip', 'pdf'])
+  if (!LAB_ASSET_TYPES.has(file.type) && !allowedExt.has(ext)) {
+    throw new Error('Allowed: HTML, ZIP, or PDF')
+  }
+  if (file.size > LAB_MAX_BYTES) {
+    throw new Error('File must be 15 MB or smaller')
+  }
+  return uploadAdminFileViaStorage(file, folder)
 }

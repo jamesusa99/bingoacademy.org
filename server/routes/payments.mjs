@@ -70,6 +70,23 @@ export function registerPaymentRoutes(app) {
     return res.json({ slugs })
   })
 
+  app.get('/api/me/orders', async (req, res) => {
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const { data, error } = await auth.admin
+      .from('orders')
+      .select(
+        'id, status, amount_cents, currency, product_name, customer_email, metadata, created_at, updated_at'
+      )
+      .eq('user_id', auth.user.id)
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (error) return res.status(502).json({ error: error.message })
+    return res.json({ orders: data || [] })
+  })
+
   app.delete('/api/me/enrollments', async (req, res) => {
     if (!enrollmentResetAllowed()) {
       return res.status(403).json({ error: 'Enrollment reset is disabled on this environment' })

@@ -3,17 +3,19 @@ import { Link, Navigate } from 'react-router-dom'
 import { PlayCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useIOAICourseContext } from '../hooks/useIOAICourseContext'
+import { useIOAIStore } from '../hooks/useIOAIStore'
 import { usePurchasedCourses } from '../hooks/usePurchasedCourses'
-import { findCourseInList } from '../lib/catalogCourse'
 import { hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from '../lib/courseAccess'
 import { authLink } from '../lib/authRedirect'
 import { claimFreeTrial, hasClaimedFreeTrial, FREE_TRIAL_COURSE_HREF } from '../lib/freeTrial'
+import { getFirstIOAILessonId } from '../lib/ioaiCourseStructure'
 import {
-  getAllIOAILessonIds,
-  getFirstIOAILessonId,
-  isIOAITrackId,
-} from '../lib/ioaiCourseStructure'
-import { getTrackProgressStats, getLessonProgress, getContinueLessonId } from '../lib/learningProgress'
+  buildStudyCourses,
+  studyCourseContinueHref,
+  studyCourseProgressLabel,
+  studyCourseProgressStats,
+} from '../lib/studyCourses'
+import ModuleCoverImage from '../components/courses/ModuleCoverImage'
 
 function ProgressBar({ percent }) {
   return (
@@ -26,48 +28,27 @@ function ProgressBar({ percent }) {
   )
 }
 
-function buildStudyCourses(slugs, catalog) {
-  const fullTrack = hasFullIOAITrack(slugs)
-  const items = []
-
-  if (fullTrack) {
-    const track = findCourseInList(catalog, IOAI_FULL_TRACK_SLUG)
-    if (track) items.push({ ...track, accessType: 'full-track' })
-  }
-
-  for (const slug of slugs) {
-    if (slug === IOAI_FULL_TRACK_SLUG || slug === 'ioai-track') continue
-    const course = findCourseInList(catalog, slug)
-    if (course) items.push({ ...course, accessType: 'lesson' })
-  }
-
-  return items
-}
-
-function courseContinueHref(course, catalog, tree) {
-  if (isIOAITrackId(course.id)) {
-    const lessonId = getContinueLessonId(getAllIOAILessonIds(catalog, tree))
-    return lessonId ? `/courses/detail/${lessonId}` : `/courses/detail/${IOAI_FULL_TRACK_SLUG}`
-  }
-  return `/courses/detail/${course.id}`
-}
-
-function courseProgressLabel(course, catalog, tree) {
-  if (isIOAITrackId(course.id)) {
-    const stats = getTrackProgressStats(getAllIOAILessonIds(catalog, tree))
-    return `${stats.percent}% · ${stats.completed}/${stats.total} lessons`
-  }
-  const p = getLessonProgress(course.id)
-  if (p.completed) return 'Completed'
-  if (p.lastVisitedAt) return 'In progress'
-  return 'Not started'
+function accessTypeLabel(accessType) {
+  if (accessType === 'full-track') return 'Full track'
+  if (accessType === 'module') return 'Module unit'
+  return 'Lesson'
 }
 
 export default function Study() {
   const { isAuthenticated, loading } = useAuth()
   const { courses: catalog, tree, loading: catalogLoading } = useIOAICourseContext()
-  const { purchased, refresh, stripeCheckout } = usePurchasedCourses()
-  const courses = useMemo(() => buildStudyCourses(purchased, catalog), [purchased, catalog])
+  const { levels, loading: storeLoading } = useIOAIStore()
+  const { enrollmentSlugs, ioaiModuleSlugs, refresh, stripeCheckout } = usePurchasedCourses()
+  const courses = useMemo(
+    () =>
+      buildStudyCourses({
+        enrollmentSlugs,
+        ioaiModuleSlugs,
+        catalog,
+        levels,
+      }),
+    [enrollmentSlugs, ioaiModuleSlugs, catalog, levels]
+  )
   const firstLessonId = getFirstIOAILessonId(catalog, tree)
   const trialActive = hasClaimedFreeTrial()
   const trialLessonHref = firstLessonId ? `/courses/detail/${firstLessonId}` : FREE_TRIAL_COURSE_HREF
@@ -77,7 +58,7 @@ export default function Study() {
     refresh()
   }
 
-  if (loading || catalogLoading) {
+  if (loading || catalogLoading || storeLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-500 text-sm">Loading…</div>
     )
@@ -108,27 +89,39 @@ export default function Study() {
         {courses.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.map((course) => {
-              const href = courseContinueHref(course, catalog, tree)
-              const progressText = courseProgressLabel(course, catalog, tree)
-              const trackStats = isIOAITrackId(course.id)
-                ? getTrackProgressStats(getAllIOAILessonIds(catalog, tree))
-                : null
+              const href = studyCourseContinueHref(course, catalog, tree)
+              const progressText = studyCourseProgressLabel(course, catalog, levels)
+              const trackStats = studyCourseProgressStats(course, catalog, levels)
 
               return (
                 <Link
                   key={course.id}
                   to={href}
-                  className="card p-5 hover:shadow-md hover:border-primary/30 transition group flex flex-col"
+                  className="card p-5 hover:shadow-md hover:border-primary/30 transition group flex flex-col overflow-hidden"
                 >
+                  {course.accessType === 'module' && course.coverUrl ? (
+                    <div className="relative -mx-5 -mt-5 mb-3 aspect-[16/9] bg-slate-100 overflow-hidden">
+                      <ModuleCoverImage
+                        coverUrl={course.coverUrl}
+                        alt=""
+                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                      />
+                    </div>
+                  ) : null}
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <span className="text-[10px] font-bold uppercase tracking-wide text-primary">
-                      {course.accessType === 'full-track' ? 'Full track' : course.badge || 'Lesson'}
+                      {course.badge || accessTypeLabel(course.accessType)}
                     </span>
                     <PlayCircle className="w-4 h-4 text-slate-400 group-hover:text-primary shrink-0" aria-hidden />
                   </div>
                   <h3 className="font-semibold text-bingo-dark text-sm group-hover:text-primary transition flex-1">
                     {course.nameEn || course.name}
                   </h3>
+                  {course.accessType === 'module' && (course.levelTitle || course.themeTitle) ? (
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      {[course.levelTitle, course.themeTitle].filter(Boolean).join(' · ')}
+                    </p>
+                  ) : null}
                   {course.hours ? (
                     <p className="text-xs text-slate-500 mt-2">{course.hours}</p>
                   ) : null}
@@ -153,6 +146,13 @@ export default function Study() {
               <li>
                 <strong>Single lesson</strong> — open a course, watch the preview, then click{' '}
                 <strong>Unlock This Lesson</strong> or <strong>Enroll Now</strong>.
+              </li>
+              <li>
+                <strong>IOAI module unit</strong> — purchase a module on the{' '}
+                <Link to="/courses?line=ioai" className="text-primary hover:underline">
+                  IOAI courses page
+                </Link>{' '}
+                to unlock every lesson inside.
               </li>
               <li>
                 <strong>Full IOAI track</strong> — on the{' '}

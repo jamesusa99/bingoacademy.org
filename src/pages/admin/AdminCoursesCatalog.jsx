@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import {
@@ -11,6 +12,8 @@ import {
 } from '../../lib/catalogCourse'
 import { saveCatalogCourse, deleteCatalogCourse, reorderScopedCatalogItems } from '../../lib/admin/catalog'
 import AdminLabMaterialsGroupedList from '../../components/admin/AdminLabMaterialsGroupedList'
+import AdminMaterialsListEditor from '../../components/admin/AdminMaterialsListEditor'
+import AdminLabPackHierarchyEditor from '../../components/admin/AdminLabPackHierarchyEditor'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -104,9 +107,86 @@ export default function AdminCoursesCatalog() {
       dragReorderHint: t('pages.coursesCatalog.dragReorderHint'),
       sectionLabs: t('pages.coursesCatalog.sectionLabs'),
       sectionMaterials: t('pages.coursesCatalog.sectionMaterials'),
+      sectionLevel1: t('pages.coursesCatalog.sectionLevel1'),
+      sectionLevel1Hint: t('pages.coursesCatalog.sectionLevel1Hint'),
+      colPackIntro: t('pages.coursesCatalog.colPackIntro'),
+      colPackIntroHint: t('pages.coursesCatalog.colPackIntroHint'),
+      colOutcomes: t('pages.coursesCatalog.colOutcomes'),
+      colOutcomesHint: t('pages.coursesCatalog.colOutcomesHint'),
+      colAudience: t('pages.coursesCatalog.colAudience'),
+      colHours: t('pages.coursesCatalog.colHours'),
+      colHoursHint: t('pages.coursesCatalog.colHoursHint'),
+      colPackMaterials: t('pages.coursesCatalog.colPackMaterials'),
+      colPackMaterialsHint: t('pages.coursesCatalog.colPackMaterialsHint'),
+      manageExperimentsInline: t('pages.coursesCatalog.manageExperimentsInline'),
     }),
     [t, c]
   )
+
+  const hierarchyLabels = useMemo(() => {
+    const L = (key) => t(`pages.coursesCatalog.${key}`)
+    return {
+      savePackFirst: L('savePackFirst'),
+      level2Title: L('level2Title'),
+      level2Desc: L('level2Desc'),
+      level3Title: L('level3Title'),
+      level3Desc: L('level3Desc'),
+      experimentList: L('experimentList'),
+      addExperiment: L('addExperiment'),
+      noExperiments: L('noExperiments'),
+      editExperiment: L('editExperiment'),
+      newExperiment: L('newExperiment'),
+      expSlugPh: L('expSlugPh'),
+      expNamePh: L('expNamePh'),
+      expContentPh: L('expContentPh'),
+      expPurposePh: L('expPurposePh'),
+      expMaterialsLabel: L('expMaterialsLabel'),
+      saveExperiment: L('saveExperiment'),
+      experimentSaved: L('experimentSaved'),
+      confirmDeleteExperiment: L('confirmDeleteExperiment'),
+      selectExperimentFirst: L('selectExperimentFirst'),
+      stepSaved: L('stepSaved'),
+      confirmDeleteStep: L('confirmDeleteStep'),
+      selectExperimentHint: L('selectExperimentHint'),
+      editingStepsFor: L('editingStepsFor'),
+      editStep: L('editStep'),
+      newStep: L('newStep'),
+      stepTitlePh: L('stepTitlePh'),
+      stepBodyPh: L('stepBodyPh'),
+      videoUrlPh: L('videoUrlPh'),
+      cloudflarePh: L('cloudflarePh'),
+      pptUrlPh: L('pptUrlPh'),
+      linkUrlPh: L('linkUrlPh'),
+      downloadUrlPh: L('downloadUrlPh'),
+      downloadLabelPh: L('downloadLabelPh'),
+      programmingLabPh: L('programmingLabPh'),
+      saveStep: L('saveStep'),
+      stepCount: (n) => L('stepCount').replace('{{count}}', String(n)),
+      materialsJsonInvalid: L('materialsJsonInvalid'),
+      tabSteps: L('tabSteps'),
+      tabRuntime: L('tabRuntime'),
+      runtimeConfigured: L('runtimeConfigured'),
+      runtimeTitle: L('runtimeTitle'),
+      runtimeDesc: L('runtimeDesc'),
+      runtimeTypeLabel: L('runtimeTypeLabel'),
+      runtimeUrlLabel: L('runtimeUrlLabel'),
+      runtimeUrlPh: L('runtimeUrlPh'),
+      runtimeUploadHint: L('runtimeUploadHint'),
+      uploadAsset: L('uploadAsset'),
+      uploadPackage: L('uploadPackage'),
+      uploading: L('uploading'),
+      runtimeInternalPathLabel: L('runtimeInternalPathLabel'),
+      runtimeUrlOptional: L('runtimeUrlOptional'),
+      embedHeightLabel: L('embedHeightLabel'),
+      openInNewTab: L('openInNewTab'),
+      runtimeStepsOnlyHint: L('runtimeStepsOnlyHint'),
+      saveRuntime: L('saveRuntime'),
+      saveExperimentBeforeRuntime: L('saveExperimentBeforeRuntime'),
+      loading: 'Loading…',
+      saving: c.saving,
+      delete: c.delete,
+    }
+  }, [t, c])
 
   const fetchItems = async () => {
     setLoading(true)
@@ -171,6 +251,22 @@ export default function AdminCoursesCatalog() {
       delivery_type: deliveryTypeForLabSub(sub, f.line),
     }))
   }
+
+  const outcomesLines = (() => {
+    try {
+      const arr = JSON.parse(form.outcomes || '[]')
+      return Array.isArray(arr) ? arr.join('\n') : ''
+    } catch {
+      return ''
+    }
+  })()
+
+  const setOutcomesLines = (text) => {
+    const arr = text.split('\n').map((s) => s.trim()).filter(Boolean)
+    set('outcomes', JSON.stringify(arr, null, 2))
+  }
+
+  const isLabRow = isLabMaterialsCatalogRow({ line: form.line, sub: form.sub })
 
   const handleSave = async () => {
     setError(null)
@@ -386,7 +482,68 @@ export default function AdminCoursesCatalog() {
             </select>
             <p className="text-[10px] text-slate-500 mt-1">{labels.colPurchasableHint}</p>
           </AdminField>
-          <AdminField label={labels.colDescription} className="sm:col-span-2 lg:col-span-3">
+        </div>
+
+        {isLabRow ? (
+          <>
+            <div className="mt-8 pt-6 border-t border-slate-200">
+              <h3 className="font-semibold text-bingo-dark">{labels.sectionLevel1}</h3>
+              <p className="text-xs text-slate-500 mt-1 mb-4">{labels.sectionLevel1Hint}</p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <AdminField label={labels.colPackIntro} className="sm:col-span-2 lg:col-span-3">
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => set('description', e.target.value)}
+                    rows={4}
+                    className={inputClass}
+                    placeholder={labels.colPackIntroHint}
+                  />
+                </AdminField>
+                <AdminField label={labels.colOutcomes} className="sm:col-span-2 lg:col-span-3">
+                  <textarea
+                    value={outcomesLines}
+                    onChange={(e) => setOutcomesLines(e.target.value)}
+                    rows={4}
+                    className={inputClass}
+                    placeholder={labels.colOutcomesHint}
+                  />
+                </AdminField>
+                <AdminField label={labels.colAudience} className="sm:col-span-2">
+                  <input
+                    value={form.audience}
+                    onChange={(e) => set('audience', e.target.value)}
+                    className={inputClass}
+                  />
+                </AdminField>
+                <AdminField label={labels.colHours}>
+                  <input
+                    value={form.hours}
+                    onChange={(e) => set('hours', e.target.value)}
+                    className={inputClass}
+                    placeholder={labels.colHoursHint}
+                  />
+                </AdminField>
+                {isLabRow ? (
+                  <AdminMaterialsListEditor
+                    label={labels.colPackMaterials}
+                    hint={labels.colPackMaterialsHint}
+                    value={form.materials_list}
+                    onChange={(json) => set('materials_list', json)}
+                  />
+                ) : null}
+              </div>
+            </div>
+
+            {editingSlug ? (
+              <AdminLabPackHierarchyEditor packSlug={editingSlug} labels={hierarchyLabels} />
+            ) : (
+              <p className="mt-6 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                {labels.manageExperimentsInline}
+              </p>
+            )}
+          </>
+        ) : (
+          <AdminField label={labels.colDescription} className="sm:col-span-2 lg:col-span-3 mt-4">
             <textarea
               value={form.description}
               onChange={(e) => set('description', e.target.value)}
@@ -394,9 +551,9 @@ export default function AdminCoursesCatalog() {
               className={inputClass}
             />
           </AdminField>
-        </div>
+        )}
 
-        <div className="flex gap-2 mt-6">
+        <div className="flex gap-2 mt-6 flex-wrap items-center">
           <button
             type="button"
             onClick={handleSave}
@@ -405,6 +562,16 @@ export default function AdminCoursesCatalog() {
           >
             {saving ? c.saving : t('pages.coursesCatalog.saveCourse')}
           </button>
+          {editingSlug && isLabRow ? (
+            <Link
+              to={`/labs/pack/${encodeURIComponent(editingSlug)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-5 py-2 rounded-xl border text-sm text-slate-600 hover:bg-slate-50"
+            >
+              Preview →
+            </Link>
+          ) : null}
           {editingSlug ? (
             <button
               type="button"
