@@ -13,6 +13,8 @@ const CURRICULUM_ADMIN_SELECT = `
   emoji,
   summary,
   sort_order,
+  status,
+  cover_url,
   themes (
     id,
     slug,
@@ -880,6 +882,95 @@ export async function deleteProgramLesson(_productLine, { lessonId, catalogSlug 
 /** @deprecated use deleteProgramLesson('ioai', input) */
 export async function deleteIOAILesson(input) {
   return deleteProgramLesson('ioai', input)
+}
+
+function collectCatalogSlugsFromLevel(level) {
+  /** @type {Set<string>} */
+  const slugs = new Set()
+  for (const theme of level.themes || []) {
+    for (const mod of theme.modules || []) {
+      const modSlug = mod.catalog_slug?.trim()
+      if (modSlug) slugs.add(modSlug)
+      for (const lesson of mod.lessons || []) {
+        const lessonSlug = (lesson.catalog_slug || lesson.slug)?.trim()
+        if (lessonSlug) slugs.add(lessonSlug)
+      }
+    }
+  }
+  return slugs
+}
+
+/** Save L1 stage (course_levels). */
+export async function saveProgramLevelConfig(productLine, levelId, patch) {
+  if (!isCurriculumLine(productLine)) throw new Error('Invalid product line')
+  if (!levelId) throw new Error('Missing stage id')
+
+  const existing = await findLevelById(levelId)
+  if (!existing) throw new Error('Stage not found')
+  if (existing.product_line !== productLine) throw new Error('Stage does not belong to this product line')
+
+  const title = patch.title?.trim()
+  if (!title) throw new Error('Stage title is required')
+
+  const slug = slugFromInput(patch.slug, title, 'stage')
+  if (slug !== existing.slug) {
+    const { data: conflict, error: slugErr } = await supabase
+      .from('course_levels')
+      .select('id')
+      .eq('product_line', productLine)
+      .eq('slug', slug)
+      .neq('id', levelId)
+      .maybeSingle()
+    if (slugErr) throw new Error(slErr.message)
+    if (conflict) throw new Error('Slug already in use for this product line')
+  }
+
+  return adminUpdate('course_levels', levelId, {
+    title,
+    slug,
+    emoji: patch.emoji?.trim() || null,
+    summary: patch.summary?.trim() || null,
+    cover_url: patch.cover_url?.trim() || null,
+    status: patch.status || 'live',
+    sort_order: parseInt(patch.sort_order, 10) || 0,
+    updated_at: new Date().toISOString(),
+  })
+}
+
+/** Delete L1 stage, nested tree (DB cascade), and linked catalog rows. */
+export async function deleteProgramLevel(productLine, { levelId } = {}) {
+  if (!isCurriculumLine(productLine)) throw new Error('Invalid product line')
+  if (!levelId) throw new Error('Missing stage id')
+
+  const { data: level, error } = await supabase
+    .from('course_levels')
+    .select(
+      `
+      id, product_line, title,
+      themes (
+        modules (
+          catalog_slug,
+          lessons ( slug, catalog_slug )
+        )
+      )
+    `
+    )
+    .eq('id', levelId)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  if (!level) throw new Error('Stage not found')
+  if (level.product_line !== productLine) throw new Error('Stage does not belong to this product line')
+
+  for (const slug of collectCatalogSlugsFromLevel(level)) {
+    try {
+      await deleteCatalogCourse(sl)
+    } catch (err) {
+      if (err?.status !== 404) throw err
+    }
+  }
+
+  return adminDelete('course_levels', levelId)
 }
 
 /** Persist lesson order within one L3 module (lessons.sort_order). */

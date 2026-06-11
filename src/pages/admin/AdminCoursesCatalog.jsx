@@ -10,10 +10,10 @@ import {
   isLabMaterialsCatalogRow,
   labMaterialsSubcategoriesForLine,
 } from '../../lib/catalogCourse'
-import { saveCatalogCourse, deleteCatalogCourse, reorderScopedCatalogItems } from '../../lib/admin/catalog'
-import AdminLabMaterialsGroupedList from '../../components/admin/AdminLabMaterialsGroupedList'
-import AdminMaterialsListEditor from '../../components/admin/AdminMaterialsListEditor'
+import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
 import AdminLabPackHierarchyEditor from '../../components/admin/AdminLabPackHierarchyEditor'
+import AdminLabPackLevel1List from '../../components/admin/AdminLabPackLevel1List'
+import AdminLabPackLevel1Fields from '../../components/admin/AdminLabPackLevel1Fields'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -23,6 +23,7 @@ import {
   LAB_MATERIAL_TYPES,
   buildCurriculumModuleIndex,
   deliveryTypeForLabSub,
+  normalizeLabMaterialSub,
 } from '../../config/labMaterials'
 
 function statusOptions(t) {
@@ -54,6 +55,7 @@ export default function AdminCoursesCatalog() {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [editingSlug, setEditingSlug] = useState(null)
+  const [editorOpen, setEditorOpen] = useState(false)
   const [form, setForm] = useState(CATALOG_FORM_EMPTY)
   const [lineFilter, setLineFilter] = useState(DEFAULT_ADMIN_PRODUCT_LINE)
   const [typeFilter, setTypeFilter] = useState('all')
@@ -88,13 +90,6 @@ export default function AdminCoursesCatalog() {
       phPrice: t('pages.coursesCatalog.phPrice'),
       phPriceCents: t('pages.coursesCatalog.phPriceCents'),
       phCurrency: t('pages.coursesCatalog.phCurrency'),
-      colStage: t('pages.ioaiCurriculum.colStage'),
-      colCategory: t('pages.ioaiCurriculum.colCategory'),
-      lessonItemCount: t('pages.coursesCatalog.lessonItemCount'),
-      moduleItemCount: t('pages.coursesCatalog.moduleItemCount'),
-      moduleExtrasPrice: t('pages.coursesCatalog.moduleExtrasPrice'),
-      unassignedHeading: t('pages.coursesCatalog.unassignedHeading'),
-      unassignedHint: t('pages.coursesCatalog.unassignedHint'),
       noCourses: t('pages.coursesCatalog.noCourses'),
       name: c.name,
       status: c.status,
@@ -102,11 +97,6 @@ export default function AdminCoursesCatalog() {
       edit: c.edit,
       delete: c.delete,
       statusLabel: (status) => statusLabel(status, t),
-      dragHint: t('pages.coursesCatalog.dragHint'),
-      savingOrder: t('pages.coursesCatalog.savingOrder'),
-      dragReorderHint: t('pages.coursesCatalog.dragReorderHint'),
-      sectionLabs: t('pages.coursesCatalog.sectionLabs'),
-      sectionMaterials: t('pages.coursesCatalog.sectionMaterials'),
       sectionLevel1: t('pages.coursesCatalog.sectionLevel1'),
       sectionLevel1Hint: t('pages.coursesCatalog.sectionLevel1Hint'),
       colPackIntro: t('pages.coursesCatalog.colPackIntro'),
@@ -119,6 +109,12 @@ export default function AdminCoursesCatalog() {
       colPackMaterials: t('pages.coursesCatalog.colPackMaterials'),
       colPackMaterialsHint: t('pages.coursesCatalog.colPackMaterialsHint'),
       manageExperimentsInline: t('pages.coursesCatalog.manageExperimentsInline'),
+      level1ListTitle: t('pages.coursesCatalog.level1ListTitle'),
+      level1ListHint: t('pages.coursesCatalog.level1ListHint'),
+      manageExperiments: t('pages.coursesCatalog.manageExperiments'),
+      deletePack: t('pages.coursesCatalog.deletePack'),
+      addCourse: t('pages.coursesCatalog.addCourse'),
+      actions: c.actions,
     }),
     [t, c]
   )
@@ -207,15 +203,16 @@ export default function AdminCoursesCatalog() {
   }, [])
 
   useEffect(() => {
-    if (editingSlug && editorRef.current) {
+    if (editorOpen && editorRef.current) {
       editorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-  }, [editingSlug])
+  }, [editorOpen, editingSlug])
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
 
   const startAdd = () => {
     setEditingSlug(null)
+    setEditorOpen(true)
     setForm({
       ...CATALOG_FORM_EMPTY,
       line: DEFAULT_ADMIN_PRODUCT_LINE,
@@ -227,7 +224,16 @@ export default function AdminCoursesCatalog() {
 
   const startEdit = (row) => {
     setEditingSlug(row.slug)
+    setEditorOpen(true)
     setForm(catalogRowToForm(row))
+    setSuccess(null)
+    setError(null)
+  }
+
+  const closeEditor = () => {
+    setEditorOpen(false)
+    setEditingSlug(null)
+    setForm(CATALOG_FORM_EMPTY)
     setSuccess(null)
     setError(null)
   }
@@ -331,19 +337,8 @@ export default function AdminCoursesCatalog() {
       await deleteCatalogCourse(slug)
       setSuccess(t('pages.coursesCatalog.courseDeleted'))
       if (editingSlug === slug) {
-        setEditingSlug(null)
-        setForm(CATALOG_FORM_EMPTY)
+        closeEditor()
       }
-      await fetchItems()
-    } catch (e) {
-      setError(e.message)
-    }
-  }
-
-  const handleReorderModuleItems = async (reorderedItems) => {
-    setError(null)
-    try {
-      await reorderScopedCatalogItems(items, reorderedItems)
       await fetchItems()
     } catch (e) {
       setError(e.message)
@@ -365,13 +360,78 @@ export default function AdminCoursesCatalog() {
         </AdminAlert>
       ) : null}
 
+      <div className="card overflow-hidden mb-6">
+        <div className="p-4 border-b flex flex-wrap justify-between items-start gap-3">
+          <div>
+            <h2 className="font-semibold text-bingo-dark">{labels.level1ListTitle}</h2>
+            <p className="text-xs text-slate-500 mt-1">{labels.level1ListHint}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={lineFilter}
+              onChange={(e) => setLineFilter(e.target.value)}
+              className="text-xs rounded-lg border border-slate-200 px-2 py-1.5"
+            >
+              <option value="all">{t('pages.coursesCatalog.filterAllLines')}</option>
+              {CURRICULUM_LINES.map((lineId) => {
+                const config = getProgramCurriculum(lineId)
+                return (
+                  <option key={lineId} value={lineId}>
+                    {config.adminTitle}
+                  </option>
+                )
+              })}
+            </select>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="text-xs rounded-lg border border-slate-200 px-2 py-1.5"
+            >
+              <option value="all">{t('pages.coursesCatalog.filterAllTypes')}</option>
+              {LAB_MATERIAL_TYPES.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
+            <button type="button" onClick={startAdd} className="btn-primary text-xs px-3 py-1.5">
+              {labels.addCourse}
+            </button>
+          </div>
+        </div>
+        {loading ? (
+          <p className="p-6 text-sm text-slate-500">{c.loading}</p>
+        ) : (
+          <AdminLabPackLevel1List
+            items={
+              lineFilter === 'all' && typeFilter === 'all'
+                ? labItems
+                : labItems.filter((r) => {
+                    if (lineFilter !== 'all' && r.line !== lineFilter) return false
+                    if (typeFilter !== 'all' && normalizeLabMaterialSub(r.sub, r.line) !== typeFilter) return false
+                    return true
+                  })
+            }
+            labels={labels}
+            onEdit={startEdit}
+            onDelete={handleDelete}
+            onAdd={startAdd}
+            activeSlug={editorOpen ? editingSlug : null}
+          />
+        )}
+      </div>
+
+      {editorOpen ? (
       <div ref={editorRef} className="card p-6 mb-6 scroll-mt-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="font-semibold text-bingo-dark">
             {editingSlug ? t('pages.coursesCatalog.editCourse', { slug: editingSlug }) : t('pages.coursesCatalog.addCourse')}
           </h2>
           <button type="button" onClick={startAdd} className="text-sm text-primary hover:underline">
-            {t('pages.coursesCatalog.newCourse')}
+            {labels.addCourse}
+          </button>
+          <button type="button" onClick={closeEditor} className="text-sm text-slate-500 hover:underline">
+            {c.cancel}
           </button>
         </div>
 
@@ -489,49 +549,14 @@ export default function AdminCoursesCatalog() {
             <div className="mt-8 pt-6 border-t border-slate-200">
               <h3 className="font-semibold text-bingo-dark">{labels.sectionLevel1}</h3>
               <p className="text-xs text-slate-500 mt-1 mb-4">{labels.sectionLevel1Hint}</p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <AdminField label={labels.colPackIntro} className="sm:col-span-2 lg:col-span-3">
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => set('description', e.target.value)}
-                    rows={4}
-                    className={inputClass}
-                    placeholder={labels.colPackIntroHint}
-                  />
-                </AdminField>
-                <AdminField label={labels.colOutcomes} className="sm:col-span-2 lg:col-span-3">
-                  <textarea
-                    value={outcomesLines}
-                    onChange={(e) => setOutcomesLines(e.target.value)}
-                    rows={4}
-                    className={inputClass}
-                    placeholder={labels.colOutcomesHint}
-                  />
-                </AdminField>
-                <AdminField label={labels.colAudience} className="sm:col-span-2">
-                  <input
-                    value={form.audience}
-                    onChange={(e) => set('audience', e.target.value)}
-                    className={inputClass}
-                  />
-                </AdminField>
-                <AdminField label={labels.colHours}>
-                  <input
-                    value={form.hours}
-                    onChange={(e) => set('hours', e.target.value)}
-                    className={inputClass}
-                    placeholder={labels.colHoursHint}
-                  />
-                </AdminField>
-                {isLabRow ? (
-                  <AdminMaterialsListEditor
-                    label={labels.colPackMaterials}
-                    hint={labels.colPackMaterialsHint}
-                    value={form.materials_list}
-                    onChange={(json) => set('materials_list', json)}
-                  />
-                ) : null}
-              </div>
+              <AdminLabPackLevel1Fields
+                form={form}
+                set={set}
+                labels={labels}
+                outcomesLines={outcomesLines}
+                setOutcomesLines={setOutcomesLines}
+                showMaterials={isLabRow}
+              />
             </div>
 
             {editingSlug ? (
@@ -563,88 +588,38 @@ export default function AdminCoursesCatalog() {
             {saving ? c.saving : t('pages.coursesCatalog.saveCourse')}
           </button>
           {editingSlug && isLabRow ? (
-            <Link
-              to={`/labs/pack/${encodeURIComponent(editingSlug)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="px-5 py-2 rounded-xl border text-sm text-slate-600 hover:bg-slate-50"
-            >
-              Preview →
-            </Link>
+            <>
+              <Link
+                to={`/admin/labs-materials/${encodeURIComponent(editingSlug)}/experiments`}
+                className="px-5 py-2 rounded-xl border text-sm text-slate-600 hover:bg-slate-50"
+              >
+                {labels.manageExperiments} →
+              </Link>
+              <Link
+                to={`/labs/pack/${encodeURIComponent(editingSlug)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-5 py-2 rounded-xl border text-sm text-slate-600 hover:bg-slate-50"
+              >
+                Preview →
+              </Link>
+            </>
           ) : null}
           {editingSlug ? (
             <button
               type="button"
-              onClick={() => {
-                setEditingSlug(null)
-                setForm(CATALOG_FORM_EMPTY)
-              }}
-              className="px-5 py-2 rounded-xl border text-sm"
+              onClick={() => handleDelete(editingSlug)}
+              className="px-5 py-2 rounded-xl border border-red-200 text-sm text-red-600 hover:bg-red-50"
             >
-              {c.cancel}
+              {labels.deletePack}
             </button>
           ) : null}
+          <button type="button" onClick={closeEditor} className="px-5 py-2 rounded-xl border text-sm">
+            {c.cancel}
+          </button>
         </div>
       </div>
-
-      <div className="card overflow-hidden">
-        <div className="p-4 border-b flex flex-wrap justify-between items-center gap-3">
-          <span className="font-semibold">{t('pages.coursesCatalog.allCourses', { count: String(labItems.length) })}</span>
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={lineFilter}
-              onChange={(e) => setLineFilter(e.target.value)}
-              className="text-xs rounded-lg border border-slate-200 px-2 py-1.5"
-            >
-              <option value="all">{t('pages.coursesCatalog.filterAllLines')}</option>
-              {CURRICULUM_LINES.map((lineId) => {
-                const config = getProgramCurriculum(lineId)
-                return (
-                  <option key={lineId} value={lineId}>
-                    {config.adminTitle}
-                  </option>
-                )
-              })}
-            </select>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="text-xs rounded-lg border border-slate-200 px-2 py-1.5"
-            >
-              <option value="all">{t('pages.coursesCatalog.filterAllTypes')}</option>
-              {LAB_MATERIAL_TYPES.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
-            <a
-              href="/courses?line=ioai"
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs text-primary hover:underline"
-            >
-              {c.previewOnSite}
-            </a>
-          </div>
-        </div>
-        {loading ? (
-          <p className="p-6 text-sm text-slate-500">{c.loading}</p>
-        ) : labItems.length === 0 ? (
-          <p className="p-6 text-sm text-slate-500">{t('pages.coursesCatalog.noCourses')}</p>
-        ) : (
-          <AdminLabMaterialsGroupedList
-            items={labItems}
-            levelsByLine={levelsByLine}
-            lineFilter={lineFilter}
-            typeFilter={typeFilter}
-            onEdit={startEdit}
-            onDelete={handleDelete}
-            onReorderModuleItems={handleReorderModuleItems}
-            labels={labels}
-          />
-        )}
-      </div>
+      ) : null}
     </div>
   )
 }
