@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import AdminAlert from './AdminAlert'
 import AdminLabExperimentRuntimeEditor from './AdminLabExperimentRuntimeEditor'
 import { LAB_STEP_TYPES } from '../../config/labExperiments'
@@ -47,6 +47,21 @@ function parseMaterialsJson(text) {
   }
 }
 
+function resolveExperimentId(editingExpId, slug, experiments) {
+  if (editingExpId) return editingExpId
+  const normalized = String(slug || '').trim()
+  if (!normalized) return null
+  return experiments.find((exp) => exp.slug === normalized)?.id ?? null
+}
+
+function formatExperimentSaveError(err, slug, labels) {
+  const msg = err?.message || ''
+  if (msg.includes('lab_experiments_pack_slug_slug_key') || /already exists in this pack/i.test(msg)) {
+    return labels.experimentSlugDuplicate?.replace('{{slug}}', slug) || msg
+  }
+  return msg
+}
+
 /**
  * L2 experiments + L3 steps editor for a saved lab pack slug.
  * @param {{ packSlug: string, labels: object }} props
@@ -64,6 +79,7 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
   const [level3Tab, setLevel3Tab] = useState('steps')
   const [expMaterialsJson, setExpMaterialsJson] = useState('[]')
   const [saving, setSaving] = useState(false)
+  const saveExperimentLock = useRef(false)
 
   const reload = useCallback(async () => {
     if (!packSlug) return
@@ -126,11 +142,15 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
 
   const saveExperiment = async (e) => {
     e?.preventDefault?.()
+    if (saveExperimentLock.current) return
     const materials = parseMaterialsJson(expMaterialsJson)
     if (materials === null) {
       setError(labels.materialsJsonInvalid)
       return
     }
+    const slug = String(expForm.slug || '').trim()
+    const targetId = resolveExperimentId(editingExpId, slug, experiments)
+    saveExperimentLock.current = true
     setSaving(true)
     setError(null)
     setSuccess(null)
@@ -139,20 +159,27 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
         packSlug,
         {
           ...expForm,
+          slug,
           materials_list: materials,
           runtime_config: normalizeRuntimeConfig(expForm.runtime_config),
         },
-        { id: editingExpId }
+        { id: targetId }
       )
       setSuccess(labels.experimentSaved)
       if (experiment?.id) {
         setActiveExperimentId(experiment.id)
         setEditingExpId(experiment.id)
+        setExpForm((prev) => ({
+          ...prev,
+          slug: experiment.slug || slug,
+          runtime_config: normalizeRuntimeConfig(experiment.runtimeConfig || experiment.runtime_config),
+        }))
       }
       await reload()
     } catch (err) {
-      setError(err.message)
+      setError(formatExperimentSaveError(err, slug, labels))
     } finally {
+      saveExperimentLock.current = false
       setSaving(false)
     }
   }

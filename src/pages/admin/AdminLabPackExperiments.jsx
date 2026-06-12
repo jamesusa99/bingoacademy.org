@@ -55,6 +55,7 @@ export default function AdminLabPackExperiments() {
       expMaterialsLabel: L('expMaterialsLabel'),
       saveExperiment: L('saveExperiment'),
       experimentSaved: L('experimentSaved'),
+      experimentSlugDuplicate: L('experimentSlugDuplicate'),
       confirmDeleteExperiment: L('confirmDeleteExperiment'),
       selectExperimentFirst: L('selectExperimentFirst'),
       stepSaved: L('stepSaved'),

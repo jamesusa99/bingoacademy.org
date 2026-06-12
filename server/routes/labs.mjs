@@ -93,7 +93,16 @@ export function registerLabRoutes(app, { verifyAdminUser }) {
     const picked = pickExperimentPayload(req.body, packSlug)
     if (picked.error) return res.status(400).json({ error: picked.error })
 
-    const { data, error } = await admin.from('lab_experiments').insert(picked.row).select().maybeSingle()
+    const { data: existing } = await admin
+      .from('lab_experiments')
+      .select('id')
+      .eq('pack_slug', packSlug)
+      .eq('slug', picked.row.slug)
+      .maybeSingle()
+
+    const { data, error } = existing?.id
+      ? await admin.from('lab_experiments').update(picked.row).eq('id', existing.id).select().maybeSingle()
+      : await admin.from('lab_experiments').insert(picked.row).select().maybeSingle()
     if (error) return res.status(400).json({ error: error.message })
     return res.json({ experiment: mapExperimentRow(data) })
   })
@@ -109,6 +118,19 @@ export function registerLabRoutes(app, { verifyAdminUser }) {
     const packSlug = req.body?.pack_slug || req.body?.packSlug
     const picked = pickExperimentPayload(req.body, packSlug)
     if (picked.error) return res.status(400).json({ error: picked.error })
+
+    const { data: slugConflict } = await admin
+      .from('lab_experiments')
+      .select('id')
+      .eq('pack_slug', picked.row.pack_slug)
+      .eq('slug', picked.row.slug)
+      .neq('id', id)
+      .maybeSingle()
+    if (slugConflict) {
+      return res.status(409).json({
+        error: `Experiment slug "${picked.row.slug}" already exists in this pack`,
+      })
+    }
 
     const { data, error } = await admin.from('lab_experiments').update(picked.row).eq('id', id).select().maybeSingle()
     if (error) return res.status(400).json({ error: error.message })

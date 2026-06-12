@@ -145,6 +145,8 @@ export const adminPagesZh = {
       expMaterialsLabel: '本实验材料清单（JSON，可选）',
       saveExperiment: '保存实验',
       experimentSaved: '实验已保存。',
+      experimentSlugDuplicate:
+        '实验标识「{{slug}}」在此包内已存在。如需修改已有实验，请在左侧列表中点击该实验后再保存；新建实验请使用不同的 slug。',
       confirmDeleteExperiment: '确定删除该实验及全部步骤？',
       selectExperimentFirst: '请先选择或保存一个实验。',
       stepSaved: '步骤已保存。',
@@ -1164,6 +1166,8 @@ export const adminPagesEn = {
       expMaterialsLabel: 'Experiment materials (JSON, optional)',
       saveExperiment: 'Save experiment',
       experimentSaved: 'Experiment saved.',
+      experimentSlugDuplicate:
+        'Slug "{{slug}}" already exists in this pack. Click the experiment in the list to edit it, or choose a different slug for a new one.',
       confirmDeleteExperiment: 'Delete this experiment and all its steps?',
       selectExperimentFirst: 'Select or save an experiment first.',
       stepSaved: 'Step saved.',
