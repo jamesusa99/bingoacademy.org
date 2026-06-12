@@ -83,6 +83,18 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
     reload()
   }, [reload])
 
+  useEffect(() => {
+    if (!activeExperimentId || !experiments.length) return
+    const fresh = experiments.find((e) => e.id === activeExperimentId)
+    if (!fresh) return
+    if (editingExpId === activeExperimentId) {
+      setExpForm((prev) => ({
+        ...prev,
+        runtime_config: normalizeRuntimeConfig(fresh.runtimeConfig || fresh.runtime_config),
+      }))
+    }
+  }, [experiments, activeExperimentId, editingExpId])
+
   const activeExperiment = experiments.find((e) => e.id === activeExperimentId) || null
 
   const startEditExperiment = (exp) => {
@@ -233,9 +245,12 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
 
   return (
     <div className="mt-8 pt-8 border-t border-slate-200 space-y-6">
-      <div>
-        <h3 className="font-semibold text-bingo-dark text-base">{labels.level2Title}</h3>
-        <p className="text-xs text-slate-500 mt-1">{labels.level2Desc}</p>
+      <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{labels.level2Title}</p>
+        <p className="text-xs text-slate-600 mt-1">{labels.level2Desc}</p>
+        <p className="text-[10px] font-mono text-slate-400 mt-2">
+          {labels.packSlugLabel || 'Pack'}: {packSlug}
+        </p>
       </div>
 
       {error ? (

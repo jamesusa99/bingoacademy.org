@@ -34,7 +34,7 @@ export default function AdminLabPackExperiments() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
-  const [level1Open, setLevel1Open] = useState(true)
+  const [level1Open, setLevel1Open] = useState(false)
 
   const hierarchyLabels = useMemo(
     () => ({
@@ -94,6 +94,7 @@ export default function AdminLabPackExperiments() {
       runtimeStepsOnlyHint: L('runtimeStepsOnlyHint'),
       saveRuntime: L('saveRuntime'),
       saveExperimentBeforeRuntime: L('saveExperimentBeforeRuntime'),
+      packSlugLabel: L('packSlugLabel'),
       loading: 'Loading…',
       saving: c.saving,
       delete: c.delete,
@@ -209,15 +210,22 @@ export default function AdminLabPackExperiments() {
 
   return (
     <div>
-      <AdminPageHeader titleKey="pages.coursesCatalog.title" descriptionKey="pages.coursesCatalog.sectionLevel23" />
+      <AdminPageHeader titleKey="pages.coursesCatalog.sectionLevel23" descriptionKey="pages.coursesCatalog.level1ListHint" />
 
-      <div className="mb-4 flex flex-wrap gap-3 text-sm">
+      <div className="mb-4 flex flex-wrap gap-3 text-sm items-center justify-between">
+        <div className="flex flex-wrap gap-3">
         <Link to="/admin/labs-materials" className="text-primary hover:underline">
           ← {L('title')}
         </Link>
         <Link to={`/labs/pack/${encodeURIComponent(packSlug)}`} className="text-slate-600 hover:underline" target="_blank" rel="noreferrer">
           Preview on site →
         </Link>
+        </div>
+        {form?.name ? (
+          <p className="text-sm font-semibold text-bingo-dark">
+            {form.name} <span className="text-slate-400 font-mono font-normal text-xs">({packSlug})</span>
+          </p>
+        ) : null}
       </div>
 
       {error ? (

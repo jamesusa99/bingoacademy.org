@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import {
@@ -11,7 +11,6 @@ import {
   labMaterialsSubcategoriesForLine,
 } from '../../lib/catalogCourse'
 import { saveCatalogCourse, deleteCatalogCourse } from '../../lib/admin/catalog'
-import AdminLabPackHierarchyEditor from '../../components/admin/AdminLabPackHierarchyEditor'
 import AdminLabPackLevel1List from '../../components/admin/AdminLabPackLevel1List'
 import AdminLabPackLevel1Fields from '../../components/admin/AdminLabPackLevel1Fields'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
@@ -48,6 +47,7 @@ const inputClass = 'w-full rounded-xl border border-slate-200 px-3 py-2 text-sm'
 export default function AdminCoursesCatalog() {
   const c = useAdminCrud()
   const t = c.t
+  const navigate = useNavigate()
   const STATUS_OPTIONS = statusOptions(t)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -60,6 +60,7 @@ export default function AdminCoursesCatalog() {
   const [lineFilter, setLineFilter] = useState(DEFAULT_ADMIN_PRODUCT_LINE)
   const [typeFilter, setTypeFilter] = useState('all')
   const [levelsByLine, setLevelsByLine] = useState({ ioai: [], general: [], k12: [] })
+  const [experimentCounts, setExperimentCounts] = useState({})
   const editorRef = useRef(null)
 
   const labSubs = useMemo(() => labMaterialsSubcategoriesForLine(form.line), [form.line])
@@ -109,9 +110,15 @@ export default function AdminCoursesCatalog() {
       colPackMaterials: t('pages.coursesCatalog.colPackMaterials'),
       colPackMaterialsHint: t('pages.coursesCatalog.colPackMaterialsHint'),
       manageExperimentsInline: t('pages.coursesCatalog.manageExperimentsInline'),
+      sectionLevel23: t('pages.coursesCatalog.sectionLevel23'),
       level1ListTitle: t('pages.coursesCatalog.level1ListTitle'),
       level1ListHint: t('pages.coursesCatalog.level1ListHint'),
-      manageExperiments: t('pages.coursesCatalog.manageExperiments'),
+      manageContent: t('pages.coursesCatalog.manageContent'),
+      colExperimentCount: t('pages.coursesCatalog.colExperimentCount'),
+      addPack: t('pages.coursesCatalog.addPack'),
+      editPack: t('pages.coursesCatalog.editPack'),
+      packSavedGoManage: t('pages.coursesCatalog.packSavedGoManage'),
+      noExperimentsShort: t('pages.coursesCatalog.noExperimentsShort'),
       deletePack: t('pages.coursesCatalog.deletePack'),
       addCourse: t('pages.coursesCatalog.addCourse'),
       actions: c.actions,
@@ -119,79 +126,20 @@ export default function AdminCoursesCatalog() {
     [t, c]
   )
 
-  const hierarchyLabels = useMemo(() => {
-    const L = (key) => t(`pages.coursesCatalog.${key}`)
-    return {
-      savePackFirst: L('savePackFirst'),
-      level2Title: L('level2Title'),
-      level2Desc: L('level2Desc'),
-      level3Title: L('level3Title'),
-      level3Desc: L('level3Desc'),
-      experimentList: L('experimentList'),
-      addExperiment: L('addExperiment'),
-      noExperiments: L('noExperiments'),
-      editExperiment: L('editExperiment'),
-      newExperiment: L('newExperiment'),
-      expSlugPh: L('expSlugPh'),
-      expNamePh: L('expNamePh'),
-      expContentPh: L('expContentPh'),
-      expPurposePh: L('expPurposePh'),
-      expMaterialsLabel: L('expMaterialsLabel'),
-      saveExperiment: L('saveExperiment'),
-      experimentSaved: L('experimentSaved'),
-      confirmDeleteExperiment: L('confirmDeleteExperiment'),
-      selectExperimentFirst: L('selectExperimentFirst'),
-      stepSaved: L('stepSaved'),
-      confirmDeleteStep: L('confirmDeleteStep'),
-      selectExperimentHint: L('selectExperimentHint'),
-      editingStepsFor: L('editingStepsFor'),
-      editStep: L('editStep'),
-      newStep: L('newStep'),
-      stepTitlePh: L('stepTitlePh'),
-      stepBodyPh: L('stepBodyPh'),
-      videoUrlPh: L('videoUrlPh'),
-      cloudflarePh: L('cloudflarePh'),
-      pptUrlPh: L('pptUrlPh'),
-      linkUrlPh: L('linkUrlPh'),
-      downloadUrlPh: L('downloadUrlPh'),
-      downloadLabelPh: L('downloadLabelPh'),
-      programmingLabPh: L('programmingLabPh'),
-      saveStep: L('saveStep'),
-      stepCount: (n) => L('stepCount').replace('{{count}}', String(n)),
-      materialsJsonInvalid: L('materialsJsonInvalid'),
-      tabSteps: L('tabSteps'),
-      tabRuntime: L('tabRuntime'),
-      runtimeConfigured: L('runtimeConfigured'),
-      runtimeTitle: L('runtimeTitle'),
-      runtimeDesc: L('runtimeDesc'),
-      runtimeTypeLabel: L('runtimeTypeLabel'),
-      runtimeUrlLabel: L('runtimeUrlLabel'),
-      runtimeUrlPh: L('runtimeUrlPh'),
-      runtimeUploadHint: L('runtimeUploadHint'),
-      uploadAsset: L('uploadAsset'),
-      uploadPackage: L('uploadPackage'),
-      uploading: L('uploading'),
-      runtimeInternalPathLabel: L('runtimeInternalPathLabel'),
-      runtimeUrlOptional: L('runtimeUrlOptional'),
-      embedHeightLabel: L('embedHeightLabel'),
-      openInNewTab: L('openInNewTab'),
-      runtimeStepsOnlyHint: L('runtimeStepsOnlyHint'),
-      saveRuntime: L('saveRuntime'),
-      saveExperimentBeforeRuntime: L('saveExperimentBeforeRuntime'),
-      loading: 'Loading…',
-      saving: c.saving,
-      delete: c.delete,
-    }
-  }, [t, c])
-
   const fetchItems = async () => {
     setLoading(true)
-    const [{ data, error: e }, ...curriculumResults] = await Promise.all([
+    const [{ data, error: e }, { data: expRows, error: expErr }, ...curriculumResults] = await Promise.all([
       supabase.from('courses_catalog').select('*').order('sort_order'),
+      supabase.from('lab_experiments').select('pack_slug'),
       ...CURRICULUM_LINES.map((line) => fetchCurriculumAdmin(line).catch(() => ({ levels: [] }))),
     ])
-    setError(e?.message || null)
+    setError(e?.message || expErr?.message || null)
     setItems(data || [])
+    const counts = {}
+    for (const row of expRows || []) {
+      if (row?.pack_slug) counts[row.pack_slug] = (counts[row.pack_slug] || 0) + 1
+    }
+    setExperimentCounts(counts)
     setLevelsByLine(
       Object.fromEntries(CURRICULUM_LINES.map((line, i) => [line, curriculumResults[i]?.levels || []]))
     )
@@ -278,6 +226,7 @@ export default function AdminCoursesCatalog() {
     setError(null)
     setSuccess(null)
     setSaving(true)
+    const wasNew = !editingSlug
     try {
       const payload = formToCatalogPayload(form)
       if (!payload.slug) throw new Error(t('pages.coursesCatalog.slugRequired'))
@@ -316,12 +265,17 @@ export default function AdminCoursesCatalog() {
         setForm(catalogRowToForm(savedRow))
       }
 
-      setSuccess(editingSlug ? t('pages.coursesCatalog.courseUpdated') : t('pages.coursesCatalog.courseSaved'))
+      setSuccess(
+        wasNew ? t('pages.coursesCatalog.packSavedGoManage') : t('pages.coursesCatalog.courseUpdated')
+      )
       setEditingSlug(rowPayload.slug)
       if (rowPayload.module_id) {
         await resyncModuleCatalogPrice(rowPayload.line, rowPayload.module_id).catch(() => {})
       }
       await fetchItems()
+      if (wasNew && isLabMaterialsCatalogRow({ line: rowPayload.line, sub: rowPayload.sub })) {
+        navigate(`/admin/labs-materials/${encodeURIComponent(rowPayload.slug)}/experiments`)
+      }
     } catch (e) {
       setError(e.message)
     } finally {
@@ -395,7 +349,7 @@ export default function AdminCoursesCatalog() {
               ))}
             </select>
             <button type="button" onClick={startAdd} className="btn-primary text-xs px-3 py-1.5">
-              {labels.addCourse}
+              {labels.addPack}
             </button>
           </div>
         </div>
@@ -413,6 +367,7 @@ export default function AdminCoursesCatalog() {
                   })
             }
             labels={labels}
+            experimentCounts={experimentCounts}
             onEdit={startEdit}
             onDelete={handleDelete}
             onAdd={startAdd}
@@ -425,10 +380,12 @@ export default function AdminCoursesCatalog() {
       <div ref={editorRef} className="card p-6 mb-6 scroll-mt-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="font-semibold text-bingo-dark">
-            {editingSlug ? t('pages.coursesCatalog.editCourse', { slug: editingSlug }) : t('pages.coursesCatalog.addCourse')}
+            {editingSlug
+              ? t('pages.coursesCatalog.editCourse', { slug: editingSlug })
+              : labels.addPack}
           </h2>
           <button type="button" onClick={startAdd} className="text-sm text-primary hover:underline">
-            {labels.addCourse}
+            {labels.addPack}
           </button>
           <button type="button" onClick={closeEditor} className="text-sm text-slate-500 hover:underline">
             {c.cancel}
@@ -560,7 +517,18 @@ export default function AdminCoursesCatalog() {
             </div>
 
             {editingSlug ? (
-              <AdminLabPackHierarchyEditor packSlug={editingSlug} labels={hierarchyLabels} />
+              <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-bingo-dark">{labels.sectionLevel23}</p>
+                  <p className="text-xs text-slate-600 mt-1">{labels.manageExperimentsInline}</p>
+                </div>
+                <Link
+                  to={`/admin/labs-materials/${encodeURIComponent(editingSlug)}/experiments`}
+                  className="btn-primary text-sm px-4 py-2"
+                >
+                  {labels.manageContent} →
+                </Link>
+              </div>
             ) : (
               <p className="mt-6 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                 {labels.manageExperimentsInline}
@@ -588,22 +556,22 @@ export default function AdminCoursesCatalog() {
             {saving ? c.saving : t('pages.coursesCatalog.saveCourse')}
           </button>
           {editingSlug && isLabRow ? (
-            <>
-              <Link
-                to={`/admin/labs-materials/${encodeURIComponent(editingSlug)}/experiments`}
-                className="px-5 py-2 rounded-xl border text-sm text-slate-600 hover:bg-slate-50"
-              >
-                {labels.manageExperiments} →
-              </Link>
-              <Link
-                to={`/labs/pack/${encodeURIComponent(editingSlug)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="px-5 py-2 rounded-xl border text-sm text-slate-600 hover:bg-slate-50"
-              >
-                Preview →
-              </Link>
-            </>
+            <Link
+              to={`/admin/labs-materials/${encodeURIComponent(editingSlug)}/experiments`}
+              className="btn-primary px-5 py-2 rounded-xl text-sm"
+            >
+              {labels.manageContent} →
+            </Link>
+          ) : null}
+          {editingSlug && isLabRow ? (
+            <Link
+              to={`/labs/pack/${encodeURIComponent(editingSlug)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-5 py-2 rounded-xl border text-sm text-slate-600 hover:bg-slate-50"
+            >
+              Preview →
+            </Link>
           ) : null}
           {editingSlug ? (
             <button
