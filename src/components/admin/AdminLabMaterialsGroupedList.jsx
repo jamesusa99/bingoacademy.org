@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { getProgramCurriculum } from '../../config/programCurriculum'
+import { useAdminLocale } from '../../contexts/AdminLocaleContext'
 import {
   groupLabMaterialsByModule,
   labMaterialTypeLabel,
@@ -18,13 +19,14 @@ function partitionModuleItems(items, productLine) {
 }
 
 function ItemRow({ row, labels, onEdit, onDelete, dragProps }) {
+  const { locale } = useAdminLocale()
   return (
     <tr {...dragProps} className={`border-t border-slate-100 hover:bg-slate-50/80 ${dragProps.className || ''}`}>
       <td className="p-2 w-10">
         <DragHandle label={labels.dragHint} />
       </td>
       <td className="p-3">
-        <span className="text-xs font-medium text-slate-700">{labMaterialTypeLabel(row.sub, row.line)}</span>
+        <span className="text-xs font-medium text-slate-700">{labMaterialTypeLabel(row.sub, row.line, { locale })}</span>
       </td>
       <td className="p-3 font-medium">{row.name}</td>
       <td className="p-3 text-slate-600">{labels.statusLabel(row.status)}</td>
@@ -125,7 +127,7 @@ function ModuleGroupTable({ items, labels, onEdit, onDelete }) {
           {items.map((row) => (
             <tr key={row.slug} className="border-t border-slate-100 hover:bg-slate-50/80">
               <td className="p-3">
-                <span className="text-xs font-medium text-slate-700">{labMaterialTypeLabel(row.sub, row.line)}</span>
+                <span className="text-xs font-medium text-slate-700">{labMaterialTypeLabel(row.sub, row.line, { locale })}</span>
               </td>
               <td className="p-3 font-medium">{row.name}</td>
               <td className="p-3 text-slate-600">{labels.statusLabel(row.status)}</td>

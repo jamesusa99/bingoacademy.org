@@ -1,11 +1,11 @@
 /** Lab & materials types — bind to curriculum modules (L3); legacy rows may use lesson_id */
 
 export const LAB_MATERIAL_TYPES = [
-  { id: 'training-lab', name: '集训 Lab', icon: '🏕️' },
-  { id: 'online-lab', name: '在线 Lab', icon: '🧪' },
-  { id: 'online-lab-kit', name: '在线材料包', icon: '📦' },
-  { id: 'offline-lab', name: '线下 Lab', icon: '🔬' },
-  { id: 'offline-lab-kit', name: '线下材料包', icon: '🛠️' },
+  { id: 'training-lab', name: '集训 Lab', nameEn: 'Training Lab', icon: '🏕️' },
+  { id: 'online-lab', name: '在线 Lab', nameEn: 'Online Lab', icon: '🧪' },
+  { id: 'online-lab-kit', name: '在线材料包', nameEn: 'Online Lab Kit', icon: '📦' },
+  { id: 'offline-lab', name: '线下 Lab', nameEn: 'Offline Lab', icon: '🔬' },
+  { id: 'offline-lab-kit', name: '线下材料包', nameEn: 'Offline Lab Kit', icon: '🛠️' },
 ]
 
 export const LAB_MATERIAL_TYPE_IDS = LAB_MATERIAL_TYPES.map((t) => t.id)
@@ -24,9 +24,11 @@ export function normalizeLabMaterialSub(sub, line) {
   return sub
 }
 
-export function labMaterialTypeLabel(sub, line) {
+export function labMaterialTypeLabel(sub, line, { locale = 'en' } = {}) {
   const id = normalizeLabMaterialSub(sub, line)
-  return LAB_MATERIAL_TYPES.find((t) => t.id === id)?.name || id
+  const row = LAB_MATERIAL_TYPES.find((t) => t.id === id)
+  if (!row) return id
+  return locale === 'zh' ? row.name : row.nameEn || row.name
 }
 
 export function deliveryTypeForLabSub(sub, line) {

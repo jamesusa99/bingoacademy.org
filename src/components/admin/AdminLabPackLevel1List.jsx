@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { labMaterialTypeLabel } from '../../config/labMaterials'
 import { getProgramCurriculum } from '../../config/programCurriculum'
+import { useAdminLocale } from '../../contexts/AdminLocaleContext'
 
 function sortByOrder(rows) {
   return [...rows].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
@@ -18,6 +19,7 @@ export default function AdminLabPackLevel1List({
   onAdd,
   activeSlug = null,
 }) {
+  const { locale } = useAdminLocale()
   const sorted = sortByOrder(items)
 
   if (!sorted.length) {
@@ -57,7 +59,7 @@ export default function AdminLabPackLevel1List({
                 className={`border-t border-slate-100 ${isActive ? 'bg-primary/5' : 'hover:bg-slate-50/80'}`}
               >
                 <td className="p-3 font-medium text-bingo-dark">{row.name}</td>
-                <td className="p-3 text-xs">{labMaterialTypeLabel(row.sub, row.line)}</td>
+                <td className="p-3 text-xs">{labMaterialTypeLabel(row.sub, row.line, { locale })}</td>
                 <td className="p-3 text-xs text-slate-600">
                   {lineConfig?.icon} {lineConfig?.adminTitle || row.line}
                 </td>

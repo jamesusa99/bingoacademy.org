@@ -105,7 +105,7 @@ export default function LabPackDetail() {
   )
   const backHref = item ? labsPath(item.line, item.sub) : '/labs'
   const lineLabel = item
-    ? getProgramCurriculum(item.line)?.adminTitle?.split('·')[0]?.trim() || item.line.toUpperCase()
+    ? getProgramCurriculum(item.line)?.adminTitleEn?.split('·')[0]?.trim() || item.line.toUpperCase()
     : ''
   const showMaterials = item && (isKitSub(item.sub) || (pack?.materialsList?.length ?? 0) > 0)
   const priceLabel = catalogItem ? getCourseDisplayPrice(catalogItem) : pack?.price || null

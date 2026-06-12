@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { labMaterialTypeLabel, partitionLabAndMaterialItems } from '../../config/labMaterials'
+import { useAdminLocale } from '../../contexts/AdminLocaleContext'
 import { useDragReorder } from '../../hooks/useDragReorder'
 import DragHandle from './DragHandle'
 
@@ -9,6 +10,7 @@ function sortByOrder(rows) {
 }
 
 function CatalogSortList({ items, title, emptyHint, labels, onReorder }) {
+  const { locale } = useAdminLocale()
   const sorted = useMemo(() => sortByOrder(items), [items])
   const drag = useDragReorder({
     items: sorted,
@@ -34,7 +36,7 @@ function CatalogSortList({ items, title, emptyHint, labels, onReorder }) {
                 {onReorder ? <DragHandle label={labels.dragHint} className="w-7 h-7 shrink-0" /> : null}
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
-                    {labMaterialTypeLabel(row.sub, row.line)}
+                    {labMaterialTypeLabel(row.sub, row.line, { locale })}
                   </p>
                   <p className="font-medium text-bingo-dark truncate">{row.name}</p>
                   <p className="text-[10px] font-mono text-slate-400 truncate">{row.slug}</p>
