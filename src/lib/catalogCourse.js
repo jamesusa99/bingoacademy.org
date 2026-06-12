@@ -237,3 +237,48 @@ export async function fetchCourseCatalog() {
 export function findCourseInList(courses, id) {
   return courses.find((c) => c.id === id) ?? null
 }
+
+/** Normalize pack learning outcomes from JSONB, JSON string, or newline text */
+export function parseOutcomesList(raw) {
+  if (Array.isArray(raw)) {
+    return raw.map((line) => String(line).trim()).filter(Boolean)
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        return parsed.map((line) => String(line).trim()).filter(Boolean)
+      }
+    } catch {
+      return raw.split('\n').map((s) => s.trim()).filter(Boolean)
+    }
+  }
+  return []
+}
+
+/** Merge API lab pack + storefront catalog row for hero display */
+export function mergeLabPackDisplayItem(pack, catalogCourse) {
+  const fromApi = pack || {}
+  const fromCatalog = catalogCourse || {}
+  const outcomesFromApi = parseOutcomesList(fromApi.outcomes)
+  const outcomesFromCatalog = parseOutcomesList(fromCatalog.outcomes)
+  const description =
+    String(fromApi.description || '').trim() ||
+    String(fromCatalog.desc || fromCatalog.description || '').trim()
+
+  return {
+    line: fromApi.line || fromCatalog.line,
+    sub: fromApi.sub || fromCatalog.sub,
+    name: fromApi.name || fromCatalog.name,
+    nameEn:
+      fromApi.nameEn ||
+      fromApi.name_en ||
+      fromCatalog.nameEn ||
+      fromApi.name ||
+      fromCatalog.name,
+    description,
+    hours: fromApi.hours || fromCatalog.hours || '',
+    audience: fromApi.audience || fromCatalog.audience || '',
+    outcomes: outcomesFromApi.length ? outcomesFromApi : outcomesFromCatalog,
+  }
+}

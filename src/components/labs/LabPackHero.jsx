@@ -7,8 +7,10 @@ import {
   Layers,
   Package,
   Shield,
+  Users,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { parseOutcomesList } from '../../lib/catalogCourse'
 import LabMaterialPurchaseButton from './LabMaterialPurchaseButton'
 import { LAB_EXPERIMENTS_PORTAL } from '../../config/labExperiments'
 import { labMaterialTypeLabel } from '../../config/labMaterials'
@@ -45,7 +47,7 @@ export default function LabPackHero({
   const experimentCount = pack?.experimentCount ?? pack?.experiments?.length ?? 0
   const typeLabel = labMaterialTypeLabel(item.sub, item.line)
   const title = item.nameEn || item.name
-  const outcomes = item.outcomes || []
+  const outcomes = parseOutcomesList(item.outcomes)
   const materialsCount = pack?.materialsList?.length ?? 0
 
   return (
@@ -84,7 +86,7 @@ export default function LabPackHero({
               <StatItem icon={FlaskConical} label={LAB_EXPERIMENTS_PORTAL.experimentCount(experimentCount)} />
             ) : null}
             {totalSteps > 0 ? (
-              <StatItem icon={Layers} label={LAB_EXPERIMENTS_PORTAL.stepCountTotal(totalSteps)} />
+              <StatItem icon={Layers} label={LAB_EXPERIMENTS_PORTAL.stepCount(totalSteps)} />
             ) : null}
             {item.hours ? (
               <StatItem icon={Clock} label={LAB_EXPERIMENTS_PORTAL.durationLabel(item.hours)} />
@@ -95,15 +97,15 @@ export default function LabPackHero({
           </div>
 
           {outcomes.length > 0 ? (
-            <div className="mt-8">
-              <h2 className="text-sm font-semibold text-white mb-4">{LAB_EXPERIMENTS_PORTAL.outcomesTitle}</h2>
-              <ul className="space-y-3">
+            <div className="mt-10 pt-2">
+              <h2 className="text-base font-semibold text-white mb-4">{LAB_EXPERIMENTS_PORTAL.outcomesTitle}</h2>
+              <ul className="space-y-3.5">
                 {outcomes.map((o) => (
                   <li key={o} className="flex gap-3 text-sm text-slate-300 leading-relaxed">
                     <span className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0 mt-0.5">
                       <Check className="w-3 h-3 text-emerald-400" aria-hidden />
                     </span>
-                    {o}
+                    <span>{o}</span>
                   </li>
                 ))}
               </ul>
@@ -157,6 +159,9 @@ export default function LabPackHero({
               ) : null}
               {materialsCount > 0 ? (
                 <IncludeRow icon={Package} text={LAB_EXPERIMENTS_PORTAL.includeMaterials(materialsCount)} />
+              ) : null}
+              {item.audience ? (
+                <IncludeRow icon={Users} text={LAB_EXPERIMENTS_PORTAL.includeAudience(item.audience)} />
               ) : null}
               <IncludeRow icon={Infinity} text={LAB_EXPERIMENTS_PORTAL.includePermanent} />
             </ul>

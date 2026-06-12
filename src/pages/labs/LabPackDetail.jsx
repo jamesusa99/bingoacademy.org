@@ -7,8 +7,8 @@ import LabMaterialsList from '../../components/labs/LabMaterialsList'
 import { LAB_EXPERIMENTS_PORTAL, isKitSub } from '../../config/labExperiments'
 import { labsPath } from '../../config/productLabs'
 import { getProgramCurriculum } from '../../config/programCurriculum'
-import { fetchLabPack, fetchLabPackExperimentsPublic } from '../../lib/labPackApi'
-import { findCourseInList } from '../../lib/catalogCourse'
+import { fetchLabPack, fetchLabPackCatalogPublic, fetchLabPackExperimentsPublic } from '../../lib/labPackApi'
+import { findCourseInList, mergeLabPackDisplayItem } from '../../lib/catalogCourse'
 import { useCourseCatalog } from '../../hooks/useCourseCatalog'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
 import { getCourseDisplayPrice } from '../../lib/coursePricing'
@@ -23,6 +23,7 @@ export default function LabPackDetail() {
   const { hasAccess: checkAccess, refresh } = usePurchasedCourses()
   const owned = checkAccess(slug)
   const [pack, setPack] = useState(null)
+  const [catalogMeta, setCatalogMeta] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -74,6 +75,18 @@ export default function LabPackDetail() {
   }, [slug])
 
   useEffect(() => {
+    let cancelled = false
+    fetchLabPackCatalogPublic(slug)
+      .then((meta) => {
+        if (!cancelled && meta) setCatalogMeta(meta)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [slug])
+
+  useEffect(() => {
     const checkout = searchParams.get('checkout')
     const sessionId = searchParams.get('session_id')
     if (checkout !== 'success' || !sessionId) return
@@ -94,7 +107,6 @@ export default function LabPackDetail() {
       })
   }, [searchParams, setSearchParams, refresh])
 
-  const item = pack || catalogItem
   const experiments = useMemo(
     () => [...(pack?.experiments || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
     [pack?.experiments]
@@ -103,12 +115,38 @@ export default function LabPackDetail() {
     () => experiments.reduce((sum, exp) => sum + (exp.stepCount ?? 0), 0),
     [experiments]
   )
+
+  const catalogSource = catalogItem || catalogMeta
+  const displayItem = useMemo(
+    () => mergeLabPackDisplayItem(pack, catalogSource),
+    [pack, catalogItem, catalogMeta]
+  )
+  const heroPack = useMemo(
+    () => ({
+      ...(catalogMeta || {}),
+      ...(pack || {}),
+      materialsList:
+        pack?.materialsList?.length
+          ? pack.materialsList
+          : catalogMeta?.materialsList?.length
+            ? catalogMeta.materialsList
+            : catalogItem?.materialsList || [],
+      experiments: pack?.experiments,
+      experimentCount: pack?.experimentCount ?? experiments.length,
+    }),
+    [pack, catalogMeta, catalogItem, experiments.length]
+  )
+
+  const item = displayItem.line ? displayItem : pack || catalogItem || catalogMeta
   const backHref = item ? labsPath(item.line, item.sub) : '/labs'
   const lineLabel = item
     ? getProgramCurriculum(item.line)?.adminTitleEn?.split('·')[0]?.trim() || item.line.toUpperCase()
     : ''
-  const showMaterials = item && (isKitSub(item.sub) || (pack?.materialsList?.length ?? 0) > 0)
-  const priceLabel = catalogItem ? getCourseDisplayPrice(catalogItem) : pack?.price || null
+  const materialsList = heroPack.materialsList || []
+  const showMaterials = item && (isKitSub(item.sub) || materialsList.length > 0)
+  const priceLabel = catalogItem
+    ? getCourseDisplayPrice(catalogItem)
+    : catalogMeta?.price || pack?.price || null
   const comingSoon = catalogItem ? isCourseComingSoon(catalogItem) : false
 
   if (catalogLoading || loading) {
@@ -132,13 +170,13 @@ export default function LabPackDetail() {
 
   return (
     <div className="lab-pack-page">
-      <PageMeta title={`${item.nameEn || item.name} · Labs`} />
+      <PageMeta title={`${displayItem.nameEn || displayItem.name || slug} · Labs`} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         <LabPackHero
-          item={item}
-          pack={pack}
-          catalogItem={catalogItem}
+          item={displayItem}
+          pack={heroPack}
+          catalogItem={catalogItem || catalogMeta}
           owned={owned}
           comingSoon={comingSoon}
           priceLabel={priceLabel}
@@ -147,9 +185,9 @@ export default function LabPackDetail() {
           totalSteps={totalSteps}
         />
 
-        {showMaterials && pack?.materialsList?.length ? (
+        {showMaterials && materialsList.length ? (
           <div className="mt-12 max-w-3xl lab-pack-materials-dark">
-            <LabMaterialsList items={pack.materialsList} className="mb-0" dark />
+            <LabMaterialsList items={materialsList} className="mb-0" dark />
           </div>
         ) : null}
 

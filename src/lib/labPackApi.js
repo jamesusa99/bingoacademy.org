@@ -30,6 +30,39 @@ export async function fetchLabPackExperimentsPublic(packSlug) {
   }))
 }
 
+/** Load L1 pack metadata from courses_catalog when API payload is incomplete */
+export async function fetchLabPackCatalogPublic(packSlug) {
+  const { supabase, isSupabaseConfigured } = await import('./supabase')
+  if (!isSupabaseConfigured) return null
+
+  const { data, error } = await supabase
+    .from('courses_catalog')
+    .select(
+      'slug, line, sub, name, name_en, description, hours, audience, outcomes, price, price_cents, currency, purchasable, materials_list'
+    )
+    .eq('slug', packSlug)
+    .maybeSingle()
+
+  if (error || !data) return null
+
+  return {
+    slug: data.slug,
+    line: data.line,
+    sub: data.sub,
+    name: data.name,
+    nameEn: data.name_en || data.name,
+    description: data.description || '',
+    hours: data.hours || '',
+    audience: data.audience || '',
+    outcomes: data.outcomes || [],
+    price: data.price || '',
+    priceCents: data.price_cents ?? null,
+    currency: data.currency || 'usd',
+    purchasable: data.purchasable ?? null,
+    materialsList: Array.isArray(data.materials_list) ? data.materials_list : [],
+  }
+}
+
 async function labAuthFetch(path) {
   const { supabase, isSupabaseConfigured } = await import('./supabase')
   const headers = { 'Content-Type': 'application/json' }

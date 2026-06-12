@@ -43,7 +43,7 @@ export const LAB_EXPERIMENTS_PORTAL = {
   continueLearning: 'Continue learning',
   packIncludes: 'This pack includes',
   includeExperiments: (n) => `${n} full experiment${n === 1 ? '' : 's'}`,
-  includeSteps: (n) => `${n}+ guided steps`,
+  includeSteps: (n) => `${n} guided step${n === 1 ? '' : 's'}`,
   includePermanent: 'Lifetime access (including future updates)',
   includeMaterials: (n) => `${n} kit item${n === 1 ? '' : 's'}`,
   includeAudience: (text) => `For: ${text}`,
