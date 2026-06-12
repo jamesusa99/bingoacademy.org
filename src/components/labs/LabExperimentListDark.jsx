@@ -1,4 +1,4 @@
-import { ChevronRight, FlaskConical, Lock } from 'lucide-react'
+import { ChevronRight, FlaskConical, Info, Lock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { LAB_EXPERIMENTS_PORTAL, isLabExperimentUnlocked } from '../../config/labExperiments'
 
@@ -6,8 +6,13 @@ function padIndex(n) {
   return String(n).padStart(2, '0')
 }
 
+function sortExperiments(rows) {
+  return [...rows].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+}
+
 export default function LabExperimentListDark({ packSlug, experiments = [], owned = false }) {
-  if (!experiments.length) {
+  const sorted = sortExperiments(experiments)
+  if (!sorted.length) {
     return (
       <section id="lab-experiment-list" className="lab-pack-experiments">
         <p className="text-sm text-slate-500 py-8 text-center">{LAB_EXPERIMENTS_PORTAL.noExperiments}</p>
@@ -16,11 +21,11 @@ export default function LabExperimentListDark({ packSlug, experiments = [], owne
   }
 
   const lockedNote =
-    !owned && experiments.length >= 2
+    !owned && sorted.length >= 2
       ? LAB_EXPERIMENTS_PORTAL.lockedDemoNote(
-          experiments.length > 2
-            ? `${experiments.length - 1}、${experiments.length}`
-            : experiments.map((_, i) => i + 1).join('、')
+          sorted.length > 2
+            ? `${sorted.length - 1}、${sorted.length}`
+            : sorted.map((_, i) => i + 1).join('、')
         )
       : null
 
@@ -34,11 +39,11 @@ export default function LabExperimentListDark({ packSlug, experiments = [], owne
       </div>
 
       <div className="space-y-3">
-        {experiments.map((exp, index) => {
+        {sorted.map((exp, index) => {
           const unlocked = isLabExperimentUnlocked({
             owned,
             index,
-            total: experiments.length,
+            total: sorted.length,
           })
           const num = padIndex(index + 1)
           const desc = exp.content || exp.purpose || ''
@@ -98,9 +103,10 @@ export default function LabExperimentListDark({ packSlug, experiments = [], owne
       </div>
 
       {lockedNote ? (
-        <p className="mt-6 text-xs text-slate-500 bg-slate-800/50 border border-slate-700/60 rounded-xl px-4 py-3 leading-relaxed">
-          {lockedNote}
-        </p>
+        <div className="mt-6 flex gap-2.5 text-xs text-slate-400 bg-emerald-500/5 border border-emerald-500/25 rounded-xl px-4 py-3 leading-relaxed">
+          <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" aria-hidden />
+          <p>{lockedNote}</p>
+        </div>
       ) : null}
     </section>
   )

@@ -157,12 +157,26 @@ export function registerLabRoutes(app, { verifyAdminUser }) {
     const admin = getSupabaseAdmin()
     if (!admin) return res.status(503).json({ error: 'Database not configured' })
 
+    const experimentId = req.params.experimentId?.trim()
     const picked = pickStepPayload(req.body)
     if (picked.error) return res.status(400).json({ error: picked.error })
 
+    const row = { ...picked.row }
+    const explicitOrder = req.body?.sort_order ?? req.body?.sortOrder
+    if (explicitOrder == null || explicitOrder === '') {
+      const { data: maxRow } = await admin
+        .from('lab_experiment_steps')
+        .select('sort_order')
+        .eq('experiment_id', experimentId)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      row.sort_order = (maxRow?.sort_order ?? -1) + 1
+    }
+
     const { data, error } = await admin
       .from('lab_experiment_steps')
-      .insert({ ...picked.row, experiment_id: req.params.experimentId })
+      .insert({ ...row, experiment_id: experimentId })
       .select()
       .maybeSingle()
 

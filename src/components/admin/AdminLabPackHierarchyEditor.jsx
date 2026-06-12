@@ -127,6 +127,7 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
     })
     setExpMaterialsJson(JSON.stringify(exp.materialsList || [], null, 2))
     setActiveExperimentId(exp.id)
+    setLevel3Tab('steps')
     setEditingStepId(null)
     setStepForm(emptyStep())
   }
@@ -136,8 +137,17 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
     setExpForm(emptyExperiment())
     setExpMaterialsJson('[]')
     setActiveExperimentId(null)
+    setLevel3Tab('steps')
     setEditingStepId(null)
     setStepForm(emptyStep())
+  }
+
+  const nextStepSortOrder = (steps = activeExperiment?.steps) =>
+    (steps?.length ? Math.max(...steps.map((s) => s.sortOrder ?? 0)) + 1 : 0)
+
+  const startNewStep = (steps) => {
+    setEditingStepId(null)
+    setStepForm({ ...emptyStep(), sort_order: nextStepSortOrder(steps) })
   }
 
   const saveExperiment = async (e) => {
@@ -169,11 +179,13 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
       if (experiment?.id) {
         setActiveExperimentId(experiment.id)
         setEditingExpId(experiment.id)
+        setLevel3Tab('steps')
         setExpForm((prev) => ({
           ...prev,
           slug: experiment.slug || slug,
           runtime_config: normalizeRuntimeConfig(experiment.runtimeConfig || experiment.runtime_config),
         }))
+        startNewStep([])
       }
       await reload()
     } catch (err) {
@@ -215,8 +227,8 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
     })
   }
 
-  const saveStep = async (e) => {
-    e.preventDefault()
+  const saveStep = async (e, { addAnother = false } = {}) => {
+    e?.preventDefault?.()
     if (!activeExperimentId) {
       setError(labels.selectExperimentFirst)
       return
@@ -224,6 +236,7 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
     setSaving(true)
     setError(null)
     setSuccess(null)
+    const wasNew = !editingStepId
     try {
       await saveLabStep(
         activeExperimentId,
@@ -234,10 +247,17 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
         { id: editingStepId }
       )
       setSuccess(labels.stepSaved)
-      setEditingStepId(null)
-      setStepForm(emptyStep())
-      await reload()
+      const data = await fetchAdminLabPackExperiments(packSlug)
+      const freshExperiments = data.experiments || []
+      setExperiments(freshExperiments)
       setActiveExperimentId(activeExperimentId)
+      const freshExp = freshExperiments.find((exp) => exp.id === activeExperimentId)
+      if (addAnother || wasNew) {
+        startNewStep(freshExp?.steps)
+      } else {
+        setEditingStepId(null)
+        setStepForm(emptyStep())
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -251,8 +271,7 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
     try {
       await deleteLabStep(id)
       if (editingStepId === id) {
-        setEditingStepId(null)
-        setStepForm(emptyStep())
+        startNewStep((activeExperiment?.steps || []).filter((step) => step.id !== id))
       }
       await reload()
     } catch (err) {
@@ -427,6 +446,22 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
                   </div>
                 ) : (
                   <>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-slate-500">
+                    {labels.stepsInExperiment.replace(
+                      '{{count}}',
+                      String(activeExperiment.steps?.length ?? 0)
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => startNewStep(activeExperiment.steps)}
+                    className="text-xs text-primary font-semibold"
+                  >
+                    {labels.addStep}
+                  </button>
+                </div>
+
                 <ul className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
                   {(activeExperiment.steps || []).map((step, index) => (
                     <li key={step.id} className="p-3 flex items-start justify-between gap-2 bg-white">
@@ -529,9 +564,21 @@ export default function AdminLabPackHierarchyEditor({ packSlug, labels }) {
                       }
                     />
                   ) : null}
-                  <button type="submit" disabled={saving} className="btn-primary text-sm px-4 py-2 disabled:opacity-60">
-                    {saving ? labels.saving : labels.saveStep}
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="submit" disabled={saving} className="btn-primary text-sm px-4 py-2 disabled:opacity-60">
+                      {saving ? labels.saving : labels.saveStep}
+                    </button>
+                    {!editingStepId ? (
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={(e) => saveStep(e, { addAnother: true })}
+                        className="text-sm px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                      >
+                        {saving ? labels.saving : labels.saveStepAndAnother}
+                      </button>
+                    ) : null}
+                  </div>
                 </form>
                   </>
                 )}

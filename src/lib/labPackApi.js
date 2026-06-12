@@ -5,6 +5,31 @@ export async function fetchLabPack(packSlug) {
   return body.pack
 }
 
+/** Public read fallback when API pack payload has no experiments yet. */
+export async function fetchLabPackExperimentsPublic(packSlug) {
+  const { supabase, isSupabaseConfigured } = await import('./supabase')
+  if (!isSupabaseConfigured) return []
+
+  const { data, error } = await supabase
+    .from('lab_experiments')
+    .select('id, slug, title, content, purpose, sort_order, status, steps:lab_experiment_steps(count)')
+    .eq('pack_slug', packSlug)
+    .eq('status', 'live')
+    .order('sort_order')
+
+  if (error) throw new Error(error.message)
+
+  return (data || []).map((row) => ({
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    content: row.content || '',
+    purpose: row.purpose || '',
+    sortOrder: row.sort_order ?? 0,
+    stepCount: Array.isArray(row.steps) && row.steps[0]?.count != null ? row.steps[0].count : 0,
+  }))
+}
+
 async function labAuthFetch(path) {
   const { supabase, isSupabaseConfigured } = await import('./supabase')
   const headers = { 'Content-Type': 'application/json' }

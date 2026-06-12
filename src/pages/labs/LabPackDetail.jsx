@@ -7,7 +7,7 @@ import LabMaterialsList from '../../components/labs/LabMaterialsList'
 import { LAB_EXPERIMENTS_PORTAL, isKitSub } from '../../config/labExperiments'
 import { labsPath } from '../../config/productLabs'
 import { getProgramCurriculum } from '../../config/programCurriculum'
-import { fetchLabPack } from '../../lib/labPackApi'
+import { fetchLabPack, fetchLabPackExperimentsPublic } from '../../lib/labPackApi'
 import { findCourseInList } from '../../lib/catalogCourse'
 import { useCourseCatalog } from '../../hooks/useCourseCatalog'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
@@ -31,14 +31,39 @@ export default function LabPackDetail() {
     setLoading(true)
     setError(null)
     fetchLabPack(slug)
-      .then((data) => {
-        if (!cancelled) setPack(data)
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setPack(null)
-          setError(err.message)
+      .then(async (data) => {
+        if (cancelled) return
+        let nextPack = data
+        if (!data?.experiments?.length) {
+          try {
+            const fallbackExperiments = await fetchLabPackExperimentsPublic(slug)
+            if (fallbackExperiments.length) {
+              nextPack = {
+                ...data,
+                experiments: fallbackExperiments,
+                experimentCount: fallbackExperiments.length,
+              }
+            }
+          } catch {
+            /* keep API payload */
+          }
         }
+        setPack(nextPack)
+      })
+      .catch(async (err) => {
+        if (cancelled) return
+        try {
+          const fallbackExperiments = await fetchLabPackExperimentsPublic(slug)
+          if (fallbackExperiments.length) {
+            setPack({ slug, experiments: fallbackExperiments, experimentCount: fallbackExperiments.length })
+            setError(null)
+            return
+          }
+        } catch {
+          /* fall through */
+        }
+        setPack(null)
+        setError(err.message)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -70,7 +95,10 @@ export default function LabPackDetail() {
   }, [searchParams, setSearchParams, refresh])
 
   const item = pack || catalogItem
-  const experiments = pack?.experiments || []
+  const experiments = useMemo(
+    () => [...(pack?.experiments || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    [pack?.experiments]
+  )
   const totalSteps = useMemo(
     () => experiments.reduce((sum, exp) => sum + (exp.stepCount ?? 0), 0),
     [experiments]
