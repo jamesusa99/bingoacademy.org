@@ -36,6 +36,7 @@ export default function LabExperimentNotesPanel({
   savedAt,
   saveStatus,
   owned,
+  embedded = false,
 }) {
   const materials = experiment?.materialsList || []
   const stepTags = (experiment?.steps || [])
@@ -45,7 +46,7 @@ export default function LabExperimentNotesPanel({
   const savedLabel = formatSavedAt(savedAt)
 
   return (
-    <aside className="lab-workspace__notes">
+    <aside className={embedded ? 'lab-workspace__notes lab-workspace__notes--embedded' : 'lab-workspace__notes'}>
       {materials.length > 0 ? (
         <section className="lab-workspace__notes-block">
           <h3 className="lab-workspace__notes-heading">{LAB_EXPERIMENTS_PORTAL.hardwareTitle}</h3>

@@ -33,19 +33,37 @@ export default function LabStepViewer({ step, index, dark = false, workspace = f
     : dark
       ? 'card-dark-panel p-5'
       : 'card p-5'
-  const titleClass = dark ? 'font-semibold text-white text-sm mt-0.5' : 'font-semibold text-bingo-dark text-sm mt-0.5'
-  const bodyClass = dark ? 'prose prose-sm max-w-none text-slate-300 whitespace-pre-wrap' : 'prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap'
-  const mutedClass = dark ? 'text-sm text-slate-400 whitespace-pre-wrap' : 'text-sm text-slate-600 whitespace-pre-wrap'
-  const numClass = dark
-    ? 'w-8 h-8 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold flex items-center justify-center shrink-0'
-    : 'w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0'
-  const videoBorder = dark ? 'border-slate-700' : 'border-slate-200'
-  const linkClass = dark
-    ? 'inline-flex items-center gap-2 text-sm font-semibold text-emerald-400 hover:underline'
-    : 'inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline'
-  const btnClass = dark
-    ? 'inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold text-sm px-4 py-2 transition'
-    : 'inline-flex items-center gap-2 btn-primary text-sm px-4 py-2'
+  const titleClass = workspace
+    ? 'font-semibold text-slate-900 text-sm mt-0.5'
+    : dark
+      ? 'font-semibold text-white text-sm mt-0.5'
+      : 'font-semibold text-bingo-dark text-sm mt-0.5'
+  const bodyClass = workspace
+    ? 'prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap'
+    : dark
+      ? 'prose prose-sm max-w-none text-slate-300 whitespace-pre-wrap'
+      : 'prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap'
+  const mutedClass = workspace
+    ? 'text-sm text-slate-600 whitespace-pre-wrap'
+    : dark
+      ? 'text-sm text-slate-400 whitespace-pre-wrap'
+      : 'text-sm text-slate-600 whitespace-pre-wrap'
+  const numClass = workspace
+    ? 'w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center shrink-0'
+    : dark
+      ? 'w-8 h-8 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold flex items-center justify-center shrink-0'
+      : 'w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0'
+  const videoBorder = workspace ? 'border-slate-200' : dark ? 'border-slate-700' : 'border-slate-200'
+  const linkClass = workspace
+    ? 'inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:underline'
+    : dark
+      ? 'inline-flex items-center gap-2 text-sm font-semibold text-emerald-400 hover:underline'
+      : 'inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline'
+  const btnClass = workspace
+    ? 'inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm px-4 py-2 transition'
+    : dark
+      ? 'inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold text-sm px-4 py-2 transition'
+      : 'inline-flex items-center gap-2 btn-primary text-sm px-4 py-2'
 
   return (
     <article className={articleClass}>
