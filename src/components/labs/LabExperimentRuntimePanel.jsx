@@ -19,7 +19,7 @@ export default function LabExperimentRuntimePanel({ runtimeConfig, owned }) {
   if (config.type === 'external_link') {
     return (
       <div className="lab-workspace__stage flex flex-col items-center justify-center gap-4 p-8">
-        <p className="text-sm text-slate-400">{runtimeTypeLabel(config.type, 'zh')}</p>
+        <p className="text-sm text-slate-400">{runtimeTypeLabel(config.type, 'en')}</p>
         <a
           href={config.url}
           target={config.openInNewTab ? '_blank' : undefined}

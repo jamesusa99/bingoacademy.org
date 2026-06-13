@@ -973,6 +973,19 @@ export async function deleteProgramLevel(productLine, { levelId } = {}) {
   return adminDelete('course_levels', levelId)
 }
 
+/** Persist L1 stage order (course_levels.sort_order) for a product line. */
+export async function reorderProgramLevels(productLine, orderedLevelIds) {
+  if (!isCurriculumLine(productLine)) throw new Error('Invalid product line')
+  if (!Array.isArray(orderedLevelIds) || !orderedLevelIds.length) return
+
+  const updatedAt = new Date().toISOString()
+  await Promise.all(
+    orderedLevelIds.map((levelId, sort_order) =>
+      adminUpdate('course_levels', levelId, { sort_order, updated_at: updatedAt })
+    )
+  )
+}
+
 /** Persist lesson order within one L3 module (lessons.sort_order). */
 export async function reorderModuleLessons(moduleDbId, orderedLessonIds) {
   if (!moduleDbId) throw new Error('Missing module id')

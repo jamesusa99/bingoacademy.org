@@ -22,7 +22,7 @@ export default function LabExperimentNavSidebar({
   return (
     <aside className="lab-workspace__nav">
       <div className="lab-workspace__nav-head">
-        <p className="text-xs text-slate-500">{LAB_EXPERIMENTS_PORTAL.journeyTitle}</p>
+        <p className="text-xs text-slate-500">{LAB_EXPERIMENTS_PORTAL.experimentsListTitle}</p>
         <p className="text-sm font-semibold text-white mt-1 line-clamp-2">{packName}</p>
         {total > 0 ? (
           <p className="text-xs text-emerald-400 mt-2">

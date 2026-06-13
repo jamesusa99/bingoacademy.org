@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import PageMeta from '../../components/PageMeta'
 import LabExperimentWorkspace from '../../components/labs/LabExperimentWorkspace'
-import { LAB_EXPERIMENTS_PORTAL } from '../../config/labExperiments'
-import { fetchLabExperiment, fetchLabPack } from '../../lib/labPackApi'
+import { LAB_EXPERIMENTS_PORTAL, isLabExperimentUnlocked } from '../../config/labExperiments'
+import { fetchLabExperiment, fetchLabPack, fetchLabPackExperimentsPublic } from '../../lib/labPackApi'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
 
 export default function LabExperimentPage() {
@@ -14,6 +14,7 @@ export default function LabExperimentPage() {
   const [pack, setPack] = useState(null)
   const [experiment, setExperiment] = useState(null)
   const [apiOwned, setApiOwned] = useState(false)
+  const [previewUnlocked, setPreviewUnlocked] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -23,11 +24,23 @@ export default function LabExperimentPage() {
     setError(null)
 
     Promise.all([fetchLabPack(packSlug), fetchLabExperiment(packSlug, experimentSlug)])
-      .then(([packData, expData]) => {
+      .then(async ([packData, expData]) => {
         if (cancelled) return
-        setPack(packData)
+        let nextPack = packData
+        if (!packData?.experiments?.length) {
+          try {
+            const fallback = await fetchLabPackExperimentsPublic(packSlug)
+            if (fallback.length) {
+              nextPack = { ...packData, experiments: fallback, experimentCount: fallback.length }
+            }
+          } catch {
+            /* keep API payload */
+          }
+        }
+        setPack(nextPack)
         setExperiment(expData.experiment)
         setApiOwned(Boolean(expData.owned))
+        setPreviewUnlocked(Boolean(expData.previewUnlocked))
       })
       .catch((err) => {
         if (!cancelled) {
@@ -45,8 +58,23 @@ export default function LabExperimentPage() {
     }
   }, [packSlug, experimentSlug])
 
-  const experiments = pack?.experiments || []
-  const experimentIndex = experiments.findIndex((e) => e.slug === experimentSlug)
+  const experiments = useMemo(
+    () => [...(pack?.experiments || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    [pack?.experiments]
+  )
+
+  const experimentIndex = useMemo(() => {
+    const idx = experiments.findIndex((e) => e.slug === experimentSlug)
+    return idx >= 0 ? idx : 0
+  }, [experiments, experimentSlug])
+
+  const previewAccess = isLabExperimentUnlocked({
+    owned,
+    index: experimentIndex,
+    total: experiments.length,
+  })
+
+  const canAccessSteps = owned || apiOwned || previewUnlocked || previewAccess
 
   const packHref = `/labs/pack/${encodeURIComponent(packSlug)}`
 
@@ -78,8 +106,8 @@ export default function LabExperimentPage() {
         experiment={experiment}
         experiments={experiments}
         owned={owned}
-        apiOwned={apiOwned}
-        experimentIndex={experimentIndex >= 0 ? experimentIndex : 0}
+        canAccessSteps={canAccessSteps}
+        experimentIndex={experimentIndex}
       />
     </div>
   )

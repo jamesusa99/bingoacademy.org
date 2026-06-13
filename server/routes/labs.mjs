@@ -19,6 +19,25 @@ async function userOwnsPack(admin, userId, packSlug) {
   return slugs.includes(packSlug)
 }
 
+async function getExperimentPreviewContext(admin, packSlug, experimentSlug) {
+  const { data, error } = await admin
+    .from('lab_experiments')
+    .select('slug, sort_order, status')
+    .eq('pack_slug', packSlug)
+    .neq('status', 'hidden')
+    .order('sort_order')
+
+  if (error) return { index: -1, total: 0, previewUnlocked: false }
+
+  const live = (data || []).filter((e) => e.status === 'live')
+  const index = live.findIndex((e) => e.slug === experimentSlug)
+  const total = live.length
+  const previewCount = Math.max(0, total - 2)
+  const previewUnlocked = index >= 0 && index < previewCount
+
+  return { index, total, previewUnlocked }
+}
+
 export function registerLabRoutes(app, { verifyAdminUser }) {
   app.get('/api/labs/:packSlug', async (req, res) => {
     const admin = getSupabaseAdmin()
@@ -43,6 +62,7 @@ export function registerLabRoutes(app, { verifyAdminUser }) {
 
     const auth = await verifyAuthUser(req)
     const owned = auth.ok ? await userOwnsPack(admin, auth.user.id, packSlug) : false
+    const preview = await getExperimentPreviewContext(admin, packSlug, experimentSlug)
 
     const { data: experiment, error } = await admin
       .from('lab_experiments')
@@ -64,8 +84,13 @@ export function registerLabRoutes(app, { verifyAdminUser }) {
       return res.status(404).json({ error: 'Experiment not found' })
     }
 
-    const mapped = mapExperimentRow(experiment, { includeSteps: owned })
-    return res.json({ experiment: mapped, owned })
+    const mapped = mapExperimentRow(experiment, { includeSteps: owned || preview.previewUnlocked })
+    return res.json({
+      experiment: mapped,
+      owned,
+      previewUnlocked: preview.previewUnlocked,
+      experimentIndex: preview.index,
+    })
   })
 
   app.get('/api/admin/lab-packs/:packSlug/experiments', async (req, res) => {

@@ -1,3 +1,6 @@
+import DragHandle from './DragHandle'
+import { useDragReorder } from '../../hooks/useDragReorder'
+
 function sortByOrder(rows) {
   return [...rows].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 }
@@ -19,8 +22,22 @@ export function countLevelTree(level) {
 /**
  * L1 stage list for curriculum admin (ioai / general / k12).
  */
-export default function CurriculumLevel1List({ levels, labels, onEdit, onDelete, onAdd, activeId = null }) {
+export default function CurriculumLevel1List({
+  levels,
+  labels,
+  onEdit,
+  onDelete,
+  onAdd,
+  onReorder,
+  activeId = null,
+}) {
   const sorted = sortByOrder(levels || [])
+  const drag = useDragReorder({
+    items: sorted,
+    getKey: (level) => level.id,
+    onReorder: onReorder || (async () => {}),
+    disabled: !onReorder,
+  })
 
   if (!sorted.length) {
     return (
@@ -37,9 +54,16 @@ export default function CurriculumLevel1List({ levels, labels, onEdit, onDelete,
 
   return (
     <div className="overflow-x-auto">
+      {onReorder && drag.saving ? (
+        <p className="px-4 pt-3 text-xs text-primary">{labels.savingOrder}</p>
+      ) : null}
+      {onReorder ? (
+        <p className="px-4 pt-3 text-[11px] text-slate-500">{labels.level1DragReorderHint || labels.dragReorderHint}</p>
+      ) : null}
       <table className="w-full text-sm min-w-[680px]">
         <thead className="bg-slate-50 text-left text-slate-600 text-xs">
           <tr>
+            {onReorder ? <th className="p-3 w-10" aria-label={labels.dragHint} /> : null}
             <th className="p-3 w-12"> </th>
             <th className="p-3">{labels.colStage}</th>
             <th className="p-3">Slug</th>
@@ -52,11 +76,18 @@ export default function CurriculumLevel1List({ levels, labels, onEdit, onDelete,
           {sorted.map((level) => {
             const stats = countLevelTree(level)
             const isActive = activeId === level.id
+            const dragProps = onReorder ? drag.rowProps(level) : {}
             return (
               <tr
                 key={level.id}
-                className={`border-t border-slate-100 ${isActive ? 'bg-primary/5' : 'hover:bg-slate-50/80'}`}
+                {...dragProps}
+                className={`border-t border-slate-100 ${isActive ? 'bg-primary/5' : 'hover:bg-slate-50/80'} ${dragProps.className || ''}`}
               >
+                {onReorder ? (
+                  <td className="p-2 w-10">
+                    <DragHandle label={labels.dragHint} />
+                  </td>
+                ) : null}
                 <td className="p-3 text-lg">{level.emoji || '—'}</td>
                 <td className="p-3">
                   <p className="font-medium text-bingo-dark">{level.title}</p>

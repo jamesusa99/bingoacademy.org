@@ -20,6 +20,7 @@ import {
   deleteProgramModule,
   fetchCurriculumAdmin,
   reorderModuleLessons,
+  reorderProgramLevels,
   saveProgramLessonConfig,
   saveProgramLevelConfig,
   saveProgramModuleConfig,
@@ -219,6 +220,8 @@ export default function AdminIOAICurriculum() {
       dragHint: c.t(`${i18nRoot}.dragHint`),
       savingOrder: c.t(`${i18nRoot}.savingOrder`),
       dragReorderHint: c.t(`${i18nRoot}.dragReorderHint`),
+      level1DragReorderHint: c.t(`${i18nRoot}.level1DragReorderHint`),
+      levelOrderSaved: c.t(`${i18nRoot}.levelOrderSaved`),
       sectionLessons: c.t(`${i18nRoot}.sectionLessons`),
       sectionLabs: c.t(`${i18nRoot}.sectionLabs`),
       sectionMaterials: c.t(`${i18nRoot}.sectionMaterials`),
@@ -506,6 +509,20 @@ export default function AdminIOAICurriculum() {
     )
   }, [labCatalogItems, editingModule, productLine])
 
+  const handleReorderLevels = async (orderedLevels) => {
+    setError(null)
+    try {
+      await reorderProgramLevels(
+        productLine,
+        orderedLevels.map((level) => level.id)
+      )
+      setSuccess(labels.levelOrderSaved)
+      await load()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
   const handleReorderLessons = async (moduleDbId, orderedLessons) => {
     setError(null)
     try {
@@ -639,6 +656,7 @@ export default function AdminIOAICurriculum() {
             levels={levels}
             labels={labels}
             activeId={editingLevel?.id}
+            onReorder={handleReorderLevels}
             onEdit={(level) => {
               setShowAddForm(false)
               setEditingRow(null)
