@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminLabPackHierarchyEditor from '../../components/admin/AdminLabPackHierarchyEditor'
+import AdminPackLibraryRefs from '../../components/admin/AdminPackLibraryRefs'
 import AdminLabPackLevel1Fields from '../../components/admin/AdminLabPackLevel1Fields'
 import AdminField from '../../components/admin/AdminField'
 import AdminAlert from '../../components/admin/AdminAlert'
@@ -310,6 +311,8 @@ export default function AdminLabPackExperiments() {
               </div>
             ) : null}
           </div>
+
+          <AdminPackLibraryRefs packSlug={packSlug} labels={hierarchyLabels} />
 
           <div className="card p-6">
             <AdminLabPackHierarchyEditor packSlug={packSlug} labels={hierarchyLabels} />

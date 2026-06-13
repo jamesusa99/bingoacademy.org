@@ -9,6 +9,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminCourses from './pages/admin/AdminCourses'
 import AdminCoursesCatalog from './pages/admin/AdminCoursesCatalog'
 import AdminLabPackExperiments from './pages/admin/AdminLabPackExperiments'
+import AdminIOAIExperimentLibrary from './pages/admin/AdminIOAIExperimentLibrary'
 import AdminIOAICurriculum from './pages/admin/AdminIOAICurriculum'
 import AdminEvents from './pages/admin/AdminEvents'
 import AdminForum from './pages/admin/AdminForum'
@@ -60,6 +61,7 @@ import Curriculum from './pages/Curriculum'
 import IOAIStore from './pages/ioai/IOAIStore'
 import IOAILevelPage from './pages/ioai/IOAILevelPage'
 import IOAIModulePage from './pages/ioai/IOAIModulePage'
+import IOAIPublicExperimentPage from './pages/ioai/IOAIPublicExperimentPage'
 
 const ProgramPage = lazy(() => import('./pages/programs/ProgramPage'))
 const Compare = lazy(() => import('./pages/Compare'))
@@ -114,6 +116,7 @@ export default function App() {
         <Route path="showcase" element={<AdminShowcase />} />
         <Route path="labs-materials" element={<AdminCoursesCatalog />} />
         <Route path="labs-materials/:packSlug/experiments" element={<AdminLabPackExperiments />} />
+        <Route path="ioai-experiments" element={<AdminIOAIExperimentLibrary />} />
         <Route path="courses" element={<Navigate to="/admin/labs-materials" replace />} />
         <Route path="curriculum/:line" element={<AdminIOAICurriculum />} />
         <Route path="ioai-curriculum" element={<Navigate to="/admin/curriculum/ioai" replace />} />
@@ -148,6 +151,7 @@ export default function App() {
         <Route path="ioai" element={<Navigate to="/courses?line=ioai" replace />} />
         <Route path="ioai/l1/:levelSlug" element={<IOAILevelPage />} />
         <Route path="ioai/l3/:moduleSlug" element={<IOAIModulePage />} />
+        <Route path="ioai/experiments/:slug" element={<IOAIPublicExperimentPage />} />
         <Route path="curriculum" element={<Curriculum />} />
         <Route path="labs" element={<ProductLabs />} />
         <Route path="labs/pack/:slug" element={<LabPackDetail />} />

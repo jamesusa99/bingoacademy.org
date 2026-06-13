@@ -106,6 +106,20 @@ export default function IOAIModuleLessonList({
                   >
                     {lesson.title}
                   </p>
+                  {(lesson.hasExperiments || lesson.hasLessonMaterials) ? (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {lesson.hasExperiments ? (
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          {COURSES_PORTAL.lessonHasExperiment}
+                        </span>
+                      ) : null}
+                      {lesson.hasLessonMaterials ? (
+                        <span className="text-[10px] font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full">
+                          {COURSES_PORTAL.lessonHasMaterials}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
                 <span className="inline-flex items-center gap-1 text-xs text-slate-400 shrink-0">
                   <Clock className="w-3.5 h-3.5" aria-hidden />

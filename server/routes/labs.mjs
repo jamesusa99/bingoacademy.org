@@ -5,9 +5,11 @@ import {
   fetchLabPackTree,
   mapExperimentRow,
   mapStepRow,
+  mapPackRow,
   pickExperimentPayload,
   pickStepPayload,
 } from '../lib/labExperiments.mjs'
+import { resolvePackExperiments, fetchPublicExperimentBySlug } from '../lib/ioaiExperiments.mjs'
 
 function sortByOrder(a, b) {
   return (a.sort_order ?? 0) - (b.sort_order ?? 0)
@@ -20,16 +22,10 @@ async function userOwnsPack(admin, userId, packSlug) {
 }
 
 async function getExperimentPreviewContext(admin, packSlug, experimentSlug) {
-  const { data, error } = await admin
-    .from('lab_experiments')
-    .select('slug, sort_order, status')
-    .eq('pack_slug', packSlug)
-    .neq('status', 'hidden')
-    .order('sort_order')
+  const resolved = await resolvePackExperiments(admin, packSlug, { includeSteps: false })
+  if (resolved.error) return { index: -1, total: 0, previewUnlocked: false }
 
-  if (error) return { index: -1, total: 0, previewUnlocked: false }
-
-  const live = (data || []).filter((e) => e.status === 'live')
+  const live = (resolved.experiments || []).filter((e) => e.status === 'live')
   const index = live.findIndex((e) => e.slug === experimentSlug)
   const total = live.length
   const previewCount = Math.max(0, total - 2)
@@ -63,6 +59,24 @@ export function registerLabRoutes(app, { verifyAdminUser }) {
     const auth = await verifyAuthUser(req)
     const owned = auth.ok ? await userOwnsPack(admin, auth.user.id, packSlug) : false
     const preview = await getExperimentPreviewContext(admin, packSlug, experimentSlug)
+    const includeSteps = owned || preview.previewUnlocked
+
+    const resolved = await resolvePackExperiments(admin, packSlug, { includeSteps: false })
+    const inPack = (resolved.experiments || []).find((e) => e.slug === experimentSlug)
+    if (!inPack || inPack.status === 'hidden') {
+      return res.status(404).json({ error: 'Experiment not found' })
+    }
+
+    if (resolved.source === 'library') {
+      const full = await fetchPublicExperimentBySlug(admin, experimentSlug, { includeSteps })
+      if (full.error) return res.status(404).json({ error: full.error })
+      return res.json({
+        experiment: { ...full.experiment, packSlug },
+        owned,
+        previewUnlocked: preview.previewUnlocked,
+        experimentIndex: preview.index,
+      })
+    }
 
     const { data: experiment, error } = await admin
       .from('lab_experiments')

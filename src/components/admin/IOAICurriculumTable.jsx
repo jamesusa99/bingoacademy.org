@@ -11,6 +11,7 @@ import DragHandle from './DragHandle'
 import ModuleLabMaterialsOrder from './ModuleLabMaterialsOrder'
 import ModuleCoverUpload from './ModuleCoverUpload'
 import AdminField from './AdminField'
+import AdminLessonResourcePanel from './AdminLessonResourcePanel'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
@@ -708,6 +709,8 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
       />
 
       <CurriculumCatalogFields form={form} set={set} labels={labels} />
+
+      <AdminLessonResourcePanel lessonId={row.lessonId} labels={labels} />
 
       <p className="text-[10px] text-slate-400">{labels.lessonCatalogPriceHint}</p>
 

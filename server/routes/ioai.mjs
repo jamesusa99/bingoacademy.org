@@ -3,13 +3,13 @@ import { verifyAuthUser } from '../lib/supabaseAuth.mjs'
 import { listEnrollmentSlugs } from '../lib/courseEntitlements.mjs'
 import {
   IOAI_FULL_BUNDLE_SLUG,
-  getBundleBySlug,
   resolveUnlockedModuleSlugs,
   resolveUnlockedLessonSlugs,
   mapLabExtrasByModuleId,
   listLabMaterialsForModule,
   mapLabMaterialRow,
 } from '../lib/ioaiCommerce.mjs'
+import { enrichLessonsWithResourceFlags } from '../lib/ioaiExperiments.mjs'
 
 function sortByOrder(a, b) {
   return (a.sort_order ?? 0) - (b.sort_order ?? 0)
@@ -23,7 +23,7 @@ function isPublicModuleDetail(mod) {
   return mod && isPublicModuleStatus(mod.status)
 }
 
-function mapStoreTree(levels, extrasByModuleId = new Map()) {
+function mapStoreTree(levels, extrasByModuleId = new Map(), lessonFlags = new Map()) {
   return [...(levels || [])].sort(sortByOrder).map((level) => ({
     id: level.slug,
     title: level.title,
@@ -72,8 +72,10 @@ function mapStoreTree(levels, extrasByModuleId = new Map()) {
               .sort(sortByOrder)
               .map((lesson) => {
                 const catalogSlug = lesson.catalog_slug || lesson.slug
+                const flags = lessonFlags.get(lesson.id) || {}
                 return {
                   id: catalogSlug,
+                  lessonDbId: lesson.id,
                   catalogSlug,
                   slug: lesson.slug,
                   title: lesson.title,
@@ -81,6 +83,8 @@ function mapStoreTree(levels, extrasByModuleId = new Map()) {
                   trialEnabled: Boolean(lesson.trial_enabled),
                   sortOrder: lesson.sort_order ?? 0,
                   cloudflareVideoId: lesson.cloudflare_video_id || null,
+                  hasExperiments: Boolean(flags.hasExperiments),
+                  hasLessonMaterials: Boolean(flags.hasLessonMaterials),
                 }
               }),
           }})
@@ -133,18 +137,26 @@ export function registerIoaiRoutes(app) {
     const fullBundle = (bundles || []).find((b) => b.slug === IOAI_FULL_BUNDLE_SLUG) || null
 
     const moduleIds = []
+    const lessonIds = []
     for (const level of levels || []) {
       for (const theme of level.themes || []) {
         for (const mod of theme.modules || []) {
           if (mod.id) moduleIds.push(mod.id)
+          for (const lesson of mod.lessons || []) {
+            if (lesson.id) lessonIds.push(lesson.id)
+          }
         }
       }
     }
     const extrasByModuleId = await mapLabExtrasByModuleId(admin, moduleIds)
+    const lessonFlags = await enrichLessonsWithResourceFlags(admin, lessonIds)
+
+    const labBundles = (bundles || []).filter((b) => b.bundle_type === 'lab_pack')
 
     return res.json({
-      levels: mapStoreTree(levels, extrasByModuleId),
+      levels: mapStoreTree(levels, extrasByModuleId, lessonFlags),
       bundles: bundles || [],
+      labBundles,
       fullBundle,
     })
   })
@@ -185,9 +197,27 @@ export function registerIoaiRoutes(app) {
       : labMaterials.reduce((sum, row) => sum + (row.priceCents || 0), 0)
     const totalPriceCents = comingSoon ? null : mod.price_cents ?? 0
 
+    const lessonIds = (mod.lessons || []).map((l) => l.id).filter(Boolean)
+    const lessonFlags = await enrichLessonsWithResourceFlags(admin, lessonIds)
+
+    const lessons = [...(mod.lessons || [])]
+      .filter((l) => l.status !== 'hidden' && l.status !== 'draft')
+      .sort(sortByOrder)
+      .map((lesson) => {
+        const catalogSlug = lesson.catalog_slug || lesson.slug
+        const flags = lessonFlags.get(lesson.id) || {}
+        return {
+          ...lesson,
+          catalogSlug,
+          hasExperiments: Boolean(flags.hasExperiments),
+          hasLessonMaterials: Boolean(flags.hasLessonMaterials),
+        }
+      })
+
     return res.json({
       module: {
         ...mod,
+        lessons,
         price_cents: comingSoon ? null : mod.price_cents,
         compare_at_cents: comingSoon ? null : mod.compare_at_cents,
         extrasPriceCents: extrasPriceCents || null,

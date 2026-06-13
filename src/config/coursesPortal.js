@@ -149,6 +149,8 @@ export const COURSES_PORTAL = {
   moduleUnlockedProgress: (unlocked, total) => `${unlocked}/${total} lessons unlocked`,
   moduleTotalDuration: (min) => `Total ${min} min`,
   moduleLessonDuration: (min) => `${min} min`,
+  lessonHasExperiment: 'Includes lab',
+  lessonHasMaterials: 'Includes materials',
   moduleLevelBeginner: 'Beginner',
   modulePreviewBadge: (sec) => `Preview ${sec}s`,
   moduleUnlockAllTitle: 'Unlock all lessons',

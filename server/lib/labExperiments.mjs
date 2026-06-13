@@ -174,30 +174,14 @@ export async function fetchLabPackTree(admin, packSlug, { includeSteps = false }
   if (packErr) return { error: packErr.message }
   if (!pack) return { error: 'Lab pack not found' }
 
-  const selectBody = includeSteps
-    ? `steps:lab_experiment_steps (
-        id, title, step_type, body, video_url, cloudflare_video_id, ppt_url,
-        external_url, download_url, download_label, programming_config, sort_order
-      )`
-    : `steps:lab_experiment_steps(count)`
+  const { resolvePackExperiments } = await import('./ioaiExperiments.mjs')
+  const resolved = await resolvePackExperiments(admin, packSlug, { includeSteps })
+  if (resolved.error) return { error: resolved.error }
 
-  let query = admin
-    .from('lab_experiments')
-    .select(`id, pack_slug, slug, title, content, purpose, materials_list, runtime_config, sort_order, status, ${selectBody}`)
-    .eq('pack_slug', packSlug)
-    .order('sort_order')
-
-  if (!includeSteps) {
-    query = query.neq('status', 'hidden')
+  const mappedExperiments = resolved.experiments || []
+  return {
+    pack: mapPackRow(pack, mappedExperiments.map((e) => ({ ...e, status: e.status || 'live' }))),
+    experiments: mappedExperiments,
+    experimentSource: resolved.source,
   }
-
-  const { data: experiments, error: expErr } = await query
-  if (expErr) return { error: expErr.message }
-
-  const mappedExperiments = (experiments || [])
-    .filter((e) => includeSteps || e.status === 'live')
-    .sort(sortByOrder)
-    .map((e) => mapExperimentRow(e, { includeSteps }))
-
-  return { pack: mapPackRow(pack, experiments || []), experiments: mappedExperiments }
 }

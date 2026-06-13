@@ -32,6 +32,7 @@ import CourseComingSoon from '../components/CourseComingSoon'
 import CourseVideoPlayer from '../components/courses/CourseVideoPlayer'
 import CoursePurchasePanel from '../components/courses/CoursePurchasePanel'
 import SegmentPlayer from '../components/courses/SegmentPlayer'
+import LessonResourcePanels from '../components/courses/LessonResourcePanels'
 import CourseLessonList from '../components/courses/CourseLessonList'
 import CourseTrackOverview from '../components/courses/CourseTrackOverview'
 import CoursePreviewBar from '../components/courses/CoursePreviewBar'
@@ -330,6 +331,9 @@ export default function CourseDetail() {
                   startAtVideo={startAtVideo}
                   {...purchaseProps}
                 />
+                {progLine === 'ioai' && item?.id ? (
+                  <LessonResourcePanels catalogSlug={item.id} owned={effectiveHasAccess} />
+                ) : null}
               </div>
               <div className="lg:col-span-2">
                 <CourseLessonList

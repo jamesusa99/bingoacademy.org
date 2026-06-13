@@ -11,6 +11,7 @@ import {
   MEMBER_TIER_LABELS,
 } from '../lib/userProfile'
 import ProfileAccountForm from '../components/ProfileAccountForm'
+import ProfileLabPacksSection from '../components/profile/ProfileLabPacksSection'
 import CourseAccessReset from '../components/CourseAccessReset'
 import { fetchMyOrders } from '../lib/checkout'
 import { formatIoaiPrice } from '../lib/ioaiStore'
@@ -606,6 +607,8 @@ export default function Profile() {
           ))}
         </div>
       </section>
+
+      <ProfileLabPacksSection />
 
       {/* ── Marketing recommendation ────────────────────────────────── */}
       <section className="mb-8">
