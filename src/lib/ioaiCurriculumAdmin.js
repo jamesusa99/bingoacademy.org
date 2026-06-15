@@ -5,6 +5,7 @@ import { assignStreamToCourse } from './admin/api'
 import { getProgramCurriculum, isCurriculumLine } from '../config/programCurriculum'
 import { COURSE_STATUS } from '../config/coursesCatalog'
 import { buildModuleCatalogSlug } from './ioaiStore'
+import { formatPriceFromCents, resolveCatalogPriceCents } from './coursePricing'
 
 const CURRICULUM_ADMIN_SELECT = `
   id,
@@ -668,10 +669,7 @@ async function sumLabExtrasForModule(moduleDbId) {
 
 function buildModuleCatalogPayload(productLine, group, patch, { totalPriceCents = null } = {}) {
   const config = getProgramCurriculum(productLine)
-  const baseCents =
-    patch.price_cents !== '' && patch.price_cents != null && patch.price_cents !== undefined
-      ? parseInt(patch.price_cents, 10) || null
-      : null
+  const baseCents = resolveCatalogPriceCents(patch.price, patch.price_cents)
   const priceCents = totalPriceCents != null && totalPriceCents > 0 ? totalPriceCents : baseCents
   const lessonCount = group.lessonCount ?? group.lessons?.length ?? 0
   const title = patch.title?.trim() || group.moduleTitle
@@ -690,7 +688,7 @@ function buildModuleCatalogPayload(productLine, group, patch, { totalPriceCents 
     name: `${group.stage} · ${group.category} · ${title}`,
     name_en: title,
     description: patch.summary?.trim() || `${title} — ${lessonCount} lesson(s)`,
-    price: patch.price?.trim() || (priceCents ? formatUsd(priceCents) : null),
+    price: patch.price?.trim() || (priceCents ? formatPriceFromCents(priceCents, patch.currency || 'usd') : null),
     price_cents: priceCents,
     currency: (patch.currency || 'usd').trim().toLowerCase(),
     hours: `${lessonCount} lesson${lessonCount === 1 ? '' : 's'}`,
@@ -707,10 +705,7 @@ export async function saveProgramModuleConfig(productLine, moduleDbId, patch, gr
   if (!isCurriculumLine(productLine)) throw new Error('Invalid product line')
   if (!moduleDbId) throw new Error('Missing module id')
 
-  const priceCents =
-    patch.price_cents !== '' && patch.price_cents != null && patch.price_cents !== undefined
-      ? parseInt(patch.price_cents, 10) || null
-      : null
+  const priceCents = resolveCatalogPriceCents(patch.price, patch.price_cents)
 
   let catalogSlug = patch.catalog_slug?.trim() || null
   if (!catalogSlug && groupContext.levelSlug && groupContext.moduleSlug) {

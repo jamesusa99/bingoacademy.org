@@ -13,6 +13,7 @@ import ModuleCoverUpload from './ModuleCoverUpload'
 import AdminField from './AdminField'
 import AdminLessonResourcePanel from './AdminLessonResourcePanel'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
+import { initialCatalogPriceFields } from '../../lib/coursePricing'
 
 const inputClass = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm'
 const textareaClass = `${inputClass} min-h-[88px] resize-y`
@@ -363,6 +364,13 @@ export function IOAIModuleEditor(props) {
 }
 
 function buildModuleFormState(group) {
+  const currency = group.catalogCurrency || group.currency || 'usd'
+  const { price, price_cents } = initialCatalogPriceFields({
+    price: group.catalogPrice || '',
+    priceCents: group.priceCents ?? group.catalogPriceCents,
+    currency,
+  })
+
   return {
     title: group.moduleTitle || '',
     summary: group.moduleSummary || '',
@@ -373,9 +381,9 @@ function buildModuleFormState(group) {
     ...CATALOG_FORM_DEFAULTS,
     status: group.catalogStatus || group.status || COURSE_STATUS.LIVE,
     sort_order: group.catalogSortOrder ?? group.sortOrder ?? 0,
-    price: group.catalogPrice || (group.priceCents != null ? formatIoaiPrice(group.priceCents, group.currency) : ''),
-    price_cents: group.catalogPriceCents ?? group.priceCents ?? '',
-    currency: group.catalogCurrency || group.currency || 'usd',
+    price,
+    price_cents,
+    currency,
     rating: group.catalogRating ?? CATALOG_FORM_DEFAULTS.rating,
     students: group.catalogStudents ?? CATALOG_FORM_DEFAULTS.students,
   }
@@ -498,7 +506,7 @@ export function ProgramModuleEditor({
         disabled={saving || deleting}
       />
 
-      <CurriculumCatalogFields form={form} set={set} labels={moduleCatalogLabels} moduleCatalog />
+      <CurriculumCatalogFields form={form} setForm={setForm} labels={moduleCatalogLabels} moduleCatalog />
 
       <ModuleEditorLessonList
         group={group}
@@ -594,6 +602,11 @@ function ModuleEditorLessonList({ group, labels, onReorderLessons }) {
 
 export function IOAILessonEditor({ row, productLine, levels, labels, saving, deleting, onSave, onDelete, onClose }) {
   const draftKey = `admin-curriculum-edit-${row.lessonId}`
+  const lessonPriceFields = initialCatalogPriceFields({
+    price: row.catalogPrice || '',
+    priceCents: row.catalogPriceCents,
+    currency: row.catalogCurrency || 'usd',
+  })
   const [form, setForm] = useAdminFormDraft(draftKey, {
     title: row.lessonTitle || '',
     knowledge_points: row.knowledgePoints || '',
@@ -602,8 +615,8 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
     catalog_slug: row.catalogSlug || row.lessonSlug || '',
     ...CATALOG_FORM_DEFAULTS,
     status: row.catalogStatus || COURSE_STATUS.LIVE,
-    price: row.catalogPrice || '',
-    price_cents: row.catalogPriceCents ?? '',
+    price: lessonPriceFields.price,
+    price_cents: lessonPriceFields.price_cents,
     currency: row.catalogCurrency || 'usd',
     sort_order: row.catalogSortOrder ?? row.sortOrder ?? 0,
     rating: row.catalogRating ?? 4.85,
@@ -708,7 +721,7 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
         disabled={saving}
       />
 
-      <CurriculumCatalogFields form={form} set={set} labels={labels} />
+      <CurriculumCatalogFields form={form} setForm={setForm} labels={labels} />
 
       <AdminLessonResourcePanel lessonId={row.lessonId} labels={labels} />
 

@@ -167,7 +167,7 @@ export default function IOAIAddCourseForm({
         {labels.syncCatalog}
       </label>
 
-      <CurriculumCatalogFields form={form} set={setField} labels={labels} />
+      <CurriculumCatalogFields form={form} setForm={setForm} labels={labels} />
 
       <div className="flex justify-end gap-2 pt-2">
         <button

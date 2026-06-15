@@ -8,6 +8,7 @@ import {
   normalizeLabMaterialSub,
 } from '../config/labMaterials'
 import { DEFAULT_ADMIN_PRODUCT_LINE } from '../config/programCurriculum'
+import { initialCatalogPriceFields, resolveCatalogPriceCents, formatPriceFromCents } from './coursePricing'
 
 /** Default subcategory when switching product line in admin */
 export function defaultSubForLine(lineId) {
@@ -93,8 +94,7 @@ export function formToCatalogPayload(form) {
   }
 
   const sub = normalizeLabMaterialSub(form.sub, form.line)
-  const priceCents =
-    form.price_cents !== '' && form.price_cents != null ? parseInt(form.price_cents, 10) || null : null
+  const priceCents = resolveCatalogPriceCents(form.price, form.price_cents)
   const purchasableExplicit =
     form.purchasable === true || form.purchasable === 'true'
       ? true
@@ -114,7 +114,7 @@ export function formToCatalogPayload(form) {
     name: form.name?.trim(),
     name_en: form.name_en?.trim() || null,
     description: form.description?.trim() || null,
-    price: form.price?.trim() || null,
+    price: form.price?.trim() || (priceCents ? formatPriceFromCents(priceCents, form.currency || 'usd') : null),
     price_cents: priceCents,
     currency: form.currency?.trim()?.toLowerCase() || 'usd',
     purchasable: purchasableExplicit ?? (priceCents != null && priceCents > 0),
@@ -141,6 +141,11 @@ export function formToCatalogPayload(form) {
 
 export function catalogRowToForm(row) {
   if (!row) return null
+  const { price, price_cents } = initialCatalogPriceFields({
+    price: row.price || '',
+    priceCents: row.price_cents,
+    currency: row.currency || 'usd',
+  })
   return {
     slug: row.slug || '',
     line: row.line || DEFAULT_ADMIN_PRODUCT_LINE,
@@ -153,8 +158,8 @@ export function catalogRowToForm(row) {
     name: row.name || '',
     name_en: row.name_en || '',
     description: row.description || '',
-    price: row.price || '',
-    price_cents: row.price_cents ?? '',
+    price,
+    price_cents,
     currency: row.currency || 'usd',
     purchasable: row.purchasable ?? '',
     hours: row.hours || '',

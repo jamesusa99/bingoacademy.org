@@ -18,6 +18,44 @@ export function parsePriceStringToCents(text) {
   return Math.round(dollars * 100)
 }
 
+/** Resolve Stripe cents from admin price text and/or cents field (price text wins when parseable). */
+export function resolveCatalogPriceCents(price, priceCents) {
+  const fromPrice = parsePriceStringToCents(typeof price === 'string' ? price : '')
+  if (fromPrice != null) return fromPrice
+  if (priceCents === '' || priceCents == null || priceCents === undefined) return null
+  const parsed = parseInt(priceCents, 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+/** Normalize admin catalog price fields so display price and cents stay aligned. */
+export function initialCatalogPriceFields({ price = '', priceCents = null, currency = 'usd' } = {}) {
+  const currencyCode = currency || 'usd'
+  const fromPrice = parsePriceStringToCents(price)
+  const centsNum =
+    priceCents !== '' && priceCents != null && priceCents !== undefined ? Number(priceCents) : null
+  const hasCents = Number.isFinite(centsNum) && centsNum > 0
+
+  if (fromPrice != null && hasCents && fromPrice !== centsNum) {
+    return {
+      price: formatPriceFromCents(fromPrice, currencyCode),
+      price_cents: fromPrice,
+    }
+  }
+  if (hasCents) {
+    return {
+      price: formatPriceFromCents(centsNum, currencyCode),
+      price_cents: centsNum,
+    }
+  }
+  if (fromPrice != null) {
+    return {
+      price: formatPriceFromCents(fromPrice, currencyCode),
+      price_cents: fromPrice,
+    }
+  }
+  return { price: price || '', price_cents: '' }
+}
+
 export function resolveCoursePriceCents(course) {
   if (!course) return null
   if (course.priceCents != null && course.priceCents > 0) return course.priceCents
