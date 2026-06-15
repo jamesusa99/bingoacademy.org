@@ -7,7 +7,8 @@ import { filterAndSortCourses, paginateCourses } from '../../lib/courseListUtils
 import { useCourseFilters } from '../../hooks/useCourseFilters'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
-import CoursesHero, { buildHeroStats } from './CoursesHero'
+import CoursesHero from './CoursesHero'
+import { useCoursesLineHero, buildLineHeroStats } from '../../hooks/useCoursesLineHero'
 import FilterBar from './FilterBar'
 import CourseGrid from './CourseGrid'
 import Pagination from './Pagination'
@@ -17,6 +18,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
   const [, setParams] = useSearchParams()
   const { filters, setFilters, perPage } = useCourseFilters()
   const purchase = usePurchasedCourses()
+  const { hero } = useCoursesLineHero(line.id)
 
   const baseCourses = useMemo(
     () => courses.filter((c) => c.line === line.id && c.sub === subId),
@@ -29,7 +31,10 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
     [filtered, filters.page, perPage]
   )
 
-  const heroStats = useMemo(() => buildHeroStats(filtered.map((c) => c)), [filtered])
+  const heroStats = useMemo(
+    () => buildLineHeroStats(filtered.length, hero),
+    [filtered.length, hero]
+  )
 
   const sub = line.subcategories.find((s) => s.id === subId)
   const subName = subcategoryLabel(line.id, subId)
@@ -109,12 +114,8 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
         </div>
 
         <CoursesHero
-          title={`${sub?.icon || '🎓'} ${subName}`}
-          subtitle={
-            curriculumSummary?.summary
-              ? `${curriculumSummary.title} — ${curriculumSummary.summary}`
-              : COURSES_PORTAL.videoListSubtitle(line.id)
-          }
+          title={`${line.icon} ${line.name} · ${hero.modulesTitle}`}
+          subtitle={hero.modulesSubtitle}
           stats={heroStats}
         />
 

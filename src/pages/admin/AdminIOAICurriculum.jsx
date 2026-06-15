@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
+import AdminCoursesLineHeroEditor from '../../components/admin/AdminCoursesLineHeroEditor'
 import AdminAlert from '../../components/admin/AdminAlert'
 import IOAICurriculumTable, { IOAILessonEditor, ProgramModuleEditor } from '../../components/admin/IOAICurriculumTable'
 import IOAIAddCourseForm from '../../components/admin/IOAIAddCourseForm'
 import CurriculumLevel1List from '../../components/admin/CurriculumLevel1List'
 import CurriculumLevel1Editor from '../../components/admin/CurriculumLevel1Editor'
 import { ADMIN_LABS_MATERIALS_PATH } from '../../config/adminNav'
-import { DEFAULT_ADMIN_PRODUCT_LINE, getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
+import { DEFAULT_ADMIN_PRODUCT_LINE, getProgramCurriculum, isCurriculumLine, CURRICULUM_LINES } from '../../config/programCurriculum'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import { filterLabMaterialsForModule } from '../../config/labMaterials'
 import { isLabMaterialsCatalogRow } from '../../lib/catalogCourse'
@@ -215,6 +216,19 @@ export default function AdminIOAICurriculum() {
       addLessonToModule: c.t(`${i18nRoot}.addLessonToModule`),
       previewModule: c.t(`${i18nRoot}.previewModule`),
       refreshData: c.t(`${i18nRoot}.refreshData`),
+      heroSectionTitle: c.t(`${i18nRoot}.heroSectionTitle`),
+      heroSectionDesc: c.t(`${i18nRoot}.heroSectionDesc`),
+      heroExpand: c.t(`${i18nRoot}.heroExpand`),
+      heroCollapse: c.t(`${i18nRoot}.heroCollapse`),
+      heroModulesTitle: c.t(`${i18nRoot}.heroModulesTitle`),
+      heroModulesSubtitle: c.t(`${i18nRoot}.heroModulesSubtitle`),
+      heroStatStudents: c.t(`${i18nRoot}.heroStatStudents`),
+      heroStatRating: c.t(`${i18nRoot}.heroStatRating`),
+      heroStatsHint: c.t(`${i18nRoot}.heroStatsHint`),
+      heroSave: c.t(`${i18nRoot}.heroSave`),
+      heroSaved: c.t(`${i18nRoot}.heroSaved`),
+      heroResetDefaults: c.t(`${i18nRoot}.heroResetDefaults`),
+      heroPreview: c.t(`${i18nRoot}.heroPreview`),
       refreshing: c.t(`${i18nRoot}.refreshing`),
       moduleSummary: (modules, lessons) => c.t(`${i18nRoot}.moduleSummaryStats`, { modules, lessons }),
       dragHint: c.t(`${i18nRoot}.dragHint`),
@@ -578,6 +592,10 @@ export default function AdminIOAICurriculum() {
   return (
     <div className="space-y-6">
       <AdminPageHeader titleKey={`${i18nRoot}.title`} descriptionKey={`${i18nRoot}.desc`} />
+
+      {CURRICULUM_LINES.includes(productLine) ? (
+        <AdminCoursesLineHeroEditor lineId={productLine} labels={labels} />
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-3 text-sm items-center">

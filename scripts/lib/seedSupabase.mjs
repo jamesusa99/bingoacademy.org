@@ -4,6 +4,7 @@
  */
 
 import { COURSE_CATALOG } from '../../src/config/coursesCatalog.js'
+import { COURSES_LINE_HERO_KEYS, DEFAULT_COURSES_LINE_HERO } from '../../src/config/coursesLineHero.js'
 import { ASSESSMENT_CATALOG } from '../../src/config/assessmentCatalog.js'
 import { STUDENT_PORTFOLIO } from '../../src/config/showcasePortfolio.js'
 import {
@@ -374,6 +375,10 @@ export async function runSiteSeed(admin, { force = false } = {}) {
   const settings = [
     { key: 'home_banners', value: HOME_BANNER_SLIDES },
     { key: 'assessment_catalog', value: ASSESSMENT_CATALOG },
+    ...Object.entries(COURSES_LINE_HERO_KEYS).map(([lineId, key]) => ({
+      key,
+      value: DEFAULT_COURSES_LINE_HERO[lineId],
+    })),
   ]
   for (const { key, value } of settings) {
     const { error } = await admin.from('platform_settings').upsert(

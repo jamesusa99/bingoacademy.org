@@ -9,7 +9,8 @@ import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
 import { useAuth } from '../../contexts/AuthContext'
-import CoursesHero, { buildHeroStats } from './CoursesHero'
+import CoursesHero from './CoursesHero'
+import { useCoursesLineHero, buildLineHeroStats } from '../../hooks/useCoursesLineHero'
 import PageMeta from '../PageMeta'
 import { PAGE_SEO } from '../../config/programs'
 import ModuleCoverImage from './ModuleCoverImage'
@@ -113,6 +114,7 @@ function ModuleCard({ mod, hasModule, stripeCheckout, isAuthenticated, navigate 
 export default function IOAICoursesModuleView({ line }) {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { hero } = useCoursesLineHero('ioai')
   const { levels, fullBundle, loading, error } = useIOAIStore()
   const { hasModule } = useIOAIAccess()
   const [stripeCheckout, setStripeCheckout] = useState(false)
@@ -140,15 +142,8 @@ export default function IOAICoursesModuleView({ line }) {
   }, [modules, stageFilter])
 
   const heroStats = useMemo(
-    () =>
-      buildHeroStats(
-        modules.map((m) => ({
-          priceNumeric: (m.priceCents ?? m.totalPriceCents) != null ? (m.priceCents ?? m.totalPriceCents) / 100 : null,
-          students: 800,
-          rating: 4.9,
-        }))
-      ),
-    [modules]
+    () => buildLineHeroStats(modules.length, hero),
+    [modules.length, hero]
   )
 
   const videoSubId = VIDEO_COURSE_SUB_BY_LINE[line.id]
@@ -183,8 +178,8 @@ export default function IOAICoursesModuleView({ line }) {
           </div>
 
           <CoursesHero
-            title={`${line.icon} ${line.name} · ${COURSES_PORTAL.ioaiModulesTitle}`}
-            subtitle={COURSES_PORTAL.ioaiModulesSubtitle}
+            title={`${line.icon} ${line.name} · ${hero.modulesTitle}`}
+            subtitle={hero.modulesSubtitle}
             stats={heroStats}
           />
 
