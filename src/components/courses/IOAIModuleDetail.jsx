@@ -15,17 +15,19 @@ import { labMaterialTypeLabel } from '../../config/labMaterials'
 import IOAIModuleHeroVideo from './IOAIModuleHeroVideo'
 import IOAIModuleInfoCards, { buildModuleInfoContent } from './IOAIModuleInfoCards'
 import IOAIModuleLessonList from './IOAIModuleLessonList'
+import { studyLessonPath } from '../../lib/studyPaths'
 
 const LESSON_DURATION_MINUTES = 14
 
 /**
  * L3 module detail: purchase unit + optional lab add-ons + L4 lessons.
- * @param {{ catalogSlug: string, backHref?: string, backLabel?: string }} props
+ * @param {{ catalogSlug: string, backHref?: string, backLabel?: string, studyMode?: boolean }} props
  */
 export default function IOAIModuleDetail({
   catalogSlug,
   backHref = '/courses?line=ioai',
   backLabel = COURSES_PORTAL.backToCourses,
+  studyMode = false,
 }) {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -283,7 +285,11 @@ export default function IOAIModuleDetail({
                       </span>
                       {firstWatchableLesson ? (
                         <Link
-                          to={`/courses/detail/${encodeURIComponent(firstWatchableLesson.id)}?from=ioai&play=1`}
+                          to={
+                            studyMode
+                              ? studyLessonPath(firstWatchableLesson.id, { play: true })
+                              : `/courses/detail/${encodeURIComponent(firstWatchableLesson.id)}?from=ioai&play=1`
+                          }
                           className="text-sm font-semibold text-primary hover:underline"
                         >
                           {COURSES_PORTAL.moduleContinueLesson} →
@@ -351,6 +357,7 @@ export default function IOAIModuleDetail({
           accessLoading={accessLoading}
           canPurchase={canPurchase}
           comingSoon={comingSoon}
+          studyMode={studyMode}
         />
 
         {labMaterials.length > 0 ? (

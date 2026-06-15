@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronUp, StickyNote } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronUp, StickyNote } from 'lucide-react'
 import LabExperimentNavSidebar from './LabExperimentNavSidebar'
 import LabInstructionsDrawer, { LabInstructionsToggle } from './LabInstructionsPanel'
 import LabExperimentNotesPanel from './LabExperimentNotesPanel'
@@ -113,6 +113,31 @@ export default function LabExperimentWorkspace({
             ) : showStepInCenter ? (
               <div className="lab-workspace__canvas-inner">
                 <LabStepViewer step={currentStep} index={safeStep} dark workspace />
+                {steps.length > 1 ? (
+                  <div className="lab-workspace__step-nav">
+                    <button
+                      type="button"
+                      className="lab-workspace__step-nav-btn"
+                      disabled={safeStep <= 0}
+                      onClick={() => setActiveStep((i) => Math.max(0, i - 1))}
+                    >
+                      <ChevronLeft className="w-4 h-4" aria-hidden />
+                      {LAB_EXPERIMENTS_PORTAL.prevStep}
+                    </button>
+                    <span className="text-xs text-slate-500 font-medium">
+                      {safeStep + 1} / {steps.length}
+                    </span>
+                    <button
+                      type="button"
+                      className="lab-workspace__step-nav-btn"
+                      disabled={safeStep >= steps.length - 1}
+                      onClick={() => setActiveStep((i) => Math.min(steps.length - 1, i + 1))}
+                    >
+                      {LAB_EXPERIMENTS_PORTAL.nextStep}
+                      <ChevronRight className="w-4 h-4" aria-hidden />
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : canAccessSteps ? (
               <div className="lab-workspace__canvas-empty">

@@ -4,6 +4,7 @@ import { ChevronDown, Clock, Lock, Play } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { hasIoaiLessonAccess, canPreviewIoaiLesson } from '../../lib/ioaiAccess'
 import { resolveLessonCatalogSlug } from '../../lib/ioaiStore'
+import { studyLessonPath } from '../../lib/studyPaths'
 
 const LESSON_DURATION_MINUTES = 14
 
@@ -34,6 +35,7 @@ export default function IOAIModuleLessonList({
   accessLoading,
   canPurchase = true,
   comingSoon = false,
+  studyMode = false,
 }) {
   const unlockedCount = useMemo(
     () =>
@@ -82,7 +84,9 @@ export default function IOAIModuleLessonList({
           })
           const lessonSlug = resolveLessonCatalogSlug(lesson)
           const expanded = expandedId === lessonSlug
-          const lessonPath = `/courses/detail/${encodeURIComponent(lessonSlug)}?from=ioai&play=1`
+          const lessonPath = studyMode
+            ? studyLessonPath(lessonSlug, { play: true })
+            : `/courses/detail/${encodeURIComponent(lessonSlug)}?from=ioai&play=1`
 
           return (
             <article key={lessonSlug} className={canWatch ? '' : 'bg-slate-50/60'}>

@@ -3,6 +3,7 @@ import { Play, BookOpen } from 'lucide-react'
 import { getAllIOAILessonIds } from '../../lib/ioaiCourseStructure'
 import { useTrackProgress } from '../../hooks/useLearningProgress'
 import CourseLessonList from './CourseLessonList'
+import { studyLessonPath } from '../../lib/studyPaths'
 
 function ProgressBar({ percent }) {
   return (
@@ -22,10 +23,15 @@ export default function CourseTrackOverview({
   courses = null,
   curriculum = [],
   summary = null,
+  studyCenter = false,
 }) {
   const lessonIds = getAllIOAILessonIds(courses, curriculum)
   const { stats, continueLessonId } = useTrackProgress(lessonIds)
-  const continueCourse = continueLessonId ? `/courses/detail/${continueLessonId}` : null
+  const continueCourse = continueLessonId
+    ? studyCenter
+      ? studyLessonPath(continueLessonId, { play: true })
+      : `/courses/detail/${continueLessonId}`
+    : null
   const summaryText = summary?.summary || ''
 
   return (
@@ -130,6 +136,7 @@ export default function CourseTrackOverview({
             compact
             curriculum={curriculum}
             summaryText={summaryText}
+            studyCenter={studyCenter}
           />
         </div>
       </div>

@@ -9,6 +9,7 @@ import { useStreamPlayback } from '../../hooks/useStreamPlayback'
 import { useVideoPreviewLimit } from '../../hooks/useVideoPreviewLimit'
 import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import { getAdjacentLessons } from '../../lib/ioaiCourseStructure'
+import { studyLessonPath } from '../../lib/studyPaths'
 import VideoPlayerControls from './VideoPlayerControls'
 import CourseStreamVideo from './CourseStreamVideo'
 
@@ -137,7 +138,7 @@ function CheckpointSegment({ course, onComplete }) {
   )
 }
 
-function SummarySegment({ course, onComplete, nextLessonId, courses = null, curriculumTree = null }) {
+function SummarySegment({ course, onComplete, nextLessonId, courses = null, curriculumTree = null, studyCenter = false }) {
   const productLine = isCurriculumLine(course?.line) ? course.line : 'ioai'
   const { index, total } = getAdjacentLessons(course.id, courses, curriculumTree, productLine)
 
@@ -160,7 +161,7 @@ function SummarySegment({ course, onComplete, nextLessonId, courses = null, curr
         </button>
         {nextLessonId ? (
           <Link
-            to={`/courses/detail/${nextLessonId}`}
+            to={studyCenter ? studyLessonPath(nextLessonId, { play: true }) : `/courses/detail/${nextLessonId}`}
             className="text-sm px-5 py-2.5 rounded-xl border border-slate-600 text-slate-200 hover:bg-slate-800 transition"
           >
             Next lesson →
@@ -186,6 +187,7 @@ export default function SegmentPlayer({
   moduleContext = null,
   previewMode = false,
   startAtVideo = false,
+  studyCenter = false,
 }) {
   const videoRef = useRef(null)
   const { progress, completeSegment, saveVideoPosition, goToSegment, completeLesson } =
@@ -442,6 +444,7 @@ export default function SegmentPlayer({
             courses={courses}
             curriculumTree={curriculumTree}
             onComplete={() => completeLesson()}
+            studyCenter={studyCenter}
           />
         ) : null}
       </div>

@@ -48,6 +48,8 @@ import CourseDetail from './pages/CourseDetail'
 import Certification from './pages/Certification'
 import Mall from './pages/Mall'
 import Study from './pages/Study'
+import StudyModulePage from './pages/study/StudyModulePage'
+import StudyLessonPage from './pages/study/StudyLessonPage'
 import Profile from './pages/Profile'
 import ProfileWorks from './pages/ProfileWorks'
 import Login from './pages/Login'
@@ -195,6 +197,8 @@ export default function App() {
         <Route path="mall" element={<Mall />} />
         <Route path="profile" element={<Profile />} />
         <Route path="profile/study" element={<Study />} />
+        <Route path="profile/study/module/:moduleSlug" element={<StudyModulePage />} />
+        <Route path="profile/study/lesson/:lessonId" element={<StudyLessonPage />} />
         <Route path="profile/works" element={<ProfileWorks />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />

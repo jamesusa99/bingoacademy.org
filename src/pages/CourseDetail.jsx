@@ -1,4 +1,4 @@
-import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { getProductLine, isCourseComingSoon, isCourseOffline, subcategoryLabel } from '../config/products'
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
@@ -40,9 +40,13 @@ import PageContent from '../components/PageContent'
 import { confirmCheckoutSession } from '../lib/checkout'
 import { normalizeLabMaterialSub } from '../config/labMaterials'
 import { labsPath } from '../config/productLabs'
+import { STUDY_HOME, studyLessonPath, studyModulePath, isStudyCenterPath } from '../lib/studyPaths'
 
-export default function CourseDetail() {
-  const { id } = useParams()
+export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
+  const { id: catalogId, lessonId: studyLessonId } = useParams()
+  const location = useLocation()
+  const studyCenter = studyCenterProp || isStudyCenterPath(location.pathname)
+  const id = studyCenter ? studyLessonId : catalogId
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutMessage, setCheckoutMessage] = useState(null)
@@ -197,15 +201,16 @@ export default function CourseDetail() {
     return (
       <PageContent className="py-12 text-center">
         <p className="text-slate-600 mb-4">{COURSES_PORTAL.notFound}</p>
-        <Link to="/courses" className="btn-primary text-sm px-5 py-2">
-          {COURSES_PORTAL.backToCourses}
+        <Link to={studyCenter ? STUDY_HOME : '/courses'} className="btn-primary text-sm px-5 py-2">
+          {studyCenter ? 'Back to Study Center' : COURSES_PORTAL.backToCourses}
         </Link>
       </PageContent>
     )
   }
 
   if (item.sub === 'module' && item.line === 'ioai') {
-    return <Navigate to={`/courses/module/${encodeURIComponent(item.id)}`} replace />
+    const modulePath = studyCenter ? studyModulePath(item.id) : `/courses/module/${encodeURIComponent(item.id)}`
+    return <Navigate to={modulePath} replace />
   }
 
   const comingSoon = isCourseComingSoon(item)
@@ -220,9 +225,11 @@ export default function CourseDetail() {
     .filter(Boolean)
 
   const pageWidth = isProgram ? 'max-w-6xl' : 'max-w-4xl'
-  const backHref = isLabMaterial
-    ? labsPath(item.line, normalizeLabMaterialSub(item.sub, item.line))
-    : `/courses?line=${item.line}&sub=${item.sub}`
+  const backHref = studyCenter
+    ? STUDY_HOME
+    : isLabMaterial
+      ? labsPath(item.line, normalizeLabMaterialSub(item.sub, item.line))
+      : `/courses?line=${item.line}&sub=${item.sub}`
 
   if (isLabMaterial) {
     return <Navigate to={`/labs/pack/${encodeURIComponent(item.id)}`} replace />
@@ -235,8 +242,8 @@ export default function CourseDetail() {
       {previewMode ? <CoursePreviewBar course={item} fromAdmin={fromAdmin} /> : null}
 
       {!previewMode ? (
-        <Link to={`/courses?line=${item.line}&sub=${item.sub}`} className="text-primary text-sm hover:underline">
-          ← {COURSES_PORTAL.backTo} {line.name}
+        <Link to={backHref} className="text-primary text-sm hover:underline">
+          ← {studyCenter ? 'Study Center' : `${COURSES_PORTAL.backTo} ${line.name}`}
         </Link>
       ) : null}
 
@@ -311,6 +318,7 @@ export default function CourseDetail() {
                 courses={courses}
                 curriculum={curriculum}
                 summary={summary}
+                studyCenter={studyCenter}
               />
             </>
           ) : null}
@@ -329,6 +337,7 @@ export default function CourseDetail() {
                   moduleContext={moduleContext}
                   previewMode={previewMode}
                   startAtVideo={startAtVideo}
+                  studyCenter={studyCenter}
                   {...purchaseProps}
                 />
                 {progLine === 'ioai' && item?.id ? (
@@ -341,6 +350,7 @@ export default function CourseDetail() {
                   purchasedSlugs={purchased}
                   curriculum={curriculum}
                   summaryText={summary.summary}
+                  studyCenter={studyCenter}
                 />
               </div>
             </div>
@@ -435,8 +445,15 @@ export default function CourseDetail() {
               <Link
                 to={
                   isTrack
-                    ? `/courses/detail/${getContinueLessonId(getAllProgramLessonIds(courses, tree, progLine)) ?? getFirstProgramLessonId(courses, tree, progLine) ?? ''}`
-                    : '/profile/study'
+                    ? studyCenter
+                      ? studyLessonPath(
+                          getContinueLessonId(getAllProgramLessonIds(courses, tree, progLine)) ??
+                            getFirstProgramLessonId(courses, tree, progLine) ??
+                            '',
+                          { play: true }
+                        )
+                      : `/courses/detail/${getContinueLessonId(getAllProgramLessonIds(courses, tree, progLine)) ?? getFirstProgramLessonId(courses, tree, progLine) ?? ''}`
+                    : STUDY_HOME
                 }
                 className="btn-primary text-sm px-5 py-2.5"
               >
@@ -444,7 +461,7 @@ export default function CourseDetail() {
               </Link>
             ) : moduleContext?.catalogSlug ? (
               <Link
-                to={`/courses/module/${encodeURIComponent(moduleContext.catalogSlug)}`}
+                to={studyCenter ? studyModulePath(moduleContext.catalogSlug) : `/courses/module/${encodeURIComponent(moduleContext.catalogSlug)}`}
                 className="btn-primary text-sm px-5 py-2.5"
               >
                 {moduleContext.priceCents

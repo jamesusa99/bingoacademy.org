@@ -1,8 +1,9 @@
 import { findCourseInList } from './catalogCourse'
 import { hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from './courseAccess'
-import { getAllIOAILessonIds, isIOAITrackId } from './ioaiCourseStructure'
+import { getAllIOAILessonIds, isIOAITrackId, getFirstIOAILessonId } from './ioaiCourseStructure'
 import { getTrackProgressStats, getContinueLessonId, getLessonProgress } from './learningProgress'
 import { findModule, resolveLessonCatalogSlug } from './ioaiStore'
+import { studyLessonPath, studyModulePath } from './studyPaths'
 
 function collectModuleLessonIds(levels, moduleCatalogSlug) {
   const found = findModule(levels, moduleCatalogSlug)
@@ -104,13 +105,13 @@ export function buildStudyCourses({ enrollmentSlugs = [], ioaiModuleSlugs = [], 
 
 export function studyCourseContinueHref(course, catalog, tree) {
   if (course.accessType === 'module') {
-    return `/courses/module/${encodeURIComponent(course.moduleSlug || course.id)}`
+    return studyModulePath(course.moduleSlug || course.id)
   }
   if (isIOAITrackId(course.id)) {
     const lessonId = getContinueLessonId(getAllIOAILessonIds(catalog, tree))
-    return lessonId ? `/courses/detail/${lessonId}` : `/courses/detail/${IOAI_FULL_TRACK_SLUG}`
+    return lessonId ? studyLessonPath(lessonId, { play: true }) : studyLessonPath(getFirstIOAILessonId(catalog, tree), { play: true })
   }
-  return `/courses/detail/${course.id}`
+  return studyLessonPath(course.id, { play: course.accessType === 'lesson' })
 }
 
 export function studyCourseProgressLabel(course, catalog, levels) {

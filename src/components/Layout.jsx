@@ -16,7 +16,9 @@ function isNavActive(loc, path) {
   if (path === '/profile') return loc.pathname.startsWith('/profile')
   if (path === '/profile/study') return loc.pathname.startsWith('/profile/study')
   if (path === '/curriculum') return loc.pathname === '/curriculum'
-  if (path === '/labs') return loc.pathname === '/labs' || loc.pathname === '/lab'
+  if (path === '/labs') {
+    return loc.pathname === '/labs' || loc.pathname === '/lab' || loc.pathname.startsWith('/labs/')
+  }
   if (path === '/exploration') {
     return loc.pathname === '/exploration' || loc.pathname.startsWith('/exploration/')
   }

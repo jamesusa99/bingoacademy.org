@@ -3,7 +3,12 @@ import { Link, useParams } from 'react-router-dom'
 import PageMeta from '../../components/PageMeta'
 import LabExperimentWorkspace from '../../components/labs/LabExperimentWorkspace'
 import { LAB_EXPERIMENTS_PORTAL, isLabExperimentUnlocked } from '../../config/labExperiments'
-import { fetchLabExperiment, fetchLabPack, fetchLabPackExperimentsPublic } from '../../lib/labPackApi'
+import {
+  fetchLabExperiment,
+  fetchLabExperimentPublic,
+  fetchLabPack,
+  fetchLabPackExperimentsPublic,
+} from '../../lib/labPackApi'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
 
 export default function LabExperimentPage() {
@@ -23,24 +28,74 @@ export default function LabExperimentPage() {
     setLoading(true)
     setError(null)
 
-    Promise.all([fetchLabPack(packSlug), fetchLabExperiment(packSlug, experimentSlug)])
-      .then(async ([packData, expData]) => {
-        if (cancelled) return
-        let nextPack = packData
+    async function loadPack() {
+      try {
+        const packData = await fetchLabPack(packSlug)
         if (!packData?.experiments?.length) {
-          try {
-            const fallback = await fetchLabPackExperimentsPublic(packSlug)
-            if (fallback.length) {
-              nextPack = { ...packData, experiments: fallback, experimentCount: fallback.length }
-            }
-          } catch {
-            /* keep API payload */
+          const fallback = await fetchLabPackExperimentsPublic(packSlug)
+          if (fallback.length) {
+            return { ...packData, experiments: fallback, experimentCount: fallback.length }
           }
         }
-        setPack(nextPack)
-        setExperiment(expData.experiment)
-        setApiOwned(Boolean(expData.owned))
-        setPreviewUnlocked(Boolean(expData.previewUnlocked))
+        return packData
+      } catch {
+        const fallback = await fetchLabPackExperimentsPublic(packSlug)
+        if (fallback.length) {
+          return { slug: packSlug, experiments: fallback, experimentCount: fallback.length }
+        }
+        throw new Error(LAB_EXPERIMENTS_PORTAL.notFound)
+      }
+    }
+
+    async function loadExperiment(nextPack) {
+      const experiments = [...(nextPack?.experiments || [])].sort(
+        (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+      )
+      const experimentIndex = Math.max(
+        0,
+        experiments.findIndex((e) => e.slug === experimentSlug)
+      )
+      const previewAccess = isLabExperimentUnlocked({
+        owned,
+        index: experimentIndex,
+        total: experiments.length,
+      })
+      const includeSteps = owned || previewAccess
+
+      let expData
+      try {
+        expData = await fetchLabExperiment(packSlug, experimentSlug)
+      } catch (err) {
+        const fallbackExp = await fetchLabExperimentPublic(packSlug, experimentSlug, { includeSteps })
+        if (!fallbackExp) throw err
+        expData = { experiment: fallbackExp, owned: false, previewUnlocked: previewAccess, fallback: true }
+      }
+
+      let nextExperiment = expData.experiment
+      if (includeSteps && !nextExperiment?.steps?.length) {
+        const withSteps = await fetchLabExperimentPublic(packSlug, experimentSlug, { includeSteps: true })
+        if (withSteps) nextExperiment = withSteps
+      }
+
+      return {
+        pack: nextPack,
+        experiment: nextExperiment,
+        apiOwned: Boolean(expData.owned),
+        previewUnlocked: Boolean(expData.previewUnlocked) || previewAccess,
+      }
+    }
+
+    loadPack()
+      .then((packData) => {
+        if (cancelled) return null
+        return loadExperiment(packData)
+      })
+      .then((result) => {
+        if (cancelled || !result) return
+        setPack(result.pack)
+        setExperiment(result.experiment)
+        setApiOwned(result.apiOwned)
+        setPreviewUnlocked(result.previewUnlocked)
       })
       .catch((err) => {
         if (!cancelled) {
@@ -56,7 +111,7 @@ export default function LabExperimentPage() {
     return () => {
       cancelled = true
     }
-  }, [packSlug, experimentSlug])
+  }, [packSlug, experimentSlug, owned])
 
   const experiments = useMemo(
     () => [...(pack?.experiments || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),

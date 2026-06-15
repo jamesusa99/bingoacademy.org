@@ -7,8 +7,9 @@ import { useIOAIStore } from '../hooks/useIOAIStore'
 import { usePurchasedCourses } from '../hooks/usePurchasedCourses'
 import { hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from '../lib/courseAccess'
 import { authLink } from '../lib/authRedirect'
-import { claimFreeTrial, hasClaimedFreeTrial, FREE_TRIAL_COURSE_HREF } from '../lib/freeTrial'
+import { claimFreeTrial, hasClaimedFreeTrial, FREE_TRIAL_LESSON_ID } from '../lib/freeTrial'
 import { getFirstIOAILessonId } from '../lib/ioaiCourseStructure'
+import { studyLessonPath } from '../lib/studyPaths'
 import {
   buildStudyCourses,
   studyCourseContinueHref,
@@ -51,7 +52,7 @@ export default function Study() {
   )
   const firstLessonId = getFirstIOAILessonId(catalog, tree)
   const trialActive = hasClaimedFreeTrial()
-  const trialLessonHref = firstLessonId ? `/courses/detail/${firstLessonId}` : FREE_TRIAL_COURSE_HREF
+  const trialLessonHref = studyLessonPath(firstLessonId || FREE_TRIAL_LESSON_ID, { play: true })
 
   const handleClaimTrial = () => {
     claimFreeTrial()

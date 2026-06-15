@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { CheckCircle2, Circle, PlayCircle, ChevronDown, ChevronRight, Lock } from 'lucide-react'
 import { getLessonProgress } from '../../lib/learningProgress'
 import { hasCourseAccess } from '../../lib/courseAccess'
+import { studyLessonPath } from '../../lib/studyPaths'
 
 function LessonStatusIcon({ lessonId, activeLessonId, hasAccess }) {
   const progress = getLessonProgress(lessonId)
@@ -18,15 +19,16 @@ function LessonStatusIcon({ lessonId, activeLessonId, hasAccess }) {
   return <Circle className="w-4 h-4 text-slate-300 shrink-0" aria-hidden />
 }
 
-function LessonRow({ lesson, activeLessonId, purchasedSlugs }) {
+function LessonRow({ lesson, activeLessonId, purchasedSlugs, studyCenter = false }) {
   const hasAccess = hasCourseAccess(lesson.id, purchasedSlugs)
   const isActive = lesson.id === activeLessonId
   const progress = getLessonProgress(lesson.id)
+  const href = studyCenter ? studyLessonPath(lesson.id, { play: true }) : `/courses/detail/${lesson.id}`
 
   if (hasAccess) {
     return (
       <Link
-        to={`/courses/detail/${lesson.id}`}
+        to={href}
         className={`flex items-start gap-2.5 px-3 sm:px-4 py-2.5 ml-12 mr-2 rounded-lg text-sm transition ${
           isActive ? 'bg-primary/10 text-primary font-medium' : 'text-slate-700 hover:bg-slate-50'
         }`}
@@ -50,7 +52,7 @@ function LessonRow({ lesson, activeLessonId, purchasedSlugs }) {
   )
 }
 
-function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen }) {
+function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen, studyCenter = false }) {
   const [open, setOpen] = useState(defaultOpen)
   const completedCount = module.lessons.filter((l) => getLessonProgress(l.id).completed).length
 
@@ -84,6 +86,7 @@ function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen }) 
                 lesson={lesson}
                 activeLessonId={activeLessonId}
                 purchasedSlugs={purchasedSlugs}
+                studyCenter={studyCenter}
               />
             </li>
           ))}
@@ -93,7 +96,7 @@ function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen }) 
   )
 }
 
-function ThemeSection({ theme, activeLessonId, purchasedSlugs, activeModuleId }) {
+function ThemeSection({ theme, activeLessonId, purchasedSlugs, activeModuleId, studyCenter = false }) {
   const [open, setOpen] = useState(
     theme.modules.some((m) => m.lessons.some((l) => l.id === activeLessonId))
   )
@@ -126,6 +129,7 @@ function ThemeSection({ theme, activeLessonId, purchasedSlugs, activeModuleId })
               activeLessonId={activeLessonId}
               purchasedSlugs={purchasedSlugs}
               defaultOpen={mod.id === activeModuleId || mod.lessons.some((l) => l.id === activeLessonId)}
+              studyCenter={studyCenter}
             />
           ))
         : null}
@@ -139,6 +143,7 @@ export default function CourseLessonList({
   compact = false,
   curriculum = [],
   summaryText = '',
+  studyCenter = false,
 }) {
   const activeContext = activeLessonId
     ? curriculum
@@ -178,6 +183,7 @@ export default function CourseLessonList({
                     activeLessonId={activeLessonId}
                     purchasedSlugs={purchasedSlugs}
                     activeModuleId={activeContext?.module.id}
+                    studyCenter={studyCenter}
                   />
                 ))}
               </div>
