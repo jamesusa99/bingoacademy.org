@@ -13,7 +13,10 @@ function navLinkClass(active) {
 }
 
 function isNavActive(loc, path) {
-  if (path === '/profile') return loc.pathname.startsWith('/profile')
+  if (path === '/profile') {
+    if (loc.pathname.startsWith('/profile/study')) return false
+    return loc.pathname === '/profile' || loc.pathname.startsWith('/profile/')
+  }
   if (path === '/profile/study') return loc.pathname.startsWith('/profile/study')
   if (path === '/curriculum') return loc.pathname === '/curriculum'
   if (path === '/labs') {
@@ -50,7 +53,6 @@ export default function Layout({ children }) {
     { type: 'link', path: '/community', label: 'Community' },
     { type: 'sep' },
     { type: 'link', path: '/mall', label: 'AI Mall' },
-    ...(isAuthenticated ? [{ type: 'link', path: '/profile', label: 'Profile' }] : []),
   ]
 
   return (
@@ -123,7 +125,7 @@ export default function Layout({ children }) {
           </div>
           <nav className="lg:hidden nav-scroll-mobile pb-2" aria-label="Mobile navigation">
             {mainNav
-              .filter(({ path }) => isAuthenticated || path !== '/profile')
+              .filter(({ path }) => path !== '/profile')
               .map(({ path, label }) => (
               <Link
                 key={path + label}
