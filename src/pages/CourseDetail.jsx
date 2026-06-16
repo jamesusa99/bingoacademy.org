@@ -23,7 +23,7 @@ import {
   findModuleForLesson,
   findLessonInTree,
 } from '../lib/ioaiCourseStructure'
-import { buildLessonModuleMapFromTree, hasIoaiLessonAccess } from '../lib/ioaiAccess'
+import { buildLessonModuleMapFromTree, hasIoaiLessonAccess, hasIoaiModuleAccess } from '../lib/ioaiAccess'
 import { useIOAIAccess } from '../hooks/useIOAIStore'
 import { buildModuleCatalogSlug, formatIoaiPrice } from '../lib/ioaiStore'
 import { IOAI_MODULE_PREVIEW_SECONDS } from '../config/ioaiPreview'
@@ -110,6 +110,11 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
     return { ...found, catalogSlug }
   }, [item?.id, isLabMaterial, progLine, courses, tree])
 
+  const ioaiModuleAccess = useMemo(() => {
+    if (progLine !== 'ioai' || !moduleContext?.catalogSlug) return false
+    return hasIoaiModuleAccess(moduleContext.catalogSlug, { moduleSlugs, enrolledSlugs })
+  }, [progLine, moduleContext?.catalogSlug, moduleSlugs, enrolledSlugs])
+
   const reloadAll = useCallback(async () => {
     await Promise.all([reload(), progLine ? reloadTree() : Promise.resolve()])
   }, [reload, reloadTree, progLine])
@@ -143,7 +148,8 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
     setCheckoutLoading,
   } = useCourseAccess(item?.id)
 
-  const effectiveHasAccess = hasAccess || ioaiLessonAccess || hasIoaiFullTrack || previewMode
+  const effectiveHasAccess =
+    hasAccess || ioaiLessonAccess || ioaiModuleAccess || hasIoaiFullTrack || previewMode
 
   useEffect(() => {
     const status = searchParams.get('checkout')

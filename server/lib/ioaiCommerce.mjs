@@ -356,11 +356,32 @@ export async function userCanPreviewLesson(admin, lessonSlug) {
 export async function userHasLessonAccess(admin, userId, lessonSlug, { enrolledSlugs } = {}) {
   if (!lessonSlug?.trim()) return false
 
-  const { data: lesson } = await admin
+  const slug = lessonSlug.trim()
+
+  const { data: initialLesson } = await admin
     .from('lessons')
     .select('slug, catalog_slug, trial_enabled, module_id, status')
-    .or(`slug.eq.${lessonSlug.trim()},catalog_slug.eq.${lessonSlug.trim()}`)
+    .or(`slug.eq.${slug},catalog_slug.eq.${slug}`)
     .maybeSingle()
+
+  let lesson = initialLesson
+
+  if (!lesson) {
+    const { data: catalogRow } = await admin
+      .from('courses_catalog')
+      .select('lesson_id')
+      .eq('slug', slug)
+      .maybeSingle()
+
+    if (catalogRow?.lesson_id) {
+      const { data: linkedLesson } = await admin
+        .from('lessons')
+        .select('slug, catalog_slug, trial_enabled, module_id, status')
+        .eq('id', catalogRow.lesson_id)
+        .maybeSingle()
+      lesson = linkedLesson
+    }
+  }
 
   if (!lesson || lesson.status === 'hidden' || lesson.status === 'draft') return false
   if (lesson.trial_enabled) return true

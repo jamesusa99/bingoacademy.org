@@ -1,5 +1,5 @@
 import { getPurchasedSlugs, hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from './courseAccess'
-import { resolveLessonCatalogSlug } from './ioaiStore'
+import { buildModuleCatalogSlug, resolveLessonCatalogSlug } from './ioaiStore'
 
 export const IOAI_FULL_BUNDLE_SLUG = IOAI_FULL_TRACK_SLUG
 
@@ -17,7 +17,10 @@ export function buildLessonModuleMapFromTree(tree) {
   for (const level of tree || []) {
     for (const theme of level.themes || []) {
       for (const mod of theme.modules || []) {
-        const catalogSlug = mod.catalogSlug || mod.catalog_slug
+        const catalogSlug =
+          mod.catalogSlug ||
+          mod.catalog_slug ||
+          buildModuleCatalogSlug(level.id, theme.id, mod.id)
         if (!catalogSlug) continue
         for (const lesson of mod.lessons || []) {
           registerLessonModuleKeys(map, lesson, catalogSlug)

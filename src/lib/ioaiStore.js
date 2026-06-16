@@ -157,9 +157,11 @@ export function buildLessonModuleMap(levels) {
   for (const level of levels || []) {
     for (const theme of level.themes || []) {
       for (const mod of theme.modules || []) {
-        if (!mod.catalogSlug) continue
+        const moduleCatalogSlug =
+          mod.catalogSlug || buildModuleCatalogSlug(level.id, theme.id, mod.id)
+        if (!moduleCatalogSlug) continue
         for (const lesson of mod.lessons || []) {
-          registerLessonModuleKeys(map, lesson, mod.catalogSlug)
+          registerLessonModuleKeys(map, lesson, moduleCatalogSlug)
         }
       }
     }

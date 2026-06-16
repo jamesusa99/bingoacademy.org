@@ -6,7 +6,7 @@ import {
   parseIOAILessonSlug,
 } from '../data/ioaiCurriculum'
 import { buildCurriculumSummary } from './ioaiCurriculumDb'
-import { resolveLessonCatalogSlug } from './ioaiStore'
+import { buildModuleCatalogSlug, resolveLessonCatalogSlug } from './ioaiStore'
 import { getProgramCurriculum, isCurriculumLine } from '../config/programCurriculum'
 
 export const IOAI_TRACK_ID = 'ioai-competition-system'
@@ -42,12 +42,17 @@ export function isIOAITrackId(id) {
   return isProgramTrackId(id, 'ioai')
 }
 
+function lessonMatchesId(lesson, lessonId) {
+  const primary = resolveLessonCatalogSlug(lesson)
+  return primary === lessonId || lesson.slug === lessonId || lesson.id === lessonId
+}
+
 export function isProgramLessonInTree(lessonId, curriculumTree) {
   if (!lessonId || !curriculumTree?.length) return false
   for (const level of curriculumTree) {
     for (const theme of level.themes || []) {
       for (const mod of theme.modules || []) {
-        if (mod.lessons?.some((l) => l.id === lessonId)) return true
+        if (mod.lessons?.some((l) => lessonMatchesId(l, lessonId))) return true
       }
     }
   }
@@ -270,7 +275,7 @@ export function findModuleForLesson(lessonId, curriculumTree = null) {
   for (const level of tree) {
     for (const theme of level.themes || []) {
       for (const mod of theme.modules || []) {
-        if (mod.lessons?.some((l) => (l.id || l.slug) === lessonId)) {
+        if (mod.lessons?.some((l) => lessonMatchesId(l, lessonId))) {
           return {
             levelId: level.id,
             levelTitle: level.title,
@@ -279,7 +284,11 @@ export function findModuleForLesson(lessonId, curriculumTree = null) {
             categoryLabel: theme.categoryLabel || theme.category_label || theme.title,
             moduleId: mod.id,
             title: mod.title,
-            catalogSlug: mod.catalogSlug || null,
+            catalogSlug:
+              mod.catalogSlug ||
+              mod.catalog_slug ||
+              buildModuleCatalogSlug(level.id, theme.id, mod.id) ||
+              null,
             priceCents: mod.priceCents ?? null,
             currency: mod.currency || 'usd',
           }
