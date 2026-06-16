@@ -12,16 +12,13 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [c, e, th, sc, rc, cj, ct, mp, cr, cm, vid, ord, prof] = await Promise.all([
+        const [c, th, sc, ct, mc, mp, cm, vid, ord, prof] = await Promise.all([
           supabase.from('courses_catalog').select('id', { count: 'exact', head: true }),
-          supabase.from('events').select('id', { count: 'exact', head: true }),
           supabase.from('forum_threads').select('id', { count: 'exact', head: true }),
           supabase.from('showcase_cases').select('id', { count: 'exact', head: true }),
-          supabase.from('research_camps').select('id', { count: 'exact', head: true }),
-          supabase.from('career_jobs').select('id', { count: 'exact', head: true }),
           supabase.from('cert_tiers').select('id', { count: 'exact', head: true }),
+          supabase.from('courses').select('id', { count: 'exact', head: true }),
           supabase.from('mall_products').select('id', { count: 'exact', head: true }),
-          supabase.from('charity_reports').select('id', { count: 'exact', head: true }),
           supabase.from('community_mentors').select('id', { count: 'exact', head: true }),
           supabase.from('video_assets').select('id', { count: 'exact', head: true }),
           supabase.from('orders').select('id', { count: 'exact', head: true }),
@@ -29,14 +26,10 @@ export default function AdminDashboard() {
         ])
         setStats({
           courses: c.count ?? 0,
-          events: e.count ?? 0,
           threads: th.count ?? 0,
           showcase: sc.count ?? 0,
-          research: rc.count ?? 0,
-          career: cj.count ?? 0,
           cert: ct.count ?? 0,
-          mallProducts: mp.count ?? 0,
-          charity: cr.count ?? 0,
+          mall: (mc.count ?? 0) + (mp.count ?? 0),
           mentors: cm.count ?? 0,
           videos: vid.count ?? 0,
           orders: ord.count ?? 0,

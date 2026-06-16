@@ -31,7 +31,7 @@ function fromDbThread(row) {
 
 const INIT = { title: '', content: '', author: 'Admin', category: 'Discussion', image: '' }
 
-export default function AdminForum() {
+export default function AdminForum({ embedded = false }) {
   const c = useAdminCrud()
   const itemLabel = c.t('pages.forum.item')
   const [threads, setThreads] = useState([])
@@ -109,7 +109,7 @@ export default function AdminForum() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-6">{c.pageTitle('forum')}</h1>
+      {!embedded ? <h1 className="text-2xl font-bold text-bingo-dark mb-6">{c.pageTitle('forum')}</h1> : null}
 
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
 

@@ -28,6 +28,16 @@ import {
   HOME_TESTIMONIALS,
   HOME_BANNER_SLIDES,
 } from '../../src/config/seed/siteFallbacks.js'
+import {
+  COMMUNITY_SCHOLAR_TIERS,
+  COMMUNITY_SCHOLARS,
+  COMMUNITY_CHECKIN_TASKS,
+  COMMUNITY_CHECKIN_REWARDS,
+  COMMUNITY_CHECKIN_POINTS_GUIDE,
+  COMMUNITY_PARTNERS,
+  COMMUNITY_HOME_DEFAULT,
+  COMMUNITY_CERT_COURSES_DEFAULT,
+} from '../../src/config/seed/communityContent.js'
 
 async function tableCount(admin, table) {
   const { count, error } = await admin.from(table).select('*', { count: 'exact', head: true })
@@ -245,6 +255,12 @@ export async function runSiteSeed(admin, { force = false } = {}) {
     'community_mentors'
   )
 
+  await seedSimple('community_scholar_tiers', COMMUNITY_SCHOLAR_TIERS, 'community_scholar_tiers')
+  await seedSimple('community_scholars', COMMUNITY_SCHOLARS, 'community_scholars')
+  await seedSimple('community_checkin_tasks', COMMUNITY_CHECKIN_TASKS, 'community_checkin_tasks')
+  await seedSimple('community_checkin_rewards', COMMUNITY_CHECKIN_REWARDS, 'community_checkin_rewards')
+  await seedSimple('community_partners', COMMUNITY_PARTNERS, 'community_partners')
+
   await seedSimple(
     'charity_reports',
     CHARITY_REPORTS.map((r, i) => ({
@@ -375,6 +391,9 @@ export async function runSiteSeed(admin, { force = false } = {}) {
   const settings = [
     { key: 'home_banners', value: HOME_BANNER_SLIDES },
     { key: 'assessment_catalog', value: ASSESSMENT_CATALOG },
+    { key: 'community_home', value: COMMUNITY_HOME_DEFAULT },
+    { key: 'community_cert_courses', value: COMMUNITY_CERT_COURSES_DEFAULT },
+    { key: 'community_checkin_points_guide', value: COMMUNITY_CHECKIN_POINTS_GUIDE },
     ...Object.entries(COURSES_LINE_HERO_KEYS).map(([lineId, key]) => ({
       key,
       value: DEFAULT_COURSES_LINE_HERO[lineId],

@@ -40,7 +40,7 @@ function fromDb(row) {
 const INIT = { name: '', type: 'course', cat: '', tag: '', price: '', bPrice: '', sold: '0', rating: '', desc: '', badge: '', aiLab: false }
 const COURSE_REQUIRED = new Set(['name'])
 
-export default function AdminCourses() {
+export default function AdminCourses({ embedded = false }) {
   const c = useAdminCrud()
   const itemLabel = c.t('pages.mall.item')
   const [items, setItems] = useState([])
@@ -114,8 +114,12 @@ export default function AdminCourses() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-2">{c.pageTitle('mall')}</h1>
-      <p className="text-slate-600 text-sm mb-6">{c.pageDesc('mall')}</p>
+      {!embedded && (
+        <>
+          <h1 className="text-2xl font-bold text-bingo-dark mb-2">{c.pageTitle('mall')}</h1>
+          <p className="text-slate-600 text-sm mb-6">{c.pageDesc('mall')}</p>
+        </>
+      )}
 
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
 

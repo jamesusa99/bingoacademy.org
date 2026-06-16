@@ -8,6 +8,51 @@ import { ADMIN_NAV_GROUPS, isAdminNavActive } from '../config/adminNav'
 import AdminErrorBoundary from './admin/AdminErrorBoundary'
 import AdminLanguageSwitcher from './admin/AdminLanguageSwitcher'
 
+function CollapsibleNavGroup({ item, pathname, t }) {
+  const basePath = item.basePath
+  const isActive = pathname === basePath || pathname.startsWith(`${basePath}/`)
+  const [open, setOpen] = useState(isActive)
+
+  useEffect(() => {
+    if (isActive) setOpen(true)
+  }, [isActive])
+
+  return (
+    <div className="mb-1">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition ${
+          isActive ? 'bg-cyan-500/20 text-white' : 'text-slate-300 hover:text-white hover:bg-white/10'
+        }`}
+      >
+        <span>{item.icon}</span>
+        <span className="flex-1 text-left">{t(item.labelKey)}</span>
+        <span className={`text-xs transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
+      </button>
+      {open ? (
+        <div className="ml-2 mt-0.5 space-y-0.5 border-l border-cyan-500/20 pl-2">
+          {item.children.map((child) => {
+            const childActive = isAdminNavActive(pathname, child.path)
+            return (
+              <Link
+                key={child.path}
+                to={child.path}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition ${
+                  childActive ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <span>{child.icon}</span>
+                {t(child.labelKey)}
+              </Link>
+            )
+          })}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export default function AdminLayout() {
   const loc = useLocation()
   const navigate = useNavigate()
@@ -68,7 +113,11 @@ export default function AdminLayout() {
               <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
                 {t(group.titleKey)}
               </p>
-              {group.items.map(({ path, labelKey, icon, end }) => {
+              {group.items.map((item) => {
+                if (item.type === 'collapsible') {
+                  return <CollapsibleNavGroup key={item.id} item={item} pathname={loc.pathname} t={t} />
+                }
+                const { path, labelKey, icon, end } = item
                 const active = isAdminNavActive(loc.pathname, path, end)
                 return (
                   <Link

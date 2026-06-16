@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useCommunityContent } from '../hooks/useCommunityContent'
 
 // ─── Certified Mentors data ────────────────────────────────────────
 const CERTIFIED_MENTORS_FALLBACK = [
@@ -16,51 +17,6 @@ const ELITE_COACHES = [
   { name: 'Dr. Zhang', role: 'STEM Admissions Specialist', stat: '300+ STEM specialty admits', avatar: '🎓', type: 'admissions' },
   { name: 'Ms. Liu', role: 'AI Project Mentor · Tsinghua PhD', stat: '100+ published student projects', avatar: '🔬', type: 'research' },
   { name: 'Prof. Wang', role: 'AI Ethics & Thinking Expert', stat: '15 yrs youth AI education', avatar: '🧠', type: 'research' },
-]
-
-// ─── Star Student Tiers ───────────────────────────────────────────
-const STAR_TIERS = [
-  { id: 'pioneer', label: 'Pioneer Scholar', age: 'Ages 6–9', desc: 'Elementary starters', focus: 'Attendance + daily check-in consistency', pts: 100, color: 'bg-green-100 text-green-700 border-green-200', icon: '🌱' },
-  { id: 'rising', label: 'Rising Scholar', age: 'Ages 10–14', desc: 'Intermediate track', focus: 'Course mastery + practical skills + check-in quality', pts: 300, color: 'bg-blue-100 text-blue-700 border-blue-200', icon: '📈' },
-  { id: 'elite', label: 'Elite Scholar', age: 'Ages 14–18', desc: 'Competition track', focus: 'Course outcomes + competition participation + research projects', pts: 600, color: 'bg-purple-100 text-purple-700 border-purple-200', icon: '🏆' },
-  { id: 'super', label: 'Bingo Super Scholar', age: 'All ages', desc: 'Highest honour', focus: 'Comprehensive ability + core achievements + role model impact', pts: 1000, color: 'bg-amber-100 text-amber-700 border-amber-200', icon: '⭐' },
-]
-
-// ─── Star Student examples ────────────────────────────────────────
-const STAR_STUDENTS = [
-  { name: 'Alex W.', grade: 'Grade 11', tier: 'super', achievement: 'National AI Innovation Competition · First Place', path: 'Foundations → Competition Bootcamp → Science Camp → Super Scholar', avatar: '⭐', pts: 1240 },
-  { name: 'Mia C.', grade: 'Grade 10', tier: 'elite', achievement: 'STEM Specialty Admissions · Top Provincial School', path: 'Level 1 → Level 2 → STEM Admissions Track', avatar: '🏆', pts: 820 },
-  { name: 'Kevin L.', grade: 'University Yr 1', tier: 'super', achievement: 'AI startup incubated · $30K seed funding', path: 'Level 3 Applied → Level 4 → Super Scholar', avatar: '⭐', pts: 1580 },
-  { name: 'Emma T.', grade: 'Grade 7', tier: 'rising', achievement: 'Regional AI Creativity Award', path: 'Foundations → Intermediate Track', avatar: '📈', pts: 410 },
-  { name: 'Jason H.', grade: 'Grade 9', tier: 'elite', achievement: '2nd place · City-level AI Robot Competition', path: 'Intermediate → Competition Bootcamp', avatar: '🏆', pts: 690 },
-  { name: 'Lily Z.', grade: 'Grade 4', tier: 'pioneer', achievement: 'School AI Art Exhibition – Best Work', path: 'AI Foundations Course', avatar: '🌱', pts: 175 },
-]
-
-// ─── Check-in tasks ───────────────────────────────────────────────
-const CHECKIN_TASKS = [
-  { id: 't1', type: 'study', icon: '📖', title: 'Daily Study Check-In', desc: 'Complete a lesson and mark attendance', pts: 5, scholarPts: 1, done: false },
-  { id: 't2', type: 'practice', icon: '🛠️', title: 'Practice Project Upload', desc: 'Submit your AI practice work screenshot', pts: 20, scholarPts: 3, done: false },
-  { id: 't3', type: 'share', icon: '📢', title: 'Community Share Check-In', desc: 'Share today\'s learning insight in the group', pts: 10, scholarPts: 2, done: false },
-  { id: 't4', type: 'scholar', icon: '⭐', title: 'Scholar Bonus Task', desc: 'Complete the week\'s project challenge', pts: 50, scholarPts: 10, done: false, exclusive: true },
-]
-
-const CHECKIN_REWARDS = [
-  { icon: '🎫', title: 'Course Voucher', pts: 200, desc: 'Up to $50 off any course', stock: 'Available' },
-  { icon: '📦', title: 'AI Maker Kit', pts: 500, desc: 'Hardware kit for AI projects', stock: '12 left' },
-  { icon: '👨‍🏫', title: '1-on-1 Mentor Session', pts: 800, desc: '30-min elite mentor consultation', stock: 'Available' },
-  { icon: '🏅', title: 'Competition Entry Fee', pts: 1000, desc: 'Free entry to partner competition', stock: '5 left' },
-  { icon: '📜', title: 'Scholar Certificate Frame', pts: 300, desc: 'Premium frame for your certificate', stock: 'Scholar only', scholarOnly: true },
-  { icon: '🎖️', title: 'Scholar Digital Badge', pts: 150, desc: 'Exclusive digital profile badge', stock: 'Scholar only', scholarOnly: true },
-]
-
-// ─── Partner Institutions ─────────────────────────────────────────
-const PARTNERS = [
-  { name: 'Youth STEM Education Center', region: 'Jiangsu · Nanjing', type: 'University Lab' },
-  { name: 'AI Education Practice Base', region: 'Guangdong · Shenzhen', type: 'Practice Base' },
-  { name: 'Education Group STEM Academy', region: 'Beijing', type: 'STEM Academy' },
-  { name: 'Foreign Language School AI Lab', region: 'Shanghai', type: 'School Lab' },
-  { name: 'STEM Training Academy', region: 'Zhejiang · Hangzhou', type: 'Training Org' },
-  { name: 'Maker Education Institute', region: 'Sichuan · Chengdu', type: 'Maker Space' },
 ]
 
 // ─── Forum: seed threads (fallback when Supabase empty) ─────────────
@@ -320,12 +276,7 @@ function ForumSection() {
 }
 
 // ─── Certified Courses ────────────────────────────────────────────
-const CERT_COURSES = [
-  { name: 'AI Literacy Certification', age: 'Ages 6–10', cert: 'Foundation Certificate', scholarPts: '+50 Scholar pts', partnerCert: true },
-  { name: 'AI & Robotics Certification', age: 'Ages 10–14', cert: 'Applied Certificate', scholarPts: '+80 Scholar pts', partnerCert: true },
-  { name: 'Data Science Certification', age: 'Ages 12–18', cert: 'Advanced Certificate', scholarPts: '+120 Scholar pts', partnerCert: true },
-  { name: 'Machine Learning Foundations', age: 'Ages 14–18', cert: 'Expert Certificate', scholarPts: '+150 Scholar pts', partnerCert: true },
-]
+// Loaded via useCommunityContent → platform_settings.community_cert_courses
 
 // ─── Avatar component ─────────────────────────────────────────────
 function Avatar({ src, name, size = 'md' }) {
@@ -340,7 +291,7 @@ function Avatar({ src, name, size = 'md' }) {
 }
 
 // ─── Scholar Registration Modal ───────────────────────────────────
-function ScholarModal({ onClose }) {
+function ScholarModal({ onClose, scholarTiers = [] }) {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({ name: '', age: '', cohort: '', tier: '' })
   if (step === 2) return (
@@ -374,7 +325,7 @@ function ScholarModal({ onClose }) {
             <select value={form.tier} onChange={e => setForm(f => ({...f, tier: e.target.value}))}
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary outline-none bg-white">
               <option value="">Select tier</option>
-              {STAR_TIERS.map(t => <option key={t.id} value={t.id}>{t.icon} {t.label} ({t.age})</option>)}
+              {scholarTiers.map(t => <option key={t.id} value={t.id}>{t.icon} {t.label} ({t.age})</option>)}
             </select>
           </div>
         </div>
@@ -459,15 +410,29 @@ function LeadModal({ title, onClose }) {
 }
 
 // ─── Main Page ─────────────────────────────────────────────────────
+const COMMUNITY_TAB_IDS = ['home', 'forum', 'scholars', 'courses', 'mentors', 'partners', 'checkin']
+
 export default function Community() {
-  const [tab, setTab] = useState('home')
+  const { section } = useParams()
+  const navigate = useNavigate()
+  const tab = COMMUNITY_TAB_IDS.includes(section) ? section : 'home'
   const [scholarModal, setScholarModal] = useState(false)
   const [progressModal, setProgressModal] = useState(false)
   const [leadModal, setLeadModal] = useState(null)
   const [checkedIn, setCheckedIn] = useState({})
-  const [joinDone, setJoinDone] = useState(false)
   const [redeemed, setRedeemed] = useState({})
   const [certifiedMentors, setCertifiedMentors] = useState(CERTIFIED_MENTORS_FALLBACK)
+  const { scholarTiers, scholars, checkinTasks, checkinRewards, checkinPointsGuide, partners, homeContent, certCourses } = useCommunityContent()
+
+  useEffect(() => {
+    if (section && !COMMUNITY_TAB_IDS.includes(section)) {
+      navigate('/community', { replace: true })
+    }
+  }, [section, navigate])
+
+  const goTab = (id) => {
+    navigate(id === 'home' ? '/community' : `/community/${id}`)
+  }
 
   useEffect(() => {
     supabase.from('community_mentors').select('*').order('sort_order').then(({ data }) => {
@@ -477,12 +442,12 @@ export default function Community() {
 
   const NAV_TABS = [
     { id: 'home', icon: '🏠', label: 'Community Home' },
-    { id: 'scholars', icon: '⭐', label: 'AI Star Scholars', highlight: true },
-    { id: 'mentors', icon: '🏆', label: 'Elite Mentor Hub' },
-    { id: 'checkin', icon: '📅', label: 'Check-In & Points' },
-    { id: 'courses', icon: '📜', label: 'Certified Courses' },
-    { id: 'partners', icon: '🏫', label: 'Partner Institutions' },
     { id: 'forum', icon: '💬', label: 'AI-Spark Forum' },
+    { id: 'scholars', icon: '⭐', label: 'AI Star Scholars', highlight: true },
+    { id: 'courses', icon: '📜', label: 'Certified Courses' },
+    { id: 'mentors', icon: '🏆', label: 'Elite Mentor Hub' },
+    { id: 'partners', icon: '🏫', label: 'Partner Institutions' },
+    { id: 'checkin', icon: '📅', label: 'Check-In & Points' },
   ]
 
   const doCheckin = (id) => setCheckedIn(p => ({ ...p, [id]: true }))
@@ -491,47 +456,14 @@ export default function Community() {
     <div className="max-w-7xl mx-auto px-4 py-8">
 
       {/* Modals */}
-      {scholarModal && <ScholarModal onClose={() => setScholarModal(false)} />}
+      {scholarModal && <ScholarModal scholarTiers={scholarTiers} onClose={() => setScholarModal(false)} />}
       {progressModal && <ProgressModal onClose={() => setProgressModal(false)} />}
       {leadModal && <LeadModal title={leadModal} onClose={() => setLeadModal(null)} />}
-
-      {/* ── Hero Banner ── */}
-      <section className="mb-8 section-tech rounded-2xl px-6 py-10 text-center">
-        <p className="text-xs font-bold tracking-widest text-primary uppercase mb-2">AI Empowers Growth · Innovation Lights the Way</p>
-        <h1 className="text-3xl sm:text-4xl font-bold text-bingo-dark mb-3">Bingo AI Learning Community</h1>
-        <p className="text-slate-600 text-base max-w-2xl mx-auto mb-4">
-          Expert mentors · peer scholars · reward-driven check-ins · authoritative certificates.<br className="hidden sm:block" />
-          Your complete AI learning ecosystem — structured, social, and results-focused.
-        </p>
-        <div className="flex flex-wrap gap-2 justify-center text-xs mb-6">
-          {['University-affiliated mentors','Competition & admissions guidance','Certified course programmes','Daily check-in point system','Bingo AI Scholar Honours','AI-Spark Forum'].map((t,i) => (
-            <span key={i} className="bg-white/80 border border-primary/20 rounded-full px-3 py-1.5 text-slate-700">{t}</span>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-3 justify-center">
-          {joinDone
-            ? <span className="btn-primary px-6 py-2.5">✅ Welcome to the community!</span>
-            : <button onClick={() => setJoinDone(true)} className="btn-primary px-6 py-2.5">Join Free Now</button>}
-          <button onClick={() => setScholarModal(true)} className="px-6 py-2.5 rounded-xl border border-amber-400 text-amber-700 font-medium hover:bg-amber-50 transition text-sm">⭐ View Scholar Honours</button>
-          <button onClick={() => setLeadModal('Book a Free 1-on-1 Learning Plan')} className="px-6 py-2.5 rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition text-sm">Get Free Learning Plan</button>
-        </div>
-        <p className="text-xs text-slate-400 mt-4">Backed by the Bingo AI Education Research Team · 10,000+ students served</p>
-      </section>
-
-      {/* ── Quick stats ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-        {[['10,000+','Students Served'],['92%','Competition Award Rate'],['300+','International Awards'],['500+','Partner Institutions']].map(([v,l],i) => (
-          <div key={i} className="card p-4 text-center">
-            <div className="text-xl font-bold text-primary">{v}</div>
-            <div className="text-xs text-slate-500 mt-0.5">{l}</div>
-          </div>
-        ))}
-      </div>
 
       {/* ── Tab Nav ── */}
       <div className="flex gap-2 flex-wrap mb-6 overflow-x-auto pb-1">
         {NAV_TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
+          <button key={t.id} onClick={() => goTab(t.id)}
             className={`shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1.5
               ${tab === t.id ? (t.highlight ? 'bg-amber-500 text-white shadow' : 'bg-primary text-white shadow') : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}
               ${t.highlight && tab !== t.id ? 'border border-amber-300' : ''}`}>
@@ -547,20 +479,16 @@ export default function Community() {
         <div className="space-y-8">
           {/* Three pillars */}
           <section>
-            <h2 className="section-title mb-5">Three Systems That Make Learning Stick</h2>
+            <h2 className="section-title mb-5">{homeContent.pillarsTitle}</h2>
             <div className="grid md:grid-cols-3 gap-5">
-              {[
-                { icon: '🏆', color: 'border-primary/20', btnColor: 'btn-primary', tabTarget: 'mentors', title: 'Elite Mentor Hub', pain: 'No direction · no one to ask', value: 'AI competition gold coaches, STEM admissions advisors, and university professors. 1-on-1 Q&A, personalised learning plans, assignment reviews. Help your student avoid 2 years of wasted effort.', stat: '15+ certified elite mentors' },
-                { icon: '⭐', color: 'border-amber-200/60 bg-amber-50/20', btnColor: 'bg-amber-500 text-white hover:bg-amber-600', tabTarget: 'scholars', title: 'AI Star Scholar System', pain: 'No role models · no visible progress', value: 'A four-tier honours programme: Pioneer → Rising → Elite → Super Scholar. Real student cases with documented paths. Every success story is replicable.', stat: '89% of scholars won provincial+ awards' },
-                { icon: '📅', color: 'border-green-200/60 bg-green-50/20', btnColor: 'bg-green-600 text-white hover:bg-green-700', tabTarget: 'checkin', title: 'Check-In & Points', pain: 'Can\'t stay consistent · no motivation', value: 'Gamified daily check-ins earn points redeemable for course vouchers, hardware kits, mentor sessions, and competition entries. Scholar points run a parallel track.', stat: '78% daily check-in rate · 1M+ pts distributed' },
-              ].map((p,i) => (
+              {homeContent.pillars.map((p, i) => (
                 <div key={i} className={`card p-6 flex flex-col border-2 ${p.color}`}>
                   <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-2xl mb-3 shadow-sm">{p.icon}</div>
                   <h3 className="font-bold text-bingo-dark mb-1">{p.title}</h3>
                   <p className="text-xs text-primary font-medium mb-2">Solves: {p.pain}</p>
                   <p className="text-sm text-slate-600 flex-1 mb-3">{p.value}</p>
                   <p className="text-xs text-slate-400 mb-3">✓ {p.stat}</p>
-                  <button onClick={() => setTab(p.tabTarget)} className={`w-full text-sm py-2 rounded-xl font-medium transition ${p.btnColor}`}>
+                  <button onClick={() => goTab(p.tabTarget)} className={`w-full text-sm py-2 rounded-xl font-medium transition ${p.btnColor}`}>
                     Enter {p.title} →
                   </button>
                 </div>
@@ -568,45 +496,15 @@ export default function Community() {
             </div>
           </section>
 
-          {/* Anxiety solver */}
-          <section className="card p-6 border-primary/10">
-            <h2 className="text-base font-bold text-bingo-dark mb-5 text-center">Every AI Learning Anxiety — One Community Solves All</h2>
-            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { icon: '🗺️', pain: '"No direction"', fix: 'Structured learning paths + 1-on-1 mentor planning — zero guesswork, no wasted time' },
-                { icon: '💬', pain: '"No one to ask"', fix: 'Elite mentor live Q&A + peer community — questions answered the same day' },
-                { icon: '🔥', pain: '"Can\'t stay consistent"', fix: 'Gamified check-ins + Scholar honours + peer accountability — motivation built in' },
-                { icon: '🏅', pain: '"No visible results"', fix: 'Competition access + project showcase + Scholar certificates + college admissions support' },
-              ].map((s,i) => (
-                <div key={i} className="text-center p-3 bg-slate-50 rounded-xl">
-                  <div className="text-2xl mb-2">{s.icon}</div>
-                  <div className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full inline-block mb-2">{s.pain}</div>
-                  <p className="text-xs text-slate-600 leading-relaxed">{s.fix}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-5 pt-4 border-t border-slate-100 text-center">
-              <p className="text-xs text-slate-500 mb-3">Powered by the <strong>Bingo AI Education Research Team</strong> — Tsinghua / Beihang AI faculty + 10+ years youth education · All outcomes verified</p>
-              <button onClick={() => setLeadModal('Get a Free Personalised AI Learning Plan')} className="btn-primary text-sm px-5 py-2">Get a Free Personalised Learning Plan →</button>
-            </div>
-          </section>
-
-          {/* Results carousel */}
-          <section>
-            <h2 className="section-title mb-4">Recent Scholar Achievements</h2>
-            <div className="grid sm:grid-cols-3 gap-4">
-              {STAR_STUDENTS.slice(0,3).map((s,i) => (
-                <div key={i} className="card p-5 hover:shadow-md hover:border-primary/30 transition">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-xl">{s.avatar}</div>
-                    <div><div className="font-semibold text-bingo-dark text-sm">{s.name}</div><div className="text-xs text-slate-500">{s.grade}</div></div>
-                  </div>
-                  <p className="text-xs text-slate-700 mb-2">🏅 {s.achievement}</p>
-                  <button onClick={() => setTab('scholars')} className="text-xs text-primary hover:underline">View full story →</button>
-                </div>
-              ))}
-            </div>
-          </section>
+          {/* Community stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {homeContent.stats.map((stat, i) => (
+              <div key={i} className="card p-4 text-center">
+                <div className="text-xl font-bold text-primary">{stat.value}</div>
+                <div className="text-xs text-slate-500 mt-0.5">{stat.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -615,32 +513,18 @@ export default function Community() {
       ══════════════════════════════════════════ */}
       {tab === 'scholars' && (
         <div className="space-y-8">
-          {/* Hero */}
-          <div className="card p-6 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/60">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-bingo-dark mb-1">⭐ Bingo AI Star Scholar Programme</h2>
-                <p className="text-slate-600 text-sm max-w-xl">A structured honours system that turns consistent effort into recognised achievement. Four tiers, transparent rules, real rewards — giving every student a clear target and the recognition they deserve.</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <button onClick={() => setScholarModal(true)} className="bg-amber-500 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-amber-600 transition">Apply for Scholar →</button>
-                <button onClick={() => setProgressModal(true)} className="border border-amber-400 text-amber-700 px-5 py-2 rounded-xl text-sm hover:bg-amber-50 transition">Check My Progress</button>
-              </div>
-            </div>
-          </div>
-
           {/* Tiers */}
           <section>
             <h3 className="font-semibold text-bingo-dark mb-4">Scholar Tiers</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {STAR_TIERS.map(t => (
+              {scholarTiers.map(t => (
                 <div key={t.id} className={`card p-5 border-2 ${t.color}`}>
                   <div className="text-2xl mb-2">{t.icon}</div>
                   <div className="font-bold text-bingo-dark">{t.label}</div>
                   <div className="text-xs text-slate-500 mb-2">{t.age} · {t.desc}</div>
                   <p className="text-xs text-slate-600 mb-3">{t.focus}</p>
                   <div className="text-xs font-semibold text-primary">Threshold: {t.pts} Scholar pts</div>
-                  {t.id === 'super' && <div className="text-[10px] text-amber-600 mt-1 bg-amber-50 rounded px-1.5 py-0.5">Highest honour · Direct entry to Mentor Hub</div>}
+                  {t.isHighest ? <div className="text-[10px] text-amber-600 mt-1 bg-amber-50 rounded px-1.5 py-0.5">Highest honour · Direct entry to Mentor Hub</div> : null}
                 </div>
               ))}
             </div>
@@ -692,8 +576,8 @@ export default function Community() {
               <button onClick={() => setProgressModal(true)} className="text-xs text-primary hover:underline">Check my ranking →</button>
             </div>
             <div className="space-y-2">
-              {STAR_STUDENTS.sort((a,b) => b.pts - a.pts).map((s,i) => {
-                const tier = STAR_TIERS.find(t => t.id === s.tier)
+              {scholars.slice().sort((a,b) => b.pts - a.pts).map((s,i) => {
+                const tier = scholarTiers.find(t => t.id === s.tier)
                 return (
                   <div key={i} className={`card p-4 flex items-center gap-4 hover:shadow-sm transition ${i < 3 ? 'border-amber-200/60' : ''}`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-slate-100 text-slate-600' : i === 2 ? 'bg-orange-100 text-orange-600' : 'bg-slate-50 text-slate-400'}`}>{i+1}</div>
@@ -813,7 +697,7 @@ export default function Community() {
           <section>
             <h3 className="font-semibold text-bingo-dark mb-3">Today's Check-In Tasks</h3>
             <div className="space-y-3">
-              {CHECKIN_TASKS.map(t => (
+              {checkinTasks.map(t => (
                 <div key={t.id} className={`card p-4 flex items-center gap-4 ${t.exclusive ? 'border-amber-200/60 bg-amber-50/30' : ''}`}>
                   <div className="text-2xl shrink-0">{t.icon}</div>
                   <div className="flex-1 min-w-0">
@@ -843,12 +727,12 @@ export default function Community() {
           <section>
             <h3 className="font-semibold text-bingo-dark mb-3">How to Earn More Points</h3>
             <div className="grid sm:grid-cols-2 gap-2 text-sm">
-              {[['Daily Check-In','+5 pts','','+1 scholar pt'],['Weekly 7-day Streak','','','+50 pts bonus'],['Complete a Lesson','+20 pts','','+3 scholar pts'],['Submit a Project','+100 pts','','+15 scholar pts'],['Mentor Q&A Interaction','+30 pts','','+5 scholar pts'],['Refer a Friend','+200 pts','','+20 scholar pts'],['Community Post Approved','+50 pts','','+8 scholar pts'],['Competition Participation','+150 pts','','+25 scholar pts']].map(([a,,b,c],i) => (
-                <div key={i} className="card p-3 flex items-center justify-between">
-                  <span className="text-slate-700 text-xs">{a}</span>
+              {checkinPointsGuide.map((rule) => (
+                <div key={rule.id} className="card p-3 flex items-center justify-between">
+                  <span className="text-slate-700 text-xs">{rule.title}</span>
                   <div className="flex gap-2 text-xs font-semibold">
-                    {a !== 'Weekly 7-day Streak' && <span className="text-green-600">+pts</span>}
-                    <span className="text-amber-600">{c}</span>
+                    {!rule.streakOnly && rule.pts ? <span className="text-green-600">{rule.pts}</span> : null}
+                    {rule.scholarPts ? <span className="text-amber-600">{rule.scholarPts}</span> : null}
                   </div>
                 </div>
               ))}
@@ -859,8 +743,8 @@ export default function Community() {
           <section>
             <h3 className="font-semibold text-bingo-dark mb-3">Redeem Your Points</h3>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {CHECKIN_REWARDS.map((r,i) => (
-                <div key={i} className={`card p-5 flex flex-col hover:shadow-md transition ${r.scholarOnly ? 'border-amber-200/60 bg-amber-50/20' : ''}`}>
+              {checkinRewards.map((r) => (
+                <div key={r.id} className={`card p-5 flex flex-col hover:shadow-md transition ${r.scholarOnly ? 'border-amber-200/60 bg-amber-50/20' : ''}`}>
                   <div className="text-2xl mb-2">{r.icon}</div>
                   <div className="font-semibold text-bingo-dark text-sm">{r.title}</div>
                   <div className="text-xs font-bold text-green-600 bg-green-50 rounded-full px-2 py-0.5 inline-block my-1.5 self-start">{r.pts} pts</div>
@@ -869,11 +753,11 @@ export default function Community() {
                   <div className="flex items-center justify-between mt-3">
                     <span className="text-[10px] text-slate-400">{r.stock}</span>
                     <button
-                      onClick={() => setRedeemed(p => ({...p,[i]:true}))}
-                      disabled={redeemed[i]}
-                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition ${redeemed[i] ? 'bg-green-100 text-green-700 cursor-default' : 'btn-primary'}`}
+                      onClick={() => setRedeemed(p => ({...p,[r.id]:true}))}
+                      disabled={redeemed[r.id]}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition ${redeemed[r.id] ? 'bg-green-100 text-green-700 cursor-default' : 'btn-primary'}`}
                     >
-                      {redeemed[i] ? '✓ Redeemed' : 'Redeem'}
+                      {redeemed[r.id] ? '✓ Redeemed' : 'Redeem'}
                     </button>
                   </div>
                 </div>
@@ -885,7 +769,7 @@ export default function Community() {
           <section>
             <h3 className="font-semibold text-bingo-dark mb-3">Weekly Check-In Leaders</h3>
             <div className="space-y-2">
-              {STAR_STUDENTS.slice(0,5).map((s,i) => (
+              {scholars.slice(0,5).map((s,i) => (
                 <div key={i} className="card p-3 flex items-center gap-3">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${i===0?'bg-yellow-100 text-yellow-700':i===1?'bg-slate-100 text-slate-600':i===2?'bg-orange-100 text-orange-600':'bg-slate-50 text-slate-400'}`}>{i+1}</div>
                   <div className="text-lg">{s.avatar}</div>
@@ -908,7 +792,7 @@ export default function Community() {
             <p className="text-slate-500 text-sm">Authoritative certifications aligned with industry standards and college admissions requirements. Every course links directly to the Scholar points system.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-5">
-            {CERT_COURSES.map((c,i) => (
+            {certCourses.map((c,i) => (
               <div key={i} className="card p-5 hover:shadow-md hover:border-primary/30 transition">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div>
@@ -948,8 +832,8 @@ export default function Community() {
             <p className="text-slate-500 text-sm">Our Super Scholar certificates are jointly certified by partner institutions. These organisations provide research facilities, competition resources, and industry credibility for our students.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {PARTNERS.map((p,i) => (
-              <div key={i} className="card p-4 flex flex-col items-center text-center hover:shadow-md hover:border-primary/30 transition group">
+            {partners.map((p) => (
+              <div key={p.id} className="card p-4 flex flex-col items-center text-center hover:shadow-md hover:border-primary/30 transition group">
                 <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-xl font-bold text-primary/60 group-hover:bg-primary/10 mb-2">{p.name.charAt(0)}</div>
                 <div className="font-medium text-bingo-dark text-xs leading-tight mb-1">{p.name}</div>
                 <div className="text-[10px] text-slate-500">{p.region}</div>

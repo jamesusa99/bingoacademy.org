@@ -25,6 +25,14 @@ async function cmsRequest(table, body) {
   })
 }
 
+/** Use direct Supabase client when admin API is unavailable or lacks table allowlist. */
+function shouldFallbackToClient(err) {
+  if (!err?.status) return true
+  if (err.status === 503 || err.status === 502) return true
+  if (err.status === 400 && /table not allowed/i.test(err.message || '')) return true
+  return false
+}
+
 async function clientInsert(table, payload) {
   const { data, error } = await supabase.from(table).insert(payload).select()
   return ensureRows(table, 'inserted', error, data)[0]
@@ -52,10 +60,10 @@ export async function adminInsert(table, payload) {
         'Your account needs profiles.role = admin or editor to save changes. Ask an administrator to update your role.'
       )
     }
-    if (!err.status || err.status === 503 || err.status === 502) {
-      return clientInsert(table, payload)
+    if (!shouldFallbackToClient(err)) {
+      throw err
     }
-    throw err
+    return clientInsert(table, payload)
   }
 }
 
@@ -72,10 +80,10 @@ export async function adminUpdate(table, id, payload) {
         'Your account needs profiles.role = admin or editor to save changes. Ask an administrator to update your role.'
       )
     }
-    if (!err.status || err.status === 503 || err.status === 502) {
-      return clientUpdate(table, id, payload)
+    if (!shouldFallbackToClient(err)) {
+      throw err
     }
-    throw err
+    return clientUpdate(table, id, payload)
   }
 }
 
@@ -92,9 +100,9 @@ export async function adminDelete(table, id) {
         'Your account needs profiles.role = admin or editor to delete records. Ask an administrator to update your role.'
       )
     }
-    if (!err.status || err.status === 503 || err.status === 502) {
-      return clientDelete(table, id)
+    if (!shouldFallbackToClient(err)) {
+      throw err
     }
-    throw err
+    return clientDelete(table, id)
   }
 }

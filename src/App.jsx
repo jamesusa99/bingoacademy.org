@@ -6,21 +6,15 @@ import AdminLayout from './components/AdminLayout'
 import { AdminLocaleProvider } from './contexts/AdminLocaleContext'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminCourses from './pages/admin/AdminCourses'
 import AdminCoursesCatalog from './pages/admin/AdminCoursesCatalog'
 import AdminLabPackExperiments from './pages/admin/AdminLabPackExperiments'
 import AdminIOAIExperimentLibrary from './pages/admin/AdminIOAIExperimentLibrary'
 import AdminIOAICurriculum from './pages/admin/AdminIOAICurriculum'
-import AdminEvents from './pages/admin/AdminEvents'
-import AdminForum from './pages/admin/AdminForum'
+import AdminCommunity from './pages/admin/AdminCommunity'
 import AdminHome from './pages/admin/AdminHome'
 import AdminShowcase from './pages/admin/AdminShowcase'
-import AdminResearch from './pages/admin/AdminResearch'
-import AdminCareer from './pages/admin/AdminCareer'
 import AdminCert from './pages/admin/AdminCert'
-import AdminMallProducts from './pages/admin/AdminMallProducts'
-import AdminCharity from './pages/admin/AdminCharity'
-import AdminMentors from './pages/admin/AdminMentors'
+import AdminMall from './pages/admin/AdminMall'
 import AdminPayments from './pages/admin/AdminPayments'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminSettings from './pages/admin/AdminSettings'
@@ -123,15 +117,14 @@ export default function App() {
         <Route path="curriculum/:line" element={<AdminIOAICurriculum />} />
         <Route path="ioai-curriculum" element={<Navigate to="/admin/curriculum/ioai" replace />} />
         <Route path="courses-catalog" element={<Navigate to="/admin/labs-materials" replace />} />
-        <Route path="mall" element={<AdminCourses />} />
-        <Route path="research" element={<AdminResearch />} />
-        <Route path="events" element={<AdminEvents />} />
-        <Route path="mentors" element={<AdminMentors />} />
-        <Route path="career" element={<AdminCareer />} />
+        <Route path="mall" element={<Navigate to="/admin/mall/courses" replace />} />
+        <Route path="mall/:section" element={<AdminMall />} />
+        <Route path="mentors" element={<Navigate to="/admin/community/mentors" replace />} />
         <Route path="cert" element={<AdminCert />} />
-        <Route path="mall-products" element={<AdminMallProducts />} />
-        <Route path="charity" element={<AdminCharity />} />
-        <Route path="forum" element={<AdminForum />} />
+        <Route path="mall-products" element={<Navigate to="/admin/mall/products" replace />} />
+        <Route path="forum" element={<Navigate to="/admin/community/forum" replace />} />
+        <Route path="community" element={<Navigate to="/admin/community/home" replace />} />
+        <Route path="community/:section" element={<AdminCommunity />} />
         <Route path="video" element={<Navigate to="/admin/curriculum/ioai" replace />} />
         <Route path="payments" element={<AdminPayments />} />
         <Route path="users" element={<AdminUsers />} />
@@ -192,6 +185,7 @@ export default function App() {
           }
         />
         <Route path="community" element={<Community />} />
+        <Route path="community/:section" element={<Community />} />
         <Route path="courses/detail/:id" element={<CourseDetail />} />
         <Route path="cert" element={<Certification />} />
         <Route path="mall" element={<Mall />} />

@@ -8,7 +8,7 @@ const TYPES = ['event','cert','material','lab','training']
 const fields = ['name','type','tag','price','b_price','desc','deadline','sort_order']
 const MALL_PRODUCT_REQUIRED = new Set(['name'])
 
-export default function AdminMallProducts() {
+export default function AdminMallProducts({ embedded = false }) {
   const c = useAdminCrud()
   const itemLabel = c.t('pages.mallProducts.item')
   const [items, setItems] = useState([])
@@ -53,7 +53,7 @@ export default function AdminMallProducts() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-bingo-dark mb-6">{c.pageTitle('mallProducts')}</h1>
+      {!embedded && <h1 className="text-2xl font-bold text-bingo-dark mb-6">{c.pageTitle('mallProducts')}</h1>}
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>}
       <div className="card p-6 mb-6">
         <h2 className="font-semibold mb-4">{editing ? c.editItem(itemLabel) : c.addItem(itemLabel)}</h2>
