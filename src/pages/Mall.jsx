@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchPaymentsConfig, startMallCheckout, confirmCheckoutSession } from '../lib/checkout'
 import { authLink } from '../lib/authRedirect'
-import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 
 const UUID_RE =
@@ -411,27 +410,16 @@ export default function Mall() {
 
   const TABS = [
     { id: 'home', icon: '🏠', label: 'Mall Home' },
-    { id: 'general', icon: '🌐', label: 'General · Materials' },
     { id: 'ioai', icon: '🏆', label: 'IOAI · Training' },
+    { id: 'general', icon: '🌐', label: 'Foundations of AI' },
     { id: 'k12', icon: '🏫', label: 'K12 · School' },
     { id: 'cert', icon: '📜', label: 'Certification' },
     { id: 'materials', icon: '📚', label: 'Books & Kits' },
     { id: 'lab', icon: '🧪', label: 'Online Labs' },
   ]
 
-  const mallBannerSlides = useMemo(
-    () => [
-      { id: 'general', gradient: 'from-primary/20 via-cyan-50 to-sky-100', icon: '🌐', eyebrow: 'Bingo AI Smart Mall', title: 'Foundations of AI — Experiment Materials', subtitle: 'Self-study kits and online lab access.', ctaLabel: 'Shop general line', onCta: () => setTab('general') },
-      { id: 'ioai', gradient: 'from-amber-100 via-orange-50 to-amber-50/80', icon: '🏆', eyebrow: 'Bingo AI Smart Mall', title: 'IOAI Competition Training', subtitle: 'Video courses and training camps for whitelist events.', ctaLabel: 'IOAI products', onCta: () => setTab('ioai') },
-      { id: 'k12', gradient: 'from-violet-100 via-purple-50 to-violet-50/80', icon: '🏫', eyebrow: 'Bingo AI Smart Mall', title: 'K12 Classroom Edition', subtitle: 'Books, class kits, offline lab setups for schools.', ctaLabel: 'K12 school', onCta: () => setTab('k12') },
-    ],
-    []
-  )
-
   return (
     <div className="w-full">
-      <PageBanner slides={mallBannerSlides} autoPlayMs={7000} />
-
       <PageContent className="py-6 sm:py-8">
 
       {selectedProduct && <ProductModal item={selectedProduct} onClose={() => setSelectedProduct(null)} onCart={addToCart} onBuy={buyNow} />}
@@ -491,49 +479,6 @@ export default function Mall() {
       {/* ══════════════════ MALL HOME ══════════════════ */}
       {tab === 'home' && (
         <div className="space-y-8">
-          {/* 6 category grid */}
-          <section>
-            <h2 className="section-title mb-5">Shop by Product Line</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3">
-              {[
-                { icon: '🌐', name: 'Foundations of AI', sub: 'Courses · Labs · Kits', tab: 'general', hot: true },
-                { icon: '🏆', name: 'IOAI Training', sub: 'Video · Training Camp', tab: 'ioai' },
-                { icon: '🏫', name: 'K12 School', sub: 'Books · Class · Labs', tab: 'k12' },
-                { icon: '📜', name: 'Certification', sub: 'Ability certs', tab: 'cert' },
-                { icon: '📚', name: 'Books & Kits', sub: 'All materials', tab: 'materials' },
-                { icon: '🧪', name: 'Online Labs', sub: 'Cloud access', tab: 'lab' },
-              ].map((c,i) => (
-                <button key={i} onClick={() => setTab(c.tab)}
-                  className="card p-4 flex flex-col items-center text-center hover:shadow-md hover:border-primary/30 transition relative">
-                  {c.hot && <span className="absolute top-2 right-2 text-[9px] bg-red-500 text-white px-1.5 py-0.5 rounded-full">HOT</span>}
-                  <div className="text-3xl mb-2">{c.icon}</div>
-                  <div className="font-semibold text-bingo-dark text-xs">{c.name}</div>
-                  <div className="text-[10px] text-slate-400">{c.sub}</div>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h2 className="section-title mb-4">Three Product Lines</h2>
-            <div className="grid sm:grid-cols-3 gap-4">
-              {[
-                { icon: '🌐', title: 'Foundations of AI Program', desc: 'Courses, online labs, materials packs', tab: 'general' },
-                { icon: '🏆', title: 'IOAI Competition Training', desc: 'Video lessons and training camps', tab: 'ioai' },
-                { icon: '🏫', title: 'K12 Classroom Edition', desc: 'Books, class packs, offline lab kits', tab: 'k12' },
-              ].map((p, i) => (
-                <button key={i} type="button" onClick={() => setTab(p.tab)} className="card p-5 text-left hover:shadow-md hover:border-primary/30 transition">
-                  <div className="text-2xl mb-2">{p.icon}</div>
-                  <h3 className="font-bold text-bingo-dark text-sm mb-1">{p.title}</h3>
-                  <p className="text-xs text-slate-500">{p.desc}</p>
-                </button>
-              ))}
-            </div>
-            <p className="text-center mt-4 text-sm text-slate-500">
-              <Link to="/courses" className="text-primary hover:underline">Browse full course catalogue →</Link>
-            </p>
-          </section>
-
           {/* Flash deals */}
           <section>
             <div className="flex items-center justify-between mb-4">
