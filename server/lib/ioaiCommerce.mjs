@@ -193,6 +193,39 @@ export function buildModuleCatalogSlug(levelSlug, themeSlug, moduleSlug) {
   return `ioai-${levelSlug}-${themeSlug}-${moduleSlug}`
 }
 
+export function inferModuleCatalogSlugFromLessonSlug(lessonSlug) {
+  if (!lessonSlug || typeof lessonSlug !== 'string') return null
+  const match = lessonSlug.match(/^(ioai-.+)-(l\d+|c\d+)$/i)
+  return match ? match[1] : null
+}
+
+async function resolveModuleCatalogSlugForLesson(admin, mod, lesson) {
+  if (mod?.catalog_slug?.trim()) return mod.catalog_slug.trim()
+
+  const fromLesson = inferModuleCatalogSlugFromLessonSlug(
+    lesson?.catalog_slug || lesson?.slug || ''
+  )
+  if (fromLesson) return fromLesson
+
+  if (!mod?.id || !admin) return null
+
+  const { data: full } = await admin
+    .from('modules')
+    .select('slug, catalog_slug, theme:themes ( slug, level:course_levels ( slug ) )')
+    .eq('id', mod.id)
+    .maybeSingle()
+
+  if (full?.catalog_slug?.trim()) return full.catalog_slug.trim()
+
+  const levelSlug = full?.theme?.level?.slug
+  const themeSlug = full?.theme?.slug
+  if (levelSlug && themeSlug && full?.slug) {
+    return buildModuleCatalogSlug(levelSlug, themeSlug, full.slug)
+  }
+
+  return null
+}
+
 export function isModuleCatalogSlug(slug) {
   return typeof slug === 'string' && slug.startsWith('ioai-') && !slug.includes('competition-system')
 }
@@ -387,13 +420,14 @@ export async function userHasLessonAccess(admin, userId, lessonSlug, { enrolledS
   if (lesson.trial_enabled) return true
 
   const { data: mod } = lesson.module_id
-    ? await admin.from('modules').select('catalog_slug, status').eq('id', lesson.module_id).maybeSingle()
+    ? await admin.from('modules').select('id, catalog_slug, status').eq('id', lesson.module_id).maybeSingle()
     : { data: null }
 
-  if (!mod?.catalog_slug) return false
-  if (mod.status === 'hidden' || mod.status === 'draft') return false
+  const moduleCatalogSlug = await resolveModuleCatalogSlugForLesson(admin, mod, lesson)
+  if (!moduleCatalogSlug) return false
+  if (mod?.status === 'hidden' || mod?.status === 'draft') return false
 
-  return userHasModuleAccess(admin, userId, mod.catalog_slug, { enrolledSlugs })
+  return userHasModuleAccess(admin, userId, moduleCatalogSlug, { enrolledSlugs })
 }
 
 export async function grantModuleEntitlement(admin, { userId, moduleCatalogSlug, addonSlugs = [], orderId = null }) {

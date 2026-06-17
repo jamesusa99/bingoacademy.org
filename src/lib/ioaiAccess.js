@@ -1,5 +1,5 @@
 import { getPurchasedSlugs, hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from './courseAccess'
-import { buildModuleCatalogSlug, resolveLessonCatalogSlug } from './ioaiStore'
+import { buildModuleCatalogSlug, resolveLessonCatalogSlug, inferModuleCatalogSlugFromLessonSlug } from './ioaiStore'
 
 export const IOAI_FULL_BUNDLE_SLUG = IOAI_FULL_TRACK_SLUG
 
@@ -44,8 +44,10 @@ export function hasIoaiLessonAccess(
   { moduleSlugs = [], enrolledSlugs = getPurchasedSlugs(), lessonModuleMap, trialEnabled = false } = {}
 ) {
   if (trialEnabled) return true
-  const moduleSlug = lessonModuleMap?.get?.(lessonId)
-  if (!moduleSlug) return hasFullIOAITrack(enrolledSlugs)
+  const merged = [...new Set([...(moduleSlugs || []), ...(enrolledSlugs || [])])]
+  const moduleSlug =
+    lessonModuleMap?.get?.(lessonId) || inferModuleCatalogSlugFromLessonSlug(lessonId)
+  if (!moduleSlug) return hasFullIOAITrack(merged)
   return hasIoaiModuleAccess(moduleSlug, { moduleSlugs, enrolledSlugs })
 }
 

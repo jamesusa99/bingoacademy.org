@@ -14,7 +14,7 @@ import {
 } from '../config/programCurriculum'
 import { initialCatalogPriceFields, resolveCatalogPriceCents, formatPriceFromCents } from './coursePricing'
 import { findLessonInTree } from './ioaiCourseStructure'
-import { resolveLessonCatalogSlug } from './ioaiStore'
+import { resolveLessonCatalogSlug, inferModuleCatalogSlugFromLessonSlug } from './ioaiStore'
 import { IOAI_MODULE_PREVIEW_SECONDS } from '../config/ioaiPreview'
 
 /** Default subcategory when switching product line in admin */
@@ -300,6 +300,41 @@ export function buildLessonCatalogCourse(found, productLine, catalogRow = null) 
   }
 }
 
+/** Minimal catalog row for program lesson slugs when DB tree/catalog sync is missing. */
+export function synthesizeProgramLessonItem(id, productLine) {
+  if (!id || !productLine || !isCurriculumLine(productLine)) return null
+  const config = getProgramCurriculum(productLine)
+  const trackSlug = config.trackSlug
+  if (id === trackSlug) return null
+
+  const prefix = config.slugPrefix
+  if (!id.startsWith(`${prefix}-`)) return null
+
+  const isIoaiLesson = productLine === 'ioai' && inferModuleCatalogSlugFromLessonSlug(id)
+  const isNumberedLesson = /-(l\d+|c\d+)$/i.test(id)
+  if (!isIoaiLesson && !isNumberedLesson) return null
+
+  return {
+    id,
+    line: config.line,
+    sub: config.catalogSub,
+    deliveryType: 'video',
+    status: 'live',
+    name: id,
+    nameEn: id,
+    desc: '',
+    cloudflareUid: null,
+    previewSeconds: IOAI_MODULE_PREVIEW_SECONDS,
+    hours: '',
+    price: config.catalogPrice,
+    badge: productLine === 'ioai' ? 'IOAI' : config.line,
+    outcomes: [],
+    syllabus: [],
+    labSlugs: [],
+    sortOrder: 0,
+  }
+}
+
 /**
  * Resolve /courses/detail/:id — catalog row plus curriculum tree (video uid, titles).
  */
@@ -321,6 +356,10 @@ export function resolveCourseDetailItem(courses, id, tree) {
   }
   if (found && productLine) {
     return { item: buildLessonCatalogCourse(found, productLine), productLine }
+  }
+  const synthesized = productLine ? synthesizeProgramLessonItem(id, productLine) : null
+  if (synthesized) {
+    return { item: synthesized, productLine }
   }
   return { item: null, productLine }
 }

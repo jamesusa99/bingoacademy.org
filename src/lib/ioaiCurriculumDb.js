@@ -28,6 +28,7 @@ const CURRICULUM_SELECT = `
         sort_order,
         cloudflare_video_id,
         catalog_slug,
+        trial_enabled,
         knowledge_points,
         content_goals
       )
@@ -63,6 +64,7 @@ export function mapDbCurriculumToTree(rows) {
           slug: lesson.slug,
           title: lesson.title,
           cloudflareVideoId: lesson.cloudflare_video_id || null,
+          trialEnabled: Boolean(lesson.trial_enabled),
           knowledgePoints: lesson.knowledge_points || '',
           contentGoals: lesson.content_goals || '',
         })),

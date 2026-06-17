@@ -24,6 +24,13 @@ function registerLessonModuleKeys(map, lesson, moduleCatalogSlug) {
   if (legacy && legacy !== primary) map.set(legacy, moduleCatalogSlug)
 }
 
+/** e.g. ioai-…-vector-mastery-quest-c1 → ioai-…-vector-mastery-quest */
+export function inferModuleCatalogSlugFromLessonSlug(lessonSlug) {
+  if (!lessonSlug || typeof lessonSlug !== 'string') return null
+  const match = lessonSlug.match(/^(ioai-.+)-(l\d+|c\d+)$/i)
+  return match ? match[1] : null
+}
+
 export function buildModuleCatalogSlug(levelSlug, themeSlug, moduleSlug) {
   const slugifyPart = (value) => {
     if (!value || typeof value !== 'string') return null

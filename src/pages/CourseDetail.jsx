@@ -9,7 +9,7 @@ import { isCurriculumLine } from '../config/programCurriculum'
 import { useCourseAccess } from '../hooks/useCourseAccess'
 import { useAuth } from '../contexts/AuthContext'
 import { findCourseInList, isLabMaterialCatalogCourse, inferProgramLineForSlug, resolveCourseDetailItem } from '../lib/catalogCourse'
-import { isVideoCourse } from '../lib/courseAccess'
+import { isVideoCourse, getPurchasedSlugs } from '../lib/courseAccess'
 import { isPurchasableCourse, resolvePurchaseType, getCheckoutPriceLabel } from '../lib/coursePricing'
 import { initiateCoursePurchase } from '../lib/coursePurchase'
 import {
@@ -25,7 +25,7 @@ import {
 } from '../lib/ioaiCourseStructure'
 import { buildLessonModuleMapFromTree, hasIoaiLessonAccess, hasIoaiModuleAccess } from '../lib/ioaiAccess'
 import { useIOAIAccess } from '../hooks/useIOAIStore'
-import { buildModuleCatalogSlug, formatIoaiPrice } from '../lib/ioaiStore'
+import { buildModuleCatalogSlug, formatIoaiPrice, fetchIoaiModule, inferModuleCatalogSlugFromLessonSlug, resolveLessonCatalogSlug } from '../lib/ioaiStore'
 import { IOAI_MODULE_PREVIEW_SECONDS } from '../config/ioaiPreview'
 import { getContinueLessonId } from '../lib/learningProgress'
 import CourseComingSoon from '../components/CourseComingSoon'
@@ -50,6 +50,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutMessage, setCheckoutMessage] = useState(null)
+  const [apiLessonPatch, setApiLessonPatch] = useState(null)
   const { courses, loading: catalogLoading, reload } = useCourseCatalog()
   const catalogItem = findCourseInList(courses, id)
   const curriculumLine = inferProgramLineForSlug(id, catalogItem)
@@ -75,6 +76,11 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
   const { isAuthenticated } = useAuth()
   const { moduleSlugs, enrolledSlugs, hasFullTrack: hasIoaiFullTrack } = useIOAIAccess()
 
+  const mergedEnrollmentSlugs = useMemo(
+    () => [...new Set([...(enrolledSlugs || []), ...(moduleSlugs || []), ...getPurchasedSlugs()])],
+    [enrolledSlugs, moduleSlugs]
+  )
+
   const lessonInTree = useMemo(
     () => (progLine && id ? findLessonInTree(id, tree)?.lesson : null),
     [progLine, id, tree]
@@ -82,20 +88,51 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
 
   const displayCourse = useMemo(() => {
     if (!item) return null
-    const treeLesson = lessonInTree?.lesson
     const cloudflareUid =
       item.cloudflareUid ||
-      treeLesson?.cloudflareVideoId ||
-      treeLesson?.cloudflare_video_id ||
+      lessonInTree?.cloudflareVideoId ||
+      lessonInTree?.cloudflare_video_id ||
+      apiLessonPatch?.cloudflareUid ||
       null
     const previewSeconds =
       progLine === 'ioai' && cloudflareUid ? IOAI_MODULE_PREVIEW_SECONDS : item.previewSeconds ?? 90
     return {
       ...item,
+      ...(apiLessonPatch || {}),
       cloudflareUid,
       previewSeconds,
     }
-  }, [item, lessonInTree, progLine])
+  }, [item, lessonInTree, progLine, apiLessonPatch])
+
+  useEffect(() => {
+    setApiLessonPatch(null)
+    if (progLine !== 'ioai' || !id) return undefined
+
+    const moduleSlug = inferModuleCatalogSlugFromLessonSlug(id)
+    if (!moduleSlug) return undefined
+
+    let cancelled = false
+    fetchIoaiModule(moduleSlug)
+      .then((data) => {
+        if (cancelled) return
+        const lesson = (data?.module?.lessons || []).find((l) => {
+          const slug = resolveLessonCatalogSlug(l)
+          return slug === id || l.slug === id || l.catalog_slug === id
+        })
+        if (!lesson) return
+        setApiLessonPatch({
+          cloudflareUid: lesson.cloudflare_video_id || lesson.cloudflareVideoId || null,
+          name: lesson.title || undefined,
+          nameEn: lesson.title || undefined,
+          desc: lesson.intro || lesson.content_goals || lesson.contentGoals || undefined,
+        })
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [progLine, id])
 
   const lessonModuleMap = useMemo(() => buildLessonModuleMapFromTree(tree), [tree])
 
@@ -103,11 +140,11 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
     if (!id || !progLine) return false
     return hasIoaiLessonAccess(id, {
       moduleSlugs,
-      enrolledSlugs,
+      enrolledSlugs: mergedEnrollmentSlugs,
       lessonModuleMap,
       trialEnabled: Boolean(lessonInTree?.trialEnabled),
     })
-  }, [id, progLine, moduleSlugs, enrolledSlugs, lessonModuleMap, lessonInTree?.trialEnabled])
+  }, [id, progLine, moduleSlugs, mergedEnrollmentSlugs, lessonModuleMap, lessonInTree?.trialEnabled])
 
   const moduleContext = useMemo(() => {
     if (!item?.id || isLabMaterial) return null
@@ -115,18 +152,27 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
       progLine && isProgramLessonId(item.id, courses, tree, progLine)
     if (!isLesson) return null
     const found = findModuleForLesson(item.id, tree)
-    if (!found) return null
-    const catalogSlug =
-      found.catalogSlug ||
-      buildModuleCatalogSlug(found.levelId, found.themeId, found.moduleId)
-    if (!catalogSlug) return null
-    return { ...found, catalogSlug }
+    if (found) {
+      const catalogSlug =
+        found.catalogSlug ||
+        buildModuleCatalogSlug(found.levelId, found.themeId, found.moduleId)
+      if (!catalogSlug) return null
+      return { ...found, catalogSlug }
+    }
+    const inferred = inferModuleCatalogSlugFromLessonSlug(item.id)
+    if (inferred && progLine === 'ioai') {
+      return { catalogSlug: inferred, title: '', levelId: '', themeId: '', moduleId: '' }
+    }
+    return null
   }, [item?.id, isLabMaterial, progLine, courses, tree])
 
   const ioaiModuleAccess = useMemo(() => {
     if (progLine !== 'ioai' || !moduleContext?.catalogSlug) return false
-    return hasIoaiModuleAccess(moduleContext.catalogSlug, { moduleSlugs, enrolledSlugs })
-  }, [progLine, moduleContext?.catalogSlug, moduleSlugs, enrolledSlugs])
+    return hasIoaiModuleAccess(moduleContext.catalogSlug, {
+      moduleSlugs,
+      enrolledSlugs: mergedEnrollmentSlugs,
+    })
+  }, [progLine, moduleContext?.catalogSlug, moduleSlugs, mergedEnrollmentSlugs])
 
   const reloadAll = useCallback(async () => {
     await Promise.all([reload(), progLine ? reloadTree() : Promise.resolve()])
@@ -368,7 +414,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
                   activeLessonId={item.id}
                   purchasedSlugs={purchased}
                   curriculum={curriculum}
-                  summaryText={summary.summary}
+                  summaryText={summary?.summary ?? ''}
                   studyCenter={studyCenter}
                 />
               </div>
