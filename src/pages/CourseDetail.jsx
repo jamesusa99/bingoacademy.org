@@ -8,7 +8,7 @@ import { useProgramCurriculum } from '../hooks/useProgramCurriculum'
 import { isCurriculumLine } from '../config/programCurriculum'
 import { useCourseAccess } from '../hooks/useCourseAccess'
 import { useAuth } from '../contexts/AuthContext'
-import { findCourseInList, isLabMaterialCatalogCourse } from '../lib/catalogCourse'
+import { findCourseInList, isLabMaterialCatalogCourse, inferProgramLineForSlug, resolveCourseDetailItem } from '../lib/catalogCourse'
 import { isVideoCourse } from '../lib/courseAccess'
 import { isPurchasableCourse, resolvePurchaseType, getCheckoutPriceLabel } from '../lib/coursePricing'
 import { initiateCoursePurchase } from '../lib/coursePurchase'
@@ -51,10 +51,18 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutMessage, setCheckoutMessage] = useState(null)
   const { courses, loading: catalogLoading, reload } = useCourseCatalog()
-  const item = findCourseInList(courses, id)
+  const catalogItem = findCourseInList(courses, id)
+  const curriculumLine = inferProgramLineForSlug(id, catalogItem)
+  const { tree, loading: treeLoading, reload: reloadTree } = useProgramCurriculum(curriculumLine)
+  const { item, productLine: resolvedProgramLine } = useMemo(
+    () => resolveCourseDetailItem(courses, id, tree),
+    [courses, id, tree]
+  )
   const isLabMaterial = item ? isLabMaterialCatalogCourse(item) : false
-  const progLine = item?.line && isCurriculumLine(item.line) && !isLabMaterial ? item.line : null
-  const { tree, loading: treeLoading, reload: reloadTree } = useProgramCurriculum(progLine)
+  const progLine =
+    resolvedProgramLine && isCurriculumLine(resolvedProgramLine) && !isLabMaterial
+      ? resolvedProgramLine
+      : null
   const curriculum = useMemo(
     () => (progLine ? buildProgramCurriculum(courses, tree, progLine) : []),
     [courses, tree, progLine]
@@ -63,7 +71,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
     () => (progLine ? getProgramCurriculumSummary(tree, progLine) : null),
     [tree, progLine]
   )
-  const loading = catalogLoading || (progLine ? treeLoading : false)
+  const loading = catalogLoading || (curriculumLine ? treeLoading : false)
   const { isAuthenticated } = useAuth()
   const { moduleSlugs, enrolledSlugs, hasFullTrack: hasIoaiFullTrack } = useIOAIAccess()
 
@@ -74,7 +82,12 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
 
   const displayCourse = useMemo(() => {
     if (!item) return null
-    const cloudflareUid = item.cloudflareUid || lessonInTree?.cloudflareVideoId || null
+    const treeLesson = lessonInTree?.lesson
+    const cloudflareUid =
+      item.cloudflareUid ||
+      treeLesson?.cloudflareVideoId ||
+      treeLesson?.cloudflare_video_id ||
+      null
     const previewSeconds =
       progLine === 'ioai' && cloudflareUid ? IOAI_MODULE_PREVIEW_SECONDS : item.previewSeconds ?? 90
     return {

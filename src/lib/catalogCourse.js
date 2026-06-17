@@ -7,8 +7,15 @@ import {
   deliveryTypeForLabSub,
   normalizeLabMaterialSub,
 } from '../config/labMaterials'
-import { DEFAULT_ADMIN_PRODUCT_LINE } from '../config/programCurriculum'
+import {
+  DEFAULT_ADMIN_PRODUCT_LINE,
+  getProgramCurriculum,
+  isCurriculumLine,
+} from '../config/programCurriculum'
 import { initialCatalogPriceFields, resolveCatalogPriceCents, formatPriceFromCents } from './coursePricing'
+import { findLessonInTree } from './ioaiCourseStructure'
+import { resolveLessonCatalogSlug } from './ioaiStore'
+import { IOAI_MODULE_PREVIEW_SECONDS } from '../config/ioaiPreview'
 
 /** Default subcategory when switching product line in admin */
 export function defaultSubForLine(lineId) {
@@ -241,6 +248,81 @@ export async function fetchCourseCatalog() {
 
 export function findCourseInList(courses, id) {
   return courses.find((c) => c.id === id) ?? null
+}
+
+/** Infer curriculum product line from catalog row or lesson slug prefix. */
+export function inferProgramLineForSlug(id, catalogItem = null) {
+  if (catalogItem?.line && isCurriculumLine(catalogItem.line)) return catalogItem.line
+  if (!id || typeof id !== 'string') return null
+  for (const line of ['ioai', 'general', 'k12']) {
+    const prefix = getProgramCurriculum(line).slugPrefix
+    if (id.startsWith(`${prefix}-`)) return line
+  }
+  return null
+}
+
+/** Merge curriculum-tree lesson metadata into a storefront catalog course row. */
+export function buildLessonCatalogCourse(found, productLine, catalogRow = null) {
+  const config = getProgramCurriculum(productLine)
+  const lesson = found.lesson
+  const slug = resolveLessonCatalogSlug(lesson)
+  const cloudflareUid =
+    catalogRow?.cloudflareUid ||
+    lesson.cloudflareVideoId ||
+    lesson.cloudflare_video_id ||
+    null
+
+  return {
+    ...(catalogRow || {}),
+    id: slug,
+    line: config.line,
+    sub: config.catalogSub,
+    deliveryType: catalogRow?.deliveryType || 'video',
+    status: catalogRow?.status || 'live',
+    name: catalogRow?.name || lesson.title || slug,
+    nameEn: catalogRow?.nameEn || lesson.title || slug,
+    desc:
+      catalogRow?.desc ||
+      lesson.contentGoals ||
+      lesson.content_goals ||
+      lesson.knowledgePoints ||
+      lesson.knowledge_points ||
+      '',
+    cloudflareUid,
+    previewSeconds: catalogRow?.previewSeconds ?? IOAI_MODULE_PREVIEW_SECONDS,
+    hours: catalogRow?.hours || '',
+    price: catalogRow?.price || config.catalogPrice,
+    badge: catalogRow?.badge || 'IOAI',
+    outcomes: catalogRow?.outcomes || [],
+    syllabus: catalogRow?.syllabus || [],
+    labSlugs: catalogRow?.labSlugs || [],
+    sortOrder: catalogRow?.sortOrder ?? lesson.sortOrder ?? 0,
+  }
+}
+
+/**
+ * Resolve /courses/detail/:id — catalog row plus curriculum tree (video uid, titles).
+ */
+export function resolveCourseDetailItem(courses, id, tree) {
+  if (!id) return { item: null, productLine: null }
+
+  const catalogItem = findCourseInList(courses, id)
+  const productLine = inferProgramLineForSlug(id, catalogItem)
+  const found = tree?.length && productLine ? findLessonInTree(id, tree) : null
+
+  if (catalogItem && found && productLine) {
+    return { item: buildLessonCatalogCourse(found, productLine, catalogItem), productLine }
+  }
+  if (catalogItem) {
+    return {
+      item: catalogItem,
+      productLine: productLine || (isCurriculumLine(catalogItem.line) ? catalogItem.line : null),
+    }
+  }
+  if (found && productLine) {
+    return { item: buildLessonCatalogCourse(found, productLine), productLine }
+  }
+  return { item: null, productLine }
 }
 
 /** Normalize pack learning outcomes from JSONB, JSON string, or newline text */

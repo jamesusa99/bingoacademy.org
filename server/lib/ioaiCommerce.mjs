@@ -496,12 +496,13 @@ export async function resolveUnlockedLessonSlugs(admin, userId, enrolledSlugs = 
 
   const { data: lessons } = await admin
     .from('lessons')
-    .select('slug, trial_enabled')
+    .select('slug, catalog_slug, trial_enabled')
     .in('module_id', moduleIds)
 
   const slugs = new Set()
   for (const lesson of lessons || []) {
     if (lesson.slug) slugs.add(lesson.slug)
+    if (lesson.catalog_slug) slugs.add(lesson.catalog_slug)
   }
 
   const { data: trials } = await admin.from('lessons').select('slug').eq('trial_enabled', true)

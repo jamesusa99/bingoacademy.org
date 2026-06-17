@@ -73,7 +73,8 @@ export function isProgramLessonId(id, courses = null, curriculumTree = null, pro
   const row = courses?.find((c) => c.id === id)
   if (row?.line === config.line && row?.sub === config.catalogSub && row.id !== trackId) return true
   const prefix = config.slugPrefix
-  return typeof id === 'string' && new RegExp(`^${prefix}-.+-l\\d+$`).test(id)
+  if (typeof id !== 'string' || !id.startsWith(`${prefix}-`) || id === trackId) return false
+  return /-(l\d+|c\d+)$/i.test(id) || new RegExp(`^${prefix}-.+-l\\d+$`).test(id)
 }
 
 /** @deprecated use isProgramLessonId(..., 'ioai') */
@@ -119,7 +120,8 @@ function lessonIdsFromTree(curriculumTree) {
     for (const theme of level.themes || []) {
       for (const mod of theme.modules || []) {
         for (const lesson of mod.lessons || []) {
-          if (lesson.id) ids.push(lesson.id)
+          const lessonId = resolveLessonCatalogSlug(lesson)
+          if (lessonId) ids.push(lessonId)
         }
       }
     }

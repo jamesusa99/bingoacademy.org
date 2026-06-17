@@ -229,9 +229,8 @@ export default function SegmentPlayer({
   useEffect(() => {
     if (!startAtVideo) return
     if (!hasAccess && !canPreviewVideo) return
-    if (segmentIndex !== 0) return
     goToSegment(1)
-  }, [startAtVideo, hasAccess, canPreviewVideo, course.id, goToSegment, segmentIndex])
+  }, [startAtVideo, hasAccess, canPreviewVideo, course.id, goToSegment])
 
   useEffect(() => {
     if (segmentIndex !== 1 || !hasAccess) return undefined
@@ -351,6 +350,14 @@ export default function SegmentPlayer({
                   onSeeking={canPreviewVideo ? preview.onSeeking : undefined}
                   onSeeked={canPreviewVideo ? preview.onSeeked : undefined}
                 />
+              ) : null}
+
+              {!videoLoading && !playbackSrc && !iframeSrc && !videoError && hasAccess ? (
+                <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-slate-400 text-sm">
+                  {hasCustomVideo
+                    ? 'Video is processing or unavailable — try again shortly.'
+                    : 'No video has been assigned to this lesson yet.'}
+                </div>
               ) : null}
 
               {!videoLoading && !playbackSrc && !iframeSrc && !videoError && hasCustomVideo && !hasAccess ? (
