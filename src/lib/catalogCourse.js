@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase'
-import { COURSE_CATALOG, COURSE_STATUS } from '../config/coursesCatalog'
+import { COURSE_CATALOG, COURSE_STATUS, isCourseOffline } from '../config/coursesCatalog'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../config/courseListFilters'
 import { PRODUCT_LINES } from '../config/products'
 import {
@@ -278,7 +278,7 @@ export function buildLessonCatalogCourse(found, productLine, catalogRow = null) 
     line: config.line,
     sub: config.catalogSub,
     deliveryType: catalogRow?.deliveryType || 'video',
-    status: catalogRow?.status || 'live',
+    status: catalogRow?.status || (lesson.status === 'offline' ? COURSE_STATUS.OFFLINE : COURSE_STATUS.LIVE),
     name: catalogRow?.name || lesson.title || slug,
     nameEn: catalogRow?.nameEn || lesson.title || slug,
     desc:
@@ -337,30 +337,51 @@ export function synthesizeProgramLessonItem(id, productLine) {
 
 /**
  * Resolve /courses/detail/:id — catalog row plus curriculum tree (video uid, titles).
+ * Stale offline catalog rows must not block live curriculum lessons or synthesized slugs.
  */
-export function resolveCourseDetailItem(courses, id, tree) {
+export function resolveCourseDetailItem(courses, id, tree, { includeOfflineCatalog = false } = {}) {
   if (!id) return { item: null, productLine: null }
 
-  const catalogItem = findCourseInList(courses, id)
-  const productLine = inferProgramLineForSlug(id, catalogItem)
+  const rawCatalogItem = findCourseInList(courses, id)
+  const productLine = inferProgramLineForSlug(id, rawCatalogItem)
   const found = tree?.length && productLine ? findLessonInTree(id, tree) : null
 
-  if (catalogItem && found && productLine) {
-    return { item: buildLessonCatalogCourse(found, productLine, catalogItem), productLine }
+  if (found && productLine) {
+    const catalogRow =
+      rawCatalogItem && (!isCourseOffline(rawCatalogItem) || includeOfflineCatalog)
+        ? rawCatalogItem
+        : null
+    return { item: buildLessonCatalogCourse(found, productLine, catalogRow), productLine }
   }
-  if (catalogItem) {
+
+  const catalogActive =
+    rawCatalogItem && (!isCourseOffline(rawCatalogItem) || includeOfflineCatalog)
+
+  if (catalogActive) {
     return {
-      item: catalogItem,
-      productLine: productLine || (isCurriculumLine(catalogItem.line) ? catalogItem.line : null),
+      item: rawCatalogItem,
+      productLine: productLine || (isCurriculumLine(rawCatalogItem.line) ? rawCatalogItem.line : null),
     }
   }
-  if (found && productLine) {
-    return { item: buildLessonCatalogCourse(found, productLine), productLine }
-  }
+
   const synthesized = productLine ? synthesizeProgramLessonItem(id, productLine) : null
   if (synthesized) {
-    return { item: synthesized, productLine }
+    const item = rawCatalogItem
+      ? {
+          ...synthesized,
+          name: rawCatalogItem.name || synthesized.name,
+          nameEn: rawCatalogItem.nameEn || rawCatalogItem.name || synthesized.nameEn,
+          desc: rawCatalogItem.desc || synthesized.desc,
+          cloudflareUid: rawCatalogItem.cloudflareUid || synthesized.cloudflareUid,
+        }
+      : synthesized
+    return { item, productLine }
   }
+
+  if (rawCatalogItem && includeOfflineCatalog) {
+    return { item: rawCatalogItem, productLine }
+  }
+
   return { item: null, productLine }
 }
 

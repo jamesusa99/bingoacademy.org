@@ -55,9 +55,12 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
   const catalogItem = findCourseInList(courses, id)
   const curriculumLine = inferProgramLineForSlug(id, catalogItem)
   const { tree, loading: treeLoading, reload: reloadTree } = useProgramCurriculum(curriculumLine)
+  const previewMode = searchParams.get('preview') === '1'
+  const fromAdmin = searchParams.get('from') === 'admin' || previewMode
+
   const { item, productLine: resolvedProgramLine } = useMemo(
-    () => resolveCourseDetailItem(courses, id, tree),
-    [courses, id, tree]
+    () => resolveCourseDetailItem(courses, id, tree, { includeOfflineCatalog: previewMode }),
+    [courses, id, tree, previewMode]
   )
   const isLabMaterial = item ? isLabMaterialCatalogCourse(item) : false
   const progLine =
@@ -178,9 +181,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
     await Promise.all([reload(), progLine ? reloadTree() : Promise.resolve()])
   }, [reload, reloadTree, progLine])
 
-  const previewMode = searchParams.get('preview') === '1'
   const startAtVideo = searchParams.get('play') === '1'
-  const fromAdmin = searchParams.get('from') === 'admin' || previewMode
   const adminReloadToken = searchParams.get('reload')
 
   useEffect(() => {
