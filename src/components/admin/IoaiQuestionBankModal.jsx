@@ -64,12 +64,14 @@ export default function IoaiQuestionBankModal({
     scopeType: 'lesson',
     scopeId: lessonId,
     enabled: open && Boolean(lessonId),
-    onUpdated: (rows) => {
-      onCountsChange?.({
-        total: rows.length,
-        live: rows.filter((r) => r.status === IOAI_QUESTION_STATUS.LIVE).length,
-      })
-    },
+    onUpdated: onCountsChange
+      ? (rows) => {
+          onCountsChange({
+            total: rows.length,
+            live: rows.filter((r) => r.status === IOAI_QUESTION_STATUS.LIVE).length,
+          })
+        }
+      : undefined,
   })
 
   const [showAnswer, setShowAnswer] = useState(true)

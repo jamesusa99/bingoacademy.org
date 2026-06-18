@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   emptyQuestionForm,
   formToQuestionRow,
@@ -25,6 +25,8 @@ export function useIoaiQuestionBank({ scopeType, scopeId, enabled = true, onUpda
   const [activeId, setActiveId] = useState(null)
   const [form, setForm] = useState(() => emptyQuestionForm(scopeType))
   const [selected, setSelected] = useState(() => new Set())
+  const onUpdatedRef = useRef(onUpdated)
+  onUpdatedRef.current = onUpdated
 
   const stats = useMemo(() => questionBankStats(items), [items])
   const activeRow = useMemo(() => items.find((r) => r.id === activeId) || null, [items, activeId])
@@ -34,38 +36,48 @@ export function useIoaiQuestionBank({ scopeType, scopeId, enabled = true, onUpda
     return items.findIndex((r) => r.id === activeId)
   }, [activeId, isNew, items])
 
-  const reload = useCallback(async () => {
-    if (!scopeId || !enabled) {
-      setItems([])
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    try {
-      const rows = await fetchQuestionsForScope(scopeType, scopeId)
-      setItems(rows)
-      setError(null)
-      setSuccess(null)
-      onUpdated?.(rows)
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [scopeType, scopeId, enabled, onUpdated])
+  const loadItems = useCallback(
+    async ({ silent = false, keepMessages = false } = {}) => {
+      if (!scopeId || !enabled) {
+        setItems([])
+        if (!silent) setLoading(false)
+        return []
+      }
+      if (!silent) setLoading(true)
+      try {
+        const rows = await fetchQuestionsForScope(scopeType, scopeId)
+        setItems(rows)
+        if (!keepMessages) {
+          setError(null)
+          setSuccess(null)
+        }
+        onUpdatedRef.current?.(rows)
+        return rows
+      } catch (e) {
+        setError(e.message || 'Failed to load questions')
+        return []
+      } finally {
+        if (!silent) setLoading(false)
+      }
+    },
+    [scopeType, scopeId, enabled]
+  )
 
   useEffect(() => {
-    reload()
-  }, [reload])
+    loadItems()
+  }, [loadItems])
 
   const startNew = useCallback(() => {
     setActiveId('__new__')
     setForm(emptyQuestionForm(scopeType))
+    setError(null)
+    setSuccess(null)
   }, [scopeType])
 
   const selectRow = useCallback((row) => {
     setActiveId(row.id)
     setForm(rowToQuestionForm(row))
+    setError(null)
   }, [])
 
   const resetSelection = useCallback(() => {
@@ -87,46 +99,58 @@ export function useIoaiQuestionBank({ scopeType, scopeId, enabled = true, onUpda
       try {
         const payload = formToQuestionRow(payloadForm, scopeType, scopeId)
         const savedId = await saveQuestion(isNew ? null : activeId, payload)
-        await reload()
-        if (savedId) setActiveId(savedId)
-        if (statusOverride) setForm((f) => ({ ...f, status: statusOverride }))
-        return true
+        const rows = await loadItems({ silent: true, keepMessages: true })
+        const savedRow = rows.find((r) => r.id === savedId)
+        if (savedId) {
+          setActiveId(savedId)
+          if (savedRow) setForm(rowToQuestionForm(savedRow))
+          else if (statusOverride) setForm((f) => ({ ...f, status: statusOverride }))
+        }
+        return Boolean(savedId)
       } catch (e) {
-        setError(e.message)
+        setError(e.message || 'Failed to save question')
         return false
       } finally {
         setSaving(false)
       }
     },
-    [form, scopeType, scopeId, isNew, activeId, reload]
+    [form, scopeType, scopeId, isNew, activeId, loadItems]
   )
 
   const handleDelete = useCallback(
     async (id) => {
-      await deleteQuestion(id)
-      if (activeId === id) resetSelection()
-      await reload()
+      try {
+        await deleteQuestion(id)
+        if (activeId === id) resetSelection()
+        await loadItems({ silent: true })
+      } catch (e) {
+        setError(e.message || 'Failed to delete question')
+      }
     },
-    [activeId, resetSelection, reload]
+    [activeId, resetSelection, loadItems]
   )
 
-  const toggleSelect = useCallback((id) => {
+  const toggleSelect = (id) => {
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
       return next
     })
-  }, [])
+  }
 
   const bulkStatus = useCallback(
     async (status) => {
       if (!selected.size) return
-      await bulkUpdateQuestionStatus([...selected], status)
-      setSelected(new Set())
-      await reload()
+      try {
+        await bulkUpdateQuestionStatus([...selected], status)
+        setSelected(new Set())
+        await loadItems({ silent: true })
+      } catch (e) {
+        setError(e.message || 'Failed to update status')
+      }
     },
-    [selected, reload]
+    [selected, loadItems]
   )
 
   const handleImport = useCallback(
@@ -136,17 +160,17 @@ export function useIoaiQuestionBank({ scopeType, scopeId, enabled = true, onUpda
       try {
         const forms = parseBulkImportJson(importText)
         const ids = await bulkImportQuestions(scopeType, scopeId, forms)
-        await reload()
+        await loadItems({ silent: true })
         setSuccess(String(ids.length))
         return ids.length
       } catch (e) {
-        setError(e.message)
+        setError(e.message || 'Import failed')
         throw e
       } finally {
         setImporting(false)
       }
     },
-    [scopeType, scopeId, reload]
+    [scopeType, scopeId, loadItems]
   )
 
   const goPrev = useCallback(() => {
@@ -168,7 +192,6 @@ export function useIoaiQuestionBank({ scopeType, scopeId, enabled = true, onUpda
     success,
     setError,
     setSuccess,
-    setSuccess,
     stats,
     activeId,
     activeRow,
@@ -187,6 +210,6 @@ export function useIoaiQuestionBank({ scopeType, scopeId, enabled = true, onUpda
     handleImport,
     goPrev,
     goNext,
-    reload,
+    reload: loadItems,
   }
 }

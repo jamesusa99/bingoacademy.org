@@ -506,6 +506,7 @@ export const adminPagesZh = {
         prevQuestion: '上一题',
         nextQuestion: '下一题',
         deleteCurrent: '删除本题',
+        saveFailed: '保存失败，请检查网络或管理员权限后重试',
       },
     },
     generalCurriculum: {
@@ -1895,6 +1896,7 @@ export const adminPagesEn = {
         prevQuestion: 'Previous',
         nextQuestion: 'Next',
         deleteCurrent: 'Delete question',
+        saveFailed: 'Save failed — check network connection and admin permissions',
       },
     },
     generalCurriculum: {

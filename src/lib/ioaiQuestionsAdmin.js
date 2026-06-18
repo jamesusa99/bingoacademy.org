@@ -1,6 +1,9 @@
 import { supabase } from './supabase'
-import { adminDelete, adminInsert, adminUpdate } from './admin/db'
 import { formToQuestionRow } from '../config/ioaiQuestions'
+
+function throwIfError(error, fallback = 'Database operation failed') {
+  if (error) throw new Error(error.message || fallback)
+}
 
 export async function fetchQuestionsForScope(scopeType, scopeId) {
   const { data, error } = await supabase
@@ -9,27 +12,49 @@ export async function fetchQuestionsForScope(scopeType, scopeId) {
     .eq('scope_type', scopeType)
     .eq('scope_id', scopeId)
     .order('sort_order')
-  if (error) throw new Error(error.message)
+  throwIfError(error)
   return data || []
 }
 
+/** Insert/update via Supabase client (staff RLS). Avoids CMS allowlist round-trip. */
 export async function saveQuestion(id, payload) {
   if (id) {
-    await adminUpdate('ioai_question_items', id, payload)
-    return id
+    const { data, error } = await supabase
+      .from('ioai_question_items')
+      .update(payload)
+      .eq('id', id)
+      .select('id')
+      .maybeSingle()
+    throwIfError(error, 'Failed to update question')
+    if (!data?.id) throw new Error('Failed to update question — no row returned')
+    return data.id
   }
-  const row = await adminInsert('ioai_question_items', payload)
-  return row?.id
+
+  const { data, error } = await supabase
+    .from('ioai_question_items')
+    .insert(payload)
+    .select('id')
+    .maybeSingle()
+  throwIfError(error, 'Failed to create question')
+  if (!data?.id) {
+    throw new Error(
+      'Failed to create question. Confirm migration 031 is applied and your account has admin/editor role.'
+    )
+  }
+  return data.id
 }
 
 export async function deleteQuestion(id) {
-  await adminDelete('ioai_question_items', id)
+  const { error } = await supabase.from('ioai_question_items').delete().eq('id', id)
+  throwIfError(error, 'Failed to delete question')
 }
 
 export async function bulkUpdateQuestionStatus(ids, status) {
-  for (const id of ids) {
-    await adminUpdate('ioai_question_items', id, { status, updated_at: new Date().toISOString() })
-  }
+  const { error } = await supabase
+    .from('ioai_question_items')
+    .update({ status, updated_at: new Date().toISOString() })
+    .in('id', ids)
+  throwIfError(error, 'Failed to bulk update question status')
 }
 
 export async function bulkImportQuestions(scopeType, scopeId, forms) {
@@ -65,7 +90,7 @@ export async function fetchQuestionCountsForLessons(lessonIds) {
     .eq('scope_type', 'lesson')
     .in('scope_id', ids)
 
-  if (error) throw new Error(error.message)
+  throwIfError(error)
 
   const map = Object.fromEntries(ids.map((id) => [id, { total: 0, live: 0, draft: 0 }]))
   for (const row of data || []) {
