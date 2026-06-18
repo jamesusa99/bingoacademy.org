@@ -117,11 +117,11 @@ export default function App() {
         <Route path="curriculum/:line" element={<AdminIOAICurriculum />} />
         <Route path="ioai-curriculum" element={<Navigate to="/admin/curriculum/ioai" replace />} />
         <Route path="courses-catalog" element={<Navigate to="/admin/labs-materials" replace />} />
-        <Route path="mall" element={<Navigate to="/admin/mall/courses" replace />} />
+        <Route path="mall" element={<Navigate to="/admin/mall/home" replace />} />
         <Route path="mall/:section" element={<AdminMall />} />
         <Route path="mentors" element={<Navigate to="/admin/community/mentors" replace />} />
         <Route path="cert" element={<AdminCert />} />
-        <Route path="mall-products" element={<Navigate to="/admin/mall/products" replace />} />
+        <Route path="mall-products" element={<Navigate to="/admin/mall/materials" replace />} />
         <Route path="forum" element={<Navigate to="/admin/community/forum" replace />} />
         <Route path="community" element={<Navigate to="/admin/community/home" replace />} />
         <Route path="community/:section" element={<AdminCommunity />} />

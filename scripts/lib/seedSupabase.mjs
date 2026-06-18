@@ -5,6 +5,7 @@
 
 import { COURSE_CATALOG } from '../../src/config/coursesCatalog.js'
 import { COURSES_LINE_HERO_KEYS, DEFAULT_COURSES_LINE_HERO } from '../../src/config/coursesLineHero.js'
+import { MALL_PAGE_DEFAULT } from '../../src/config/mallContent.js'
 import { ASSESSMENT_CATALOG } from '../../src/config/assessmentCatalog.js'
 import { STUDENT_PORTFOLIO } from '../../src/config/showcasePortfolio.js'
 import {
@@ -135,6 +136,7 @@ export async function runSiteSeed(admin, { force = false } = {}) {
       desc: c.desc,
       badge: c.badge,
       ai_lab: !!c.aiLab,
+      mall_tab: c.cat === 'competition' || String(c.badge || '').includes('Competition') ? 'ioai' : 'general',
     })),
     'courses'
   )
@@ -166,6 +168,16 @@ export async function runSiteSeed(admin, { force = false } = {}) {
       desc: p.desc,
       deadline: p.deadline || null,
       sort_order: i,
+      mall_tab:
+        p.type === 'event'
+          ? 'ioai'
+          : p.type === 'cert'
+            ? 'cert'
+            : p.type === 'lab'
+              ? 'lab'
+              : p.type === 'training'
+                ? 'k12'
+                : 'materials',
     })),
     'mall_products'
   )
@@ -394,6 +406,7 @@ export async function runSiteSeed(admin, { force = false } = {}) {
     { key: 'community_home', value: COMMUNITY_HOME_DEFAULT },
     { key: 'community_cert_courses', value: COMMUNITY_CERT_COURSES_DEFAULT },
     { key: 'community_checkin_points_guide', value: COMMUNITY_CHECKIN_POINTS_GUIDE },
+    { key: 'mall_page', value: MALL_PAGE_DEFAULT },
     ...Object.entries(COURSES_LINE_HERO_KEYS).map(([lineId, key]) => ({
       key,
       value: DEFAULT_COURSES_LINE_HERO[lineId],

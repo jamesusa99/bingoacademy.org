@@ -825,11 +825,57 @@ export const adminPagesZh = {
       title: 'AI商城',
       desc: '管理前台 /mall 页面展示的课程与商品。保存后刷新商城即可看到更新。',
       previewFront: '预览前台商城',
+      pageSettings: '页面文案与布局',
+      settingsSaved: '商城页面设置已保存。',
+      fields: {
+        introText: '页头介绍',
+        showPoints: '显示积分提示',
+        stats: '顶部数据指标',
+        flashDealsTitle: 'Flash Deals 标题',
+        flashDealsSubtitle: 'Flash Deals 副标题',
+        flashDealsLimit: 'Flash Deals 展示数量',
+        trustTitle: '信任背书标题',
+        trustItems: '信任背书条目',
+        bottomCta: '底部 CTA 区块',
+        headerTitle: '标签页标题',
+        headerDesc: '标签页描述',
+        headerCardClass: '标题卡片样式 class',
+        footerLinkText: '底部链接文字',
+        footerLinkHref: '底部链接 URL',
+        materialPreviewCount: '通识区展示教材数量',
+        filterLabels: '筛选标签（展示用）',
+        labFeatures: '实验室特色说明',
+        bookingButton: '预约按钮文字',
+        bookingTitle: '预约弹窗标题',
+        featuredHome: '首页 Flash Deals 推荐',
+        featuredHomeHint: '勾选后优先展示在 Mall Home',
+      },
       section: {
+        home: 'AI商城 · Mall Home',
+        ioai: 'AI商城 · IOAI · Training',
+        general: 'AI商城 · Foundations of AI',
+        k12: 'AI商城 · K12 · School',
+        cert: 'AI商城 · Certification',
+        materials: 'AI商城 · Books & Kits',
+        lab: 'AI商城 · Online Labs',
         courses: 'AI商城 · 课程',
         products: 'AI商城 · 商品',
       },
       sectionDesc: {
+        home:
+          '对应前台 Mall Home：页头介绍、数据指标、Flash Deals 设置、信任背书、底部 CTA。商品可在各标签页中勾选「首页推荐」。',
+        ioai:
+          '对应前台 IOAI · Training 标签页。可购课程（courses 表）与赛事/训练包（mall_products，type=event）。',
+        general:
+          '对应前台 Foundations of AI 标签页。通识可购课程（courses 表）；教材可在 Books & Kits 中维护。',
+        k12:
+          '对应前台 K12 · School 标签页。教材（material）与训练站（training）商品（mall_products 表）。',
+        cert:
+          '对应前台 Certification 标签页。认证类商品（mall_products，type=cert）。完整认证体系见「认证」管理。',
+        materials:
+          '对应前台 Books & Kits 标签页。教材与套装（mall_products，type=material）。',
+        lab:
+          '对应前台 Online Labs 标签页。在线实验商品（mall_products，type=lab）。',
         courses:
           '对应前台「通识 / IOAI」等标签页中的可购课程（courses 表）。cat=competition 会出现在 IOAI 区；badge 含 Competition 也会归入 IOAI。',
         products:
@@ -2071,11 +2117,57 @@ export const adminPagesEn = {
       title: 'AI Mall',
       desc: 'Manage courses and products shown on the public /mall page. Changes appear after refresh.',
       previewFront: 'Preview mall',
+      pageSettings: 'Page copy & layout',
+      settingsSaved: 'Mall page settings saved.',
+      fields: {
+        introText: 'Intro text',
+        showPoints: 'Show points badge',
+        stats: 'Top stats',
+        flashDealsTitle: 'Flash Deals title',
+        flashDealsSubtitle: 'Flash Deals subtitle',
+        flashDealsLimit: 'Flash Deals item count',
+        trustTitle: 'Trust section title',
+        trustItems: 'Trust section items',
+        bottomCta: 'Bottom CTA block',
+        headerTitle: 'Tab header title',
+        headerDesc: 'Tab header description',
+        headerCardClass: 'Header card CSS classes',
+        footerLinkText: 'Footer link label',
+        footerLinkHref: 'Footer link URL',
+        materialPreviewCount: 'Materials preview count (General tab)',
+        filterLabels: 'Filter chip labels (display only)',
+        labFeatures: 'Lab feature highlights',
+        bookingButton: 'Booking button label',
+        bookingTitle: 'Booking modal title',
+        featuredHome: 'Flash Deals featured',
+        featuredHomeHint: 'Pin to Mall Home flash deals',
+      },
       section: {
+        home: 'AI Mall · Mall Home',
+        ioai: 'AI Mall · IOAI · Training',
+        general: 'AI Mall · Foundations of AI',
+        k12: 'AI Mall · K12 · School',
+        cert: 'AI Mall · Certification',
+        materials: 'AI Mall · Books & Kits',
+        lab: 'AI Mall · Online Labs',
         courses: 'AI Mall · Courses',
         products: 'AI Mall · Products',
       },
       sectionDesc: {
+        home:
+          'Mall Home tab: intro, stats, flash deals settings, trust block, bottom CTA. Mark products as featured in each tab section.',
+        ioai:
+          'Matches the IOAI · Training tab. Retail courses (courses table) and event/training packages (mall_products, type=event).',
+        general:
+          'Matches the Foundations of AI tab. General retail courses (courses table). Materials are managed under Books & Kits.',
+        k12:
+          'Matches the K12 · School tab. Materials (material) and training stations (training) in mall_products.',
+        cert:
+          'Matches the Certification tab. Cert products (mall_products, type=cert). Full cert tiers are under Certification admin.',
+        materials:
+          'Matches the Books & Kits tab. Materials and kits (mall_products, type=material).',
+        lab:
+          'Matches the Online Labs tab. Lab access products (mall_products, type=lab).',
         courses:
           'Purchasable courses on General / IOAI tabs (courses table). cat=competition or Competition badge → IOAI section.',
         products:

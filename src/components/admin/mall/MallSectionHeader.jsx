@@ -13,7 +13,7 @@ export default function MallSectionHeader({ sectionId }) {
       <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
         <h1 className="text-2xl font-bold text-bingo-dark">{c.t(titleKey)}</h1>
         <Link
-          to="/mall"
+          to={`/mall?tab=${encodeURIComponent(sectionId)}`}
           target="_blank"
           rel="noreferrer"
           className="text-sm text-primary hover:underline shrink-0"

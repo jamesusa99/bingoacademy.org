@@ -1,10 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchPaymentsConfig, startMallCheckout, confirmCheckoutSession } from '../lib/checkout'
 import { authLink } from '../lib/authRedirect'
 import PageContent from '../components/PageContent'
+import { MALL_STOREFRONT_TABS } from '../config/mallTabs'
+import { getMallTabContent } from '../config/mallContent'
+import { useMallContent } from '../hooks/useMallContent'
+import {
+  filterMallCoursesForTab,
+  filterMallProductsForTab,
+  filterMallFlashDealItems,
+  isMallRetailItem,
+} from '../lib/mallTabFilters'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -15,7 +24,7 @@ function isDbMallItem(item) {
 
 // ─── Product data (fallback when Supabase empty) ─────────────────────
 
-const isRetail = (item) => item.price != null && item.price !== ''
+const isRetail = isMallRetailItem
 
 const COURSES_FALLBACK = [
   { id: 'c1', name: 'AI Foundations Bootcamp (Ages 8–12)', type: 'course', cat: 'qizhi', tag: '🔥 Bestseller', price: 299, bPrice: '$199/seat (bulk)', sold: 3420, rating: 4.9, desc: 'Core AI literacy, visual programming, and introductory projects. Suitable for complete beginners.', badge: 'Enlightenment', aiLab: false },
@@ -39,6 +48,8 @@ function courseFromDb(row) {
     desc: row.desc,
     badge: row.badge,
     aiLab: !!row.ai_lab,
+    mall_tab: row.mall_tab || null,
+    featured_home: !!row.featured_home,
     source: 'courses',
   }
 }
@@ -74,7 +85,7 @@ const AI_TRAINING = [
 
 // ─── Sub-components ────────────────────────────────────────────────
 
-function ProductModal({ item, onClose, onCart, onBuy }) {
+function ProductModal({ item, onClose, onCart, onBuy, sellingPoints = [] }) {
   const [qty, setQty] = useState(1)
   if (!item) return null
   return (
@@ -100,7 +111,7 @@ function ProductModal({ item, onClose, onCart, onBuy }) {
 
           {/* Key selling points */}
           <div className="grid grid-cols-3 gap-2 mb-4 text-xs text-center">
-            {['✓ Verified quality', '✓ Instant access', '✓ Money-back guarantee'].map((s,i) => (
+            {(sellingPoints.length ? sellingPoints : ['✓ Verified quality', '✓ Instant access', '✓ Money-back guarantee']).map((s, i) => (
               <div key={i} className="bg-green-50 text-green-700 rounded-lg p-2">{s}</div>
             ))}
           </div>
@@ -300,9 +311,13 @@ export default function Mall() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
+  const { content } = useMallContent()
   const [courses, setCourses] = useState(COURSES_FALLBACK)
   const [coursesLoading, setCoursesLoading] = useState(true)
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState(() => {
+    const fromUrl = searchParams.get('tab')
+    return MALL_STOREFRONT_TABS.some((t) => t.id === fromUrl) ? fromUrl : 'home'
+  })
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [cart, setCart] = useState([])
   const [cartOpen, setCartOpen] = useState(false)
@@ -334,6 +349,8 @@ export default function Mall() {
     bPrice: r.b_price,
     desc: r.desc,
     deadline: r.deadline,
+    mall_tab: r.mall_tab || null,
+    featured_home: !!r.featured_home,
     source: 'mall_products',
   })
 
@@ -408,21 +425,62 @@ export default function Mall() {
     })
   }, [])
 
-  const TABS = [
-    { id: 'home', icon: '🏠', label: 'Mall Home' },
-    { id: 'ioai', icon: '🏆', label: 'IOAI · Training' },
-    { id: 'general', icon: '🌐', label: 'Foundations of AI' },
-    { id: 'k12', icon: '🏫', label: 'K12 · School' },
-    { id: 'cert', icon: '📜', label: 'Certification' },
-    { id: 'materials', icon: '📚', label: 'Books & Kits' },
-    { id: 'lab', icon: '🧪', label: 'Online Labs' },
-  ]
+  useEffect(() => {
+    const fromUrl = searchParams.get('tab')
+    if (fromUrl && MALL_STOREFRONT_TABS.some((t) => t.id === fromUrl) && fromUrl !== tab) {
+      setTab(fromUrl)
+    }
+  }, [searchParams, tab])
+
+  const ioaiCourses = useMemo(() => filterMallCoursesForTab(courses, 'ioai').filter(isRetail), [courses])
+  const generalCourses = useMemo(() => filterMallCoursesForTab(courses, 'general').filter(isRetail), [courses])
+  const ioaiEvents = useMemo(() => filterMallProductsForTab(eventsProducts, 'ioai').filter(isRetail), [eventsProducts])
+  const k12Products = useMemo(
+    () => [...filterMallProductsForTab(materialProducts, 'k12'), ...filterMallProductsForTab(trainingProducts, 'k12')].filter(isRetail),
+    [materialProducts, trainingProducts]
+  )
+  const certItems = useMemo(() => filterMallProductsForTab(certProducts, 'cert').filter(isRetail), [certProducts])
+  const materialItems = useMemo(() => filterMallProductsForTab(materialProducts, 'materials').filter(isRetail), [materialProducts])
+  const labItems = useMemo(() => filterMallProductsForTab(labProducts, 'lab').filter(isRetail), [labProducts])
+  const flashDeals = useMemo(
+    () =>
+      filterMallFlashDealItems({
+        courses,
+        products: [...materialProducts, ...labProducts, ...certProducts, ...eventsProducts, ...trainingProducts],
+        limit: content.tabs.home?.flashDeals?.limit ?? 6,
+      }),
+    [courses, materialProducts, labProducts, certProducts, eventsProducts, trainingProducts, content.tabs.home?.flashDeals?.limit]
+  )
+
+  const handleCtaAction = (action) => {
+    if (!action) return
+    if (action.startsWith('tab:')) {
+      setTab(action.slice(4))
+      return
+    }
+    if (action.startsWith('link:')) {
+      navigate(action.slice(5))
+    }
+  }
+
+  const tabPanel = (tabId) => getMallTabContent(content, tabId)
+  const homePanel = tabPanel('home')
+
+  const TABS = MALL_STOREFRONT_TABS
 
   return (
     <div className="w-full">
       <PageContent className="py-6 sm:py-8">
 
-      {selectedProduct && <ProductModal item={selectedProduct} onClose={() => setSelectedProduct(null)} onCart={addToCart} onBuy={buyNow} />}
+      {selectedProduct && (
+        <ProductModal
+          item={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onCart={addToCart}
+          onBuy={buyNow}
+          sellingPoints={content.productModal?.sellingPoints}
+        />
+      )}
       {bookingModal && <BookingModal title={bookingModal} onClose={() => setBookingModal(null)} />}
       {checkoutOpen ? (
         <CheckoutModal
@@ -455,14 +513,19 @@ export default function Mall() {
 
       <section className="mb-6 sm:mb-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <p className="text-sm text-slate-600">Books, courses, kits, labs, and certification products for families and learners.</p>
-          <div className="flex gap-3 text-xs text-slate-500 items-center">
-            <span>🪙 <strong className="text-primary">{points.toLocaleString()}</strong> points</span>
-          </div>
+          <p className="text-sm text-slate-600">{content.intro.text}</p>
+          {content.intro.showPoints ? (
+            <div className="flex gap-3 text-xs text-slate-500 items-center">
+              <span>🪙 <strong className="text-primary">{points.toLocaleString()}</strong> points</span>
+            </div>
+          ) : null}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[['10,000+','Products Sold'],['3,500+','Satisfied Families'],['1,000+','Certified Learners'],['50+','IOAI Programs']].map(([v,l],i) => (
-            <div key={i} className="card p-3 sm:p-4 text-center"><div className="font-bold text-primary text-sm sm:text-base">{v}</div><div className="text-xs text-slate-500">{l}</div></div>
+          {content.stats.map((stat, i) => (
+            <div key={i} className="card p-3 sm:p-4 text-center">
+              <div className="font-bold text-primary text-sm sm:text-base">{stat.value}</div>
+              <div className="text-xs text-slate-500">{stat.label}</div>
+            </div>
           ))}
         </div>
       </section>
@@ -482,11 +545,11 @@ export default function Mall() {
           {/* Flash deals */}
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="section-title mb-0">🔥 Flash Deals</h2>
-              <span className="text-xs text-slate-400">Updated daily</span>
+              <h2 className="section-title mb-0">{homePanel.flashDeals?.title}</h2>
+              <span className="text-xs text-slate-400">{homePanel.flashDeals?.subtitle}</span>
             </div>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {[...courses, ...materialProducts, ...labProducts, ...certProducts, ...eventsProducts].filter(isRetail).slice(0, 6).map((item,i) => (
+              {flashDeals.map((item, i) => (
                 <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
               ))}
             </div>
@@ -494,10 +557,10 @@ export default function Mall() {
 
           {/* Brand trust */}
           <section className="card p-5 bg-slate-50 border-slate-200">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3 text-center">Why Buy from Bingo Mall</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3 text-center">{homePanel.trust?.title}</p>
             <div className="grid sm:grid-cols-4 gap-3 text-center text-xs">
-              {[['🔒','Verified Quality','All courses and products reviewed by our curriculum team'],['🏅','Authoritative Certs','Issuing-centre endorsed, nationally verifiable'],['📦','Fast Delivery','Digital instant access · Physical 3–5 days'],['💬','After-sales Support','7×12h online support for orders and access']].map(([icon,t,d],i) => (
-                <div key={i}><div className="text-2xl mb-1">{icon}</div><p className="font-semibold text-bingo-dark mb-0.5">{t}</p><p className="text-slate-500">{d}</p></div>
+              {(homePanel.trust?.items ?? []).map(({ icon, title, desc }, i) => (
+                <div key={i}><div className="text-2xl mb-1">{icon}</div><p className="font-semibold text-bingo-dark mb-0.5">{title}</p><p className="text-slate-500">{desc}</p></div>
               ))}
             </div>
           </section>
@@ -506,55 +569,58 @@ export default function Mall() {
 
       {tab === 'general' && (
         <div className="space-y-5">
-          <div className="card p-4 bg-cyan-50/50 border-cyan-200/60">
-            <h2 className="font-bold text-bingo-dark mb-1">🌐 Foundations of AI Program</h2>
-            <p className="text-slate-500 text-sm">AI literacy courses, online experiments, and home materials packs.</p>
+          <div className={`card p-4 ${tabPanel('general').header?.cardClass || ''}`}>
+            <h2 className="font-bold text-bingo-dark mb-1">{tabPanel('general').header?.title}</h2>
+            <p className="text-slate-500 text-sm">{tabPanel('general').header?.desc}</p>
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {courses.filter((c) => isRetail(c) && !c.badge?.includes('Competition') && !c.badge?.includes('Lab Bundle')).map((item, i) => (
+            {generalCourses.map((item, i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
-            {materialProducts.slice(0, 2).map((item, i) => (
+            {materialItems.slice(0, tabPanel('general').materialPreviewCount ?? 2).map((item, i) => (
               <ProductCard key={`m-${i}`} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
-          <Link to="/courses?line=general" className="text-sm text-primary hover:underline">View all general courses →</Link>
+          {tabPanel('general').footerLink?.href ? (
+            <Link to={tabPanel('general').footerLink.href} className="text-sm text-primary hover:underline">{tabPanel('general').footerLink.text}</Link>
+          ) : null}
         </div>
       )}
 
       {tab === 'ioai' && (
         <div className="space-y-5">
-          <div className="card p-4 bg-amber-50/30 border-amber-200/60">
-            <h2 className="font-bold text-bingo-dark mb-1">🏆 IOAI Competition Training</h2>
-            <p className="text-slate-500 text-sm">Video courses and training camps for whitelist competition preparation.</p>
+          <div className={`card p-4 ${tabPanel('ioai').header?.cardClass || ''}`}>
+            <h2 className="font-bold text-bingo-dark mb-1">{tabPanel('ioai').header?.title}</h2>
+            <p className="text-slate-500 text-sm">{tabPanel('ioai').header?.desc}</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            {eventsProducts.map((item, i) => (
+            {ioaiEvents.map((item, i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
-            {courses.filter((c) => isRetail(c) && (c.cat === 'competition' || c.badge?.includes('Competition'))).map((item, i) => (
+            {ioaiCourses.map((item, i) => (
               <ProductCard key={`c-${i}`} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
-          <Link to="/courses?line=ioai" className="text-sm text-primary hover:underline">View IOAI courses →</Link>
+          {tabPanel('ioai').footerLink?.href ? (
+            <Link to={tabPanel('ioai').footerLink.href} className="text-sm text-primary hover:underline">{tabPanel('ioai').footerLink.text}</Link>
+          ) : null}
         </div>
       )}
 
       {tab === 'k12' && (
         <div className="space-y-5">
-          <div className="card p-4 bg-violet-50/30 border-violet-200/60">
-            <h2 className="font-bold text-bingo-dark mb-1">🏫 K12 Classroom School Edition</h2>
-            <p className="text-slate-500 text-sm">Books, classroom courses, online/offline labs, and school experiment kits.</p>
+          <div className={`card p-4 ${tabPanel('k12').header?.cardClass || ''}`}>
+            <h2 className="font-bold text-bingo-dark mb-1">{tabPanel('k12').header?.title}</h2>
+            <p className="text-slate-500 text-sm">{tabPanel('k12').header?.desc}</p>
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {materialProducts.filter(isRetail).map((item, i) => (
+            {k12Products.map((item, i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
-            {trainingProducts.filter(isRetail).map((item, i) => (
-              <ProductCard key={`t-${i}`} item={item} onOpen={setSelectedProduct} />
-            ))}
           </div>
-          <Link to="/courses?line=k12" className="text-sm text-primary hover:underline">View K12 classroom products →</Link>
+          {tabPanel('k12').footerLink?.href ? (
+            <Link to={tabPanel('k12').footerLink.href} className="text-sm text-primary hover:underline">{tabPanel('k12').footerLink.text}</Link>
+          ) : null}
         </div>
       )}
 
@@ -587,36 +653,37 @@ export default function Mall() {
       {/* ══════════════════ CERTIFICATION ══════════════════ */}
       {tab === 'cert' && (
         <div className="space-y-5">
-          <div className="card p-4 bg-primary/5 border-primary/20">
-            <h2 className="font-bold text-bingo-dark mb-1">📜 Certification Products</h2>
-            <p className="text-slate-500 text-sm">Learner and teacher certification products. Dual-endorsed, nationally verifiable. Admissions-referenced at top tiers.</p>
+          <div className={`card p-4 ${tabPanel('cert').header?.cardClass || ''}`}>
+            <h2 className="font-bold text-bingo-dark mb-1">{tabPanel('cert').header?.title}</h2>
+            <p className="text-slate-500 text-sm">{tabPanel('cert').header?.desc}</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            {certProducts.filter(isRetail).map((item,i) => (
+            {certItems.map((item, i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
-          <div className="card p-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-700">View full certification system and requirements</p>
-            <Link to="/cert" className="btn-primary text-xs px-4 py-2">Certification Centre →</Link>
-          </div>
+          {tabPanel('cert').cta ? (
+            <div className="card p-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-slate-700">{tabPanel('cert').cta.text}</p>
+              <Link to={tabPanel('cert').cta.href || '/cert'} className="btn-primary text-xs px-4 py-2">{tabPanel('cert').cta.buttonText}</Link>
+            </div>
+          ) : null}
         </div>
       )}
 
-      {/* ══════════════════ MATERIALS ══════════════════ */}
       {tab === 'materials' && (
         <div className="space-y-5">
-          <div className="card p-4 bg-primary/5 border-primary/20">
-            <h2 className="font-bold text-bingo-dark mb-1">📚 Books, Kits & Teaching Materials</h2>
-            <p className="text-slate-500 text-sm">Digital textbooks, physical hardware kits, and teaching bundles. Matched to Bingo curriculum stages.</p>
+          <div className={`card p-4 ${tabPanel('materials').header?.cardClass || ''}`}>
+            <h2 className="font-bold text-bingo-dark mb-1">{tabPanel('materials').header?.title}</h2>
+            <p className="text-slate-500 text-sm">{tabPanel('materials').header?.desc}</p>
           </div>
           <div className="flex gap-2 text-xs flex-wrap">
-            {['All','Digital Textbooks','Hardware Kits','Lab Equipment','Course Bundles'].map((f,i) => (
+            {(tabPanel('materials').filterLabels ?? []).map((f, i) => (
               <button key={i} className={`px-3 py-1.5 rounded-xl font-medium transition ${i===0?'bg-primary text-white':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{f}</button>
             ))}
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {materialProducts.filter(isRetail).map((item,i) => (
+            {materialItems.map((item, i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
@@ -626,21 +693,23 @@ export default function Mall() {
       {/* ══════════════════ AI LAB ══════════════════ */}
       {tab === 'lab' && (
         <div className="space-y-5">
-          <div className="card p-4 bg-violet-50/30 border-violet-200/60">
-            <h2 className="font-bold text-bingo-dark mb-1">🔬 AI Digital Laboratory</h2>
-            <p className="text-slate-600 text-sm">Cloud-based virtual AI lab with guided experiments, AI coaching, and progress tracking for families and independent learners.</p>
+          <div className={`card p-4 ${tabPanel('lab').header?.cardClass || ''}`}>
+            <h2 className="font-bold text-bingo-dark mb-1">{tabPanel('lab').header?.title}</h2>
+            <p className="text-slate-600 text-sm">{tabPanel('lab').header?.desc}</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            {labProducts.filter(isRetail).map((item,i) => (
+            {labItems.map((item, i) => (
               <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
             ))}
           </div>
           <div className="card p-5 grid sm:grid-cols-3 gap-3 text-xs">
-            {[['🧪','Guided Experiments','50+ curated AI experiments with step-by-step guidance'],['🤖','AI Coach','In-lab AI tutor answers questions and adapts to student level'],['📊','Progress Dashboard','Parents and teachers see real-time learning progress and milestones']].map(([icon,t,d],i) => (
-              <div key={i} className="bg-slate-50 rounded-xl p-3"><div className="text-xl mb-1">{icon}</div><p className="font-semibold text-bingo-dark mb-0.5">{t}</p><p className="text-slate-500">{d}</p></div>
+            {(tabPanel('lab').features ?? []).map(({ icon, title, desc }, i) => (
+              <div key={i} className="bg-slate-50 rounded-xl p-3"><div className="text-xl mb-1">{icon}</div><p className="font-semibold text-bingo-dark mb-0.5">{title}</p><p className="text-slate-500">{desc}</p></div>
             ))}
           </div>
-          <button onClick={() => setBookingModal('AI Digital Lab — Free Demo Booking')} className="w-full border border-primary text-primary py-2.5 rounded-xl font-medium text-sm hover:bg-primary/5 transition">Book a Free Lab Demo Session →</button>
+          {tabPanel('lab').bookingButton ? (
+            <button type="button" onClick={() => setBookingModal(tabPanel('lab').bookingTitle || tabPanel('lab').bookingButton)} className="w-full border border-primary text-primary py-2.5 rounded-xl font-medium text-sm hover:bg-primary/5 transition">{tabPanel('lab').bookingButton}</button>
+          ) : null}
         </div>
       )}
 
@@ -687,13 +756,30 @@ export default function Mall() {
       {/* ── Bottom CTA ── */}
       <div className="mt-10 card p-5 bg-gradient-to-r from-cyan-50 to-sky-50 border-primary/20 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-semibold text-bingo-dark">Earn while you learn</p>
-          <p className="text-xs text-slate-500 mt-0.5">Every purchase earns points · Share products to earn commission · Redeem for courses and lab access</p>
+          <p className="font-semibold text-bingo-dark">{content.bottomCta.title}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{content.bottomCta.desc}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button type="button" onClick={() => setTab('general')} className="btn-primary text-sm px-4 py-2.5 min-h-[44px]">General line</button>
-          <button type="button" onClick={() => setTab('k12')} className="bg-amber-500 text-white text-sm px-4 py-2.5 rounded-xl hover:bg-amber-600 transition min-h-[44px]">K12 school</button>
-          <Link to="/profile" className="border border-slate-300 text-slate-600 text-sm px-4 py-2.5 rounded-xl hover:bg-slate-50 transition min-h-[44px] inline-flex items-center">My Profile</Link>
+          {(content.bottomCta.buttons ?? []).map((btn, i) => {
+            const className =
+              btn.style === 'amber'
+                ? 'bg-amber-500 text-white text-sm px-4 py-2.5 rounded-xl hover:bg-amber-600 transition min-h-[44px]'
+                : btn.style === 'outline'
+                  ? 'border border-slate-300 text-slate-600 text-sm px-4 py-2.5 rounded-xl hover:bg-slate-50 transition min-h-[44px] inline-flex items-center'
+                  : 'btn-primary text-sm px-4 py-2.5 min-h-[44px]'
+            if (btn.action?.startsWith('link:')) {
+              return (
+                <Link key={i} to={btn.action.slice(5)} className={className}>
+                  {btn.label}
+                </Link>
+              )
+            }
+            return (
+              <button key={i} type="button" onClick={() => handleCtaAction(btn.action)} className={className}>
+                {btn.label}
+              </button>
+            )
+          })}
         </div>
       </div>
       </PageContent>
