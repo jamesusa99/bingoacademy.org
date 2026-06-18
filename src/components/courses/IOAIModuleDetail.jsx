@@ -15,6 +15,7 @@ import { labMaterialTypeLabel } from '../../config/labMaterials'
 import IOAIModuleHeroVideo from './IOAIModuleHeroVideo'
 import IOAIModuleInfoCards, { buildModuleInfoContent } from './IOAIModuleInfoCards'
 import IOAIModuleLessonList from './IOAIModuleLessonList'
+import ModuleTestSection from './ModuleTestSection'
 import { studyLessonPath } from '../../lib/studyPaths'
 
 const LESSON_DURATION_MINUTES = 14
@@ -358,6 +359,12 @@ export default function IOAIModuleDetail({
           canPurchase={canPurchase}
           comingSoon={comingSoon}
           studyMode={studyMode}
+        />
+
+        <ModuleTestSection
+          moduleRef={catalogSlug}
+          owned={owned}
+          lessonIds={lessons.map((l) => l.catalogSlug)}
         />
 
         {labMaterials.length > 0 ? (

@@ -45,6 +45,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "hls.js": "^1.6.16",
+    "katex": "^0.17.0",
     "lucide-react": "^1.17.0",
     "matter-js": "^0.20.0",
     "pyodide": "^0.29.4",

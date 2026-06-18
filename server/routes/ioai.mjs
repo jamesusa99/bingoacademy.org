@@ -10,6 +10,16 @@ import {
   mapLabMaterialRow,
 } from '../lib/ioaiCommerce.mjs'
 import { enrichLessonsWithResourceFlags } from '../lib/ioaiExperiments.mjs'
+import {
+  countLiveQuestions,
+  fetchLiveQuestions,
+  gradeModuleTest,
+  gradeSingleQuestion,
+  resolveLessonDbId,
+  resolveModuleDbId,
+  sanitizeQuestions,
+} from '../lib/ioaiQuestions.mjs'
+import { userHasLessonAccess, userHasModuleAccess } from '../lib/ioaiCommerce.mjs'
 
 function sortByOrder(a, b) {
   return (a.sort_order ?? 0) - (b.sort_order ?? 0)
@@ -242,5 +252,90 @@ export function registerIoaiRoutes(app) {
       hasFullTrack:
         enrolledSlugs.includes(IOAI_FULL_BUNDLE_SLUG) || enrolledSlugs.includes('ioai-track'),
     })
+  })
+
+  app.get('/api/ioai/lessons/:lessonRef/exercises', async (req, res) => {
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    const lessonDbId = await resolveLessonDbId(admin, req.params.lessonRef?.trim())
+    if (!lessonDbId) return res.json({ questions: [], count: 0 })
+
+    const rows = await fetchLiveQuestions(admin, { scopeType: 'lesson', scopeId: lessonDbId })
+    return res.json({ questions: sanitizeQuestions(rows), count: rows.length })
+  })
+
+  app.post('/api/ioai/lessons/:lessonRef/exercises/grade', async (req, res) => {
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    const auth = await verifyAuthUser(req)
+    const lessonRef = req.params.lessonRef?.trim()
+    const lessonDbId = await resolveLessonDbId(admin, lessonRef)
+    if (!lessonDbId) return res.status(404).json({ error: 'Lesson not found' })
+
+    const enrolledSlugs = auth.ok ? await listEnrollmentSlugs(admin, auth.user.id) : []
+    const hasAccess = auth.ok
+      ? await userHasLessonAccess(admin, auth.user.id, lessonRef, { enrolledSlugs })
+      : false
+    if (!hasAccess) return res.status(403).json({ error: 'Purchase required to submit exercises' })
+
+    const { questionId, answer } = req.body || {}
+    if (!questionId) return res.status(400).json({ error: 'questionId required' })
+
+    const { data: row, error } = await admin
+      .from('ioai_question_items')
+      .select('*')
+      .eq('id', questionId)
+      .eq('scope_type', 'lesson')
+      .eq('scope_id', lessonDbId)
+      .eq('status', 'live')
+      .maybeSingle()
+    if (error) return res.status(502).json({ error: error.message })
+    if (!row) return res.status(404).json({ error: 'Question not found' })
+
+    const result = gradeSingleQuestion(row, answer)
+    return res.json({ questionId, ...result })
+  })
+
+  app.get('/api/ioai/modules/:moduleRef/test', async (req, res) => {
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    const mod = await resolveModuleDbId(admin, req.params.moduleRef?.trim())
+    if (!mod?.id) return res.json({ questions: [], count: 0 })
+
+    const rows = await fetchLiveQuestions(admin, { scopeType: 'module', scopeId: mod.id })
+    return res.json({ questions: sanitizeQuestions(rows), count: rows.length, moduleId: mod.id })
+  })
+
+  app.post('/api/ioai/modules/:moduleRef/test/submit', async (req, res) => {
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const mod = await resolveModuleDbId(admin, req.params.moduleRef?.trim())
+    if (!mod?.id) return res.status(404).json({ error: 'Module not found' })
+
+    const enrolledSlugs = await listEnrollmentSlugs(admin, auth.user.id)
+    const hasModule = await userHasModuleAccess(admin, auth.user.id, mod.catalog_slug, { enrolledSlugs })
+    if (!hasModule) return res.status(403).json({ error: 'Purchase required for module test' })
+
+    const rows = await fetchLiveQuestions(admin, { scopeType: 'module', scopeId: mod.id })
+    const { answers } = req.body || {}
+    const graded = gradeModuleTest(rows, answers || {})
+
+    await admin.from('ioai_module_test_attempts').insert({
+      user_id: auth.user.id,
+      module_id: mod.id,
+      answers: answers || {},
+      score: graded.score,
+      total_score: graded.totalScore,
+      passed: graded.passed,
+    })
+
+    return res.json(graded)
   })
 }

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Lock, Play, RotateCcw, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { IOAI_MODULE_PREVIEW_SECONDS } from '../../config/ioaiPreview'
-import { LESSON_SEGMENTS, getCheckpointQuestion } from '../../config/lessonSegments'
+import { LESSON_SEGMENTS } from '../../config/lessonSegments'
+import LessonExerciseSegment, { useLessonExerciseCount } from './LessonExerciseSegment'
 import { useLessonProgress } from '../../hooks/useLearningProgress'
 import { useStreamPlayback } from '../../hooks/useStreamPlayback'
 import { useVideoPreviewLimit } from '../../hooks/useVideoPreviewLimit'
@@ -19,20 +20,34 @@ function formatTime(seconds) {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-function SegmentStepper({ currentIndex, segmentsDone, onSelect, hasAccess }) {
+function activeSegments(hasExercises) {
+  return hasExercises ? LESSON_SEGMENTS : LESSON_SEGMENTS.filter((s) => s.id !== 'checkpoint')
+}
+
+function segmentAtIndex(index, hasExercises) {
+  if (!hasExercises && index >= 2) return LESSON_SEGMENTS[index + 1] || LESSON_SEGMENTS[3]
+  return LESSON_SEGMENTS[index] || LESSON_SEGMENTS[LESSON_SEGMENTS.length - 1]
+}
+
+function SegmentStepper({ currentIndex, segmentsDone, onSelect, hasAccess, hasExercises }) {
+  const segments = activeSegments(hasExercises)
   return (
     <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-      {LESSON_SEGMENTS.map((seg, i) => {
+      {segments.map((seg, i) => {
+        const storageIndex = hasExercises ? i : i >= 2 ? i + 1 : i
         const done = segmentsDone[seg.id]
-        const active = i === currentIndex
-        const canClick = hasAccess && (done || i <= currentIndex)
+        const active = storageIndex === currentIndex
+        const canClick =
+          seg.id === 'checkpoint'
+            ? hasExercises
+            : hasAccess && (done || storageIndex <= currentIndex)
 
         return (
           <button
             key={seg.id}
             type="button"
             disabled={!canClick}
-            onClick={() => canClick && onSelect(i)}
+            onClick={() => canClick && onSelect(storageIndex)}
             className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition shrink-0 ${
               active
                 ? 'bg-primary text-white shadow-sm'
@@ -73,67 +88,6 @@ function IntroSegment({ course, onContinue }) {
       <button type="button" onClick={onContinue} className="btn-primary text-sm px-5 py-2.5">
         Start video lesson →
       </button>
-    </div>
-  )
-}
-
-function CheckpointSegment({ course, onComplete }) {
-  const question = getCheckpointQuestion(course)
-  const [selected, setSelected] = useState(null)
-  const [submitted, setSubmitted] = useState(false)
-  const correct = submitted && selected === question.correctId
-
-  const handleSubmit = () => {
-    if (!selected) return
-    setSubmitted(true)
-    if (selected === question.correctId) {
-      setTimeout(onComplete, 600)
-    }
-  }
-
-  return (
-    <div className="p-6 sm:p-8">
-      <p className="text-xs font-bold uppercase tracking-wide text-amber-400 mb-2">Knowledge checkpoint</p>
-      <h3 className="text-base font-bold text-white mb-4">{question.prompt}</h3>
-      <div className="space-y-2 mb-5">
-        {question.options.map((opt) => (
-          <label
-            key={opt.id}
-            className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
-              selected === opt.id
-                ? 'border-primary bg-primary/10'
-                : 'border-slate-700 hover:border-slate-500'
-            } ${submitted && opt.id === question.correctId ? 'border-emerald-500 bg-emerald-500/10' : ''}
-            ${submitted && selected === opt.id && opt.id !== question.correctId ? 'border-red-500/60 bg-red-500/10' : ''}`}
-          >
-            <input
-              type="radio"
-              name="checkpoint"
-              value={opt.id}
-              checked={selected === opt.id}
-              onChange={() => !submitted && setSelected(opt.id)}
-              className="mt-1"
-              disabled={submitted}
-            />
-            <span className="text-sm text-slate-200">{opt.text}</span>
-          </label>
-        ))}
-      </div>
-      {submitted ? (
-        <p className={`text-sm mb-4 ${correct ? 'text-emerald-400' : 'text-amber-400'}`}>
-          {correct ? 'Correct! Moving to summary…' : 'Not quite — review the video and try again.'}
-        </p>
-      ) : null}
-      {!submitted || !correct ? (
-        <button
-          type="button"
-          onClick={submitted && !correct ? () => { setSubmitted(false); setSelected(null) } : handleSubmit}
-          disabled={!selected && !submitted}
-          className="btn-primary text-sm px-5 py-2.5 disabled:opacity-50"
-        >
-          {submitted && !correct ? 'Try again' : 'Submit answer'}
-        </button>
-      ) : null}
     </div>
   )
 }
@@ -220,7 +174,8 @@ export default function SegmentPlayer({
   const useIframe = Boolean(iframeSrc && !playbackSrc && hasAccess)
 
   const segmentIndex = progress.currentSegment
-  const currentSegment = LESSON_SEGMENTS[segmentIndex]
+  const { hasExercises } = useLessonExerciseCount(course.id)
+  const currentSegment = segmentAtIndex(segmentIndex, hasExercises)
   const productLine = isCurriculumLine(course?.line) ? course.line : 'ioai'
   const { next: nextLessonId } = getAdjacentLessons(course.id, courses, curriculumTree, productLine)
 
@@ -255,20 +210,24 @@ export default function SegmentPlayer({
 
   const goNextSegment = useCallback(() => {
     if (currentSegment) completeSegment(currentSegment.id)
-    goToSegment(Math.min(segmentIndex + 1, LESSON_SEGMENTS.length - 1))
-  }, [completeSegment, currentSegment, goToSegment, segmentIndex])
+    let next = segmentIndex + 1
+    if (!hasExercises && next === 2) next = 3
+    goToSegment(Math.min(next, LESSON_SEGMENTS.length - 1))
+  }, [completeSegment, currentSegment, goToSegment, segmentIndex, hasExercises])
 
   const goPrevSegment = useCallback(() => {
-    goToSegment(Math.max(0, segmentIndex - 1))
-  }, [goToSegment, segmentIndex])
+    let prev = segmentIndex - 1
+    if (!hasExercises && prev === 2) prev = 1
+    goToSegment(Math.max(0, prev))
+  }, [goToSegment, segmentIndex, hasExercises])
 
   const handleVideoEnded = useCallback(() => {
     preview.setPlaying(false)
     if (hasAccess) {
       completeSegment('video')
-      goToSegment(2)
+      goToSegment(hasExercises ? 2 : 3)
     }
-  }, [hasAccess, completeSegment, goToSegment, preview.setPlaying])
+  }, [hasAccess, hasExercises, completeSegment, goToSegment, preview.setPlaying])
 
   const previewProgress = preview.previewProgress
   const currentTime = preview.currentTime
@@ -283,6 +242,7 @@ export default function SegmentPlayer({
             segmentsDone={progress.segmentsDone}
             onSelect={goToSegment}
             hasAccess={hasAccess}
+            hasExercises={hasExercises}
           />
         </div>
 
@@ -425,23 +385,43 @@ export default function SegmentPlayer({
                 <span className="text-xs text-slate-500">
                   {progress.videoPosition > 0 ? `Resumed at ${formatTime(progress.videoPosition)}` : 'Watch to continue'}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    completeSegment('video')
-                    goToSegment(2)
-                  }}
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:text-cyan-300 font-semibold"
-                >
-                  Checkpoint <ChevronRight className="w-4 h-4" />
-                </button>
+                {hasExercises ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      completeSegment('video')
+                      goToSegment(2)
+                    }}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:text-cyan-300 font-semibold"
+                  >
+                    随堂习题 <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      completeSegment('video')
+                      goToSegment(3)
+                    }}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:text-cyan-300 font-semibold"
+                  >
+                    Summary <ChevronRight className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             ) : null}
           </div>
         ) : null}
 
-        {currentSegment?.type === 'checkpoint' ? (
-          <CheckpointSegment course={course} onComplete={goNextSegment} />
+        {currentSegment?.type === 'checkpoint' && hasExercises ? (
+          <LessonExerciseSegment
+            lessonRef={course.id}
+            hasAccess={hasAccess}
+            onAllComplete={() => {
+              completeSegment('checkpoint')
+              goNextSegment()
+            }}
+          />
         ) : null}
 
         {currentSegment?.type === 'summary' ? (

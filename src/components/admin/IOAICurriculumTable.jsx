@@ -12,6 +12,7 @@ import ModuleLabMaterialsOrder from './ModuleLabMaterialsOrder'
 import ModuleCoverUpload from './ModuleCoverUpload'
 import AdminField from './AdminField'
 import AdminLessonResourcePanel from './AdminLessonResourcePanel'
+import IoaiQuestionBankPanel from './IoaiQuestionBankPanel'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 import { initialCatalogPriceFields } from '../../lib/coursePricing'
 
@@ -522,6 +523,8 @@ export function ProgramModuleEditor({
         labsAdminHref={labsAdminHref}
       />
 
+      <IoaiQuestionBankPanel scopeType="module" scopeId={group.moduleDbId} />
+
       <div className="flex flex-wrap justify-between gap-2 pt-2">
         {onDelete ? (
           <button
@@ -724,6 +727,8 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
       <CurriculumCatalogFields form={form} setForm={setForm} labels={labels} />
 
       <AdminLessonResourcePanel lessonId={row.lessonId} labels={labels} />
+
+      <IoaiQuestionBankPanel scopeType="lesson" scopeId={row.lessonId} />
 
       <p className="text-[10px] text-slate-400">{labels.lessonCatalogPriceHint}</p>
 
