@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from 'react'
-import { ExternalLink, Pencil, Plus, Trash2, Video } from 'lucide-react'
+import { ExternalLink, ListChecks, Pencil, Plus, Trash2, Video } from 'lucide-react'
 import { getProgramCurriculum } from '../../config/programCurriculum'
 import { COURSE_STATUS } from '../../config/coursesCatalog'
 import { useAdminFormDraft } from '../../hooks/useAdminFormDraft'
@@ -93,9 +93,11 @@ export default function IOAICurriculumTable({
   loading,
   refreshing = false,
   labels,
+  exerciseCounts = {},
   onEditModule,
   onEditLesson,
   onDeleteLesson,
+  onOpenExercises,
   onReorderLessons,
   deletingId,
   onAddCourse,
@@ -244,9 +246,11 @@ export default function IOAICurriculumTable({
                     <ModuleLessonRows
                       group={group}
                       labels={labels}
+                      exerciseCounts={exerciseCounts}
                       deletingId={deletingId}
                       onEditLesson={onEditLesson}
                       onDeleteLesson={onDeleteLesson}
+                      onOpenExercises={onOpenExercises}
                       onReorderLessons={onReorderLessons}
                     />
                   ) : (
@@ -255,9 +259,11 @@ export default function IOAICurriculumTable({
                         key={row.lessonId}
                         row={row}
                         labels={labels}
+                        exerciseCounts={exerciseCounts}
                         deletingId={deletingId}
                         onEditLesson={onEditLesson}
                         onDeleteLesson={onDeleteLesson}
+                        onOpenExercises={onOpenExercises}
                       />
                     ))
                   )}
@@ -274,7 +280,7 @@ export default function IOAICurriculumTable({
   )
 }
 
-function ModuleLessonRows({ group, labels, deletingId, onEditLesson, onDeleteLesson, onReorderLessons }) {
+function ModuleLessonRows({ group, labels, exerciseCounts, deletingId, onEditLesson, onDeleteLesson, onOpenExercises, onReorderLessons }) {
   const lessons = useMemo(
     () => [...(group.lessons || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
     [group.lessons]
@@ -299,9 +305,11 @@ function ModuleLessonRows({ group, labels, deletingId, onEditLesson, onDeleteLes
           key={row.lessonId}
           row={row}
           labels={labels}
+          exerciseCounts={exerciseCounts}
           deletingId={deletingId}
           onEditLesson={onEditLesson}
           onDeleteLesson={onDeleteLesson}
+          onOpenExercises={onOpenExercises}
           dragProps={drag.rowProps(row)}
         />
       ))}
@@ -309,7 +317,8 @@ function ModuleLessonRows({ group, labels, deletingId, onEditLesson, onDeleteLes
   )
 }
 
-function LessonRow({ row, labels, deletingId, onEditLesson, onDeleteLesson, dragProps }) {
+function LessonRow({ row, labels, exerciseCounts, deletingId, onEditLesson, onDeleteLesson, onOpenExercises, dragProps }) {
+  const counts = exerciseCounts[row.lessonId] || { total: 0, live: 0 }
   return (
     <tr
       {...(dragProps || {})}
@@ -323,7 +332,17 @@ function LessonRow({ row, labels, deletingId, onEditLesson, onDeleteLesson, drag
       <td className="p-3" />
       <td className="p-3 text-[10px] text-slate-400 italic whitespace-nowrap">{labels.lessonIncludedInModule}</td>
       <td className="p-3">
-        <p className="font-medium text-bingo-dark text-sm">{row.lessonTitle}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-medium text-bingo-dark text-sm">{row.lessonTitle}</p>
+          <span
+            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${
+              counts.total > 0 ? 'bg-violet-100 text-violet-800' : 'bg-slate-100 text-slate-500'
+            }`}
+            title={labels.exerciseCountHint}
+          >
+            {labels.exerciseCount(counts.total, counts.live)}
+          </span>
+        </div>
         <p className="text-[10px] font-mono text-slate-400 mt-0.5">{row.catalogSlug || row.lessonSlug}</p>
       </td>
       <td className="p-3">
@@ -353,6 +372,16 @@ function LessonRow({ row, labels, deletingId, onEditLesson, onDeleteLesson, drag
           >
             <Trash2 className="w-3.5 h-3.5 shrink-0" />
             {deletingId === row.lessonId ? labels.deleting : labels.deleteLesson}
+          </button>
+        ) : null}
+        {onOpenExercises ? (
+          <button
+            type="button"
+            onClick={() => onOpenExercises(row)}
+            className="inline-flex items-center gap-1 text-primary text-xs font-semibold hover:underline px-2 py-1.5 rounded-lg hover:bg-primary/5 min-h-[36px]"
+          >
+            <ListChecks className="w-3.5 h-3.5 shrink-0" />
+            {labels.addExercises}
           </button>
         ) : null}
       </RowActions>
@@ -727,8 +756,6 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
       <CurriculumCatalogFields form={form} setForm={setForm} labels={labels} />
 
       <AdminLessonResourcePanel lessonId={row.lessonId} labels={labels} />
-
-      <IoaiQuestionBankPanel scopeType="lesson" scopeId={row.lessonId} />
 
       <p className="text-[10px] text-slate-400">{labels.lessonCatalogPriceHint}</p>
 

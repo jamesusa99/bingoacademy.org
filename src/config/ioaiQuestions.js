@@ -122,6 +122,48 @@ export function rowToQuestionForm(row) {
   }
 }
 
+/** Format correct answer for admin list / answer sheet */
+export function formatCorrectAnswer(row, { trueLabel = '正确', falseLabel = '错误' } = {}) {
+  const c = row.correct_answer
+  if (row.question_type === IOAI_QUESTION_TYPES.TRUE_FALSE) {
+    return c === 'A' ? `A · ${trueLabel}` : `B · ${falseLabel}`
+  }
+  if (Array.isArray(c)) return c.join(', ')
+  return String(c || '—')
+}
+
+export function questionBankStats(items) {
+  const live = items.filter((i) => i.status === IOAI_QUESTION_STATUS.LIVE).length
+  const draft = items.filter((i) => i.status === IOAI_QUESTION_STATUS.DRAFT).length
+  const offline = items.filter((i) => i.status === IOAI_QUESTION_STATUS.OFFLINE).length
+  const liveScore = items
+    .filter((i) => i.status === IOAI_QUESTION_STATUS.LIVE)
+    .reduce((sum, i) => sum + (i.score ?? 1), 0)
+  return { live, draft, offline, total: items.length, liveScore }
+}
+
+export function formToPreviewQuestion(form, id = 'draft-preview') {
+  const row = {
+    id,
+    question_type: form.question_type,
+    stem_html: form.stem_html,
+    option_a_html: form.option_a_html,
+    option_b_html: form.option_b_html,
+    option_c_html: form.option_c_html,
+    option_d_html: form.option_d_html,
+    score: form.score ?? 1,
+    sort_order: form.sort_order ?? 0,
+  }
+  return sanitizeQuestionForClient(row)
+}
+
+export function previewCorrectAnswer(form) {
+  const type = form.question_type
+  if (type === IOAI_QUESTION_TYPES.SINGLE) return form.correct_single
+  if (type === IOAI_QUESTION_TYPES.MULTIPLE) return [...(form.correct_multiple || [])].sort()
+  return form.correct_true_false
+}
+
 /** Strip correct answers for client-facing fetch */
 export function sanitizeQuestionForClient(row) {
   return {

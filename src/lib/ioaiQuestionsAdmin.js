@@ -53,3 +53,27 @@ export async function bulkImportQuestions(scopeType, scopeId, forms) {
 
   return ids
 }
+
+/** Batch counts for lesson rows in curriculum table */
+export async function fetchQuestionCountsForLessons(lessonIds) {
+  const ids = [...new Set(lessonIds.filter(Boolean))]
+  if (!ids.length) return {}
+
+  const { data, error } = await supabase
+    .from('ioai_question_items')
+    .select('scope_id, status')
+    .eq('scope_type', 'lesson')
+    .in('scope_id', ids)
+
+  if (error) throw new Error(error.message)
+
+  const map = Object.fromEntries(ids.map((id) => [id, { total: 0, live: 0, draft: 0 }]))
+  for (const row of data || []) {
+    const bucket = map[row.scope_id]
+    if (!bucket) continue
+    bucket.total += 1
+    if (row.status === 'live') bucket.live += 1
+    if (row.status === 'draft') bucket.draft += 1
+  }
+  return map
+}

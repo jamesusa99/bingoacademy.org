@@ -4,6 +4,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminCoursesLineHeroEditor from '../../components/admin/AdminCoursesLineHeroEditor'
 import AdminAlert from '../../components/admin/AdminAlert'
 import IOAICurriculumTable, { IOAILessonEditor, ProgramModuleEditor } from '../../components/admin/IOAICurriculumTable'
+import IoaiQuestionBankModal from '../../components/admin/IoaiQuestionBankModal'
 import IOAIAddCourseForm from '../../components/admin/IOAIAddCourseForm'
 import CurriculumLevel1List from '../../components/admin/CurriculumLevel1List'
 import CurriculumLevel1Editor from '../../components/admin/CurriculumLevel1Editor'
@@ -26,6 +27,7 @@ import {
   saveProgramLevelConfig,
   saveProgramModuleConfig,
 } from '../../lib/ioaiCurriculumAdmin'
+import { fetchQuestionCountsForLessons } from '../../lib/ioaiQuestionsAdmin'
 import { readAdminUiDraft, writeAdminUiDraft, clearAdminUiDraft } from '../../hooks/useAdminFormDraft'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
@@ -52,6 +54,8 @@ export default function AdminIOAICurriculum() {
   const [deletingModuleId, setDeletingModuleId] = useState(null)
   const [deletingLevelId, setDeletingLevelId] = useState(null)
   const [catalogItems, setCatalogItems] = useState([])
+  const [exerciseCounts, setExerciseCounts] = useState({})
+  const [exerciseModalLesson, setExerciseModalLesson] = useState(null)
   const editorRef = useRef(null)
 
   const i18nRoot = `pages.${config.i18nKey}`
@@ -255,6 +259,10 @@ export default function AdminIOAICurriculum() {
       slugRenameStageHint: c.t(`${i18nRoot}.slugRenameStageHint`),
       stageStats: (themes, modules, lessons) =>
         c.t(`${i18nRoot}.stageStats`, { themes: String(themes), modules: String(modules), lessons: String(lessons) }),
+      addExercises: c.t('pages.ioaiCurriculum.questionBank.addExercises'),
+      exerciseCount: (total, live) =>
+        c.t('pages.ioaiCurriculum.questionBank.exerciseCountBadge', { total: String(total), live: String(live) }),
+      exerciseCountHint: c.t('pages.ioaiCurriculum.questionBank.exerciseCountHint'),
     }),
     [c, i18nRoot]
   )
@@ -281,6 +289,25 @@ export default function AdminIOAICurriculum() {
       if (group) setEditingModule(group)
     }
   }, [rows, moduleGroups, uiKey, editingRow, editingModule])
+
+  const refreshExerciseCounts = useCallback(async () => {
+    if (productLine !== 'ioai') return
+    const lessonIds = moduleGroups.flatMap((g) => (g.lessons || []).map((l) => l.lessonId)).filter(Boolean)
+    if (!lessonIds.length) {
+      setExerciseCounts({})
+      return
+    }
+    try {
+      const counts = await fetchQuestionCountsForLessons(lessonIds)
+      setExerciseCounts(counts)
+    } catch {
+      /* non-fatal */
+    }
+  }, [moduleGroups, productLine])
+
+  useEffect(() => {
+    refreshExerciseCounts()
+  }, [refreshExerciseCounts])
 
   useEffect(() => {
     writeAdminUiDraft(uiKey, {
@@ -756,6 +783,7 @@ export default function AdminIOAICurriculum() {
         loading={initialLoading}
         refreshing={refreshing}
         labels={labels}
+        exerciseCounts={productLine === 'ioai' ? exerciseCounts : {}}
         deletingId={deletingId}
         onEditModule={(group) => {
           setShowAddForm(false)
@@ -770,6 +798,14 @@ export default function AdminIOAICurriculum() {
           setEditingRow(row)
         }}
         onDeleteLesson={handleDelete}
+        onOpenExercises={
+          productLine === 'ioai'
+            ? (row) => {
+                setEditingRow(null)
+                setExerciseModalLesson(row)
+              }
+            : undefined
+        }
         onReorderLessons={handleReorderLessons}
         onAddLessonToModule={handleAddLessonToModule}
         onAddCourse={() => {
@@ -779,6 +815,23 @@ export default function AdminIOAICurriculum() {
           setShowAddForm(true)
         }}
       />
+
+      {productLine === 'ioai' ? (
+        <IoaiQuestionBankModal
+          open={Boolean(exerciseModalLesson)}
+          lessonId={exerciseModalLesson?.lessonId}
+          lessonTitle={exerciseModalLesson?.lessonTitle}
+          onClose={() => setExerciseModalLesson(null)}
+          onCountsChange={({ total, live }) => {
+            if (!exerciseModalLesson?.lessonId) return
+            setExerciseCounts((prev) => ({
+              ...prev,
+              [exerciseModalLesson.lessonId]: { total, live, draft: total - live },
+            }))
+            refreshExerciseCounts()
+          }}
+        />
+      ) : null}
     </div>
   )
 }
