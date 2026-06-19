@@ -11,14 +11,6 @@ export const PRODUCT_LAB_MODULE_IDS = {
   k12: ['online-lab', 'materials-pack', 'offline-lab', 'school-kit'],
 }
 
-export const PRODUCT_LABS_INTRO = {
-  title: 'Product labs & kits',
-  desc: 'Structured online labs, training labs, and physical kits tied to Foundations, IOAI, and K12 programs — purchase individually or as optional add-ons with course units.',
-  explorationNote:
-    'Looking for free browser games? AI Exploration is a separate play zone — no enrollment, not tied to product lines.',
-  explorationHref: '/exploration',
-}
-
 export function isProductLabSub(lineId, subId) {
   return (PRODUCT_LAB_MODULE_IDS[lineId] || []).includes(subId)
 }

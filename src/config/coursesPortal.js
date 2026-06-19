@@ -141,6 +141,7 @@ export const COURSES_PORTAL = {
   browseIoaiUnits: 'Browse IOAI course units',
   backToLabs: 'Back to labs & kits',
   ioaiLegacyNote: 'Looking for the interactive curriculum tree?',
+  legacyCatalogNote: 'Prefer the flat course catalog?',
   moduleIntroTitle: 'Module overview',
   moduleObjectivesTitle: 'Learning objectives',
   moduleOutcomesTitle: 'What you\'ll gain',

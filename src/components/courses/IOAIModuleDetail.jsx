@@ -4,7 +4,9 @@ import { Award, Clock, Headphones, ShieldCheck, Video } from 'lucide-react'
 import PageContent from '../PageContent'
 import PageMeta from '../PageMeta'
 import { useAuth } from '../../contexts/AuthContext'
-import { useIOAIAccess, useIOAIStore } from '../../hooks/useIOAIStore'
+import { useIOAIAccess } from '../../hooks/useIOAIStore'
+import { useProgramStore } from '../../hooks/useProgramStore'
+import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
 import { buildLessonModuleMap, findModule, fetchIoaiModule, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable, mapDetailToFoundContext, mapDetailToStoreModule, resolveLessonCatalogSlug } from '../../lib/ioaiStore'
 import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig, confirmCheckoutSession } from '../../lib/checkout'
@@ -32,8 +34,11 @@ export default function IOAIModuleDetail({
 }) {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { levels, loading: storeLoading } = useIOAIStore()
-  const { moduleSlugs, enrolledSlugs, hasModule, loading: accessLoading, reload: reloadAccess } = useIOAIAccess()
+  const [productLine, setProductLine] = useState('ioai')
+  const { levels, loading: storeLoading } = useProgramStore(productLine)
+  const { hasModule: hasIoaiModule, moduleSlugs, enrolledSlugs, loading: accessLoading, reload: reloadAccess } =
+    useIOAIAccess()
+  const purchase = usePurchasedCourses()
   const { isAuthenticated } = useAuth()
   const [stripeCheckout, setStripeCheckout] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
@@ -74,7 +79,11 @@ export default function IOAIModuleDetail({
     setSelectedAddons(new Set())
     fetchIoaiModule(catalogSlug)
       .then((mod) => {
-        if (!cancelled) setDetail(mod)
+        if (!cancelled) {
+          setDetail(mod)
+          const line = mod?.theme?.level?.product_line
+          if (line) setProductLine(line)
+        }
       })
       .catch(() => {
         if (!cancelled) setDetail(null)
@@ -97,7 +106,14 @@ export default function IOAIModuleDetail({
     [storeMatch, detail]
   )
   const lessonModuleMap = useMemo(() => buildLessonModuleMap(levels), [levels])
-  const owned = hasModule(catalogSlug)
+  const accessSlugs = useMemo(() => {
+    if (productLine === 'ioai') return enrolledSlugs
+    return purchase.enrollmentSlugs || []
+  }, [productLine, enrolledSlugs, purchase.enrollmentSlugs])
+  const owned =
+    productLine === 'ioai'
+      ? hasIoaiModule(catalogSlug)
+      : Boolean(purchase.hasAccess?.(catalogSlug))
   const comingSoon = isIoaiModuleComingSoon(mod ?? detail)
   const canPurchase = isIoaiModulePurchasable(mod ?? detail) && !owned
 
@@ -228,7 +244,7 @@ export default function IOAIModuleDetail({
 
   return (
     <div className="w-full">
-      <PageMeta title={`${mod.title} · IOAI`} />
+      <PageMeta title={`${mod.title} · ${productLine === 'ioai' ? 'IOAI' : productLine === 'k12' ? 'K12' : 'Foundations'}`} />
       <PageContent className="py-8 max-w-6xl mx-auto">
         <Link to={backHref} className="text-sm text-primary hover:underline inline-flex items-center gap-1">
           ← {backLabel}
@@ -349,8 +365,8 @@ export default function IOAIModuleDetail({
         <IOAIModuleLessonList
           lessons={lessons}
           owned={owned}
-          moduleSlugs={moduleSlugs}
-          enrolledSlugs={enrolledSlugs}
+          moduleSlugs={productLine === 'ioai' ? moduleSlugs : []}
+          enrolledSlugs={accessSlugs}
           lessonModuleMap={lessonModuleMap}
           price={price}
           onBuy={buy}
@@ -373,7 +389,7 @@ export default function IOAIModuleDetail({
             <p className="text-sm text-slate-500 mb-4">{COURSES_PORTAL.moduleLabsDesc}</p>
             <ul className="space-y-3">
               {labMaterials.map((item) => {
-                const addonOwned = enrolledSlugs.includes(item.slug)
+                const addonOwned = accessSlugs.includes(item.slug)
                 const selected = selectedAddons.has(item.slug)
                 const itemPrice =
                   item.priceCents != null

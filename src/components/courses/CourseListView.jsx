@@ -121,10 +121,10 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
 
         <div className="flex flex-wrap gap-3 mb-6">
           <Link
-            to={`/curriculum?line=${line.id}`}
+            to={`/courses?line=${line.id}`}
             className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition"
           >
-            🎬 {COURSES_PORTAL.videoCurriculumChip}
+            🎬 {COURSES_PORTAL.ioaiModulesTitle}
           </Link>
           {purchase?.isAuthenticated ? (
             <Link

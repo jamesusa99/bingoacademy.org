@@ -15,16 +15,16 @@ export const DEFAULT_COURSES_LINE_HERO = {
     statRating: '4.9',
   },
   general: {
-    modulesTitle: 'AI Video Courses',
+    modulesTitle: 'Course units',
     modulesSubtitle:
-      'Explore self-paced AI video courses — literacy, tools, and creative projects for independent learners.',
+      'Purchase a course unit to unlock all video lessons inside. Open a unit to see individual lessons.',
     statStudents: '800',
     statRating: '4.9',
   },
   k12: {
-    modulesTitle: 'AI Video Courses',
+    modulesTitle: 'Course units',
     modulesSubtitle:
-      'Classroom-ready AI video courses for schools — aligned packs with teacher support.',
+      'Purchase a classroom course unit to unlock all video lessons. Open a unit to see individual lessons.',
     statStudents: '800',
     statRating: '4.9',
   },

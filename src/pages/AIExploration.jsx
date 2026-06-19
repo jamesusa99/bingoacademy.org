@@ -1,11 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import PageMeta from '../components/PageMeta'
 import ExperimentCard from '../components/lab/ExperimentCard'
 import {
-  LAB_STANDALONE_INTRO,
   LAB_VALUE_PROPS,
   LAB_UX_PRINCIPLES,
   LAB_TECH_STACK,
@@ -14,7 +12,6 @@ import {
   BADGE_STORAGE_KEY,
   getExperimentsByCategory,
 } from '../config/explorationLab'
-import { EXPLORATION_PORTAL } from '../config/explorationPortal'
 import { PAGE_SEO } from '../config/programs'
 
 function scrollToExperiments() {
@@ -77,27 +74,6 @@ export default function AIExploration() {
       />
 
       <PageContent className="py-6 sm:py-10">
-        <section className="mb-8 card p-5 sm:p-6 border-violet-200/60 bg-violet-50/40 w-full">
-          <div className="w-full flex flex-col gap-3 lg:flex-row lg:items-baseline lg:gap-8">
-            <div className="shrink-0 lg:max-w-[16rem]">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600 mb-1">
-                {EXPLORATION_PORTAL.standaloneEyebrow}
-              </p>
-              <h2 className="font-bold text-bingo-dark text-lg">{LAB_STANDALONE_INTRO.title}</h2>
-            </div>
-            <p className="flex-1 min-w-0 w-full text-sm text-slate-600 leading-relaxed lg:text-base">
-              {LAB_STANDALONE_INTRO.desc}
-            </p>
-          </div>
-          <p className="text-xs text-slate-500 mt-4 pt-4 border-t border-violet-200/60">
-            Product labs & kits (Foundations / IOAI / K12) live under{' '}
-            <Link to="/labs" className="text-primary font-medium hover:underline">
-              Labs
-            </Link>{' '}
-            — different content, not mapped one-to-one to these games.
-          </p>
-        </section>
-
         {unlockedBadgeDetails.length > 0 && (
           <section className="mb-8 card p-5 border-amber-200/60 bg-amber-50/30">
             <h3 className="text-sm font-bold text-bingo-dark mb-3">Your explorer badges</h3>

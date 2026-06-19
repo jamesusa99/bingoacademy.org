@@ -15,7 +15,7 @@ import { isCurriculumLine } from '../config/programCurriculum'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import CourseListView from '../components/courses/CourseListView'
-import IOAICoursesModuleView from '../components/courses/IOAICoursesModuleView'
+import ProgramCoursesModuleView from '../components/courses/ProgramCoursesModuleView'
 import PageMeta from '../components/PageMeta'
 import { ProgramBadge, ModuleBadge, UseCaseTag } from '../components/courses/ProgramBadges'
 import { PAGE_SEO } from '../config/programs'
@@ -137,19 +137,20 @@ export default function Courses() {
   }, [courses, line.id, line.subcategories])
 
   const videoSubId = VIDEO_COURSE_SUB_BY_LINE[line.id]
-  const curriculumHref = `/curriculum?line=${line.id}`
+  const curriculumHref = `/courses?line=${line.id}`
 
   if (subId && isProductLabSub(lineId, subId)) {
     return <Navigate to={labsPath(lineId, subId)} replace />
   }
 
-  const ioaiModuleView =
-    lineId === 'ioai' && (!subId || subId === VIDEO_COURSE_SUB_BY_LINE.ioai || subId === 'module')
+  const programModuleView =
+    isCurriculumLine(lineId) &&
+    (!subId || subId === videoSubId || (lineId === 'ioai' && subId === 'module'))
 
-  if (ioaiModuleView) {
+  if (programModuleView) {
     return (
       <>
-        <IOAICoursesModuleView line={line} />
+        <ProgramCoursesModuleView line={line} />
         <PageContent className="py-8">
           <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -336,10 +337,10 @@ export default function Courses() {
                   </button>
                   {VIDEO_COURSE_SUB_BY_LINE[line.id] === s.id ? (
                     <Link
-                      to={`/curriculum?line=${line.id}`}
+                      to={`/courses?line=${line.id}`}
                       className="text-[10px] text-primary font-medium mt-2 inline-block hover:underline"
                     >
-                      Open curriculum explorer →
+                      Open course units →
                     </Link>
                   ) : null}
                 </div>

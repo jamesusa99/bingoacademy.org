@@ -5,7 +5,7 @@ import PageContent from '../components/PageContent'
 import PageMeta from '../components/PageMeta'
 import { LabMaterialCardActions } from '../components/labs/LabMaterialPurchaseButton'
 import { getProductLine, subcategoryLabel, isCourseComingSoon, isCourseListedOnStorefront } from '../config/products'
-import { getProductLabTracks, PRODUCT_LABS_INTRO, labsPath } from '../config/productLabs'
+import { getProductLabTracks, labsPath } from '../config/productLabs'
 import { PRODUCT_LABS_PORTAL } from '../config/productLabsPortal'
 import { normalizeLabMaterialSub } from '../config/labMaterials'
 import { isLabMaterialsCatalogRow } from '../lib/catalogCourse'
@@ -81,31 +81,6 @@ export default function ProductLabs() {
       />
 
       <PageContent className="py-6 sm:py-10">
-        <nav className="flex flex-wrap gap-2 mb-4 text-xs text-slate-500">
-          <Link to="/courses" className="hover:text-primary">
-            Courses
-          </Link>
-          <span>/</span>
-          <span className="text-bingo-dark font-medium">Labs & kits</span>
-          {activeTrack && subParam && activeModule ? (
-            <>
-              <span>/</span>
-              <span className="text-primary font-medium">{activeModule.name}</span>
-            </>
-          ) : null}
-        </nav>
-
-        <section className="mb-8 card p-5 sm:p-6 border-cyan-200/60 bg-cyan-50/30">
-          <h2 className="font-bold text-bingo-dark text-lg mb-2">{PRODUCT_LABS_INTRO.title}</h2>
-          <p className="text-sm text-slate-600 leading-relaxed">{PRODUCT_LABS_INTRO.desc}</p>
-          <p className="text-sm text-violet-700 mt-3 font-medium">
-            {PRODUCT_LABS_INTRO.explorationNote}{' '}
-            <Link to={PRODUCT_LABS_INTRO.explorationHref} className="text-primary hover:underline">
-              {PRODUCT_LABS_PORTAL.exploreFree} →
-            </Link>
-          </p>
-        </section>
-
         <div
           className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none"
           style={{ WebkitOverflowScrolling: 'touch' }}

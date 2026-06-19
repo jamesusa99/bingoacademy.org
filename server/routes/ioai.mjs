@@ -5,7 +5,6 @@ import {
   IOAI_FULL_BUNDLE_SLUG,
   resolveUnlockedModuleSlugs,
   resolveUnlockedLessonSlugs,
-  mapLabExtrasByModuleId,
   listLabMaterialsForModule,
   mapLabMaterialRow,
 } from '../lib/ioaiCommerce.mjs'
@@ -20,6 +19,10 @@ import {
   sanitizeQuestions,
 } from '../lib/ioaiQuestions.mjs'
 import { userHasLessonAccess, userHasModuleAccess } from '../lib/ioaiCommerce.mjs'
+import {
+  fetchProgramStoreLevels,
+  isCurriculumProductLine,
+} from '../lib/programStore.mjs'
 
 function sortByOrder(a, b) {
   return (a.sort_order ?? 0) - (b.sort_order ?? 0)
@@ -33,142 +36,60 @@ function isPublicModuleDetail(mod) {
   return mod && isPublicModuleStatus(mod.status)
 }
 
-function mapStoreTree(levels, extrasByModuleId = new Map(), lessonFlags = new Map()) {
-  return [...(levels || [])].sort(sortByOrder).map((level) => ({
-    id: level.slug,
-    title: level.title,
-    emoji: level.emoji || '',
-    coverUrl: level.cover_url || null,
-    summaryShort: level.summary_short || level.summary || '',
-    intro: level.intro_json || {},
-    highlightTags: level.highlight_tags || [],
-    status: level.status || 'live',
-    themes: [...(level.themes || [])]
-      .filter((t) => t.status !== 'hidden' && !t.hidden)
-      .sort(sortByOrder)
-      .map((theme) => ({
-        id: theme.slug,
-        title: theme.title,
-        categoryLabel: theme.category_label || theme.title,
-        coverUrl: theme.cover_url || null,
-        introHtml: theme.intro_html || '',
-        status: theme.status || 'live',
-        modules: [...(theme.modules || [])]
-          .filter((m) => isPublicModuleStatus(m.status))
-          .sort(sortByOrder)
-          .map((mod) => {
-            const comingSoon = mod.status === 'coming-soon'
-            const extrasCents = comingSoon ? 0 : extrasByModuleId.get(mod.id) || 0
-            const baseCents = comingSoon ? null : mod.price_cents ?? 0
-            return {
-            id: mod.slug,
-            catalogSlug: mod.catalog_slug,
-            title: mod.title,
-            status: mod.status || 'live',
-            coverUrl: mod.cover_url || null,
-            summary: mod.summary || '',
-            learningObjectives: mod.learning_objectives || '',
-            learningOutcomes: mod.learning_outcomes || '',
-            introHtml: mod.summary || '',
-            priceCents: comingSoon ? null : baseCents || null,
-            extrasPriceCents: comingSoon ? null : extrasCents || null,
-            totalPriceCents: comingSoon ? null : baseCents > 0 ? baseCents : null,
-            compareAtCents: comingSoon ? null : mod.compare_at_cents ?? null,
-            currency: mod.currency || 'usd',
-            marketingTags: mod.marketing_tags || [],
-            lessonCount: mod.lessons?.length ?? 0,
-            lessons: [...(mod.lessons || [])]
-              .filter((l) => l.status !== 'hidden' && l.status !== 'draft')
-              .sort(sortByOrder)
-              .map((lesson) => {
-                const catalogSlug = lesson.catalog_slug || lesson.slug
-                const flags = lessonFlags.get(lesson.id) || {}
-                return {
-                  id: catalogSlug,
-                  lessonDbId: lesson.id,
-                  catalogSlug,
-                  slug: lesson.slug,
-                  title: lesson.title,
-                  intro: lesson.intro || '',
-                  trialEnabled: Boolean(lesson.trial_enabled),
-                  sortOrder: lesson.sort_order ?? 0,
-                  cloudflareVideoId: lesson.cloudflare_video_id || null,
-                  hasExperiments: Boolean(flags.hasExperiments),
-                  hasLessonMaterials: Boolean(flags.hasLessonMaterials),
-                }
-              }),
-          }})
-      })),
-  }))
-}
-
 export function registerIoaiRoutes(app) {
+  app.get('/api/program/:productLine/store', async (req, res) => {
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    const productLine = req.params.productLine?.trim()
+    if (!isCurriculumProductLine(productLine)) {
+      return res.status(400).json({ error: 'Invalid product line' })
+    }
+
+    try {
+      const levels = await fetchProgramStoreLevels(admin, productLine)
+      const payload = { levels, productLine, bundles: [], labBundles: [], fullBundle: null }
+
+      if (productLine === 'ioai') {
+        const { data: bundles } = await admin
+          .from('ioai_bundles')
+          .select('slug, bundle_type, title, cover_url, intro_html, price_cents, compare_at_cents, currency, marketing_tags, status, sort_order')
+          .eq('status', 'live')
+          .order('sort_order')
+        payload.bundles = bundles || []
+        payload.labBundles = (bundles || []).filter((b) => b.bundle_type === 'lab_pack')
+        payload.fullBundle = (bundles || []).find((b) => b.slug === IOAI_FULL_BUNDLE_SLUG) || null
+      }
+
+      return res.json(payload)
+    } catch (err) {
+      return res.status(502).json({ error: err.message || 'Failed to load store' })
+    }
+  })
+
   app.get('/api/ioai/store', async (_req, res) => {
     const admin = getSupabaseAdmin()
-    if (!admin) {
-      return res.status(503).json({ error: 'Database not configured' })
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    try {
+      const levels = await fetchProgramStoreLevels(admin, 'ioai')
+      const { data: bundles } = await admin
+        .from('ioai_bundles')
+        .select('slug, bundle_type, title, cover_url, intro_html, price_cents, compare_at_cents, currency, marketing_tags, status, sort_order')
+        .eq('status', 'live')
+        .order('sort_order')
+      const fullBundle = (bundles || []).find((b) => b.slug === IOAI_FULL_BUNDLE_SLUG) || null
+      const labBundles = (bundles || []).filter((b) => b.bundle_type === 'lab_pack')
+
+      return res.json({
+        levels,
+        bundles: bundles || [],
+        labBundles,
+        fullBundle,
+      })
+    } catch (err) {
+      return res.status(502).json({ error: err.message || 'Failed to load store' })
     }
-
-    const { data: levels, error } = await admin
-      .from('course_levels')
-      .select(
-        `
-        id, slug, title, emoji, summary, summary_short, cover_url, intro_json,
-        highlight_tags, status, sort_order,
-        themes (
-          id, slug, title, category_label, cover_url, intro_html, status, hidden, sort_order,
-          modules (
-            id, slug, title, summary, learning_objectives, learning_outcomes, cover_url, intro_html, catalog_slug,
-            price_cents, compare_at_cents, currency, marketing_tags, status, sort_order,
-            lessons (
-              id, slug, title, intro, trial_enabled, status, sort_order, catalog_slug, cloudflare_video_id
-            )
-          )
-        )
-      `
-      )
-      .eq('product_line', 'ioai')
-      .eq('status', 'live')
-      .order('sort_order')
-      .order('sort_order', { referencedTable: 'themes', ascending: true })
-      .order('sort_order', { referencedTable: 'themes.modules', ascending: true })
-      .order('sort_order', { referencedTable: 'themes.modules.lessons', ascending: true })
-
-    if (error) {
-      return res.status(502).json({ error: error.message })
-    }
-
-    const { data: bundles } = await admin
-      .from('ioai_bundles')
-      .select('slug, bundle_type, title, cover_url, intro_html, price_cents, compare_at_cents, currency, marketing_tags, status, sort_order')
-      .eq('status', 'live')
-      .order('sort_order')
-
-    const fullBundle = (bundles || []).find((b) => b.slug === IOAI_FULL_BUNDLE_SLUG) || null
-
-    const moduleIds = []
-    const lessonIds = []
-    for (const level of levels || []) {
-      for (const theme of level.themes || []) {
-        for (const mod of theme.modules || []) {
-          if (mod.id) moduleIds.push(mod.id)
-          for (const lesson of mod.lessons || []) {
-            if (lesson.id) lessonIds.push(lesson.id)
-          }
-        }
-      }
-    }
-    const extrasByModuleId = await mapLabExtrasByModuleId(admin, moduleIds)
-    const lessonFlags = await enrichLessonsWithResourceFlags(admin, lessonIds)
-
-    const labBundles = (bundles || []).filter((b) => b.bundle_type === 'lab_pack')
-
-    return res.json({
-      levels: mapStoreTree(levels, extrasByModuleId, lessonFlags),
-      bundles: bundles || [],
-      labBundles,
-      fullBundle,
-    })
   })
 
   app.get('/api/ioai/modules/:catalogSlug', async (req, res) => {

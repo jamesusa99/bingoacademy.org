@@ -1,10 +1,5 @@
 /** AI Exploration Lab — standalone gamified web experiments (not tied to course product lines) */
 
-export const LAB_STANDALONE_INTRO = {
-  title: 'A standalone play zone',
-  desc: 'AI Exploration Lab is its own free, browser-based experience — separate from Foundations of AI, IOAI Training, K12 Classroom, and mall subscriptions. No enrollment required to explore previews.',
-}
-
 export const LAB_VALUE_PROPS = [
   {
     id: 'zero-setup',
