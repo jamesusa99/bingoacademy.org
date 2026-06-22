@@ -1,9 +1,22 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle2, Circle, PlayCircle, ChevronDown, ChevronRight, Lock } from 'lucide-react'
+import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { getLessonProgress } from '../../lib/learningProgress'
 import { hasCourseAccess } from '../../lib/courseAccess'
+import { hasIoaiLessonAccess } from '../../lib/ioaiAccess'
 import { studyLessonPath } from '../../lib/studyPaths'
+
+function resolveLessonHasAccess(lesson, purchasedSlugs, ioaiAccess) {
+  if (hasCourseAccess(lesson.id, purchasedSlugs)) return true
+  if (!ioaiAccess?.lessonModuleMap) return false
+  return hasIoaiLessonAccess(lesson.id, {
+    moduleSlugs: ioaiAccess.moduleSlugs,
+    enrolledSlugs: ioaiAccess.enrolledSlugs,
+    lessonModuleMap: ioaiAccess.lessonModuleMap,
+    trialEnabled: Boolean(lesson.trialEnabled),
+  })
+}
 
 function LessonStatusIcon({ lessonId, activeLessonId, hasAccess }) {
   const progress = getLessonProgress(lessonId)
@@ -19,8 +32,16 @@ function LessonStatusIcon({ lessonId, activeLessonId, hasAccess }) {
   return <Circle className="w-4 h-4 text-slate-300 shrink-0" aria-hidden />
 }
 
-function LessonRow({ lesson, activeLessonId, purchasedSlugs, studyCenter = false }) {
-  const hasAccess = hasCourseAccess(lesson.id, purchasedSlugs)
+function LessonUnlockedBadge() {
+  return (
+    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
+      {COURSES_PORTAL.moduleUnlocked}
+    </span>
+  )
+}
+
+function LessonRow({ lesson, activeLessonId, purchasedSlugs, studyCenter = false, ioaiAccess = null }) {
+  const hasAccess = resolveLessonHasAccess(lesson, purchasedSlugs, ioaiAccess)
   const isActive = lesson.id === activeLessonId
   const progress = getLessonProgress(lesson.id)
   const href = studyCenter ? studyLessonPath(lesson.id, { play: true }) : `/courses/detail/${lesson.id}`
@@ -40,6 +61,7 @@ function LessonRow({ lesson, activeLessonId, purchasedSlugs, studyCenter = false
             <span className="text-[10px] text-amber-600 block mt-0.5">In progress</span>
           ) : null}
         </span>
+        <LessonUnlockedBadge />
       </Link>
     )
   }
@@ -52,7 +74,7 @@ function LessonRow({ lesson, activeLessonId, purchasedSlugs, studyCenter = false
   )
 }
 
-function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen, studyCenter = false }) {
+function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen, studyCenter = false, ioaiAccess = null }) {
   const [open, setOpen] = useState(defaultOpen)
   const completedCount = module.lessons.filter((l) => getLessonProgress(l.id).completed).length
 
@@ -87,6 +109,7 @@ function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen, st
                 activeLessonId={activeLessonId}
                 purchasedSlugs={purchasedSlugs}
                 studyCenter={studyCenter}
+                ioaiAccess={ioaiAccess}
               />
             </li>
           ))}
@@ -96,7 +119,7 @@ function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen, st
   )
 }
 
-function ThemeSection({ theme, activeLessonId, purchasedSlugs, activeModuleId, studyCenter = false }) {
+function ThemeSection({ theme, activeLessonId, purchasedSlugs, activeModuleId, studyCenter = false, ioaiAccess = null }) {
   const [open, setOpen] = useState(
     theme.modules.some((m) => m.lessons.some((l) => l.id === activeLessonId))
   )
@@ -130,6 +153,7 @@ function ThemeSection({ theme, activeLessonId, purchasedSlugs, activeModuleId, s
               purchasedSlugs={purchasedSlugs}
               defaultOpen={mod.id === activeModuleId || mod.lessons.some((l) => l.id === activeLessonId)}
               studyCenter={studyCenter}
+              ioaiAccess={ioaiAccess}
             />
           ))
         : null}
@@ -144,6 +168,7 @@ export default function CourseLessonList({
   curriculum = [],
   summaryText = '',
   studyCenter = false,
+  ioaiAccess = null,
 }) {
   const activeContext = activeLessonId
     ? curriculum
@@ -184,6 +209,7 @@ export default function CourseLessonList({
                     purchasedSlugs={purchasedSlugs}
                     activeModuleId={activeContext?.module.id}
                     studyCenter={studyCenter}
+                    ioaiAccess={ioaiAccess}
                   />
                 ))}
               </div>

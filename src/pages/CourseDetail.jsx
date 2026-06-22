@@ -431,6 +431,15 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
                   curriculum={curriculum}
                   summaryText={summary?.summary ?? ''}
                   studyCenter={studyCenter}
+                  ioaiAccess={
+                    progLine === 'ioai'
+                      ? {
+                          moduleSlugs,
+                          enrolledSlugs: mergedEnrollmentSlugs,
+                          lessonModuleMap,
+                        }
+                      : null
+                  }
                 />
               </div>
             </div>

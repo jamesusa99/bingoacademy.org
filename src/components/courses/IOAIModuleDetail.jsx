@@ -8,6 +8,7 @@ import { useIOAIAccess } from '../../hooks/useIOAIStore'
 import { useProgramStore } from '../../hooks/useProgramStore'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
 import { buildLessonModuleMap, findModule, fetchIoaiModule, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable, mapDetailToFoundContext, mapDetailToStoreModule, resolveLessonCatalogSlug } from '../../lib/ioaiStore'
+import { isPurchasableCourse } from '../../lib/coursePricing'
 import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig, confirmCheckoutSession } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
@@ -395,6 +396,13 @@ export default function IOAIModuleDetail({
                   item.priceCents != null
                     ? formatIoaiPrice(item.priceCents, item.currency || currency)
                     : item.price || null
+                const standalonePurchasable = isPurchasableCourse({
+                  id: item.slug,
+                  status: 'live',
+                  price: item.price,
+                  price_cents: item.priceCents,
+                  purchasable: item.purchasable,
+                })
                 return (
                   <li key={item.slug} className="card p-4 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex gap-3 min-w-0 flex-1 items-start">
@@ -442,13 +450,17 @@ export default function IOAIModuleDetail({
                         <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
                           {COURSES_PORTAL.comingSoonBadge}
                         </span>
-                      ) : (
+                      ) : standalonePurchasable ? (
                         <Link
                           to={`/courses/detail/${encodeURIComponent(item.slug)}`}
                           className="text-[10px] font-semibold text-primary hover:underline"
                         >
-                          Buy separately →
+                          {COURSES_PORTAL.moduleLabBuySeparately}
                         </Link>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                          {COURSES_PORTAL.moduleLabIncluded}
+                        </span>
                       )}
                     </div>
                   </li>

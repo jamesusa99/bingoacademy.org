@@ -132,6 +132,8 @@ export const COURSES_PORTAL = {
   moduleLessonsHeading: 'Lessons in this unit',
   moduleLabsHeading: 'Labs & material kits',
   moduleLabsDesc: 'Optional add-ons — select any items to include at checkout. Not selected by default.',
+  moduleLabIncluded: 'Included',
+  moduleLabBuySeparately: 'Buy separately →',
   moduleWatchNow: 'Watch now',
   moduleContinueLesson: 'Continue lesson',
   moduleNoVideoYet: 'No video uploaded for this unit yet. Check back after lessons are configured.',

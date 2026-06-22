@@ -14,7 +14,7 @@ export function sumCatalogRowsPriceCents(rows) {
 }
 
 const LAB_MATERIAL_SELECT =
-  'slug, name, sub, price, price_cents, currency, status, delivery_type, description, thumbnail_url, sort_order, module_id, lesson_id'
+  'slug, name, sub, price, price_cents, currency, purchasable, status, delivery_type, description, thumbnail_url, sort_order, module_id, lesson_id'
 
 /** Lab/material catalog rows bound to an L3 module (module_id or legacy lesson_id) */
 export async function listLabMaterialsForModule(admin, moduleId) {
@@ -182,6 +182,7 @@ export function mapLabMaterialRow(row) {
     price: row.price || null,
     priceCents: row.price_cents ?? null,
     currency: row.currency || 'usd',
+    purchasable: row.purchasable ?? null,
     deliveryType: row.delivery_type || null,
     description: row.description || '',
     thumbnailUrl: row.thumbnail_url || null,
