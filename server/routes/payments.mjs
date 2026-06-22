@@ -127,7 +127,8 @@ export function registerPaymentRoutes(app) {
       addonSlugs,
     })
     if (quote.error) {
-      return res.status(quote.error === 'Course not found in catalog' ? 404 : 400).json({
+      const status = quote.error.includes('Stripe') || quote.error.includes('minimum') ? 400 : quote.error === 'Course not found in catalog' || quote.error === 'Module not found' ? 404 : 400
+      return res.status(status).json({
         error: quote.error,
       })
     }

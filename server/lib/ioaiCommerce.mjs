@@ -1,4 +1,4 @@
-import { parsePriceStringToCents } from './priceUtils.mjs'
+import { parsePriceStringToCents, isStripeCheckoutAmountValid } from './priceUtils.mjs'
 
 export const IOAI_FULL_BUNDLE_SLUG = 'ioai-competition-system'
 
@@ -553,7 +553,7 @@ export function isModulePurchasable(mod, totalPriceCents = null) {
   if (mod.theme?.hidden || mod.theme?.status === 'hidden') return false
   if (mod.theme?.level?.status === 'hidden') return false
   const cents = totalPriceCents != null ? totalPriceCents : mod.price_cents ?? 0
-  return cents > 0
+  return isStripeCheckoutAmountValid(cents, mod.currency || 'usd')
 }
 
 export function isBundlePurchasable(bundle) {

@@ -1,3 +1,5 @@
+import { authFetch } from './checkout'
+
 const API = '/api/ioai'
 
 export async function fetchLessonExercises(lessonRef) {
@@ -6,15 +8,19 @@ export async function fetchLessonExercises(lessonRef) {
   return res.json()
 }
 
+/** @deprecated Use submitLessonExercises for batch grading */
 export async function gradeLessonExercise(lessonRef, questionId, answer) {
-  const res = await fetch(`${API}/lessons/${encodeURIComponent(lessonRef)}/exercises/grade`, {
+  return authFetch(`${API}/lessons/${encodeURIComponent(lessonRef)}/exercises/grade`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify({ questionId, answer }),
   })
-  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText)
-  return res.json()
+}
+
+export async function submitLessonExercises(lessonRef, answers) {
+  return authFetch(`${API}/lessons/${encodeURIComponent(lessonRef)}/exercises/submit`, {
+    method: 'POST',
+    body: JSON.stringify({ answers }),
+  })
 }
 
 export async function fetchModuleTest(moduleRef) {
@@ -24,12 +30,8 @@ export async function fetchModuleTest(moduleRef) {
 }
 
 export async function submitModuleTest(moduleRef, answers) {
-  const res = await fetch(`${API}/modules/${encodeURIComponent(moduleRef)}/test/submit`, {
+  return authFetch(`${API}/modules/${encodeURIComponent(moduleRef)}/test/submit`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify({ answers }),
   })
-  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText)
-  return res.json()
 }

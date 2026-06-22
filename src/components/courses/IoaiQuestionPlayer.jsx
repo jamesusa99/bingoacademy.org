@@ -68,6 +68,155 @@ function OptionList({ question, value, onChange, disabled, reveal, correctAnswer
   )
 }
 
+function formatCorrectAnswer(correctAnswer) {
+  if (correctAnswer == null) return '—'
+  if (Array.isArray(correctAnswer)) return correctAnswer.join(', ')
+  return String(correctAnswer)
+}
+
+function isQuestionAnswered(question, value) {
+  if (question.questionType === IOAI_QUESTION_TYPES.MULTIPLE) {
+    return Array.isArray(value) && value.length > 0
+  }
+  return value != null && value !== ''
+}
+
+/** Lesson exercises — answer all, submit once, then review */
+export function IoaiLessonExerciseForm({ questions, locked = false, onSubmit, onComplete, submitting = false }) {
+  const [answers, setAnswers] = useState({})
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState('')
+
+  const allAnswered = useMemo(
+    () => questions.length > 0 && questions.every((q) => isQuestionAnswered(q, answers[q.id])),
+    [answers, questions]
+  )
+
+  const resultByQuestionId = useMemo(() => {
+    const map = new Map()
+    for (const row of result?.results || []) {
+      map.set(row.questionId, row)
+    }
+    return map
+  }, [result])
+
+  const handleSubmit = async () => {
+    if (!allAnswered || !onSubmit) {
+      setError(COURSES_PORTAL.classExercisesAnswerAll)
+      return
+    }
+    setError('')
+    try {
+      const graded = await onSubmit(answers)
+      setResult(graded)
+      onComplete?.(graded)
+    } catch (err) {
+      setError(err.message || 'Submit failed')
+    }
+  }
+
+  const handleRetry = () => {
+    setResult(null)
+    setAnswers({})
+    setError('')
+  }
+
+  if (locked) {
+    return (
+      <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-5 text-center">
+        <Lock className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+        <p className="text-sm text-slate-400">{COURSES_PORTAL.classExercisesLockedShort}</p>
+      </div>
+    )
+  }
+
+  if (result) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-4 text-center">
+          <p className="text-xs font-bold uppercase tracking-wide text-emerald-400 mb-1">Results</p>
+          <p className="text-2xl font-bold text-white">
+            {COURSES_PORTAL.classExercisesScore(result.score, result.totalScore)}
+          </p>
+        </div>
+
+        {questions.map((q, index) => {
+          const graded = resultByQuestionId.get(q.id)
+          const reveal = Boolean(graded)
+          return (
+            <article key={q.id} className="rounded-xl border border-slate-700 bg-slate-800/30 p-5 space-y-4">
+              <p className="text-xs text-slate-400">
+                Question {index + 1} · {q.score} pt{q.score === 1 ? '' : 's'}
+              </p>
+              <RichHtmlContent html={q.stemHtml} />
+              <OptionList
+                question={q}
+                value={answers[q.id]}
+                onChange={() => {}}
+                disabled
+                reveal={reveal}
+                correctAnswer={graded?.correctAnswer}
+              />
+              {graded ? (
+                <div className="space-y-3 pt-1">
+                  <p className={`text-sm font-semibold ${graded.correct ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {graded.correct ? COURSES_PORTAL.classExercisesCorrect : COURSES_PORTAL.classExercisesIncorrect}
+                  </p>
+                  <p className="text-sm text-slate-300">
+                    <span className="text-slate-500">{COURSES_PORTAL.classExercisesCorrectAnswer}: </span>
+                    {formatCorrectAnswer(graded.correctAnswer)}
+                  </p>
+                  {graded.explanationHtml ? (
+                    <div className="text-sm text-slate-300 bg-slate-900/50 rounded-lg p-3">
+                      <p className="text-xs text-slate-500 mb-1">{COURSES_PORTAL.classExercisesExplanation}</p>
+                      <RichHtmlContent html={graded.explanationHtml} />
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </article>
+          )
+        })}
+
+        <button type="button" onClick={handleRetry} className="btn-primary text-sm px-5 py-2.5">
+          {COURSES_PORTAL.classExercisesRetry}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {questions.map((q, index) => (
+        <article key={q.id} className="rounded-xl border border-slate-700 bg-slate-800/30 p-5 space-y-4">
+          <p className="text-xs text-slate-400">
+            Question {index + 1} · {q.score} pt{q.score === 1 ? '' : 's'}
+          </p>
+          <RichHtmlContent html={q.stemHtml} />
+          <OptionList
+            question={q}
+            value={answers[q.id]}
+            onChange={(val) => setAnswers((prev) => ({ ...prev, [q.id]: val }))}
+            disabled={false}
+            reveal={false}
+          />
+        </article>
+      ))}
+
+      {error ? <p className="text-sm text-red-400">{error}</p> : null}
+
+      <button
+        type="button"
+        disabled={submitting || !allAnswered}
+        onClick={handleSubmit}
+        className="btn-primary w-full sm:w-auto text-sm px-6 py-2.5 disabled:opacity-50"
+      >
+        {submitting ? COURSES_PORTAL.classExercisesSubmitting : COURSES_PORTAL.classExercisesSubmitAll}
+      </button>
+    </div>
+  )
+}
+
 /** Single question player — immediate feedback mode */
 export function IoaiQuestionCard({
   question,

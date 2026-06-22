@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Lock } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
-import { fetchLessonExercises, gradeLessonExercise } from '../../lib/ioaiQuestionsApi'
-import { IoaiQuestionCard } from './IoaiQuestionPlayer'
+import { fetchLessonExercises, submitLessonExercises } from '../../lib/ioaiQuestionsApi'
+import { IoaiLessonExerciseForm } from './IoaiQuestionPlayer'
 
 export function useLessonExerciseCount(lessonRef) {
   const [count, setCount] = useState(0)
@@ -43,14 +42,8 @@ export function useLessonExerciseCount(lessonRef) {
 
 export default function LessonExerciseSegment({ lessonRef, hasAccess, onAllComplete }) {
   const { questions, loading, hasExercises } = useLessonExerciseCount(lessonRef)
-  const [completed, setCompleted] = useState(() => new Set())
-
-  useEffect(() => {
-    if (!hasAccess || !questions.length) return
-    if (completed.size >= questions.length) {
-      onAllComplete?.()
-    }
-  }, [completed.size, hasAccess, onAllComplete, questions.length])
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   if (loading) {
     return <div className="p-8 text-center text-slate-400 text-sm">Loading exercises…</div>
@@ -58,12 +51,19 @@ export default function LessonExerciseSegment({ lessonRef, hasAccess, onAllCompl
 
   if (!hasExercises) return null
 
-  const handleGrade = async (questionId, answer) => {
-    const result = await gradeLessonExercise(lessonRef, questionId, answer)
-    if (result.correct) {
-      setCompleted((prev) => new Set([...prev, questionId]))
+  const handleSubmit = async (answers) => {
+    setSubmitting(true)
+    try {
+      return await submitLessonExercises(lessonRef, answers)
+    } finally {
+      setSubmitting(false)
     }
-    return result
+  }
+
+  const handleComplete = () => {
+    if (submitted) return
+    setSubmitted(true)
+    onAllComplete?.()
   }
 
   return (
@@ -76,16 +76,13 @@ export default function LessonExerciseSegment({ lessonRef, hasAccess, onAllCompl
           {hasAccess ? COURSES_PORTAL.classExercisesDesc : COURSES_PORTAL.classExercisesLocked}
         </p>
       </div>
-      {!hasAccess ? (
-        <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-5 text-center">
-          <Lock className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-          <p className="text-sm text-slate-400">{COURSES_PORTAL.classExercisesLockedShort}</p>
-        </div>
-      ) : (
-        questions.map((q) => (
-          <IoaiQuestionCard key={q.id} question={q} onGrade={handleGrade} />
-        ))
-      )}
+      <IoaiLessonExerciseForm
+        questions={questions}
+        locked={!hasAccess}
+        submitting={submitting}
+        onSubmit={handleSubmit}
+        onComplete={handleComplete}
+      />
     </div>
   )
 }

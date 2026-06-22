@@ -219,6 +219,28 @@ export function registerIoaiRoutes(app) {
     return res.json({ questionId, ...result })
   })
 
+  app.post('/api/ioai/lessons/:lessonRef/exercises/submit', async (req, res) => {
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const lessonRef = req.params.lessonRef?.trim()
+    const lessonDbId = await resolveLessonDbId(admin, lessonRef)
+    if (!lessonDbId) return res.status(404).json({ error: 'Lesson not found' })
+
+    const enrolledSlugs = await listEnrollmentSlugs(auth.admin, auth.user.id)
+    const hasAccess = await userHasLessonAccess(auth.admin, auth.user.id, lessonRef, { enrolledSlugs })
+    if (!hasAccess) return res.status(403).json({ error: 'Purchase required to submit exercises' })
+
+    const rows = await fetchLiveQuestions(admin, { scopeType: 'lesson', scopeId: lessonDbId })
+    const { answers } = req.body || {}
+    const graded = gradeModuleTest(rows, answers || {})
+
+    return res.json(graded)
+  })
+
   app.get('/api/ioai/modules/:moduleRef/test', async (req, res) => {
     const admin = getSupabaseAdmin()
     if (!admin) return res.status(503).json({ error: 'Database not configured' })

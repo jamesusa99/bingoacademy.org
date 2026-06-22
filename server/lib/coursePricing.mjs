@@ -7,7 +7,7 @@ import {
   resolveModuleCheckoutPriceCents,
   validateModuleAddonSlugs,
 } from './ioaiCommerce.mjs'
-import { parsePriceStringToCents } from './priceUtils.mjs'
+import { parsePriceStringToCents, isStripeCheckoutAmountValid, stripeMinimumAmountError } from './priceUtils.mjs'
 
 export { parsePriceStringToCents } from './priceUtils.mjs'
 
@@ -81,6 +81,9 @@ export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, co
     if (!isModulePurchasable(mod, mod.price_cents ?? 0)) {
       return { error: 'This module is not available for purchase' }
     }
+    if (!isStripeCheckoutAmountValid(totalCents, mod.currency)) {
+      return { error: stripeMinimumAmountError(totalCents, mod.currency) }
+    }
     const addonLabel =
       validation.slugs.length > 0 ? ` (+ ${validation.slugs.length} add-on${validation.slugs.length === 1 ? '' : 's'})` : ''
     return {
@@ -105,6 +108,9 @@ export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, co
   const amountCents = resolveCoursePriceCents(course)
   if (!isCatalogCoursePurchasable(course, amountCents)) {
     return { error: 'This course is not available for online purchase' }
+  }
+  if (!isStripeCheckoutAmountValid(amountCents, course.currency)) {
+    return { error: stripeMinimumAmountError(amountCents, course.currency) }
   }
 
   return {

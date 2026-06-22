@@ -3,6 +3,14 @@ import { COURSE_STATUS } from '../config/coursesCatalog'
 
 export const IOAI_FULL_BUNDLE_SLUG = 'ioai-competition-system'
 
+/** Stripe Checkout minimum for USD (matches server/lib/priceUtils.mjs). */
+export const STRIPE_MINIMUM_USD_CENTS = 50
+
+function modulePriceCents(mod) {
+  if (!mod || typeof mod === 'string') return 0
+  return mod.totalPriceCents ?? mod.priceCents ?? mod.price_cents ?? 0
+}
+
 /** Canonical courses_catalog slug used in /courses/detail/:id routes */
 export function resolveLessonCatalogSlug(lesson) {
   if (!lesson) return ''
