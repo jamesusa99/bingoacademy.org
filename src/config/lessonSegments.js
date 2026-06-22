@@ -21,11 +21,11 @@ export const LESSON_SEGMENTS = [
   },
   {
     id: 'checkpoint',
-    label: 'Checkpoint',
-    shortLabel: 'Quiz',
+    label: 'Class Exercises',
+    shortLabel: 'Exercises',
     icon: '✅',
     type: 'checkpoint',
-    desc: 'Quick knowledge check',
+    desc: 'In-lesson practice questions',
   },
   {
     id: 'summary',

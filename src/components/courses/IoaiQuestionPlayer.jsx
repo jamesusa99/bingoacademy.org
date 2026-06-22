@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Lock } from 'lucide-react'
 import { IOAI_QUESTION_TYPES } from '../../config/ioaiQuestions'
+import { COURSES_PORTAL } from '../../config/coursesPortal'
 import RichHtmlContent from '../shared/RichHtmlContent'
 
 function OptionList({ question, value, onChange, disabled, reveal, correctAnswer, theme = 'dark' }) {
@@ -102,7 +103,7 @@ export function IoaiQuestionCard({
     return (
       <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-5 text-center">
         <Lock className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-        <p className="text-sm text-slate-400">购买模块后可解锁随堂习题</p>
+        <p className="text-sm text-slate-400">{COURSES_PORTAL.classExercisesLockedShort}</p>
       </div>
     )
   }

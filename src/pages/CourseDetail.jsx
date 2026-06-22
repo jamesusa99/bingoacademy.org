@@ -99,11 +99,23 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
       null
     const previewSeconds =
       progLine === 'ioai' && cloudflareUid ? IOAI_MODULE_PREVIEW_SECONDS : item.previewSeconds ?? 90
+    const contentGoals =
+      lessonInTree?.lesson?.contentGoals ||
+      apiLessonPatch?.contentGoals ||
+      item.contentGoals ||
+      ''
+    const knowledgePoints =
+      lessonInTree?.lesson?.knowledgePoints ||
+      apiLessonPatch?.knowledgePoints ||
+      item.knowledgePoints ||
+      ''
     return {
       ...item,
       ...(apiLessonPatch || {}),
       cloudflareUid,
       previewSeconds,
+      contentGoals,
+      knowledgePoints,
     }
   }, [item, lessonInTree, progLine, apiLessonPatch])
 
@@ -128,6 +140,8 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
           name: lesson.title || undefined,
           nameEn: lesson.title || undefined,
           desc: lesson.intro || lesson.content_goals || lesson.contentGoals || undefined,
+          contentGoals: lesson.content_goals || lesson.contentGoals || '',
+          knowledgePoints: lesson.knowledge_points || lesson.knowledgePoints || '',
         })
       })
       .catch(() => {})

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Lock } from 'lucide-react'
+import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { fetchLessonExercises, gradeLessonExercise } from '../../lib/ioaiQuestionsApi'
 import { IoaiQuestionCard } from './IoaiQuestionPlayer'
 
@@ -68,15 +69,17 @@ export default function LessonExerciseSegment({ lessonRef, hasAccess, onAllCompl
   return (
     <div className="p-6 sm:p-8 space-y-6">
       <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-amber-400 mb-1">随堂习题</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-amber-400 mb-1">
+          {COURSES_PORTAL.classExercises}
+        </p>
         <p className="text-sm text-slate-400">
-          {hasAccess ? '完成全部习题后可继续学习（可重复练习）' : '购买模块后可解锁习题作答'}
+          {hasAccess ? COURSES_PORTAL.classExercisesDesc : COURSES_PORTAL.classExercisesLocked}
         </p>
       </div>
       {!hasAccess ? (
         <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-5 text-center">
           <Lock className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-          <p className="text-sm text-slate-400">购买模块后可解锁随堂习题</p>
+          <p className="text-sm text-slate-400">{COURSES_PORTAL.classExercisesLockedShort}</p>
         </div>
       ) : (
         questions.map((q) => (

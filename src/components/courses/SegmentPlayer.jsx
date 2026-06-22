@@ -13,6 +13,7 @@ import { getAdjacentLessons } from '../../lib/ioaiCourseStructure'
 import { studyLessonPath } from '../../lib/studyPaths'
 import VideoPlayerControls from './VideoPlayerControls'
 import CourseStreamVideo from './CourseStreamVideo'
+import CoursePurchasePanel from './CoursePurchasePanel'
 
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60)
@@ -29,6 +30,23 @@ function segmentAtIndex(index, hasExercises) {
   return LESSON_SEGMENTS[index] || LESSON_SEGMENTS[LESSON_SEGMENTS.length - 1]
 }
 
+function splitTakeawayText(text) {
+  if (!text || typeof text !== 'string') return []
+  return text
+    .split(/\n+|(?:;\s*)/)
+    .map((s) => s.replace(/^[-•*]\s*/, '').trim())
+    .filter(Boolean)
+}
+
+function getLessonTakeaways(course) {
+  const items = []
+  if (course?.outcomes?.length) items.push(...course.outcomes)
+  if (course?.knowledgePoints) items.push(...splitTakeawayText(course.knowledgePoints))
+  const contentGoals = (course?.contentGoals || '').trim()
+  const uniqueItems = [...new Set(items.map((s) => String(s).trim()).filter(Boolean))]
+  return { contentGoals, items: uniqueItems }
+}
+
 function SegmentStepper({ currentIndex, segmentsDone, onSelect, hasAccess, hasExercises }) {
   const segments = activeSegments(hasExercises)
   return (
@@ -39,8 +57,10 @@ function SegmentStepper({ currentIndex, segmentsDone, onSelect, hasAccess, hasEx
         const active = storageIndex === currentIndex
         const canClick =
           seg.id === 'checkpoint'
-            ? hasExercises
-            : hasAccess && (done || storageIndex <= currentIndex)
+            ? hasExercises && hasAccess
+            : seg.id === 'summary'
+              ? hasAccess
+              : hasAccess && (done || storageIndex <= currentIndex)
 
         return (
           <button
@@ -95,6 +115,8 @@ function IntroSegment({ course, onContinue }) {
 function SummarySegment({ course, onComplete, nextLessonId, courses = null, curriculumTree = null, studyCenter = false }) {
   const productLine = isCurriculumLine(course?.line) ? course.line : 'ioai'
   const { index, total } = getAdjacentLessons(course.id, courses, curriculumTree, productLine)
+  const { contentGoals, items } = getLessonTakeaways(course)
+  const hasTakeaways = Boolean(contentGoals || items.length > 0)
 
   return (
     <div className="p-6 sm:p-8 text-center">
@@ -106,8 +128,25 @@ function SummarySegment({ course, onComplete, nextLessonId, courses = null, curr
       <p className="text-sm text-slate-400 mb-2">
         Lesson {index + 1} of {total} in this track
       </p>
-      {course.outcomes?.[0] ? (
-        <p className="text-sm text-slate-300 max-w-md mx-auto mb-6">{course.outcomes[0]}</p>
+      {hasTakeaways ? (
+        <section className="text-left max-w-md mx-auto mb-6 rounded-xl border border-slate-700/80 bg-slate-800/40 p-4">
+          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">
+            {COURSES_PORTAL.lessonTakeaways}
+          </h4>
+          {contentGoals ? (
+            <p className="text-sm text-slate-300 leading-relaxed mb-3">{contentGoals}</p>
+          ) : null}
+          {items.length > 0 ? (
+            <ul className="space-y-2">
+              {items.map((o) => (
+                <li key={o} className="text-sm text-slate-300 flex gap-2">
+                  <span className="text-emerald-400 shrink-0">✓</span>
+                  <span>{o}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
       ) : null}
       <div className="flex flex-wrap gap-2 justify-center">
         <button type="button" onClick={onComplete} className="btn-primary text-sm px-5 py-2.5">
@@ -394,7 +433,7 @@ export default function SegmentPlayer({
                     }}
                     className="inline-flex items-center gap-1 text-xs text-primary hover:text-cyan-300 font-semibold"
                   >
-                    随堂习题 <ChevronRight className="w-4 h-4" />
+                    {COURSES_PORTAL.classExercises} <ChevronRight className="w-4 h-4" />
                   </button>
                 ) : (
                   <button
