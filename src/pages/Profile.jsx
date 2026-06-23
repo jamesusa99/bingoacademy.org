@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authLink } from '../lib/authRedirect'
 import {
@@ -329,10 +329,9 @@ function ProfileOrdersSection({ orders, loading, error }) {
 
 export default function Profile() {
   const location = useLocation()
-  const navigate = useNavigate()
-  const pendingSettingsScroll = useRef(false)
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const [view, setView] = useState('home')
+  const [accountSettingsOpen, setAccountSettingsOpen] = useState(false)
   const [showEarnBySharing, setShowEarnBySharing] = useState(false)
   const [shareModal, setShareModal] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -441,46 +440,29 @@ export default function Profile() {
 
   const unreadNotificationCount = notifications.filter((n) => isNotificationUnread(n)).length
 
-  const goToSettingsSection = useCallback(
-    (e) => {
-      e?.preventDefault?.()
-      pendingSettingsScroll.current = true
-      setView('home')
-
-      const scrollAfterPaint = () => {
-        window.setTimeout(() => {
-          pendingSettingsScroll.current = false
-          scrollToProfileSection('settings')
-        }, 80)
+  const toggleAccountSettings = useCallback(() => {
+    setAccountSettingsOpen((open) => {
+      const next = !open
+      if (next) {
+        window.setTimeout(() => scrollToProfileSection('settings'), 80)
       }
-
-      if (location.pathname !== '/profile' || location.hash !== '#settings') {
-        navigate('/profile#settings')
-        return
-      }
-
-      scrollAfterPaint()
-    },
-    [location.pathname, location.hash, navigate]
-  )
+      return next
+    })
+  }, [])
 
   useEffect(() => {
     if (authLoading || !isAuthenticated || view !== 'home') return
 
     const hash = location.hash.replace('#', '')
-    const sectionId = pendingSettingsScroll.current
-      ? 'settings'
-      : hash === 'settings' || hash === 'orders' || hash === 'notifications'
-        ? hash
-        : null
-    if (!sectionId) return
-
-    const timer = window.setTimeout(() => {
-      pendingSettingsScroll.current = false
-      scrollToProfileSection(sectionId)
-    }, 80)
-
-    return () => window.clearTimeout(timer)
+    if (hash === 'settings') {
+      setAccountSettingsOpen(true)
+      const timer = window.setTimeout(() => scrollToProfileSection('settings'), 80)
+      return () => window.clearTimeout(timer)
+    }
+    if (hash === 'orders' || hash === 'notifications') {
+      const timer = window.setTimeout(() => scrollToProfileSection(hash), 80)
+      return () => window.clearTimeout(timer)
+    }
   }, [location.hash, view, authLoading, isAuthenticated, profileLoading, ordersLoading, notificationsLoading])
 
   if (authLoading) {
@@ -511,7 +493,6 @@ export default function Profile() {
     { to: '/profile#cert', icon: '📜', label: 'My Certificates', share: true },
     { to: '/showcase', icon: '🏅', label: 'My Achievements', share: true },
     { to: '/profile#notifications', icon: '🔔', label: 'Notifications', share: false, badge: unreadNotificationCount },
-    { to: '/profile#settings', icon: '⚙️', label: 'Settings', share: false },
   ]
 
   const dataCards = [
@@ -552,8 +533,9 @@ export default function Profile() {
               Account ID: {accountId} ·{' '}
               <button
                 type="button"
-                onClick={goToSettingsSection}
+                onClick={toggleAccountSettings}
                 className="text-primary hover:underline"
+                aria-expanded={accountSettingsOpen}
               >
                 Account settings
               </button>
@@ -577,10 +559,11 @@ export default function Profile() {
           <div className="flex gap-2 flex-wrap shrink-0">
             <button
               type="button"
-              onClick={goToSettingsSection}
+              onClick={toggleAccountSettings}
               className="rounded-lg border border-slate-300 text-slate-700 px-4 py-2 text-sm hover:bg-slate-50"
+              aria-expanded={accountSettingsOpen}
             >
-              Edit profile
+              {accountSettingsOpen ? 'Hide profile' : 'Edit profile'}
             </button>
             {memberTier !== 'free' ? (
               <button type="button" onClick={() => setView('member')} className="btn-primary px-4 py-2 text-sm">Member benefits →</button>
@@ -600,7 +583,6 @@ export default function Profile() {
               {item.to ? (
                 <Link
                   to={item.to}
-                  onClick={item.to === '/profile#settings' ? goToSettingsSection : undefined}
                   className={`card p-4 text-center hover:shadow-md transition block ${item.highlight ? 'border-amber-300 bg-amber-50/30' : ''}`}
                 >
                   {item.share && (
@@ -770,27 +752,45 @@ export default function Profile() {
         <ProfileOrdersSection orders={orders} loading={ordersLoading} error={ordersError} />
       )}
 
-      {/* ── Account settings ──────────────────────────────────────── */}
+      {/* ── Account settings (collapsible) ─────────────────────────── */}
       {view === 'home' && (
         <section id="settings" className="mb-8 scroll-mt-28">
-          <h2 className="section-title mb-4">Account settings</h2>
-          <div className="card p-6">
-            {profileLoading ? (
-              <p className="text-sm text-slate-500">Loading account info…</p>
-            ) : profile ? (
-              <ProfileAccountForm
-                userId={user.id}
-                profile={profile}
-                userEmail={userEmail}
-                onSaved={setProfile}
-              />
-            ) : (
-              <p className="text-sm text-slate-600">
-                No profile found. Try signing in again, or contact support if the problem continues.
-              </p>
-            )}
-            <CourseAccessReset />
-          </div>
+          <button
+            type="button"
+            className="w-full flex items-center justify-between gap-4 card p-5 hover:shadow-md transition text-left"
+            onClick={toggleAccountSettings}
+            aria-expanded={accountSettingsOpen}
+          >
+            <div>
+              <h2 className="section-title mb-0">Account settings</h2>
+              <p className="text-sm text-slate-500 mt-1">Name, contact info, and course access</p>
+            </div>
+            <span
+              className={`text-slate-400 shrink-0 transition-transform ${accountSettingsOpen ? 'rotate-180' : ''}`}
+              aria-hidden
+            >
+              ▼
+            </span>
+          </button>
+          {accountSettingsOpen ? (
+            <div className="card p-6 mt-3">
+              {profileLoading ? (
+                <p className="text-sm text-slate-500">Loading account info…</p>
+              ) : profile ? (
+                <ProfileAccountForm
+                  userId={user.id}
+                  profile={profile}
+                  userEmail={userEmail}
+                  onSaved={setProfile}
+                />
+              ) : (
+                <p className="text-sm text-slate-600">
+                  No profile found. Try signing in again, or contact support if the problem continues.
+                </p>
+              )}
+              <CourseAccessReset />
+            </div>
+          ) : null}
         </section>
       )}
 
