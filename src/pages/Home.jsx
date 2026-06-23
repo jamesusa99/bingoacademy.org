@@ -16,7 +16,7 @@ import {
   PORTAL_TRUST_STATS_FALLBACK,
   PORTAL_TESTIMONIALS_FALLBACK,
 } from '../config/homePortal'
-import { lineIdFromHref } from '../config/productLineVisibility'
+import { lineIdFromHref, adaptiveCountGridClass, productLineSectionTitle } from '../config/productLineVisibility'
 import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 
 const ACCENT_RING = {
@@ -108,18 +108,11 @@ export default function Home() {
 
         {visibleProductLines.length > 0 ? (
         <section className="mb-14">
-          <h2 className="section-title mb-1">Three Product Lines</h2>
+          <h2 className="section-title mb-1">{productLineSectionTitle(visibleProductLines.length)}</h2>
           <p className="text-slate-500 text-sm mb-6">Choose the path that fits your learning goal</p>
-          <div className="hidden md:grid md:grid-cols-3 gap-5">
+          <div className={adaptiveCountGridClass(visibleProductLines.length)}>
             {visibleProductLines.map((line) => (
               <ProductLineCard key={line.id} line={line} />
-            ))}
-          </div>
-          <div className="md:hidden scroll-strip">
-            {visibleProductLines.map((line) => (
-              <div key={line.id} className="w-[min(85vw,320px)]">
-                <ProductLineCard line={line} compact />
-              </div>
             ))}
           </div>
         </section>
@@ -139,7 +132,7 @@ export default function Home() {
             </Link>
             ) : null}
           </div>
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className={adaptiveCountGridClass(competitions.length)}>
             {competitions.map((c) => (
               <Link key={c.name} to={c.to} className="card p-5 hover:shadow-md hover:border-amber-200/80 transition group">
                 <div className="flex items-start justify-between gap-2 mb-3">

@@ -41,3 +41,32 @@ export function lineIdFromBannerSlide(slide) {
   if (slide?.id && PRODUCT_LINE_IDS.includes(slide.id)) return slide.id
   return lineIdFromHref(slide?.href)
 }
+
+/** Grid layout for 1–3 visible product-line cards (centered, responsive). */
+export function adaptiveCountGridClass(count) {
+  const n = Math.min(Math.max(count, 1), 3)
+  if (n === 1) return 'grid grid-cols-1 gap-4 sm:gap-5 max-w-md mx-auto w-full'
+  if (n === 2) return 'grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 max-w-3xl mx-auto w-full'
+  return 'grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto w-full'
+}
+
+export function productLineSectionTitle(count) {
+  if (count === 1) return 'Our Product Line'
+  if (count === 2) return 'Two Product Lines'
+  return 'Three Product Lines'
+}
+
+export function heroPathsSubtitle(programs) {
+  const n = programs?.length ?? 0
+  if (n === 0) return 'Explore courses, labs, and certification.'
+  if (n === 1) {
+    const p = programs[0]
+    return p.audience || `Explore ${p.shortTitle || p.title}.`
+  }
+  if (n === 2) {
+    const a = programs[0].shortTitle || programs[0].title
+    const b = programs[1].shortTitle || programs[1].title
+    return `${a} or ${b} — pick your path.`
+  }
+  return 'Three clear paths — IOAI competition training, self-study literacy or K12 classroom delivery.'
+}

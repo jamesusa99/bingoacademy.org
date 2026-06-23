@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { programPath } from '../../config/programs'
+import { adaptiveCountGridClass, heroPathsSubtitle } from '../../config/productLineVisibility'
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
 import HomeUserEntry from './HomeUserEntry'
 
@@ -28,6 +29,8 @@ function PathCard({ program }) {
 
 export default function HomeHero() {
   const { visiblePrograms } = useProductLineVisibility()
+  const programCount = visiblePrograms.length
+  const gridClass = adaptiveCountGridClass(programCount)
 
   return (
     <section id="get-started" className="relative w-full overflow-hidden border-b border-cyan-500/10 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
@@ -38,15 +41,17 @@ export default function HomeHero() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-4">Learn AI by Doing</h1>
           <p className="text-lg sm:text-xl text-slate-300 font-medium">From Curiosity to Certified Outcomes</p>
           <p className="text-sm text-slate-400 mt-3 max-w-xl mx-auto">
-            Three clear paths — IOAI competition training, self-study literacy or K12 classroom delivery.
+            {heroPathsSubtitle(visiblePrograms)}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto">
+        {programCount > 0 ? (
+        <div className={gridClass}>
           {visiblePrograms.map((p) => (
             <PathCard key={p.slug} program={p} />
           ))}
         </div>
+        ) : null}
 
         <div className="mt-8 sm:mt-10">
           <HomeUserEntry />
