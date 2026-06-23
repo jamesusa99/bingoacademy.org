@@ -1,4 +1,13 @@
-import { lineFromProgramSlug } from './programs'
+/** URL slug ↔ courses `line` query param (duplicated from programs.js for Node-safe imports) */
+const PROGRAM_SLUG_TO_LINE = {
+  foundations: 'general',
+  ioai: 'ioai',
+  k12: 'k12',
+}
+
+function lineFromProgramSlug(slug) {
+  return PROGRAM_SLUG_TO_LINE[slug] || 'ioai'
+}
 
 export const PRODUCT_LINE_VISIBILITY_KEY = 'product_lines'
 
