@@ -1,6 +1,7 @@
 import { getSupabaseAdmin, getSupabaseConfig } from '../lib/supabaseAdmin.mjs'
 import { grantCourseEntitlements } from '../lib/courseEntitlements.mjs'
 import { notifyCheckoutEntitlements, notifyOrderPaid } from '../lib/userNotifications.mjs'
+import { notifyPurchaseAccomplishments } from '../lib/userAccomplishments.mjs'
 import { parseAddonSlugs } from '../lib/ioaiCommerce.mjs'
 import {
   STREAM_DEFAULT_MAX_DURATION_SECONDS,
@@ -214,5 +215,13 @@ export async function upsertOrderFromStripe(session) {
         grantedSlugs: granted,
       })
     }
+
+    await notifyPurchaseAccomplishments(admin, {
+      userId,
+      orderId: orderRow?.id,
+      productName,
+      purchaseType,
+      courseSlug: metadata.course_slug,
+    })
   }
 }

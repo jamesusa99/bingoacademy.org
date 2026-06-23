@@ -13,8 +13,15 @@ import {
 import ProfileAccountForm from '../components/ProfileAccountForm'
 import ProfileLabPacksSection from '../components/profile/ProfileLabPacksSection'
 import ProfileNotificationsSection from '../components/profile/ProfileNotificationsSection'
+import ProfileCertificatesSection from '../components/profile/ProfileCertificatesSection'
+import ProfileAchievementsSection from '../components/profile/ProfileAchievementsSection'
 import CourseAccessReset from '../components/CourseAccessReset'
 import { fetchMyOrders } from '../lib/checkout'
+import {
+  fetchMyCertificates,
+  fetchMyAchievements,
+  syncLocalAccomplishments,
+} from '../lib/userAccomplishments'
 import { fetchMyNotifications, isNotificationUnread } from '../lib/userNotifications'
 import { formatIoaiPrice } from '../lib/ioaiStore'
 
@@ -343,6 +350,12 @@ export default function Profile() {
   const [notifications, setNotifications] = useState([])
   const [notificationsLoading, setNotificationsLoading] = useState(true)
   const [notificationsError, setNotificationsError] = useState('')
+  const [certificates, setCertificates] = useState([])
+  const [certificatesLoading, setCertificatesLoading] = useState(true)
+  const [certificatesError, setCertificatesError] = useState('')
+  const [achievements, setAchievements] = useState([])
+  const [achievementsLoading, setAchievementsLoading] = useState(true)
+  const [achievementsError, setAchievementsError] = useState('')
 
   useEffect(() => {
     if (!user?.id) {
@@ -438,6 +451,57 @@ export default function Profile() {
     }
   }, [isAuthenticated, loadNotifications])
 
+  const loadAccomplishments = useCallback(async () => {
+    if (!user?.id) {
+      setCertificates([])
+      setAchievements([])
+      setCertificatesLoading(false)
+      setAchievementsLoading(false)
+      return
+    }
+
+    setCertificatesLoading(true)
+    setAchievementsLoading(true)
+    setCertificatesError('')
+    setAchievementsError('')
+
+    await syncLocalAccomplishments(user.id)
+
+    const [certResult, achResult] = await Promise.all([
+      fetchMyCertificates(user.id),
+      fetchMyAchievements(user.id),
+    ])
+
+    if (certResult.error) {
+      setCertificatesError(certResult.error.message || 'Failed to load certificates')
+      setCertificates([])
+    } else {
+      setCertificates(certResult.data || [])
+    }
+
+    if (achResult.error) {
+      setAchievementsError(achResult.error.message || 'Failed to load achievements')
+      setAchievements([])
+    } else {
+      setAchievements(achResult.data || [])
+    }
+
+    setCertificatesLoading(false)
+    setAchievementsLoading(false)
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setCertificates([])
+      setAchievements([])
+      setCertificatesLoading(false)
+      setAchievementsLoading(false)
+      return
+    }
+
+    loadAccomplishments()
+  }, [isAuthenticated, loadAccomplishments])
+
   const unreadNotificationCount = notifications.filter((n) => isNotificationUnread(n)).length
 
   const toggleAccountSettings = useCallback(() => {
@@ -459,11 +523,11 @@ export default function Profile() {
       const timer = window.setTimeout(() => scrollToProfileSection('settings'), 80)
       return () => window.clearTimeout(timer)
     }
-    if (hash === 'orders' || hash === 'notifications') {
+    if (hash === 'orders' || hash === 'notifications' || hash === 'certificates' || hash === 'achievements') {
       const timer = window.setTimeout(() => scrollToProfileSection(hash), 80)
       return () => window.clearTimeout(timer)
     }
-  }, [location.hash, view, authLoading, isAuthenticated, profileLoading, ordersLoading, notificationsLoading])
+  }, [location.hash, view, authLoading, isAuthenticated, profileLoading, ordersLoading, notificationsLoading, certificatesLoading, achievementsLoading])
 
   if (authLoading) {
     return (
@@ -490,16 +554,16 @@ export default function Profile() {
     { to: '/profile/study', icon: '📚', label: 'My Courses', share: false },
     { to: '/profile/works', icon: '🎨', label: 'My Works', share: true },
     { to: '/profile#orders', icon: '📦', label: 'My Orders', share: true },
-    { to: '/profile#cert', icon: '📜', label: 'My Certificates', share: true },
-    { to: '/showcase', icon: '🏅', label: 'My Achievements', share: true },
+    { to: '/profile#certificates', icon: '📜', label: 'My Certificates', share: true },
+    { to: '/profile#achievements', icon: '🏅', label: 'My Achievements', share: true },
     { to: '/profile#notifications', icon: '🔔', label: 'Notifications', share: false, badge: unreadNotificationCount },
   ]
 
   const dataCards = [
     { label: 'Course hours', value: '128', unit: 'hrs', shareModule: null },
     { label: 'Events joined', value: '6', unit: '', shareModule: 'My Events' },
-    { label: 'Awards / works', value: '3', unit: '', shareModule: 'My Works' },
-    { label: 'Certificates', value: '2', unit: '', shareModule: 'My Certificates' },
+    { label: 'Awards / works', value: String(achievements.length), unit: '', shareModule: 'My Works' },
+    { label: 'Certificates', value: String(certificates.length), unit: '', shareModule: 'My Certificates' },
     { label: 'Capability profile', value: 'Level 3', unit: '', shareModule: 'Capability Profile' },
     { label: 'Orders', value: String(orders.length), unit: '', shareModule: 'My Orders' },
     { label: 'Teaching kit stock', value: '2', unit: 'items', shareModule: null },
@@ -750,6 +814,24 @@ export default function Profile() {
       {/* ── My Orders ─────────────────────────────────────────────── */}
       {view === 'home' && (
         <ProfileOrdersSection orders={orders} loading={ordersLoading} error={ordersError} />
+      )}
+
+      {/* ── My Certificates ───────────────────────────────────────── */}
+      {view === 'home' && (
+        <ProfileCertificatesSection
+          certificates={certificates}
+          loading={certificatesLoading}
+          error={certificatesError}
+        />
+      )}
+
+      {/* ── My Achievements ───────────────────────────────────────── */}
+      {view === 'home' && (
+        <ProfileAchievementsSection
+          achievements={achievements}
+          loading={achievementsLoading}
+          error={achievementsError}
+        />
       )}
 
       {/* ── Account settings (collapsible) ─────────────────────────── */}

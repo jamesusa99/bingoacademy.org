@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getQuestionsForPaper, getResult } from '../../data/assessmentQuestionBanks'
 import { saveAssessmentRecord } from '../../lib/assessmentRecords'
+import { recordAssessmentAccomplishments } from '../../lib/userAccomplishments'
+import { useAuth } from '../../contexts/AuthContext'
 import { ASSESSMENT_PORTAL } from '../../config/assessmentPortal'
 
 function Results({ score, total, result, paper, onBack }) {
+  const { user } = useAuth()
+
   useEffect(() => {
-    saveAssessmentRecord({
+    const record = {
       id: `${paper.id}-${Date.now()}`,
       assessmentId: paper.id,
       title: paper.title,
@@ -15,8 +19,12 @@ function Results({ score, total, result, paper, onBack }) {
       score,
       total,
       at: Date.now(),
-    })
-  }, [paper.id, paper.title, result.pct, result.level, score, total])
+    }
+    saveAssessmentRecord(record)
+    if (user?.id) {
+      recordAssessmentAccomplishments(user.id, record)
+    }
+  }, [paper.id, paper.title, result.pct, result.level, score, total, user?.id])
 
   return (
     <div className="max-w-3xl mx-auto">
