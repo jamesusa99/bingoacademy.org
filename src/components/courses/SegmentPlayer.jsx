@@ -273,8 +273,8 @@ export default function SegmentPlayer({
   const duration = preview.duration
 
   return (
-    <section className="segment-player mb-6">
-      <div className="rounded-2xl overflow-hidden border border-slate-700 bg-slate-900 shadow-2xl">
+    <section className="segment-player mb-6 min-w-0">
+      <div className="rounded-2xl overflow-x-hidden border border-slate-700 bg-slate-900 shadow-2xl min-w-0">
         <div className="px-4 pt-4 pb-3 border-b border-slate-800 bg-slate-900/95">
           <SegmentStepper
             currentIndex={segmentIndex}

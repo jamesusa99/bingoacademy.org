@@ -405,7 +405,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
 
           {showSegmentLearning ? (
             <div className="grid lg:grid-cols-5 gap-6 mb-6">
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-3 min-w-0">
                 <SegmentPlayer
                   course={displayCourse || item}
                   hasAccess={effectiveHasAccess}

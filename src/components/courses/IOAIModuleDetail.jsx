@@ -403,6 +403,7 @@ export default function IOAIModuleDetail({
                   price_cents: item.priceCents,
                   purchasable: item.purchasable,
                 })
+                const labPackHref = `/labs/pack/${encodeURIComponent(item.slug)}`
                 return (
                   <li key={item.slug} className="card p-4 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex gap-3 min-w-0 flex-1 items-start">
@@ -415,22 +416,29 @@ export default function IOAIModuleDetail({
                           className="mt-1 rounded border-slate-300 text-primary focus:ring-primary/30 shrink-0"
                         />
                       ) : null}
-                      {item.thumbnailUrl ? (
-                        <img
-                          src={item.thumbnailUrl}
-                          alt=""
-                          className="w-12 h-12 rounded-lg object-cover shrink-0"
-                        />
-                      ) : (
-                        <span className="w-12 h-12 rounded-lg bg-primary/10 text-primary text-lg flex items-center justify-center shrink-0">
-                          📦
-                        </span>
-                      )}
+                      <Link to={labPackHref} className="shrink-0 rounded-lg hover:opacity-90 transition">
+                        {item.thumbnailUrl ? (
+                          <img
+                            src={item.thumbnailUrl}
+                            alt=""
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <span className="w-12 h-12 rounded-lg bg-primary/10 text-primary text-lg flex items-center justify-center">
+                            📦
+                          </span>
+                        )}
+                      </Link>
                       <div className="min-w-0">
                         <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
                           {labMaterialTypeLabel(item.sub, 'ioai')}
                         </p>
-                        <p className="font-medium text-sm text-bingo-dark">{item.name}</p>
+                        <Link
+                          to={labPackHref}
+                          className="font-medium text-sm text-bingo-dark hover:text-primary hover:underline"
+                        >
+                          {item.name}
+                        </Link>
                         {item.description ? (
                           <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{item.description}</p>
                         ) : null}
@@ -443,24 +451,30 @@ export default function IOAIModuleDetail({
                         <span className="text-sm font-semibold text-slate-400">—</span>
                       ) : null}
                       {addonOwned ? (
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        <Link
+                          to={labPackHref}
+                          className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition"
+                        >
                           Purchased
-                        </span>
+                        </Link>
                       ) : comingSoon ? (
                         <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
                           {COURSES_PORTAL.comingSoonBadge}
                         </span>
                       ) : standalonePurchasable ? (
                         <Link
-                          to={`/courses/detail/${encodeURIComponent(item.slug)}`}
+                          to={labPackHref}
                           className="text-[10px] font-semibold text-primary hover:underline"
                         >
                           {COURSES_PORTAL.moduleLabBuySeparately}
                         </Link>
                       ) : (
-                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                        <Link
+                          to={labPackHref}
+                          className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full hover:bg-primary/20 transition"
+                        >
                           {COURSES_PORTAL.moduleLabIncluded}
-                        </span>
+                        </Link>
                       )}
                     </div>
                   </li>

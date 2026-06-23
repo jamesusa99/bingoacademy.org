@@ -16,10 +16,15 @@ export default function RichHtmlContent({ html, className = '', theme = 'dark' }
       ? 'prose prose-sm max-w-none text-slate-700'
       : 'prose prose-sm prose-invert max-w-none'
 
+  const wrapClass =
+    'min-w-0 max-w-full break-words [overflow-wrap:anywhere] ' +
+    '[&_*]:max-w-full [&_p]:break-words [&_li]:break-words [&_span]:break-words [&_div]:break-words ' +
+    '[&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:break-words [&_code]:whitespace-pre-wrap'
+
   return (
     <div
       ref={ref}
-      className={`${proseClass} ${className}`.trim()}
+      className={`${proseClass} ${wrapClass} ${className}`.trim()}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )

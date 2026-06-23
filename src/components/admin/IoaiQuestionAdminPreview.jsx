@@ -27,7 +27,7 @@ function StaticOptionList({ question, correctAnswer, theme = 'dark' }) {
         return (
           <div
             key={opt.key}
-            className={`flex items-start gap-3 p-3 rounded-xl border ${
+            className={`flex items-start gap-3 p-3 rounded-xl border w-full min-w-0 ${
               isCorrect
                 ? 'border-emerald-500 bg-emerald-500/10'
                 : isLight
@@ -40,9 +40,13 @@ function StaticOptionList({ question, correctAnswer, theme = 'dark' }) {
                 isCorrect ? 'border-emerald-500 bg-emerald-500' : isLight ? 'border-slate-300' : 'border-slate-600'
               }`}
             />
-            <div className={`text-sm ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+            <div
+              className={`min-w-0 flex-1 text-sm break-words [overflow-wrap:anywhere] ${
+                isLight ? 'text-slate-700' : 'text-slate-200'
+              }`}
+            >
               <span className="font-semibold mr-2">{opt.key}.</span>
-              <RichHtmlContent html={opt.html} theme={theme} />
+              <RichHtmlContent html={opt.html} theme={theme} className="inline-block w-full" />
             </div>
           </div>
         )

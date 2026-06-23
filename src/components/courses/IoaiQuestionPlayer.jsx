@@ -31,7 +31,7 @@ export function OptionList({ question, value, onChange, disabled, reveal, correc
         return (
           <label
             key={key}
-            className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
+            className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition w-full min-w-0 ${
               isSelected
                 ? isLight
                   ? 'border-primary bg-primary/5'
@@ -55,11 +55,15 @@ export function OptionList({ question, value, onChange, disabled, reveal, correc
                   onChange(key)
                 }
               }}
-              className="mt-1"
+              className="mt-1 shrink-0"
             />
-            <div className={`text-sm ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+            <div
+              className={`min-w-0 flex-1 text-sm break-words [overflow-wrap:anywhere] ${
+                isLight ? 'text-slate-700' : 'text-slate-200'
+              }`}
+            >
               <span className="font-semibold mr-2">{key}.</span>
-              <RichHtmlContent html={opt.html} theme={theme} />
+              <RichHtmlContent html={opt.html} theme={theme} className="inline-block w-full" />
             </div>
           </label>
         )
@@ -116,13 +120,13 @@ export function IoaiLessonExerciseForm({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       {questions.map((q, index) => (
-        <article key={q.id} className="rounded-xl border border-slate-700 bg-slate-800/30 p-5 space-y-4">
+        <article key={q.id} className="rounded-xl border border-slate-700 bg-slate-800/30 p-5 space-y-4 min-w-0">
           <p className="text-xs text-slate-400">
             {COURSES_PORTAL.classExercisesQuestionPoints(index + 1, q.score)}
           </p>
-          <RichHtmlContent html={q.stemHtml} />
+          <RichHtmlContent html={q.stemHtml} className="w-full" />
           <OptionList
             question={q}
             value={answers[q.id]}
@@ -188,10 +192,10 @@ export function IoaiQuestionCard({
   }
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-800/30 p-5 space-y-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-800/30 p-5 space-y-4 min-w-0">
       <div>
         <p className="text-xs text-slate-400 mb-1">{COURSES_PORTAL.classExercisesPointsLabel(question.score)}</p>
-        <RichHtmlContent html={question.stemHtml} />
+        <RichHtmlContent html={question.stemHtml} className="w-full" />
       </div>
       <OptionList
         question={question}
@@ -271,11 +275,11 @@ export function IoaiModuleTestForm({ questions, locked, onSubmit, submitting = f
   return (
     <div className="space-y-6">
       {questions.map((q, index) => (
-        <div key={q.id} className="card p-5 space-y-3">
+        <div key={q.id} className="card p-5 space-y-3 min-w-0">
           <p className="text-xs text-slate-500">
             {COURSES_PORTAL.classExercisesQuestionPoints(index + 1, q.score)}
           </p>
-          <RichHtmlContent html={q.stemHtml} theme="light" />
+          <RichHtmlContent html={q.stemHtml} theme="light" className="w-full" />
           <OptionList
             question={q}
             value={answers[q.id]}

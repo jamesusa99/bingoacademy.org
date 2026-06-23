@@ -93,7 +93,7 @@ export default function LessonExerciseSegment({
   }
 
   return (
-    <div className="p-6 sm:p-8 space-y-6">
+    <div className="p-6 sm:p-8 space-y-6 min-w-0">
       <div>
         <p className="text-xs font-bold uppercase tracking-wide text-amber-400 mb-1">
           {COURSES_PORTAL.classExercises}

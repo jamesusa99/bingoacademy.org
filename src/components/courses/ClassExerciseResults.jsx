@@ -234,8 +234,8 @@ export default function ClassExerciseResults({
                   </button>
 
                   {open ? (
-                    <div className="px-4 pb-4 pt-0 space-y-4 border-t border-slate-100">
-                      <RichHtmlContent html={q.stemHtml} theme="light" />
+                    <div className="px-4 pb-4 pt-0 space-y-4 border-t border-slate-100 min-w-0">
+                      <RichHtmlContent html={q.stemHtml} theme="light" className="w-full" />
                       <OptionList
                         question={q}
                         value={userAnswer}
