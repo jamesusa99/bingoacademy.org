@@ -206,7 +206,9 @@ function LayoutShell({ children }) {
               <Link to="/courses" className="block hover:text-white">Courses</Link>
               <Link to="/labs" className="block hover:text-white">Labs & kits</Link>
               <Link to="/exploration" className="block hover:text-white">AI Exploration (free games)</Link>
-              <Link to="/compare" className="block hover:text-white">Compare Programs</Link>
+              {visiblePrograms.length > 1 ? (
+                <Link to="/compare" className="block hover:text-white">Compare Programs</Link>
+              ) : null}
               <Link to="/showcase" className="block hover:text-white">Achievements</Link>
               <Link to="/cert" className="block hover:text-white">Certification</Link>
               <Link to="/mall" className="block hover:text-white">AI Mall</Link>

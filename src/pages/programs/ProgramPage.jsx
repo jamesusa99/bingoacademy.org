@@ -1,4 +1,3 @@
-import { useEffect, useState, useMemo } from 'react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import PageMeta from '../../components/PageMeta'
 import PageContent from '../../components/PageContent'
@@ -37,7 +36,9 @@ function LearningPath({ steps }) {
 
 export default function ProgramPage() {
   const { slug } = useParams()
-  const { isLineVisible, defaultLineId } = useProductLineVisibility()
+  const { isLineVisible, defaultLineId, visiblePrograms } = useProductLineVisibility()
+  const { courses } = useCourseCatalog()
+  const showCompare = visiblePrograms.length > 1
 
   if (!PROGRAM_SLUG_TO_LINE[slug]) {
     return <Navigate to="/courses" replace />
@@ -51,8 +52,9 @@ export default function ProgramPage() {
   const program = getProgram(slug)
   const line = getProductLine(program.lineId)
   const modules = programModules(slug)
-  const { courses } = useCourseCatalog()
   const seo = PAGE_SEO[slug] || PAGE_SEO.courses
+  const secondaryHref = program.secondaryHref || '/compare'
+  const secondaryIsCompare = secondaryHref === '/compare'
 
   const moduleCounts = Object.fromEntries(
     modules.map((m) => [m.id, courses.filter((c) => c.line === program.lineId && c.sub === m.id).length])
@@ -75,12 +77,14 @@ export default function ProgramPage() {
                 <Link to={coursesPathForProgram(slug)} className="btn-primary px-5 py-2.5 text-sm min-h-[44px]">
                   {program.cta}
                 </Link>
-                <Link
-                  to={program.secondaryHref || '/compare'}
-                  className="px-5 py-2.5 text-sm rounded-xl border border-slate-300 text-slate-700 hover:bg-white/80 transition min-h-[44px] inline-flex items-center"
-                >
-                  {program.ctaSecondary}
-                </Link>
+                {showCompare || !secondaryIsCompare ? (
+                  <Link
+                    to={secondaryHref}
+                    className="px-5 py-2.5 text-sm rounded-xl border border-slate-300 text-slate-700 hover:bg-white/80 transition min-h-[44px] inline-flex items-center"
+                  >
+                    {program.ctaSecondary}
+                  </Link>
+                ) : null}
               </div>
             </div>
           </div>
@@ -126,6 +130,7 @@ export default function ProgramPage() {
           </div>
         </section>
 
+        {showCompare ? (
         <section className="card p-6 sm:p-8 bg-slate-50 text-center">
           <h2 className="font-bold text-bingo-dark mb-2">Not sure this is the right fit?</h2>
           <p className="text-sm text-slate-600 mb-4">Compare Foundations, IOAI, and K12 side by side.</p>
@@ -133,6 +138,7 @@ export default function ProgramPage() {
             Compare programs →
           </Link>
         </section>
+        ) : null}
       </PageContent>
     </div>
   )

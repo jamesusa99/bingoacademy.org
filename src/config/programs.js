@@ -48,10 +48,10 @@ export const PROGRAMS = [
     heroBody:
       'Video courses and intensive training camps aligned to IOAI whitelist formats — from first concepts to mock assessments.',
     learningPath: [
-      { icon: '🎬', label: 'Competition videos' },
-      { icon: '🏕️', label: 'Training lab' },
-      { icon: '🏆', label: 'Mock events' },
-      { icon: '📜', label: 'Competition cert' },
+      { icon: '🎬', label: 'Competition Course' },
+      { icon: '🏕️', label: 'Training Lab' },
+      { icon: '🏆', label: 'Mock Events' },
+      { icon: '📜', label: 'Competition Cert' },
     ],
   },
   {
