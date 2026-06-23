@@ -195,32 +195,6 @@ export default function Study() {
         )}
       </section>
 
-      <section className="mb-10">
-        <h2 className="section-title">Features</h2>
-        <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <li className="card p-5">
-            <span className="font-semibold text-primary">Playback</span>
-            <p className="text-sm text-slate-600 mt-1">Video/live replay, resume from last position</p>
-          </li>
-          <li className="card p-5">
-            <span className="font-semibold text-primary">Speed</span>
-            <p className="text-sm text-slate-600 mt-1">0.75x–2x playback</p>
-          </li>
-          <li className="card p-5">
-            <span className="font-semibold text-primary">Notes</span>
-            <p className="text-sm text-slate-600 mt-1">Take notes during lessons; export and review</p>
-          </li>
-          <li className="card p-5">
-            <span className="font-semibold text-primary">Q&A</span>
-            <p className="text-sm text-slate-600 mt-1">Ask questions; mentor/TA answers</p>
-          </li>
-          <li className="card p-5">
-            <span className="font-semibold text-primary">Assignments</span>
-            <p className="text-sm text-slate-600 mt-1">Submit online; grading and feedback</p>
-          </li>
-        </ul>
-      </section>
-
       <div className="flex flex-wrap gap-3">
         <Link to="/courses" className="btn-primary">Browse Courses</Link>
         <Link to="/profile" className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">

@@ -4,7 +4,8 @@ import { CheckCircle2, Circle, PlayCircle, ChevronDown, ChevronRight, Lock } fro
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { getLessonProgress } from '../../lib/learningProgress'
 import { hasCourseAccess } from '../../lib/courseAccess'
-import { hasIoaiLessonAccess } from '../../lib/ioaiAccess'
+import { hasIoaiLessonAccess, hasIoaiModuleAccess } from '../../lib/ioaiAccess'
+import { buildModuleCatalogSlug } from '../../lib/ioaiStore'
 import { studyLessonPath } from '../../lib/studyPaths'
 
 function resolveLessonHasAccess(lesson, purchasedSlugs, ioaiAccess) {
@@ -32,7 +33,18 @@ function LessonStatusIcon({ lessonId, activeLessonId, hasAccess }) {
   return <Circle className="w-4 h-4 text-slate-300 shrink-0" aria-hidden />
 }
 
-function LessonUnlockedBadge() {
+function resolveModuleHasAccess(module, purchasedSlugs, ioaiAccess) {
+  const catalogSlug = buildModuleCatalogSlug(module.levelId, module.themeId, module.id)
+  if (catalogSlug && ioaiAccess) {
+    return hasIoaiModuleAccess(catalogSlug, {
+      moduleSlugs: ioaiAccess.moduleSlugs,
+      enrolledSlugs: ioaiAccess.enrolledSlugs,
+    })
+  }
+  return module.lessons.some((lesson) => resolveLessonHasAccess(lesson, purchasedSlugs, ioaiAccess))
+}
+
+function UnlockedBadge() {
   return (
     <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
       {COURSES_PORTAL.moduleUnlocked}
@@ -61,7 +73,6 @@ function LessonRow({ lesson, activeLessonId, purchasedSlugs, studyCenter = false
             <span className="text-[10px] text-amber-600 block mt-0.5">In progress</span>
           ) : null}
         </span>
-        <LessonUnlockedBadge />
       </Link>
     )
   }
@@ -77,6 +88,7 @@ function LessonRow({ lesson, activeLessonId, purchasedSlugs, studyCenter = false
 function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen, studyCenter = false, ioaiAccess = null }) {
   const [open, setOpen] = useState(defaultOpen)
   const completedCount = module.lessons.filter((l) => getLessonProgress(l.id).completed).length
+  const moduleUnlocked = resolveModuleHasAccess(module, purchasedSlugs, ioaiAccess)
 
   if (!module.lessons.length) return null
 
@@ -95,6 +107,7 @@ function ModuleSection({ module, activeLessonId, purchasedSlugs, defaultOpen, st
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-bingo-dark truncate">{module.title}</p>
         </div>
+        {moduleUnlocked ? <UnlockedBadge /> : null}
         <span className="text-[10px] text-slate-500 shrink-0">
           {completedCount}/{module.lessons.length}
         </span>
