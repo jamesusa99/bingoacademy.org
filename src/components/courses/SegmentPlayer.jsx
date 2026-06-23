@@ -455,7 +455,9 @@ export default function SegmentPlayer({
         {currentSegment?.type === 'checkpoint' && hasExercises ? (
           <LessonExerciseSegment
             lessonRef={course.id}
+            lessonTitle={course.nameEn || course.name}
             hasAccess={hasAccess}
+            onBackToVideo={() => goToSegment(1)}
             onAllComplete={() => {
               completeSegment('checkpoint')
               goNextSegment()

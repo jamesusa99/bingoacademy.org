@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { fetchLessonExercises, submitLessonExercises } from '../../lib/ioaiQuestionsApi'
 import { IoaiLessonExerciseForm } from './IoaiQuestionPlayer'
+import ClassExerciseResults from './ClassExerciseResults'
 
 export function useLessonExerciseCount(lessonRef) {
   const [count, setCount] = useState(0)
@@ -40,10 +41,17 @@ export function useLessonExerciseCount(lessonRef) {
   return { count, questions, loading, hasExercises: count > 0 }
 }
 
-export default function LessonExerciseSegment({ lessonRef, hasAccess, onAllComplete }) {
+export default function LessonExerciseSegment({
+  lessonRef,
+  lessonTitle = '',
+  hasAccess,
+  onAllComplete,
+  onBackToVideo,
+}) {
   const { questions, loading, hasExercises } = useLessonExerciseCount(lessonRef)
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [submitResult, setSubmitResult] = useState(null)
+  const [userAnswers, setUserAnswers] = useState(null)
 
   if (loading) {
     return <div className="p-8 text-center text-slate-400 text-sm">Loading exercises…</div>
@@ -60,10 +68,28 @@ export default function LessonExerciseSegment({ lessonRef, hasAccess, onAllCompl
     }
   }
 
-  const handleComplete = () => {
-    if (submitted) return
-    setSubmitted(true)
-    onAllComplete?.()
+  const handleSubmitted = (answers, graded) => {
+    setUserAnswers(answers)
+    setSubmitResult(graded)
+  }
+
+  const handleRetry = () => {
+    setSubmitResult(null)
+    setUserAnswers(null)
+  }
+
+  if (submitResult && userAnswers) {
+    return (
+      <ClassExerciseResults
+        questions={questions}
+        answers={userAnswers}
+        result={submitResult}
+        lessonTitle={lessonTitle}
+        onRetry={handleRetry}
+        onFinish={() => onAllComplete?.()}
+        onBackToLesson={onBackToVideo}
+      />
+    )
   }
 
   return (
@@ -81,7 +107,7 @@ export default function LessonExerciseSegment({ lessonRef, hasAccess, onAllCompl
         locked={!hasAccess}
         submitting={submitting}
         onSubmit={handleSubmit}
-        onComplete={handleComplete}
+        onSubmitted={handleSubmitted}
       />
     </div>
   )
