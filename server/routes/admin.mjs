@@ -1,5 +1,6 @@
 import { getSupabaseAdmin, getSupabaseConfig } from '../lib/supabaseAdmin.mjs'
 import { grantCourseEntitlements } from '../lib/courseEntitlements.mjs'
+import { notifyCheckoutEntitlements, notifyOrderPaid } from '../lib/userNotifications.mjs'
 import { parseAddonSlugs } from '../lib/ioaiCommerce.mjs'
 import {
   STREAM_DEFAULT_MAX_DURATION_SECONDS,
@@ -187,12 +188,31 @@ export async function upsertOrderFromStripe(session) {
   if (session.payment_status === 'paid' && userId) {
     const purchaseType = metadata.purchase_type || 'course'
     const addonSlugs = parseAddonSlugs(metadata.addon_slugs)
-    await grantCourseEntitlements(admin, {
+    const productName = metadata.product_name || session.line_items?.data?.[0]?.description
+
+    await notifyOrderPaid(admin, {
+      userId,
+      orderId: orderRow?.id,
+      productName,
+      amountCents: amount,
+      currency,
+    })
+
+    const { granted } = await grantCourseEntitlements(admin, {
       userId,
       purchaseType,
       courseSlug: metadata.course_slug,
       addonSlugs,
       orderId: orderRow?.id ?? null,
     })
+
+    if (granted?.length) {
+      await notifyCheckoutEntitlements(admin, {
+        userId,
+        orderId: orderRow?.id,
+        productName,
+        grantedSlugs: granted,
+      })
+    }
   }
 }

@@ -12,8 +12,10 @@ import {
 } from '../lib/userProfile'
 import ProfileAccountForm from '../components/ProfileAccountForm'
 import ProfileLabPacksSection from '../components/profile/ProfileLabPacksSection'
+import ProfileNotificationsSection from '../components/profile/ProfileNotificationsSection'
 import CourseAccessReset from '../components/CourseAccessReset'
 import { fetchMyOrders } from '../lib/checkout'
+import { fetchMyNotifications, isNotificationUnread } from '../lib/userNotifications'
 import { formatIoaiPrice } from '../lib/ioaiStore'
 
 // ─── Member tier data ──────────────────────────────────────────────
@@ -339,6 +341,9 @@ export default function Profile() {
   const [orders, setOrders] = useState([])
   const [ordersLoading, setOrdersLoading] = useState(true)
   const [ordersError, setOrdersError] = useState('')
+  const [notifications, setNotifications] = useState([])
+  const [notificationsLoading, setNotificationsLoading] = useState(true)
+  const [notificationsError, setNotificationsError] = useState('')
 
   useEffect(() => {
     if (!user?.id) {
@@ -393,6 +398,49 @@ export default function Profile() {
     }
   }, [isAuthenticated, user?.id])
 
+  const loadNotifications = useCallback(() => {
+    if (!user?.id) {
+      setNotifications([])
+      setNotificationsLoading(false)
+      return Promise.resolve()
+    }
+
+    setNotificationsLoading(true)
+    setNotificationsError('')
+
+    return fetchMyNotifications(user.id)
+      .then(({ data, error }) => {
+        if (error) {
+          setNotificationsError(error.message || 'Failed to load notifications')
+          setNotifications([])
+        } else {
+          setNotifications(data || [])
+        }
+      })
+      .finally(() => {
+        setNotificationsLoading(false)
+      })
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setNotifications([])
+      setNotificationsLoading(false)
+      return
+    }
+
+    let mounted = true
+    loadNotifications().then(() => {
+      if (!mounted) return
+    })
+
+    return () => {
+      mounted = false
+    }
+  }, [isAuthenticated, loadNotifications])
+
+  const unreadNotificationCount = notifications.filter((n) => isNotificationUnread(n)).length
+
   const goToSettingsSection = useCallback(
     (e) => {
       e?.preventDefault?.()
@@ -422,7 +470,7 @@ export default function Profile() {
     const hash = location.hash.replace('#', '')
     const sectionId = pendingSettingsScroll.current
       ? 'settings'
-      : hash === 'settings' || hash === 'orders'
+      : hash === 'settings' || hash === 'orders' || hash === 'notifications'
         ? hash
         : null
     if (!sectionId) return
@@ -433,7 +481,7 @@ export default function Profile() {
     }, 80)
 
     return () => window.clearTimeout(timer)
-  }, [location.hash, view, authLoading, isAuthenticated, profileLoading, ordersLoading])
+  }, [location.hash, view, authLoading, isAuthenticated, profileLoading, ordersLoading, notificationsLoading])
 
   if (authLoading) {
     return (
@@ -461,12 +509,9 @@ export default function Profile() {
     { to: '/profile/works', icon: '🎨', label: 'My Works', share: true },
     { to: '/profile#orders', icon: '📦', label: 'My Orders', share: true },
     { to: '/profile#cert', icon: '📜', label: 'My Certificates', share: true },
-    { to: '/cert', icon: '📊', label: 'Certification', share: true },
-    { to: '/showcase', icon: '🏅', label: 'Achievements', share: true },
-    { to: '/mall', icon: '🛒', label: 'AI Mall Orders', share: false },
-    { to: '/profile#messages', icon: '🔔', label: 'Notifications', share: false },
+    { to: '/showcase', icon: '🏅', label: 'My Achievements', share: true },
+    { to: '/profile#notifications', icon: '🔔', label: 'Notifications', share: false, badge: unreadNotificationCount },
     { to: '/profile#settings', icon: '⚙️', label: 'Settings', share: false },
-    { action: () => setView('member'), icon: '👑', label: 'Member Center', share: false },
   ]
 
   const dataCards = [
@@ -568,6 +613,11 @@ export default function Profile() {
                       ↗
                     </button>
                   )}
+                  {item.badge > 0 ? (
+                    <span className="absolute top-2 left-2 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  ) : null}
                   <span className="text-2xl block mb-1">{item.icon}</span>
                   <span className="text-xs font-medium text-bingo-dark">{item.label}</span>
                 </Link>
@@ -614,12 +664,6 @@ export default function Profile() {
       <section className="mb-8">
         <h2 className="section-title mb-4">For you</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="card p-4 border-amber-200/60 bg-amber-50/20">
-            <p className="text-xs font-semibold text-amber-700 mb-1">Member only</p>
-            <p className="font-semibold text-bingo-dark text-sm mb-1">Member course discount · Free competition camp trial</p>
-            <p className="text-xs text-slate-500 mb-2">Unlock with your current plan</p>
-            <button type="button" onClick={() => setView('member')} className="text-xs text-primary font-medium hover:underline">View benefits →</button>
-          </div>
           <div className="card p-4 border-primary/20 bg-primary/5">
             <p className="text-xs font-semibold text-primary mb-1">Hot</p>
             <p className="font-semibold text-bingo-dark text-sm mb-1">Flash sale · Prestigious competition early bird</p>
@@ -750,12 +794,15 @@ export default function Profile() {
         </section>
       )}
 
-      {/* ── Notifications (retained) ──────────────────────────────── */}
+      {/* ── Notifications ─────────────────────────────────────────── */}
       {view === 'home' && (
-        <section className="mb-8">
-          <h2 className="section-title">Notifications</h2>
-          <p className="text-sm text-slate-600">Announcements, activity reminders, Q&A replies, commission updates, referral order alerts</p>
-        </section>
+        <ProfileNotificationsSection
+          notifications={notifications}
+          loading={notificationsLoading}
+          error={notificationsError}
+          userId={user?.id}
+          onRefresh={loadNotifications}
+        />
       )}
 
       {/* ── Bottom quick area ──────────────────────────────────────── */}
