@@ -6,6 +6,7 @@ import {
   rowToQuestionForm,
   sanitizeQuestionForClient,
 } from '../../config/ioaiQuestions'
+import { COURSES_PORTAL } from '../../config/coursesPortal'
 import RichHtmlContent from '../shared/RichHtmlContent'
 
 function StaticOptionList({ question, correctAnswer, theme = 'dark' }) {
@@ -16,7 +17,7 @@ function StaticOptionList({ question, correctAnswer, theme = 'dark' }) {
     <div className="space-y-2 pointer-events-none">
       {isMultiple ? (
         <p className={`text-xs mb-2 ${isLight ? 'text-amber-700' : 'text-amber-300'}`}>
-          本题为多选题，全部选对方可得分
+          {COURSES_PORTAL.classExercisesMultipleHint}
         </p>
       ) : null}
       {question.options.map((opt) => {
@@ -87,7 +88,7 @@ export default function IoaiQuestionAdminPreview({ source, scopeType = 'lesson',
     <div className={shellClass}>
       <div>
         <p className={`text-xs mb-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-          {question.score} 分 · 前台预览
+          {COURSES_PORTAL.classExercisesPointsLabel(question.score)} · Storefront preview
         </p>
         <RichHtmlContent html={question.stemHtml} theme={theme} />
       </div>
@@ -98,7 +99,9 @@ export default function IoaiQuestionAdminPreview({ source, scopeType = 'lesson',
             theme === 'light' ? 'bg-slate-50 text-slate-700' : 'bg-slate-900/50 text-slate-300'
           }`}
         >
-          <p className={`text-xs mb-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>解析</p>
+          <p className={`text-xs mb-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
+            {COURSES_PORTAL.classExercisesExplanation}
+          </p>
           <RichHtmlContent html={explanationHtml} theme={theme} />
         </div>
       ) : null}

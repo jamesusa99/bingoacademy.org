@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { fetchModuleTest, submitModuleTest } from '../../lib/ioaiQuestionsApi'
 import { getTrackProgressStats } from '../../lib/learningProgress'
 import { IoaiModuleTestForm } from './IoaiQuestionPlayer'
@@ -57,13 +58,13 @@ export default function ModuleTestSection({ moduleRef, owned, lessonIds }) {
 
   return (
     <section className="mb-8">
-      <h2 className="text-lg font-bold text-bingo-dark mb-1">模块结业测试</h2>
+      <h2 className="text-lg font-bold text-bingo-dark mb-1">{COURSES_PORTAL.moduleTestTitle}</h2>
       <p className="text-sm text-slate-500 mb-4">
         {unlocked
-          ? '整套试卷统一提交，可重复重测'
+          ? COURSES_PORTAL.moduleTestDescUnlocked
           : !owned
-            ? '购买模块并完成全部课时后可参加结业测试'
-            : `已完成 ${progress.completed}/${progress.total} 课时，完成全部课时后可解锁`}
+            ? COURSES_PORTAL.moduleTestDescLockedPurchase
+            : COURSES_PORTAL.moduleTestDescLockedProgress(progress.completed, progress.total)}
       </p>
       <IoaiModuleTestForm
         questions={questions}

@@ -15,8 +15,8 @@ export const IOAI_QUESTION_STATUS = {
 export const IOAI_OPTION_KEYS = ['A', 'B', 'C', 'D']
 
 export const IOAI_TRUE_FALSE_OPTIONS = [
-  { key: 'A', label: '正确' },
-  { key: 'B', label: '错误' },
+  { key: 'A', label: 'True' },
+  { key: 'B', label: 'False' },
 ]
 
 export function questionTypeLabel(type) {
@@ -123,7 +123,7 @@ export function rowToQuestionForm(row) {
 }
 
 /** Format correct answer for admin list / answer sheet */
-export function formatCorrectAnswer(row, { trueLabel = '正确', falseLabel = '错误' } = {}) {
+export function formatCorrectAnswer(row, { trueLabel = 'True', falseLabel = 'False' } = {}) {
   const c = row.correct_answer
   if (row.question_type === IOAI_QUESTION_TYPES.TRUE_FALSE) {
     return c === 'A' ? `A · ${trueLabel}` : `B · ${falseLabel}`

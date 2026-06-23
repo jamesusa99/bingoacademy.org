@@ -13,7 +13,7 @@ export function OptionList({ question, value, onChange, disabled, reveal, correc
     <div className="space-y-2">
       {isMultiple ? (
         <p className={`text-xs mb-2 ${isLight ? 'text-amber-700' : 'text-amber-300'}`}>
-          本题为多选题，全部选对方可得分
+          {COURSES_PORTAL.classExercisesMultipleHint}
         </p>
       ) : null}
       {question.options.map((opt) => {
@@ -120,7 +120,7 @@ export function IoaiLessonExerciseForm({
       {questions.map((q, index) => (
         <article key={q.id} className="rounded-xl border border-slate-700 bg-slate-800/30 p-5 space-y-4">
           <p className="text-xs text-slate-400">
-            Question {index + 1} · {q.score} pt{q.score === 1 ? '' : 's'}
+            {COURSES_PORTAL.classExercisesQuestionPoints(index + 1, q.score)}
           </p>
           <RichHtmlContent html={q.stemHtml} />
           <OptionList
@@ -190,7 +190,7 @@ export function IoaiQuestionCard({
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-800/30 p-5 space-y-4">
       <div>
-        <p className="text-xs text-slate-400 mb-1">{question.score} 分</p>
+        <p className="text-xs text-slate-400 mb-1">{COURSES_PORTAL.classExercisesPointsLabel(question.score)}</p>
         <RichHtmlContent html={question.stemHtml} />
       </div>
       <OptionList
@@ -204,16 +204,16 @@ export function IoaiQuestionCard({
       {result ? (
         <div className="space-y-2">
           <p className={`text-sm font-medium ${result.correct ? 'text-emerald-400' : 'text-red-400'}`}>
-            {result.correct ? '回答正确' : '回答错误'}
+            {result.correct ? COURSES_PORTAL.classExercisesCorrect : COURSES_PORTAL.classExercisesIncorrect}
           </p>
           {result.explanationHtml ? (
             <div className="text-sm text-slate-300 bg-slate-900/50 rounded-lg p-3">
-              <p className="text-xs text-slate-500 mb-1">解析</p>
+              <p className="text-xs text-slate-500 mb-1">{COURSES_PORTAL.classExercisesExplanation}</p>
               <RichHtmlContent html={result.explanationHtml} />
             </div>
           ) : null}
           <button type="button" onClick={handleReset} className="text-sm text-primary hover:underline">
-            重新作答
+            {COURSES_PORTAL.classExercisesAnswerAgain}
           </button>
         </div>
       ) : (
@@ -223,7 +223,7 @@ export function IoaiQuestionCard({
           onClick={handleSubmit}
           className="btn-primary text-sm px-5 py-2 disabled:opacity-50"
         >
-          {grading ? '提交中…' : '提交答案'}
+          {grading ? COURSES_PORTAL.classExercisesSubmitting : COURSES_PORTAL.classExercisesSubmitAnswer}
         </button>
       )}
     </div>
@@ -239,7 +239,7 @@ export function IoaiModuleTestForm({ questions, locked, onSubmit, submitting = f
     return (
       <div className="card p-6 text-center">
         <Lock className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-        <p className="text-sm text-slate-600">完成模块全部课时并购买模块后，可参加结业测试</p>
+        <p className="text-sm text-slate-600">{COURSES_PORTAL.moduleTestLocked}</p>
       </div>
     )
   }
@@ -247,22 +247,22 @@ export function IoaiModuleTestForm({ questions, locked, onSubmit, submitting = f
   if (result) {
     return (
       <div className="card p-6 space-y-4">
-        <h3 className="font-bold text-bingo-dark text-lg">测试完成</h3>
+        <h3 className="font-bold text-bingo-dark text-lg">{COURSES_PORTAL.moduleTestComplete}</h3>
         <p className="text-primary text-2xl font-bold">
-          {result.score} / {result.totalScore} 分
+          {COURSES_PORTAL.moduleTestScore(result.score, result.totalScore)}
         </p>
         <div className="space-y-3">
           {result.results?.map((r) => (
             <div key={r.questionId} className={`rounded-lg p-3 text-sm ${r.correct ? 'bg-emerald-50' : 'bg-red-50'}`}>
               <p className={r.correct ? 'text-emerald-800' : 'text-red-800'}>
-                {r.correct ? '✓ 正确' : '✗ 错误'}
+                {r.correct ? COURSES_PORTAL.moduleTestResultCorrect : COURSES_PORTAL.moduleTestResultIncorrect}
               </p>
               {r.explanationHtml ? <RichHtmlContent html={r.explanationHtml} theme="light" /> : null}
             </div>
           ))}
         </div>
         <button type="button" onClick={() => { setResult(null); setAnswers({}) }} className="btn-primary text-sm px-4 py-2">
-          重新测试
+          {COURSES_PORTAL.moduleTestRetake}
         </button>
       </div>
     )
@@ -272,7 +272,9 @@ export function IoaiModuleTestForm({ questions, locked, onSubmit, submitting = f
     <div className="space-y-6">
       {questions.map((q, index) => (
         <div key={q.id} className="card p-5 space-y-3">
-          <p className="text-xs text-slate-500">第 {index + 1} 题 · {q.score} 分</p>
+          <p className="text-xs text-slate-500">
+            {COURSES_PORTAL.classExercisesQuestionPoints(index + 1, q.score)}
+          </p>
           <RichHtmlContent html={q.stemHtml} theme="light" />
           <OptionList
             question={q}
@@ -293,7 +295,7 @@ export function IoaiModuleTestForm({ questions, locked, onSubmit, submitting = f
         }}
         className="btn-primary w-full py-3 disabled:opacity-50"
       >
-        {submitting ? '提交中…' : '提交试卷'}
+        {submitting ? COURSES_PORTAL.classExercisesSubmitting : COURSES_PORTAL.moduleTestSubmit}
       </button>
     </div>
   )

@@ -73,6 +73,26 @@ export const COURSES_PORTAL = {
   classExercisesMotivationRetry: 'Mistakes are part of learning — review the explanations and try again.',
   classExercisesBackToLesson: 'Back to lesson',
   classExercisesFinishContinue: 'Finish & continue',
+  classExercisesMultipleHint: 'Multiple choice — select all correct answers to score.',
+  classExercisesQuestionPoints: (index, score) =>
+    `Question ${index} · ${score} pt${score === 1 ? '' : 's'}`,
+  classExercisesPointsLabel: (score) => `${score} pt${score === 1 ? '' : 's'}`,
+  classExercisesSubmitAnswer: 'Submit answer',
+  classExercisesAnswerAgain: 'Try again',
+  moduleTestTitle: 'Module graduation test',
+  moduleTestDescUnlocked: 'Submit the full test at once. You may retake it.',
+  moduleTestDescLockedPurchase:
+    'Purchase this module and complete all lessons to take the graduation test.',
+  moduleTestDescLockedProgress: (completed, total) =>
+    `${completed}/${total} lessons complete — finish all lessons to unlock.`,
+  moduleTestLocked:
+    'Complete all lessons and purchase this module to take the graduation test.',
+  moduleTestComplete: 'Test complete',
+  moduleTestRetake: 'Retake test',
+  moduleTestSubmit: 'Submit test',
+  moduleTestScore: (score, total) => `${score} / ${total} pts`,
+  moduleTestResultCorrect: '✓ Correct',
+  moduleTestResultIncorrect: '✗ Incorrect',
   syllabus: 'Syllabus',
   linkedLabs: 'Optional AI Exploration games',
   linkedLabsDesc: 'Free browser games — optional, not the same as product labs or kits',
