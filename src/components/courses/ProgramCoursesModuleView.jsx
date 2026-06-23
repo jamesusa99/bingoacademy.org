@@ -11,6 +11,7 @@ import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
 import { useAuth } from '../../contexts/AuthContext'
+import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
 import CoursesHero from './CoursesHero'
 import { useCoursesLineHero, buildLineHeroStats } from '../../hooks/useCoursesLineHero'
 import PageMeta from '../PageMeta'
@@ -125,6 +126,7 @@ function ModuleCard({ mod, lineId, hasModule, stripeCheckout, isAuthenticated, n
 export default function ProgramCoursesModuleView({ line }) {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { visibleProductLines } = useProductLineVisibility()
   const lineId = line.id
   const { hero } = useCoursesLineHero(lineId)
   const { levels, fullBundle, loading, error } = useProgramStore(lineId)
@@ -180,7 +182,7 @@ export default function ProgramCoursesModuleView({ line }) {
           </nav>
 
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
-            {PRODUCT_LINES.map((pl) => (
+            {visibleProductLines.map((pl) => (
               <Link
                 key={pl.id}
                 to={`/courses?line=${pl.id}`}

@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { Link, useSearchParams, Navigate } from 'react-router-dom'
 import {
-  PRODUCT_LINES,
   getProductLine,
   subcategoryLabel,
   isCourseComingSoon,
@@ -22,6 +21,7 @@ import { PAGE_SEO } from '../config/programs'
 import { isProductLabSub, labsPath } from '../config/productLabs'
 import { usePurchasedCourses } from '../hooks/usePurchasedCourses'
 import CoursePurchaseButton from '../components/courses/CoursePurchaseButton'
+import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 
 function CourseCard({ item, purchase }) {
   const soon = isCourseComingSoon(item)
@@ -98,8 +98,14 @@ function CourseCard({ item, purchase }) {
 
 export default function Courses() {
   const [params, setParams] = useSearchParams()
-  const lineId = params.get('line') || 'ioai'
+  const { visibleProductLines, isLineVisible, defaultLineId } = useProductLineVisibility()
+  const lineId = params.get('line') || defaultLineId
   const subId = params.get('sub') || ''
+
+  if (!isLineVisible(lineId)) {
+    return <Navigate to={`/courses?line=${defaultLineId}`} replace />
+  }
+
   const line = getProductLine(lineId)
   const videoListMode = isVideoCoursesSub(line.id, subId)
   const { courses, loading: catalogLoading } = useCourseCatalog()
@@ -113,7 +119,7 @@ export default function Courses() {
     return list
   }, [courses, line.id, subId])
 
-  const bannerSlides = PRODUCT_LINES.map((pl) => ({
+  const bannerSlides = visibleProductLines.map((pl) => ({
     id: pl.id,
     gradient: pl.gradient,
     icon: pl.icon,
@@ -235,7 +241,7 @@ export default function Courses() {
           className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
-          {PRODUCT_LINES.map((pl) => (
+          {visibleProductLines.map((pl) => (
             <button
               key={pl.id}
               type="button"

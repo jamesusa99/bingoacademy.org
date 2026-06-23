@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
+import AdminProductLineVisibility from '../../components/admin/AdminProductLineVisibility'
 import { fetchAdminHealth, importSiteData } from '../../lib/admin/api'
 import { isSupabaseConfigured } from '../../lib/supabase'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -80,6 +81,19 @@ export default function AdminSettings() {
           {c.t('pages.settings.apiPlatform', { platform: health.platform })}
         </p>
       ) : null}
+
+      <AdminProductLineVisibility
+        labels={{
+          heading: c.t('pages.settings.productLinesHeading'),
+          desc: c.t('pages.settings.productLinesDesc'),
+          statusVisible: c.t('pages.settings.productLineVisible'),
+          statusHidden: c.t('pages.settings.productLineHidden'),
+          save: c.save,
+          saving: c.saving,
+          saved: c.t('pages.settings.productLinesSaved'),
+          loading: c.loading,
+        }}
+      />
 
       <div className="card p-6 mb-6">
         <h2 className="font-semibold text-bingo-dark mb-4">{c.t('pages.settings.integrationStatus')}</h2>

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { mainNav, authNav } from '../config/nav'
 import { programPath } from '../config/programs'
 import { useAuth } from '../contexts/AuthContext'
+import { ProductLineVisibilityProvider, useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 import { authLink } from '../lib/authRedirect'
 import NavDropdown from './NavDropdown'
 import ChatWidget from './ChatWidget'
@@ -30,9 +31,23 @@ function isNavActive(loc, path) {
 }
 
 export default function Layout({ children }) {
+  return (
+    <ProductLineVisibilityProvider>
+      <LayoutShell>{children}</LayoutShell>
+    </ProductLineVisibilityProvider>
+  )
+}
+
+function LayoutShell({ children }) {
   const loc = useLocation()
   const { isAuthenticated, loading: authLoading, signOut } = useAuth()
+  const { visiblePrograms } = useProductLineVisibility()
   const showGuestNav = !authLoading && !isAuthenticated
+  const visibleProgramPaths = new Set(visiblePrograms.map((p) => programPath(p.slug)))
+  const mobileNavItems = mainNav.filter((item) => {
+    if (item.path.startsWith('/programs/')) return visibleProgramPaths.has(item.path)
+    return true
+  })
 
   const headerAuthLinks = isAuthenticated
     ? [
@@ -124,7 +139,7 @@ export default function Layout({ children }) {
             </div>
           </div>
           <nav className="lg:hidden nav-scroll-mobile pb-2" aria-label="Mobile navigation">
-            {mainNav
+            {mobileNavItems
               .filter(({ path }) => path !== '/profile')
               .map(({ path, label }) => (
               <Link
@@ -198,9 +213,11 @@ export default function Layout({ children }) {
             </div>
             <div>
               <div className="text-white font-medium mb-2">Programs</div>
-              <Link to={programPath('ioai')} className="block hover:text-white">IOAI Competition</Link>
-              <Link to={programPath('foundations')} className="block hover:text-white">Foundations of AI</Link>
-              <Link to={programPath('k12')} className="block hover:text-white">K12 School Edition</Link>
+              {visiblePrograms.map((p) => (
+                <Link key={p.slug} to={programPath(p.slug)} className="block hover:text-white">
+                  {p.title}
+                </Link>
+              ))}
               <Link to="/admin" className="block hover:text-white text-slate-500 mt-2">Admin</Link>
             </div>
           </div>

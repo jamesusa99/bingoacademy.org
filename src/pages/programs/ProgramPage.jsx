@@ -1,3 +1,4 @@
+import { useEffect, useState, useMemo } from 'react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import PageMeta from '../../components/PageMeta'
 import PageContent from '../../components/PageContent'
@@ -7,9 +8,12 @@ import {
   coursesPathForProgram,
   PAGE_SEO,
   PROGRAM_SLUG_TO_LINE,
+  programSlugFromLine,
+  lineFromProgramSlug,
 } from '../../config/programs'
 import { getProductLine } from '../../config/products'
 import { useCourseCatalog } from '../../hooks/useCourseCatalog'
+import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
 
 function LearningPath({ steps }) {
   return (
@@ -33,8 +37,15 @@ function LearningPath({ steps }) {
 
 export default function ProgramPage() {
   const { slug } = useParams()
+  const { isLineVisible, defaultLineId } = useProductLineVisibility()
+
   if (!PROGRAM_SLUG_TO_LINE[slug]) {
     return <Navigate to="/courses" replace />
+  }
+
+  const lineId = lineFromProgramSlug(slug)
+  if (!isLineVisible(lineId)) {
+    return <Navigate to={`/programs/${programSlugFromLine(defaultLineId)}`} replace />
   }
 
   const program = getProgram(slug)

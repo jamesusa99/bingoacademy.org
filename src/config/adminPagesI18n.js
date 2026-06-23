@@ -1387,6 +1387,11 @@ export const adminPagesZh = {
       stripeMissingLocal:
         '本地 API 未检测到 STRIPE_SECRET_KEY。请写入 .env.local 并用 npm run dev 启动（需同时跑 Express 8787 端口）。',
       apiPlatform: 'API 运行环境：{{platform}}',
+      productLinesHeading: '产品线显示',
+      productLinesDesc: '控制三大产品线在前台（首页、Programs、Courses、Labs、Mall）的显示或隐藏。隐藏后，对应入口与内容不会出现在公开站点。',
+      productLineVisible: '已上线 — 前台可见',
+      productLineHidden: '已隐藏 — 前台不可见',
+      productLinesSaved: '产品线显示设置已保存。',
     },
   },
 }
@@ -2776,6 +2781,11 @@ export const adminPagesEn = {
       stripeMissingLocal:
         'Local API does not see STRIPE_SECRET_KEY. Add it to .env.local and run npm run dev (Express on port 8787).',
       apiPlatform: 'API platform: {{platform}}',
+      productLinesHeading: 'Product line visibility',
+      productLinesDesc: 'Show or hide the three product lines across the public site (Home, Programs, Courses, Labs, Mall). Hidden lines are removed from navigation and page content.',
+      productLineVisible: 'Live — visible on storefront',
+      productLineHidden: 'Hidden — not shown on storefront',
+      productLinesSaved: 'Product line visibility saved.',
     },
   },
 }

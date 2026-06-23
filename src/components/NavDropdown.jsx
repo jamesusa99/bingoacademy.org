@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { PROGRAMS, programPath } from '../config/programs'
+import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 
 export default function NavDropdown({ label, highlight = false }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const loc = useLocation()
+  const { visiblePrograms } = useProductLineVisibility()
 
-  const isActive = PROGRAMS.some((p) => loc.pathname.startsWith(programPath(p.slug)))
+  const isActive = visiblePrograms.some((p) => loc.pathname.startsWith(`/programs/${p.slug}`))
 
   useEffect(() => {
     function onDocClick(e) {
@@ -37,10 +38,10 @@ export default function NavDropdown({ label, highlight = false }) {
       </button>
       {open ? (
         <div className="absolute top-full left-0 mt-1 min-w-[240px] rounded-xl border border-slate-700 bg-[#1e293b] shadow-xl py-2 z-50">
-          {PROGRAMS.map((p) => (
+          {visiblePrograms.map((p) => (
             <Link
               key={p.slug}
-              to={programPath(p.slug)}
+              to={`/programs/${p.slug}`}
               onClick={() => setOpen(false)}
               className="flex items-start gap-3 px-4 py-2.5 hover:bg-white/10 transition"
             >
@@ -51,15 +52,17 @@ export default function NavDropdown({ label, highlight = false }) {
               </span>
             </Link>
           ))}
-          <div className="border-t border-slate-700 mt-1 pt-1 px-2">
-            <Link
-              to="/compare"
-              onClick={() => setOpen(false)}
-              className="block px-2 py-2 text-xs text-cyan-400 hover:text-cyan-300"
-            >
-              Compare all programs →
-            </Link>
-          </div>
+          {visiblePrograms.length > 1 ? (
+            <div className="border-t border-slate-700 mt-1 pt-1 px-2">
+              <Link
+                to="/compare"
+                onClick={() => setOpen(false)}
+                className="block px-2 py-2 text-xs text-cyan-400 hover:text-cyan-300"
+              >
+                Compare all programs →
+              </Link>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

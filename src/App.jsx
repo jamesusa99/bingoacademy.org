@@ -1,6 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
+import ProductLineGate from './components/ProductLineGate'
 import AdminGuard from './components/admin/AdminGuard'
 import AdminLayout from './components/AdminLayout'
 import { AdminLocaleProvider } from './contexts/AdminLocaleContext'
@@ -142,11 +143,11 @@ export default function App() {
         <Route path="showcase/award/:id" element={<ShowcaseCase />} />
         <Route path="assessment" element={<AIAssessment />} />
         <Route path="courses" element={<Courses />} />
-        <Route path="courses/module/:moduleSlug" element={<IOAIModuleDetailPage />} />
-        <Route path="ioai" element={<Navigate to="/courses?line=ioai" replace />} />
-        <Route path="ioai/l1/:levelSlug" element={<IOAILevelPage />} />
-        <Route path="ioai/l3/:moduleSlug" element={<IOAIModulePage />} />
-        <Route path="ioai/experiments/:slug" element={<IOAIPublicExperimentPage />} />
+        <Route path="courses/module/:moduleSlug" element={<ProductLineGate lineId="ioai"><IOAIModuleDetailPage /></ProductLineGate>} />
+        <Route path="ioai" element={<ProductLineGate lineId="ioai"><Navigate to="/courses?line=ioai" replace /></ProductLineGate>} />
+        <Route path="ioai/l1/:levelSlug" element={<ProductLineGate lineId="ioai"><IOAILevelPage /></ProductLineGate>} />
+        <Route path="ioai/l3/:moduleSlug" element={<ProductLineGate lineId="ioai"><IOAIModulePage /></ProductLineGate>} />
+        <Route path="ioai/experiments/:slug" element={<ProductLineGate lineId="ioai"><IOAIPublicExperimentPage /></ProductLineGate>} />
         <Route path="curriculum" element={<Curriculum />} />
         <Route path="labs" element={<ProductLabs />} />
         <Route path="labs/pack/:slug" element={<LabPackDetail />} />

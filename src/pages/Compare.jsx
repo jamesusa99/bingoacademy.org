@@ -1,7 +1,13 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import PageMeta from '../components/PageMeta'
 import PageContent from '../components/PageContent'
-import { COMPARISON_ROWS, PROGRAMS, PAGE_SEO, programPath, coursesPathForProgram } from '../config/programs'
+import {
+  COMPARISON_ROWS,
+  PAGE_SEO,
+  programPath,
+  coursesPathForProgram,
+} from '../config/programs'
+import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 
 function CellValue({ value }) {
   if (value === true) return <span className="text-emerald-600 font-medium">✅</span>
@@ -9,7 +15,20 @@ function CellValue({ value }) {
   return <span>{value}</span>
 }
 
+const COMPARE_COLUMNS = [
+  { key: 'foundations', lineId: 'general', icon: '🎓', label: 'Foundations' },
+  { key: 'ioai', lineId: 'ioai', icon: '🏆', label: 'IOAI' },
+  { key: 'k12', lineId: 'k12', icon: '🏫', label: 'K12 School' },
+]
+
 export default function Compare() {
+  const { visiblePrograms, isLineVisible } = useProductLineVisibility()
+  const columns = COMPARE_COLUMNS.filter((col) => isLineVisible(col.lineId))
+
+  if (visiblePrograms.length < 2) {
+    return <Navigate to="/" replace />
+  }
+
   return (
     <div className="w-full">
       <PageMeta title={PAGE_SEO.compare.title} description={PAGE_SEO.compare.description} />
@@ -30,33 +49,23 @@ export default function Compare() {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   <th className="text-left p-4 font-semibold text-slate-600 w-[28%]">Feature</th>
-                  <th className="p-4 font-semibold text-bingo-dark text-center">
-                    <span className="text-lg">🎓</span>
-                    <div className="mt-1">Foundations</div>
-                  </th>
-                  <th className="p-4 font-semibold text-bingo-dark text-center">
-                    <span className="text-lg">🏆</span>
-                    <div className="mt-1">IOAI</div>
-                  </th>
-                  <th className="p-4 font-semibold text-bingo-dark text-center">
-                    <span className="text-lg">🏫</span>
-                    <div className="mt-1">K12 School</div>
-                  </th>
+                  {columns.map((col) => (
+                    <th key={col.key} className="p-4 font-semibold text-bingo-dark text-center">
+                      <span className="text-lg">{col.icon}</span>
+                      <div className="mt-1">{col.label}</div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON_ROWS.map((row) => (
                   <tr key={row.feature} className="border-b border-slate-100 last:border-0">
                     <td className="p-4 text-slate-700 font-medium">{row.feature}</td>
-                    <td className="p-4 text-center text-slate-600">
-                      <CellValue value={row.foundations} />
-                    </td>
-                    <td className="p-4 text-center text-slate-600">
-                      <CellValue value={row.ioai} />
-                    </td>
-                    <td className="p-4 text-center text-slate-600">
-                      <CellValue value={row.k12} />
-                    </td>
+                    {columns.map((col) => (
+                      <td key={col.key} className="p-4 text-center text-slate-600">
+                        <CellValue value={row[col.key]} />
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -65,7 +74,7 @@ export default function Compare() {
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4">
-          {PROGRAMS.map((p) => (
+          {visiblePrograms.map((p) => (
             <div key={p.slug} className="card p-5 flex flex-col">
               <span className="text-3xl">{p.icon}</span>
               <h3 className="font-bold text-bingo-dark mt-2">{p.title}</h3>

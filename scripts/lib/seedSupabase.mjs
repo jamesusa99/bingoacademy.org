@@ -6,6 +6,7 @@
 import { COURSE_CATALOG } from '../../src/config/coursesCatalog.js'
 import { COURSES_LINE_HERO_KEYS, DEFAULT_COURSES_LINE_HERO } from '../../src/config/coursesLineHero.js'
 import { MALL_PAGE_DEFAULT } from '../../src/config/mallContent.js'
+import { DEFAULT_PRODUCT_LINE_VISIBILITY } from '../../src/config/productLineVisibility.js'
 import { ASSESSMENT_CATALOG } from '../../src/config/assessmentCatalog.js'
 import { STUDENT_PORTFOLIO } from '../../src/config/showcasePortfolio.js'
 import {
@@ -407,6 +408,7 @@ export async function runSiteSeed(admin, { force = false } = {}) {
     { key: 'community_cert_courses', value: COMMUNITY_CERT_COURSES_DEFAULT },
     { key: 'community_checkin_points_guide', value: COMMUNITY_CHECKIN_POINTS_GUIDE },
     { key: 'mall_page', value: MALL_PAGE_DEFAULT },
+    { key: 'product_lines', value: DEFAULT_PRODUCT_LINE_VISIBILITY },
     ...Object.entries(COURSES_LINE_HERO_KEYS).map(([lineId, key]) => ({
       key,
       value: DEFAULT_COURSES_LINE_HERO[lineId],

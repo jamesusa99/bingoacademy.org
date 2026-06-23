@@ -8,6 +8,7 @@ import PageContent from '../components/PageContent'
 import { MALL_STOREFRONT_TABS } from '../config/mallTabs'
 import { getMallTabContent } from '../config/mallContent'
 import { useMallContent } from '../hooks/useMallContent'
+import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 import {
   filterMallCoursesForTab,
   filterMallProductsForTab,
@@ -312,6 +313,7 @@ export default function Mall() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
   const { content } = useMallContent()
+  const { visibleMallLineTabs, isLineVisible, loading: visibilityLoading } = useProductLineVisibility()
   const [courses, setCourses] = useState(COURSES_FALLBACK)
   const [coursesLoading, setCoursesLoading] = useState(true)
   const [tab, setTab] = useState(() => {
@@ -427,10 +429,20 @@ export default function Mall() {
 
   useEffect(() => {
     const fromUrl = searchParams.get('tab')
-    if (fromUrl && MALL_STOREFRONT_TABS.some((t) => t.id === fromUrl) && fromUrl !== tab) {
+    if (fromUrl && visibleMallLineTabs.some((t) => t.id === fromUrl) && fromUrl !== tab) {
       setTab(fromUrl)
     }
-  }, [searchParams, tab])
+  }, [searchParams, tab, visibleMallLineTabs])
+
+  useEffect(() => {
+    if (visibilityLoading) return
+    if (['ioai', 'general', 'k12'].includes(tab) && !isLineVisible(tab)) {
+      setTab('home')
+      const next = new URLSearchParams(searchParams)
+      next.delete('tab')
+      setSearchParams(next, { replace: true })
+    }
+  }, [visibilityLoading, tab, isLineVisible, searchParams, setSearchParams])
 
   const ioaiCourses = useMemo(() => filterMallCoursesForTab(courses, 'ioai').filter(isRetail), [courses])
   const generalCourses = useMemo(() => filterMallCoursesForTab(courses, 'general').filter(isRetail), [courses])
@@ -466,7 +478,7 @@ export default function Mall() {
   const tabPanel = (tabId) => getMallTabContent(content, tabId)
   const homePanel = tabPanel('home')
 
-  const TABS = MALL_STOREFRONT_TABS
+  const TABS = visibleMallLineTabs
 
   return (
     <div className="w-full">

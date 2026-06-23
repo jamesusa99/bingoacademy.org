@@ -1,12 +1,13 @@
 import { useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { PRODUCT_LINES, subcategoryLabel } from '../../config/products'
+import { subcategoryLabel } from '../../config/products'
 import { isProductLabSub, labsPath } from '../../config/productLabs'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
 import { filterAndSortCourses, paginateCourses } from '../../lib/courseListUtils'
 import { useCourseFilters } from '../../hooks/useCourseFilters'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
+import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
 import CoursesHero from './CoursesHero'
 import { useCoursesLineHero, buildLineHeroStats } from '../../hooks/useCoursesLineHero'
 import FilterBar from './FilterBar'
@@ -19,6 +20,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
   const { filters, setFilters, perPage } = useCourseFilters()
   const purchase = usePurchasedCourses()
   const { hero } = useCoursesLineHero(line.id)
+  const { visibleProductLines } = useProductLineVisibility()
 
   const baseCourses = useMemo(
     () => courses.filter((c) => c.line === line.id && c.sub === subId),
@@ -66,7 +68,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
           className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
-          {PRODUCT_LINES.map((pl) => (
+          {visibleProductLines.map((pl) => (
             <Link
               key={pl.id}
               to={`/courses?line=${pl.id}&sub=${VIDEO_COURSE_SUB_BY_LINE[pl.id] || subId}`}

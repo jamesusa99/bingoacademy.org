@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { PROGRAMS, programPath } from '../../config/programs'
+import { programPath } from '../../config/programs'
+import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
 import HomeUserEntry from './HomeUserEntry'
 
 function PathCard({ program }) {
@@ -26,6 +27,8 @@ function PathCard({ program }) {
 }
 
 export default function HomeHero() {
+  const { visiblePrograms } = useProductLineVisibility()
+
   return (
     <section id="get-started" className="relative w-full overflow-hidden border-b border-cyan-500/10 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
       <div className="absolute inset-0 opacity-30 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-transparent" />
@@ -40,7 +43,7 @@ export default function HomeHero() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto">
-          {PROGRAMS.map((p) => (
+          {visiblePrograms.map((p) => (
             <PathCard key={p.slug} program={p} />
           ))}
         </div>

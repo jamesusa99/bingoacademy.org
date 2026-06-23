@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, Navigate } from 'react-router-dom'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import PageMeta from '../components/PageMeta'
@@ -10,14 +10,24 @@ import { PRODUCT_LABS_PORTAL } from '../config/productLabsPortal'
 import { normalizeLabMaterialSub } from '../config/labMaterials'
 import { isLabMaterialsCatalogRow } from '../lib/catalogCourse'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
+import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 
 export default function ProductLabs() {
   const [params, setParams] = useSearchParams()
-  const lineParam = params.get('line') || 'ioai'
+  const { isLineVisible, defaultLineId } = useProductLineVisibility()
+  const lineParam = params.get('line') || defaultLineId
   const subParam = params.get('sub') || ''
 
-  const tracks = useMemo(() => getProductLabTracks(), [])
-  const activeLine = tracks.some((t) => t.lineId === lineParam) ? lineParam : tracks[0]?.lineId ?? 'ioai'
+  const tracks = useMemo(
+    () => getProductLabTracks().filter((t) => isLineVisible(t.lineId)),
+    [isLineVisible]
+  )
+
+  if (lineParam && !isLineVisible(lineParam)) {
+    return <Navigate to={subParam ? `/labs?line=${defaultLineId}&sub=${subParam}` : `/labs?line=${defaultLineId}`} replace />
+  }
+
+  const activeLine = tracks.some((t) => t.lineId === lineParam) ? lineParam : tracks[0]?.lineId ?? defaultLineId
   const { courses, loading } = useCourseCatalog()
 
   const activeTrack = tracks.find((t) => t.lineId === activeLine) ?? tracks[0]

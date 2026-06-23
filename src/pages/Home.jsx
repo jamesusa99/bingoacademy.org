@@ -15,8 +15,9 @@ import {
   PORTAL_COMPETITIONS,
   PORTAL_TRUST_STATS_FALLBACK,
   PORTAL_TESTIMONIALS_FALLBACK,
-  PRODUCT_LINES,
 } from '../config/homePortal'
+import { lineIdFromHref } from '../config/productLineVisibility'
+import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 
 const ACCENT_RING = {
   cyan: 'hover:border-cyan-300 ring-cyan-100',
@@ -31,9 +32,24 @@ export default function Home() {
   const [trustStats, setTrustStats] = useState(PORTAL_TRUST_STATS_FALLBACK)
   const [testimonials, setTestimonials] = useState(PORTAL_TESTIMONIALS_FALLBACK)
   const { courses } = useIOAICourseContext()
+  const { visibleProductLines, isLineVisible } = useProductLineVisibility()
+
+  const coreEntries = useMemo(
+    () => PORTAL_CORE_ENTRIES.filter((item) => isLineVisible(lineIdFromHref(item.to))),
+    [isLineVisible]
+  )
+
+  const competitions = useMemo(
+    () => PORTAL_COMPETITIONS.filter((item) => isLineVisible(lineIdFromHref(item.to))),
+    [isLineVisible]
+  )
+
   const featuredCourses = useMemo(
-    () => courses.filter((c) => c.featured).slice(0, 6),
-    [courses]
+    () =>
+      courses
+        .filter((c) => c.featured && isLineVisible(c.line))
+        .slice(0, 6),
+    [courses, isLineVisible]
   )
 
   useEffect(() => {
@@ -76,7 +92,7 @@ export default function Home() {
           <h2 className="section-title mb-1">Explore the Academy</h2>
           <p className="text-slate-500 text-sm mb-6">Courses, competitions, school solutions, mall, achievements, and certification</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-            {PORTAL_CORE_ENTRIES.map((item) => (
+            {coreEntries.map((item) => (
               <Link
                 key={item.to + item.title}
                 to={item.to}
@@ -90,37 +106,41 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Three product lines */}
+        {visibleProductLines.length > 0 ? (
         <section className="mb-14">
           <h2 className="section-title mb-1">Three Product Lines</h2>
           <p className="text-slate-500 text-sm mb-6">Choose the path that fits your learning goal</p>
           <div className="hidden md:grid md:grid-cols-3 gap-5">
-            {PRODUCT_LINES.map((line) => (
+            {visibleProductLines.map((line) => (
               <ProductLineCard key={line.id} line={line} />
             ))}
           </div>
           <div className="md:hidden scroll-strip">
-            {PRODUCT_LINES.map((line) => (
+            {visibleProductLines.map((line) => (
               <div key={line.id} className="w-[min(85vw,320px)]">
                 <ProductLineCard line={line} compact />
               </div>
             ))}
           </div>
         </section>
+        ) : null}
 
         {/* Authoritative competitions highlight */}
+        {competitions.length > 0 ? (
         <section className="mb-14 section-tech rounded-2xl p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
             <div>
               <h2 className="section-title mb-1">Authoritative Competitions</h2>
               <p className="text-slate-500 text-sm">IOAI whitelist training and competition-ready outcomes</p>
             </div>
+            {isLineVisible('ioai') ? (
             <Link to="/courses?line=ioai" className="text-sm text-primary font-medium hover:underline shrink-0">
               All competition courses →
             </Link>
+            ) : null}
           </div>
           <div className="grid sm:grid-cols-3 gap-4">
-            {PORTAL_COMPETITIONS.map((c) => (
+            {competitions.map((c) => (
               <Link key={c.name} to={c.to} className="card p-5 hover:shadow-md hover:border-amber-200/80 transition group">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <span className="text-3xl">{c.icon}</span>
@@ -134,8 +154,7 @@ export default function Home() {
             ))}
           </div>
         </section>
-
-        {/* Learning pathway */}
+        ) : null}
         <section className="mb-14">
           <h2 className="section-title mb-4">Your Learning Path</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
