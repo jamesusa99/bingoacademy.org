@@ -7,12 +7,14 @@ import ClassExerciseResults from './ClassExerciseResults'
 export function useLessonExerciseCount(lessonRef) {
   const [count, setCount] = useState(0)
   const [questions, setQuestions] = useState([])
+  const [submission, setSubmission] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!lessonRef) {
       setCount(0)
       setQuestions([])
+      setSubmission(null)
       setLoading(false)
       return undefined
     }
@@ -23,11 +25,13 @@ export function useLessonExerciseCount(lessonRef) {
         if (cancelled) return
         setCount(data.count || 0)
         setQuestions(data.questions || [])
+        setSubmission(data.submission || null)
       })
       .catch(() => {
         if (!cancelled) {
           setCount(0)
           setQuestions([])
+          setSubmission(null)
         }
       })
       .finally(() => {
@@ -38,7 +42,7 @@ export function useLessonExerciseCount(lessonRef) {
     }
   }, [lessonRef])
 
-  return { count, questions, loading, hasExercises: count > 0 }
+  return { count, questions, submission, loading, hasExercises: count > 0 }
 }
 
 export default function LessonExerciseSegment({
@@ -48,10 +52,15 @@ export default function LessonExerciseSegment({
   onAllComplete,
   onBackToVideo,
 }) {
-  const { questions, loading, hasExercises } = useLessonExerciseCount(lessonRef)
+  const { questions, submission, loading, hasExercises } = useLessonExerciseCount(lessonRef)
   const [submitting, setSubmitting] = useState(false)
   const [submitResult, setSubmitResult] = useState(null)
   const [userAnswers, setUserAnswers] = useState(null)
+  const [retrying, setRetrying] = useState(false)
+
+  const savedSubmission = retrying ? null : submission
+  const activeResult = submitResult ?? savedSubmission?.result ?? null
+  const activeAnswers = userAnswers ?? savedSubmission?.answers ?? null
 
   if (loading) {
     return <div className="p-8 text-center text-slate-400 text-sm">Loading exercises…</div>
@@ -69,21 +78,23 @@ export default function LessonExerciseSegment({
   }
 
   const handleSubmitted = (answers, graded) => {
+    setRetrying(false)
     setUserAnswers(answers)
     setSubmitResult(graded)
   }
 
   const handleRetry = () => {
+    setRetrying(true)
     setSubmitResult(null)
     setUserAnswers(null)
   }
 
-  if (submitResult && userAnswers) {
+  if (activeResult && activeAnswers) {
     return (
       <ClassExerciseResults
         questions={questions}
-        answers={userAnswers}
-        result={submitResult}
+        answers={activeAnswers}
+        result={activeResult}
         lessonTitle={lessonTitle}
         onRetry={handleRetry}
         onFinish={() => onAllComplete?.()}

@@ -1,9 +1,14 @@
 import { authFetch } from './checkout'
+import { supabase } from './supabase'
 
 const API = '/api/ioai'
 
 export async function fetchLessonExercises(lessonRef) {
-  const res = await fetch(`${API}/lessons/${encodeURIComponent(lessonRef)}/exercises`)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const headers = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+  const res = await fetch(`${API}/lessons/${encodeURIComponent(lessonRef)}/exercises`, { headers })
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText)
   return res.json()
 }

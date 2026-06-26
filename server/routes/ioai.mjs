@@ -36,6 +36,30 @@ function isPublicModuleDetail(mod) {
   return mod && isPublicModuleStatus(mod.status)
 }
 
+function formatLessonExerciseSubmission(row) {
+  if (!row) return null
+  return {
+    answers: row.answers || {},
+    result: {
+      score: row.score,
+      totalScore: row.total_score,
+      passed: row.passed,
+      results: row.results || [],
+    },
+  }
+}
+
+async function fetchLatestLessonExerciseAttempt(admin, userId, lessonDbId) {
+  const { data, error } = await admin
+    .from('ioai_lesson_exercise_attempts')
+    .select('answers, score, total_score, passed, results, submitted_at')
+    .eq('user_id', userId)
+    .eq('lesson_id', lessonDbId)
+    .maybeSingle()
+  if (error) throw error
+  return formatLessonExerciseSubmission(data)
+}
+
 export function registerIoaiRoutes(app) {
   app.get('/api/program/:productLine/store', async (req, res) => {
     const admin = getSupabaseAdmin()
@@ -183,7 +207,19 @@ export function registerIoaiRoutes(app) {
     if (!lessonDbId) return res.json({ questions: [], count: 0 })
 
     const rows = await fetchLiveQuestions(admin, { scopeType: 'lesson', scopeId: lessonDbId })
-    return res.json({ questions: sanitizeQuestions(rows), count: rows.length })
+    const payload = { questions: sanitizeQuestions(rows), count: rows.length }
+
+    const auth = await verifyAuthUser(req)
+    if (auth.ok) {
+      try {
+        const submission = await fetchLatestLessonExerciseAttempt(admin, auth.user.id, lessonDbId)
+        if (submission) payload.submission = submission
+      } catch (err) {
+        return res.status(502).json({ error: err.message || 'Failed to load exercise submission' })
+      }
+    }
+
+    return res.json(payload)
   })
 
   app.post('/api/ioai/lessons/:lessonRef/exercises/grade', async (req, res) => {
@@ -237,6 +273,21 @@ export function registerIoaiRoutes(app) {
     const rows = await fetchLiveQuestions(admin, { scopeType: 'lesson', scopeId: lessonDbId })
     const { answers } = req.body || {}
     const graded = gradeModuleTest(rows, answers || {})
+
+    const { error: saveError } = await admin.from('ioai_lesson_exercise_attempts').upsert(
+      {
+        user_id: auth.user.id,
+        lesson_id: lessonDbId,
+        answers: answers || {},
+        score: graded.score,
+        total_score: graded.totalScore,
+        passed: graded.passed,
+        results: graded.results,
+        submitted_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,lesson_id' }
+    )
+    if (saveError) return res.status(502).json({ error: saveError.message })
 
     return res.json(graded)
   })
