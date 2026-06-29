@@ -15,6 +15,7 @@ import {
   filterMallFlashDealItems,
   isMallRetailItem,
 } from '../lib/mallTabFilters'
+import IoaiMallPackageGrid from '../components/mall/IoaiMallPackageGrid'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -605,14 +606,17 @@ export default function Mall() {
             <h2 className="font-bold text-bingo-dark mb-1">{tabPanel('ioai').header?.title}</h2>
             <p className="text-slate-500 text-sm">{tabPanel('ioai').header?.desc}</p>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {ioaiEvents.map((item, i) => (
-              <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
-            ))}
-            {ioaiCourses.map((item, i) => (
-              <ProductCard key={`c-${i}`} item={item} onOpen={setSelectedProduct} />
-            ))}
-          </div>
+          <IoaiMallPackageGrid />
+          {(ioaiEvents.length > 0 || ioaiCourses.length > 0) ? (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {ioaiEvents.map((item, i) => (
+                <ProductCard key={i} item={item} onOpen={setSelectedProduct} />
+              ))}
+              {ioaiCourses.map((item, i) => (
+                <ProductCard key={`c-${i}`} item={item} onOpen={setSelectedProduct} />
+              ))}
+            </div>
+          ) : null}
           {tabPanel('ioai').footerLink?.href ? (
             <Link to={tabPanel('ioai').footerLink.href} className="text-sm text-primary hover:underline">{tabPanel('ioai').footerLink.text}</Link>
           ) : null}

@@ -33,7 +33,7 @@ export function createApiApp() {
   registerCatalogRoutes(app, { verifyAdminUser })
   registerStreamRoutes(app, { verifyAdminUser })
   registerPaymentRoutes(app)
-  registerIoaiRoutes(app)
+  registerIoaiRoutes(app, { verifyAdminUser })
   registerLabRoutes(app, { verifyAdminUser })
   registerIoaiExperimentRoutes(app, { verifyAdminUser })
 

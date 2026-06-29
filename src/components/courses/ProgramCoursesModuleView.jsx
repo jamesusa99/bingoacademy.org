@@ -6,7 +6,10 @@ import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { useIOAIAccess } from '../../hooks/useIOAIStore'
 import { useProgramStore } from '../../hooks/useProgramStore'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
-import { flattenIoaiModules, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable, buildStageCombo, isStageComboOwned } from '../../lib/ioaiStore'
+import { flattenIoaiModules, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable } from '../../lib/ioaiStore'
+import { mapCourseBundleToDisplayItem } from '../../lib/ioaiMallPackages'
+import { findCourseBundleForStage, useIoaiCourseBundles } from '../../hooks/useIoaiCourseBundles'
+import { IoaiCourseBundleCards } from '../ioai/IoaiCourseBundleModal'
 import { purchaseIoaiModule, purchaseIoaiBundle } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
@@ -18,19 +21,19 @@ import PageMeta from '../PageMeta'
 import { PAGE_SEO } from '../../config/programs'
 import ModuleCoverImage from './ModuleCoverImage'
 
-function buyStageCombo({
-  combo,
+function buyStageBundleItem({
+  item,
   stageId,
   stripeCheckout,
   isAuthenticated,
   navigate,
   setCheckoutLoading,
 }) {
-  if (!combo) return
+  if (!item) return
   const returnPath = `/courses?line=ioai&stage=${encodeURIComponent(stageId)}&buy=1`
 
   purchaseIoaiBundle({
-    bundleSlug: combo.slug,
+    bundleSlug: item.ioaiBundleSlug,
     stripeCheckout,
     isAuthenticated,
     navigate,
@@ -39,13 +42,18 @@ function buyStageCombo({
     onDemoUnlock: {
       bundle: (slug) => {
         purchaseCourseSlug(slug)
-        for (const moduleSlug of combo.moduleSlugs) {
+        for (const moduleSlug of item.moduleSlugs || []) {
           purchaseCourseSlug(moduleSlug)
         }
         window.location.reload()
       },
     },
   })
+}
+
+function isBundleItemOwned(item, hasModule) {
+  if (!item?.moduleSlugs?.length) return false
+  return item.moduleSlugs.every((slug) => hasModule(slug))
 }
 
 function lineBadgeLabel(lineId) {
@@ -153,81 +161,6 @@ function ModuleCard({ mod, lineId, hasModule, stripeCheckout, isAuthenticated, n
   )
 }
 
-function StageComboCard({ combo, lineId, hasModule, stripeCheckout, isAuthenticated, navigate }) {
-  const [loading, setLoading] = useState(false)
-  if (!combo) return null
-
-  const owned = isStageComboOwned(combo, hasModule)
-  const price = formatIoaiPrice(combo.priceCents, combo.currency)
-  const compare = combo.compareAtCents ? formatIoaiPrice(combo.compareAtCents, combo.currency) : null
-
-  const buy = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    buyStageCombo({
-      combo,
-      stageId: combo.stageId,
-      stripeCheckout,
-      isAuthenticated,
-      navigate,
-      setCheckoutLoading: setLoading,
-    })
-  }
-
-  return (
-    <article className="course-card-dark group flex flex-col h-full ring-2 ring-amber-500/40 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-900">
-      <div className="relative p-4 pb-0">
-        <div
-          className="course-card-dark__thumb bg-gradient-to-br from-amber-500/90 via-orange-600/80 to-amber-950 flex items-center justify-center overflow-hidden min-h-[120px] rounded-lg"
-          aria-hidden
-        >
-          <span className="text-4xl">{combo.isFullTrack ? '🏆' : '📦'}</span>
-        </div>
-      </div>
-
-      <div className="flex flex-col flex-1 p-4">
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          <span className="text-[10px] font-semibold text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded">
-            {COURSES_PORTAL.stageComboBadge}
-          </span>
-          <span className="text-[10px] font-semibold text-cyan-400/90 bg-cyan-500/10 px-2 py-0.5 rounded">
-            {lineBadgeLabel(lineId)}
-          </span>
-        </div>
-        <h3 className="font-semibold text-white text-sm leading-snug mb-1">{combo.title}</h3>
-        <p className="text-[10px] text-slate-500 mb-2">
-          {COURSES_PORTAL.stageComboDesc(combo.moduleCount, combo.lessonCount)}
-        </p>
-        {combo.introHtml ? (
-          <p className="text-xs text-slate-400 leading-relaxed flex-1 mb-4 line-clamp-2">{combo.introHtml}</p>
-        ) : (
-          <div className="flex-1 mb-4" />
-        )}
-        <div className="flex items-center justify-between gap-2 pt-3 border-t border-amber-500/20 mt-auto">
-          <div>
-            {compare ? <p className="text-[10px] text-slate-500 line-through">{compare}</p> : null}
-            <span className="text-lg font-bold text-amber-300">{price}</span>
-          </div>
-          {owned ? (
-            <span className="text-xs font-semibold text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/40">
-              {COURSES_PORTAL.stageComboOwned}
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={buy}
-              disabled={loading}
-              className="text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 px-3 py-1.5 rounded-lg disabled:opacity-60"
-            >
-              {loading ? '…' : combo.isFullTrack ? COURSES_PORTAL.buyFullTrack : COURSES_PORTAL.buyStageCombo}
-            </button>
-          )}
-        </div>
-      </div>
-    </article>
-  )
-}
-
 export default function ProgramCoursesModuleView({ line }) {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -235,10 +168,12 @@ export default function ProgramCoursesModuleView({ line }) {
   const { visibleProductLines } = useProductLineVisibility()
   const lineId = line.id
   const { hero } = useCoursesLineHero(lineId)
-  const { levels, fullBundle, loading, error } = useProgramStore(lineId)
+  const { levels, loading, error } = useProgramStore(lineId)
+  const { bundles: courseBundles, loading: bundlesLoading } = useIoaiCourseBundles()
   const ioaiAccess = useIOAIAccess()
   const purchase = usePurchasedCourses()
   const [stripeCheckout, setStripeCheckout] = useState(false)
+  const [buyingSlug, setBuyingSlug] = useState(null)
   const stageParam = searchParams.get('stage')
   const shouldAutoBuy = searchParams.get('buy') === '1'
   const [stageFilter, setStageFilter] = useState(stageParam || 'all')
@@ -270,10 +205,11 @@ export default function ProgramCoursesModuleView({ line }) {
     return modules.filter((m) => m.levelId === stageFilter)
   }, [modules, stageFilter])
 
-  const stageCombo = useMemo(() => {
-    const combo = buildStageCombo({ stageFilter, modules, stages, fullBundle })
-    return combo ? { ...combo, stageId: stageFilter } : null
-  }, [stageFilter, modules, stages, fullBundle])
+  const stageBundleItem = useMemo(() => {
+    if (lineId !== 'ioai') return null
+    const bundle = findCourseBundleForStage(courseBundles, stageFilter)
+    return mapCourseBundleToDisplayItem(bundle)
+  }, [lineId, courseBundles, stageFilter])
 
   useEffect(() => {
     if (!stageParam) return
@@ -292,9 +228,9 @@ export default function ProgramCoursesModuleView({ line }) {
   }
 
   useEffect(() => {
-    if (!shouldAutoBuy || autoBuyStarted.current || loading || lineId !== 'ioai') return
+    if (!shouldAutoBuy || autoBuyStarted.current || loading || bundlesLoading || lineId !== 'ioai') return
 
-    if (!stageCombo || isStageComboOwned(stageCombo, hasModule)) {
+    if (!stageBundleItem || isBundleItemOwned(stageBundleItem, hasModule)) {
       const next = new URLSearchParams(searchParams)
       next.delete('buy')
       setSearchParams(next, { replace: true })
@@ -302,8 +238,8 @@ export default function ProgramCoursesModuleView({ line }) {
     }
 
     autoBuyStarted.current = true
-    buyStageCombo({
-      combo: stageCombo,
+    buyStageBundleItem({
+      item: stageBundleItem,
       stageId: stageFilter,
       stripeCheckout,
       isAuthenticated,
@@ -318,8 +254,9 @@ export default function ProgramCoursesModuleView({ line }) {
   }, [
     shouldAutoBuy,
     loading,
+    bundlesLoading,
     lineId,
-    stageCombo,
+    stageBundleItem,
     hasModule,
     stageFilter,
     stripeCheckout,
@@ -407,14 +344,25 @@ export default function ProgramCoursesModuleView({ line }) {
                 {COURSES_PORTAL.ioaiModuleCount(visible.length)}
               </p>
               <div className="course-grid-dark">
-                {lineId === 'ioai' && stageCombo ? (
-                  <StageComboCard
-                    combo={stageCombo}
-                    lineId={lineId}
-                    hasModule={hasModule}
-                    stripeCheckout={stripeCheckout}
-                    isAuthenticated={isAuthenticated}
-                    navigate={navigate}
+                {lineId === 'ioai' && stageBundleItem ? (
+                  <IoaiCourseBundleCards
+                    items={[stageBundleItem]}
+                    theme="dark"
+                    gridClass="contents"
+                    buyingSlug={buyingSlug}
+                    onBuy={(item) => {
+                      setBuyingSlug(item.ioaiBundleSlug)
+                      buyStageBundleItem({
+                        item,
+                        stageId: stageFilter,
+                        stripeCheckout,
+                        isAuthenticated,
+                        navigate,
+                        setCheckoutLoading: (active) => {
+                          if (!active) setBuyingSlug(null)
+                        },
+                      })
+                    }}
                   />
                 ) : null}
                 {visible.map((mod) => (

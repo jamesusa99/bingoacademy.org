@@ -33,7 +33,7 @@ function CollapsibleNavGroup({ item, pathname, t }) {
       {open ? (
         <div className="ml-2 mt-0.5 space-y-0.5 border-l border-cyan-500/20 pl-2">
           {item.children.map((child) => {
-            const childActive = isAdminNavActive(pathname, child.path)
+            const childActive = isAdminNavActive(pathname, child.path, Boolean(child.end))
             return (
               <Link
                 key={child.path}

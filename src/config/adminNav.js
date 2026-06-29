@@ -1,5 +1,10 @@
 import { COMMUNITY_ADMIN_COLLAPSIBLE } from './communityAdminNav'
 import { MALL_ADMIN_COLLAPSIBLE } from './mallAdminNav'
+import {
+  GENERAL_ADMIN_COLLAPSIBLE,
+  IOAI_ADMIN_COLLAPSIBLE,
+  K12_ADMIN_COLLAPSIBLE,
+} from './curriculumAdminNav'
 
 /** Admin path for Lab & Materials catalogue (courses_catalog non-video items) */
 export const ADMIN_LABS_MATERIALS_PATH = '/admin/labs-materials'
@@ -18,9 +23,9 @@ export const ADMIN_NAV_GROUPS = [
     items: [
       { path: '/admin/home', labelKey: 'nav.homePortal', icon: '🏠' },
       { path: ADMIN_LABS_MATERIALS_PATH, labelKey: 'nav.courses', icon: '🧪' },
-      { path: '/admin/curriculum/ioai', labelKey: 'nav.ioaiCurriculum', icon: '🏆' },
-      { path: '/admin/curriculum/general', labelKey: 'nav.generalCurriculum', icon: '🌐' },
-      { path: '/admin/curriculum/k12', labelKey: 'nav.k12Curriculum', icon: '🏫' },
+      IOAI_ADMIN_COLLAPSIBLE,
+      GENERAL_ADMIN_COLLAPSIBLE,
+      K12_ADMIN_COLLAPSIBLE,
       { path: '/admin/showcase', labelKey: 'nav.achievements', icon: '🏅' },
       { path: '/admin/cert', labelKey: 'nav.certification', icon: '📜' },
       COMMUNITY_ADMIN_COLLAPSIBLE,

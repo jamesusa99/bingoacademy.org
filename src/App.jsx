@@ -11,6 +11,7 @@ import AdminCoursesCatalog from './pages/admin/AdminCoursesCatalog'
 import AdminLabPackExperiments from './pages/admin/AdminLabPackExperiments'
 import AdminIOAIExperimentLibrary from './pages/admin/AdminIOAIExperimentLibrary'
 import AdminIOAICurriculum from './pages/admin/AdminIOAICurriculum'
+import AdminProgramCourseBundles from './pages/admin/AdminProgramCourseBundles'
 import AdminCommunity from './pages/admin/AdminCommunity'
 import AdminHome from './pages/admin/AdminHome'
 import AdminShowcase from './pages/admin/AdminShowcase'
@@ -115,6 +116,7 @@ export default function App() {
         <Route path="labs-materials/:packSlug/experiments" element={<AdminLabPackExperiments />} />
         <Route path="ioai-experiments" element={<AdminIOAIExperimentLibrary />} />
         <Route path="courses" element={<Navigate to="/admin/labs-materials" replace />} />
+        <Route path="curriculum/:line/bundles" element={<AdminProgramCourseBundles />} />
         <Route path="curriculum/:line" element={<AdminIOAICurriculum />} />
         <Route path="ioai-curriculum" element={<Navigate to="/admin/curriculum/ioai" replace />} />
         <Route path="courses-catalog" element={<Navigate to="/admin/labs-materials" replace />} />

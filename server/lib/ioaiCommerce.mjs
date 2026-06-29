@@ -319,56 +319,8 @@ async function listLivePurchasableModulesForLevel(admin, levelSlug) {
   )
 }
 
-/** Resolve a stage combo bundle from DB or live modules in that L1 stage. */
-export async function resolveStageComboBundle(admin, slug) {
-  if (!admin || !slug?.trim()) return null
-
-  const levelSlug = parseStageComboLevelSlug(slug.trim())
-  if (!levelSlug) return null
-
-  const dbBundle = await getBundleBySlug(admin, slug.trim())
-  if (dbBundle?.bundle_type === 'combo' && dbBundle.status === 'live') {
-    const { data: links, error } = await admin
-      .from('ioai_bundle_modules')
-      .select('module:modules ( catalog_slug )')
-      .eq('bundle_id', dbBundle.id)
-    if (error) return null
-    const moduleSlugs = (links || []).map((row) => row.module?.catalog_slug).filter(Boolean)
-    if (!moduleSlugs.length) return null
-    return {
-      slug: dbBundle.slug,
-      title: dbBundle.title,
-      priceCents: dbBundle.price_cents,
-      currency: dbBundle.currency || 'usd',
-      moduleSlugs,
-    }
-  }
-
-  const modules = await listLivePurchasableModulesForLevel(admin, levelSlug)
-  if (!modules.length) return null
-
-  const priceCents = modules.reduce((sum, mod) => sum + (mod.price_cents || 0), 0)
-  const levelTitle =
-    levelSlug === 'all'
-      ? 'All stages'
-      : modules[0]?.theme?.level?.title || levelSlug.replace(/-/g, ' ')
-
-  return {
-    slug: slug.trim(),
-    title: `${levelTitle} — Stage Bundle`,
-    priceCents,
-    currency: modules[0]?.currency || 'usd',
-    moduleSlugs: modules.map((mod) => mod.catalog_slug).filter(Boolean),
-  }
-}
-
-export async function listBundleModuleCatalogSlugs(admin, bundleSlug) {
-  if (isStageComboBundleSlug(bundleSlug)) {
-    const combo = await resolveStageComboBundle(admin, bundleSlug)
-    return combo?.moduleSlugs || []
-  }
-
-  const bundle = await getBundleBySlug(admin, bundleSlug)
+/** Module catalog slugs linked to a bundle row (no dynamic fallback). */
+async function listModuleSlugsForBundleRecord(admin, bundle) {
   if (!bundle) return []
 
   if (bundle.bundle_type === 'unit' && bundle.module_id) {
@@ -382,7 +334,67 @@ export async function listBundleModuleCatalogSlugs(admin, bundleSlug) {
     .eq('bundle_id', bundle.id)
 
   if (error) return []
-  return (links || []).map((r) => r.module?.catalog_slug).filter(Boolean)
+  return (links || []).map((row) => row.module?.catalog_slug).filter(Boolean)
+}
+
+/** Resolve a stage combo bundle from DB or live modules in that L1 stage. */
+export async function resolveStageComboBundle(admin, slug) {
+  if (!admin || !slug?.trim()) return null
+
+  const trimmed = slug.trim()
+  const levelSlug = parseStageComboLevelSlug(trimmed)
+  if (!levelSlug) return null
+
+  const dbBundle = await getBundleBySlug(admin, trimmed)
+  if (dbBundle?.bundle_type === 'combo' && dbBundle.status === 'live') {
+    const moduleSlugs = await listModuleSlugsForBundleRecord(admin, dbBundle)
+    if (!moduleSlugs.length) return null
+    return {
+      slug: dbBundle.slug,
+      title: dbBundle.title,
+      priceCents: dbBundle.price_cents,
+      compareAtCents: dbBundle.compare_at_cents,
+      currency: dbBundle.currency || 'usd',
+      introHtml: dbBundle.intro_html || '',
+      marketingTags: dbBundle.marketing_tags || [],
+      moduleSlugs,
+    }
+  }
+
+  const modules = await listLivePurchasableModulesForLevel(admin, levelSlug)
+  if (!modules.length) return null
+
+  const listPriceCents = modules.reduce((sum, mod) => sum + (mod.price_cents || 0), 0)
+  const levelTitle =
+    levelSlug === 'all'
+      ? 'All stages'
+      : modules[0]?.theme?.level?.title || levelSlug.replace(/-/g, ' ')
+
+  return {
+    slug: trimmed,
+    title: `${levelTitle} — Stage Bundle`,
+    priceCents: listPriceCents,
+    compareAtCents: null,
+    currency: modules[0]?.currency || 'usd',
+    introHtml: '',
+    marketingTags: [],
+    moduleSlugs: modules.map((mod) => mod.catalog_slug).filter(Boolean),
+  }
+}
+
+export async function listBundleModuleCatalogSlugs(admin, bundleSlug) {
+  const bundle = await getBundleBySlug(admin, bundleSlug)
+  if (bundle) {
+    const slugs = await listModuleSlugsForBundleRecord(admin, bundle)
+    if (slugs.length) return slugs
+  }
+
+  if (isStageComboBundleSlug(bundleSlug)) {
+    const combo = await resolveStageComboBundle(admin, bundleSlug)
+    return combo?.moduleSlugs || []
+  }
+
+  return []
 }
 
 export async function listLessonSlugsForModule(admin, moduleCatalogSlug) {

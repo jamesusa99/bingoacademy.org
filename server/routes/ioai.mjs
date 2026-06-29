@@ -23,6 +23,13 @@ import {
   fetchProgramStoreLevels,
   isCurriculumProductLine,
 } from '../lib/programStore.mjs'
+import {
+  ensureStorefrontCourseBundles,
+  fetchAdminCourseBundles,
+  fetchLiveCourseBundles,
+  syncCourseBundleModuleLinks,
+  updateAdminCourseBundle,
+} from '../lib/ioaiCourseBundles.mjs'
 
 function sortByOrder(a, b) {
   return (a.sort_order ?? 0) - (b.sort_order ?? 0)
@@ -60,7 +67,7 @@ async function fetchLatestLessonExerciseAttempt(admin, userId, lessonDbId) {
   return formatLessonExerciseSubmission(data)
 }
 
-export function registerIoaiRoutes(app) {
+export function registerIoaiRoutes(app, { verifyAdminUser } = {}) {
   app.get('/api/program/:productLine/store', async (req, res) => {
     const admin = getSupabaseAdmin()
     if (!admin) return res.status(503).json({ error: 'Database not configured' })
@@ -332,4 +339,91 @@ export function registerIoaiRoutes(app) {
 
     return res.json(graded)
   })
+
+  app.get('/api/ioai/course-bundles', async (_req, res) => {
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    try {
+      const bundles = await fetchLiveCourseBundles(admin)
+      return res.json({ bundles })
+    } catch (err) {
+      return res.status(502).json({ error: err.message || 'Failed to load course bundles' })
+    }
+  })
+
+  if (verifyAdminUser) {
+    const curriculumBundleLines = ['ioai', 'general', 'k12']
+
+    for (const productLine of curriculumBundleLines) {
+      const base = `/api/admin/${productLine}/course-bundles`
+
+      app.get(base, async (req, res) => {
+        const auth = await verifyAdminUser(req)
+        if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+        const admin = getSupabaseAdmin()
+        if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+        try {
+          const bundles = await fetchAdminCourseBundles(admin, productLine)
+          return res.json({ bundles })
+        } catch (err) {
+          return res.status(502).json({ error: err.message || 'Failed to load course bundles' })
+        }
+      })
+
+      app.put(`${base}/:id`, async (req, res) => {
+        const auth = await verifyAdminUser(req)
+        if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+        const admin = getSupabaseAdmin()
+        if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+        try {
+          const bundle = await updateAdminCourseBundle(admin, req.params.id, req.body || {}, productLine)
+          if (!bundle) return res.status(404).json({ error: 'Bundle not found' })
+          return res.json({ bundle })
+        } catch (err) {
+          return res.status(502).json({ error: err.message || 'Failed to update bundle' })
+        }
+      })
+
+      app.post(`${base}/:id/sync-modules`, async (req, res) => {
+        const auth = await verifyAdminUser(req)
+        if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+        const admin = getSupabaseAdmin()
+        if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+        const { levelSlug } = req.body || {}
+        if (!levelSlug) return res.status(400).json({ error: 'levelSlug required' })
+
+        try {
+          const modules = await syncCourseBundleModuleLinks(admin, productLine, req.params.id, levelSlug)
+          const bundles = await fetchAdminCourseBundles(admin, productLine)
+          const bundle = bundles.find((row) => row.id === req.params.id)
+          return res.json({ bundle, moduleCount: modules.length })
+        } catch (err) {
+          return res.status(502).json({ error: err.message || 'Failed to sync modules' })
+        }
+      })
+
+      app.post(`${base}/ensure`, async (req, res) => {
+        const auth = await verifyAdminUser(req)
+        if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+        const admin = getSupabaseAdmin()
+        if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+        try {
+          await ensureStorefrontCourseBundles(admin, productLine)
+          const bundles = await fetchAdminCourseBundles(admin, productLine)
+          return res.json({ bundles })
+        } catch (err) {
+          return res.status(502).json({ error: err.message || 'Failed to ensure bundles' })
+        }
+      })
+    }
+  }
 }

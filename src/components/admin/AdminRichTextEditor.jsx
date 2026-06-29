@@ -30,13 +30,14 @@ export default function AdminRichTextEditor({
 }) {
   const editorRef = useRef(null)
   const fileRef = useRef(null)
+  const isFocusedRef = useRef(false)
   const [sourceMode, setSourceMode] = useState(false)
   const [sourceText, setSourceText] = useState(value || '')
   const [uploading, setUploading] = useState(false)
 
   const syncFromValue = useCallback(() => {
     const el = editorRef.current
-    if (!el || sourceMode) return
+    if (!el || sourceMode || isFocusedRef.current) return
     const html = value || ''
     if (el.innerHTML !== html) el.innerHTML = html
   }, [sourceMode, value])
@@ -170,8 +171,14 @@ export default function AdminRichTextEditor({
           ref={editorRef}
           contentEditable
           suppressContentEditableWarning
+          onFocus={() => {
+            isFocusedRef.current = true
+          }}
           onInput={emitChange}
-          onBlur={emitChange}
+          onBlur={() => {
+            isFocusedRef.current = false
+            emitChange()
+          }}
           data-placeholder={placeholder}
           className="admin-rich-editor px-3 py-2 text-sm text-slate-800 outline-none prose prose-sm max-w-none min-h-[var(--editor-min-h)] empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400"
           style={{ '--editor-min-h': `${minHeight}px` }}
