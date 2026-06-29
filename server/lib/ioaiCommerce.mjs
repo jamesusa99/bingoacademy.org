@@ -1,6 +1,20 @@
 import { parsePriceStringToCents, isStripeCheckoutAmountValid } from './priceUtils.mjs'
 
 export const IOAI_FULL_BUNDLE_SLUG = 'ioai-competition-system'
+export const IOAI_STAGE_BUNDLE_PREFIX = 'ioai-stage-'
+
+export function stageComboBundleSlug(levelSlug) {
+  return `${IOAI_STAGE_BUNDLE_PREFIX}${levelSlug}`
+}
+
+export function isStageComboBundleSlug(slug) {
+  return Boolean(slug?.startsWith(IOAI_STAGE_BUNDLE_PREFIX))
+}
+
+export function parseStageComboLevelSlug(slug) {
+  if (!isStageComboBundleSlug(slug)) return null
+  return slug.slice(IOAI_STAGE_BUNDLE_PREFIX.length)
+}
 
 /** L4 preview length when L3 unit is not purchased (seconds). */
 export const IOAI_MODULE_PREVIEW_SECONDS = 30
@@ -263,7 +277,97 @@ export async function getBundleBySlug(admin, slug) {
   return data
 }
 
+const MODULE_STAGE_SELECT = `
+  id, catalog_slug, title, price_cents, currency, status,
+  theme:themes (
+    title,
+    level:course_levels ( slug, title, product_line, status )
+  )
+`
+
+async function listLivePurchasableModulesForLevel(admin, levelSlug) {
+  if (!admin) return []
+
+  let themeQuery = admin
+    .from('themes')
+    .select('id, level:course_levels!inner ( slug, title, product_line, status )')
+    .eq('status', 'live')
+    .eq('hidden', false)
+    .eq('level.product_line', 'ioai')
+    .eq('level.status', 'live')
+
+  if (levelSlug && levelSlug !== 'all') {
+    themeQuery = themeQuery.eq('level.slug', levelSlug)
+  }
+
+  const { data: themes, error: themeErr } = await themeQuery
+  if (themeErr || !themes?.length) return []
+
+  const themeIds = themes.map((theme) => theme.id)
+  const { data: modules, error: modErr } = await admin
+    .from('modules')
+    .select(MODULE_STAGE_SELECT)
+    .in('theme_id', themeIds)
+    .eq('status', 'live')
+    .not('catalog_slug', 'is', null)
+    .order('sort_order')
+
+  if (modErr) return []
+
+  return (modules || []).filter(
+    (mod) => mod.catalog_slug && isModulePurchasable(mod, mod.price_cents ?? 0)
+  )
+}
+
+/** Resolve a stage combo bundle from DB or live modules in that L1 stage. */
+export async function resolveStageComboBundle(admin, slug) {
+  if (!admin || !slug?.trim()) return null
+
+  const levelSlug = parseStageComboLevelSlug(slug.trim())
+  if (!levelSlug) return null
+
+  const dbBundle = await getBundleBySlug(admin, slug.trim())
+  if (dbBundle?.bundle_type === 'combo' && dbBundle.status === 'live') {
+    const { data: links, error } = await admin
+      .from('ioai_bundle_modules')
+      .select('module:modules ( catalog_slug )')
+      .eq('bundle_id', dbBundle.id)
+    if (error) return null
+    const moduleSlugs = (links || []).map((row) => row.module?.catalog_slug).filter(Boolean)
+    if (!moduleSlugs.length) return null
+    return {
+      slug: dbBundle.slug,
+      title: dbBundle.title,
+      priceCents: dbBundle.price_cents,
+      currency: dbBundle.currency || 'usd',
+      moduleSlugs,
+    }
+  }
+
+  const modules = await listLivePurchasableModulesForLevel(admin, levelSlug)
+  if (!modules.length) return null
+
+  const priceCents = modules.reduce((sum, mod) => sum + (mod.price_cents || 0), 0)
+  const levelTitle =
+    levelSlug === 'all'
+      ? 'All stages'
+      : modules[0]?.theme?.level?.title || levelSlug.replace(/-/g, ' ')
+
+  return {
+    slug: slug.trim(),
+    title: `${levelTitle} — Stage Bundle`,
+    priceCents,
+    currency: modules[0]?.currency || 'usd',
+    moduleSlugs: modules.map((mod) => mod.catalog_slug).filter(Boolean),
+  }
+}
+
 export async function listBundleModuleCatalogSlugs(admin, bundleSlug) {
+  if (isStageComboBundleSlug(bundleSlug)) {
+    const combo = await resolveStageComboBundle(admin, bundleSlug)
+    return combo?.moduleSlugs || []
+  }
+
   const bundle = await getBundleBySlug(admin, bundleSlug)
   if (!bundle) return []
 
@@ -470,7 +574,45 @@ export async function grantModuleEntitlement(admin, { userId, moduleCatalogSlug,
 export async function grantBundleEntitlement(admin, { userId, bundleSlug, orderId = null }) {
   if (!admin || !userId || !bundleSlug?.trim()) return { granted: [] }
 
-  const bundle = await getBundleBySlug(admin, bundleSlug.trim())
+  const trimmedSlug = bundleSlug.trim()
+
+  async function grantStageComboEntitlement(combo) {
+    const granted = []
+    const { error: bundleErr } = await admin.from('course_enrollments').upsert(
+      {
+        user_id: userId,
+        course_slug: combo.slug,
+        source: 'stripe',
+        order_id: orderId,
+      },
+      { onConflict: 'user_id,course_slug' }
+    )
+    if (bundleErr) return { granted: [], error: bundleErr.message }
+    granted.push(combo.slug)
+
+    for (const moduleSlug of combo.moduleSlugs) {
+      const { error } = await admin.from('course_enrollments').upsert(
+        {
+          user_id: userId,
+          course_slug: moduleSlug,
+          source: 'stripe',
+          order_id: orderId,
+        },
+        { onConflict: 'user_id,course_slug' }
+      )
+      if (!error) granted.push(moduleSlug)
+    }
+
+    return { granted: [...new Set(granted)] }
+  }
+
+  if (isStageComboBundleSlug(trimmedSlug)) {
+    const combo = await resolveStageComboBundle(admin, trimmedSlug)
+    if (!combo?.moduleSlugs?.length) return { granted: [], error: 'Bundle not found' }
+    return grantStageComboEntitlement(combo)
+  }
+
+  const bundle = await getBundleBySlug(admin, trimmedSlug)
   if (!bundle) return { granted: [], error: 'Bundle not found' }
   if (bundle.status !== 'live') return { granted: [], error: 'Bundle is not available for purchase' }
 

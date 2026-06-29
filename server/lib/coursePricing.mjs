@@ -4,7 +4,9 @@ import {
   getModuleByCatalogSlug,
   isBundlePurchasable,
   isModulePurchasable,
+  isStageComboBundleSlug,
   resolveModuleCheckoutPriceCents,
+  resolveStageComboBundle,
   validateModuleAddonSlugs,
 } from './ioaiCommerce.mjs'
 import { parsePriceStringToCents, isStripeCheckoutAmountValid, stripeMinimumAmountError } from './priceUtils.mjs'
@@ -58,6 +60,21 @@ export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, co
   }
 
   if (purchaseType === 'bundle') {
+    if (isStageComboBundleSlug(slug)) {
+      const combo = admin ? await resolveStageComboBundle(admin, slug) : null
+      if (!combo) return { error: 'Bundle not found' }
+      if (!isStripeCheckoutAmountValid(combo.priceCents, combo.currency)) {
+        return { error: stripeMinimumAmountError(combo.priceCents, combo.currency) }
+      }
+      return {
+        purchaseType: 'bundle',
+        returnSlug: combo.slug,
+        amountCents: combo.priceCents,
+        currency: (combo.currency || 'usd').toLowerCase(),
+        productName: combo.title || combo.slug,
+      }
+    }
+
     const bundle = admin ? await getBundleBySlug(admin, slug) : null
     if (!bundle) return { error: 'Bundle not found' }
     if (!isBundlePurchasable(bundle)) return { error: 'This bundle is not available for purchase' }

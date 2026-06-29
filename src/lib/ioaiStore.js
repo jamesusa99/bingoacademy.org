@@ -2,6 +2,11 @@ import { authFetch } from './checkout'
 import { COURSE_STATUS } from '../config/coursesCatalog'
 
 export const IOAI_FULL_BUNDLE_SLUG = 'ioai-competition-system'
+export const IOAI_STAGE_BUNDLE_PREFIX = 'ioai-stage-'
+
+export function stageComboBundleSlug(levelSlug) {
+  return `${IOAI_STAGE_BUNDLE_PREFIX}${levelSlug}`
+}
 
 /** Stripe Checkout minimum for USD (matches server/lib/priceUtils.mjs). */
 export const STRIPE_MINIMUM_USD_CENTS = 50
@@ -230,4 +235,56 @@ export function flattenIoaiModules(levels) {
     }
   }
   return modules
+}
+
+/** Build the stage combo card payload for the current L1 filter tab. */
+export function buildStageCombo({ stageFilter, modules, stages, fullBundle }) {
+  const filtered =
+    stageFilter === 'all' ? modules : modules.filter((mod) => mod.levelId === stageFilter)
+  const purchasable = filtered.filter((mod) => isIoaiModulePurchasable(mod))
+  if (!purchasable.length) return null
+
+  const moduleCount = purchasable.length
+  const lessonCount = purchasable.reduce((total, mod) => total + (mod.lessonCount || 0), 0)
+  const moduleSlugs = purchasable.map((mod) => mod.catalogSlug)
+  const stageTitle =
+    stageFilter === 'all'
+      ? null
+      : stages.find((stage) => stage.id === stageFilter)?.title || stageFilter
+
+  if (stageFilter === 'all' && fullBundle?.price_cents) {
+    return {
+      slug: IOAI_FULL_BUNDLE_SLUG,
+      title: fullBundle.title || 'IOAI Full Track',
+      introHtml: fullBundle.intro_html || '',
+      priceCents: fullBundle.price_cents,
+      compareAtCents: fullBundle.compare_at_cents ?? null,
+      currency: fullBundle.currency || 'usd',
+      moduleCount,
+      lessonCount,
+      moduleSlugs,
+      isFullTrack: true,
+    }
+  }
+
+  const priceCents = purchasable.reduce((sum, mod) => sum + modulePriceCents(mod), 0)
+  const levelKey = stageFilter === 'all' ? 'all' : stageFilter
+
+  return {
+    slug: stageComboBundleSlug(levelKey),
+    title: stageTitle ? `${stageTitle} — All units` : 'All stages — Complete bundle',
+    introHtml: '',
+    priceCents,
+    compareAtCents: null,
+    currency: purchasable[0]?.currency || 'usd',
+    moduleCount,
+    lessonCount,
+    moduleSlugs,
+    isFullTrack: false,
+  }
+}
+
+export function isStageComboOwned(combo, hasModule) {
+  if (!combo?.moduleSlugs?.length) return false
+  return combo.moduleSlugs.every((slug) => hasModule(slug))
 }

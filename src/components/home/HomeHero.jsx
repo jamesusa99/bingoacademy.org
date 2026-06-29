@@ -3,6 +3,7 @@ import { programPath } from '../../config/programs'
 import { adaptiveCountGridClass, heroPathsSubtitle } from '../../config/productLineVisibility'
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
 import HomeUserEntry from './HomeUserEntry'
+import HomeIoaiStagePackages from './HomeIoaiStagePackages'
 
 function PathCard({ program }) {
   const accent =
@@ -52,6 +53,8 @@ export default function HomeHero() {
           ))}
         </div>
         ) : null}
+
+        <HomeIoaiStagePackages />
 
         <div className="mt-8 sm:mt-10">
           <HomeUserEntry />

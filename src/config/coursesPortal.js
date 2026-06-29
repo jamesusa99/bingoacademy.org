@@ -162,6 +162,12 @@ export const COURSES_PORTAL = {
     return map[lineId] || map.general
   },
   allStages: 'All stages',
+  stageComboBadge: 'Stage bundle',
+  stageComboDesc: (moduleCount, lessonCount) =>
+    `One purchase unlocks all ${moduleCount} course unit${moduleCount === 1 ? '' : 's'} (${lessonCount} lesson${lessonCount === 1 ? '' : 's'}) in this stage.`,
+  stageComboOwned: 'Stage unlocked',
+  buyStageCombo: 'Buy stage bundle',
+  buyFullTrack: 'Buy full track',
   ioaiModulesTitle: 'Course units',
   ioaiModulesSubtitle:
     'Purchase a course unit (L3) to unlock all video lessons inside. Open a unit to see individual lessons (L4).',

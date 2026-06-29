@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { PRODUCT_LINES } from '../../config/products'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { useIOAIAccess } from '../../hooks/useIOAIStore'
 import { useProgramStore } from '../../hooks/useProgramStore'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
-import { flattenIoaiModules, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable } from '../../lib/ioaiStore'
-import { purchaseIoaiModule } from '../../lib/ioaiPurchase'
+import { flattenIoaiModules, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable, buildStageCombo, isStageComboOwned } from '../../lib/ioaiStore'
+import { purchaseIoaiModule, purchaseIoaiBundle } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig } from '../../lib/checkout'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
 import { useAuth } from '../../contexts/AuthContext'
@@ -17,6 +17,36 @@ import { useCoursesLineHero, buildLineHeroStats } from '../../hooks/useCoursesLi
 import PageMeta from '../PageMeta'
 import { PAGE_SEO } from '../../config/programs'
 import ModuleCoverImage from './ModuleCoverImage'
+
+function buyStageCombo({
+  combo,
+  stageId,
+  stripeCheckout,
+  isAuthenticated,
+  navigate,
+  setCheckoutLoading,
+}) {
+  if (!combo) return
+  const returnPath = `/courses?line=ioai&stage=${encodeURIComponent(stageId)}&buy=1`
+
+  purchaseIoaiBundle({
+    bundleSlug: combo.slug,
+    stripeCheckout,
+    isAuthenticated,
+    navigate,
+    setCheckoutLoading,
+    returnPath,
+    onDemoUnlock: {
+      bundle: (slug) => {
+        purchaseCourseSlug(slug)
+        for (const moduleSlug of combo.moduleSlugs) {
+          purchaseCourseSlug(moduleSlug)
+        }
+        window.location.reload()
+      },
+    },
+  })
+}
 
 function lineBadgeLabel(lineId) {
   const pl = PRODUCT_LINES.find((p) => p.id === lineId)
@@ -123,8 +153,84 @@ function ModuleCard({ mod, lineId, hasModule, stripeCheckout, isAuthenticated, n
   )
 }
 
+function StageComboCard({ combo, lineId, hasModule, stripeCheckout, isAuthenticated, navigate }) {
+  const [loading, setLoading] = useState(false)
+  if (!combo) return null
+
+  const owned = isStageComboOwned(combo, hasModule)
+  const price = formatIoaiPrice(combo.priceCents, combo.currency)
+  const compare = combo.compareAtCents ? formatIoaiPrice(combo.compareAtCents, combo.currency) : null
+
+  const buy = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    buyStageCombo({
+      combo,
+      stageId: combo.stageId,
+      stripeCheckout,
+      isAuthenticated,
+      navigate,
+      setCheckoutLoading: setLoading,
+    })
+  }
+
+  return (
+    <article className="course-card-dark group flex flex-col h-full ring-2 ring-amber-500/40 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-900">
+      <div className="relative p-4 pb-0">
+        <div
+          className="course-card-dark__thumb bg-gradient-to-br from-amber-500/90 via-orange-600/80 to-amber-950 flex items-center justify-center overflow-hidden min-h-[120px] rounded-lg"
+          aria-hidden
+        >
+          <span className="text-4xl">{combo.isFullTrack ? '🏆' : '📦'}</span>
+        </div>
+      </div>
+
+      <div className="flex flex-col flex-1 p-4">
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          <span className="text-[10px] font-semibold text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded">
+            {COURSES_PORTAL.stageComboBadge}
+          </span>
+          <span className="text-[10px] font-semibold text-cyan-400/90 bg-cyan-500/10 px-2 py-0.5 rounded">
+            {lineBadgeLabel(lineId)}
+          </span>
+        </div>
+        <h3 className="font-semibold text-white text-sm leading-snug mb-1">{combo.title}</h3>
+        <p className="text-[10px] text-slate-500 mb-2">
+          {COURSES_PORTAL.stageComboDesc(combo.moduleCount, combo.lessonCount)}
+        </p>
+        {combo.introHtml ? (
+          <p className="text-xs text-slate-400 leading-relaxed flex-1 mb-4 line-clamp-2">{combo.introHtml}</p>
+        ) : (
+          <div className="flex-1 mb-4" />
+        )}
+        <div className="flex items-center justify-between gap-2 pt-3 border-t border-amber-500/20 mt-auto">
+          <div>
+            {compare ? <p className="text-[10px] text-slate-500 line-through">{compare}</p> : null}
+            <span className="text-lg font-bold text-amber-300">{price}</span>
+          </div>
+          {owned ? (
+            <span className="text-xs font-semibold text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/40">
+              {COURSES_PORTAL.stageComboOwned}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={buy}
+              disabled={loading}
+              className="text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 px-3 py-1.5 rounded-lg disabled:opacity-60"
+            >
+              {loading ? '…' : combo.isFullTrack ? COURSES_PORTAL.buyFullTrack : COURSES_PORTAL.buyStageCombo}
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  )
+}
+
 export default function ProgramCoursesModuleView({ line }) {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
   const { visibleProductLines } = useProductLineVisibility()
   const lineId = line.id
@@ -133,7 +239,10 @@ export default function ProgramCoursesModuleView({ line }) {
   const ioaiAccess = useIOAIAccess()
   const purchase = usePurchasedCourses()
   const [stripeCheckout, setStripeCheckout] = useState(false)
-  const [stageFilter, setStageFilter] = useState('all')
+  const stageParam = searchParams.get('stage')
+  const shouldAutoBuy = searchParams.get('buy') === '1'
+  const [stageFilter, setStageFilter] = useState(stageParam || 'all')
+  const autoBuyStarted = useRef(false)
 
   useEffect(() => {
     fetchPaymentsConfig()
@@ -160,6 +269,65 @@ export default function ProgramCoursesModuleView({ line }) {
     if (stageFilter === 'all') return modules
     return modules.filter((m) => m.levelId === stageFilter)
   }, [modules, stageFilter])
+
+  const stageCombo = useMemo(() => {
+    const combo = buildStageCombo({ stageFilter, modules, stages, fullBundle })
+    return combo ? { ...combo, stageId: stageFilter } : null
+  }, [stageFilter, modules, stages, fullBundle])
+
+  useEffect(() => {
+    if (!stageParam) return
+    if (stageParam === 'all' || stages.some((stage) => stage.id === stageParam)) {
+      setStageFilter(stageParam)
+    }
+  }, [stageParam, stages])
+
+  const selectStage = (stageId) => {
+    setStageFilter(stageId)
+    const next = new URLSearchParams(searchParams)
+    next.set('line', lineId)
+    next.set('stage', stageId)
+    next.delete('buy')
+    setSearchParams(next, { replace: true })
+  }
+
+  useEffect(() => {
+    if (!shouldAutoBuy || autoBuyStarted.current || loading || lineId !== 'ioai') return
+
+    if (!stageCombo || isStageComboOwned(stageCombo, hasModule)) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('buy')
+      setSearchParams(next, { replace: true })
+      return
+    }
+
+    autoBuyStarted.current = true
+    buyStageCombo({
+      combo: stageCombo,
+      stageId: stageFilter,
+      stripeCheckout,
+      isAuthenticated,
+      navigate,
+    })
+
+    if (isAuthenticated) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('buy')
+      setSearchParams(next, { replace: true })
+    }
+  }, [
+    shouldAutoBuy,
+    loading,
+    lineId,
+    stageCombo,
+    hasModule,
+    stageFilter,
+    stripeCheckout,
+    isAuthenticated,
+    navigate,
+    searchParams,
+    setSearchParams,
+  ])
 
   const heroStats = useMemo(
     () => buildLineHeroStats(modules.length, hero),
@@ -203,22 +371,10 @@ export default function ProgramCoursesModuleView({ line }) {
             stats={heroStats}
           />
 
-          {lineId === 'ioai' && fullBundle?.price_cents ? (
-            <section className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold text-amber-300 uppercase tracking-wide">{COURSES_PORTAL.fullTrack}</p>
-                <p className="text-sm text-slate-300">{fullBundle.title || 'IOAI Full Track'}</p>
-              </div>
-              <Link to="/ioai" className="text-xs font-semibold text-amber-200 hover:underline">
-                {COURSES_PORTAL.viewFullTrack} →
-              </Link>
-            </section>
-          ) : null}
-
           <div className="flex flex-wrap gap-2 mb-6">
             <button
               type="button"
-              onClick={() => setStageFilter('all')}
+              onClick={() => selectStage('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
                 stageFilter === 'all' ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'
               }`}
@@ -229,7 +385,7 @@ export default function ProgramCoursesModuleView({ line }) {
               <button
                 key={s.id}
                 type="button"
-                onClick={() => setStageFilter(s.id)}
+                onClick={() => selectStage(s.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
                   stageFilter === s.id ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'
                 }`}
@@ -251,6 +407,16 @@ export default function ProgramCoursesModuleView({ line }) {
                 {COURSES_PORTAL.ioaiModuleCount(visible.length)}
               </p>
               <div className="course-grid-dark">
+                {lineId === 'ioai' && stageCombo ? (
+                  <StageComboCard
+                    combo={stageCombo}
+                    lineId={lineId}
+                    hasModule={hasModule}
+                    stripeCheckout={stripeCheckout}
+                    isAuthenticated={isAuthenticated}
+                    navigate={navigate}
+                  />
+                ) : null}
                 {visible.map((mod) => (
                   <ModuleCard
                     key={mod.catalogSlug}
