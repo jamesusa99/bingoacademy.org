@@ -19,6 +19,7 @@ import PageMeta from '../components/PageMeta'
 import { ProgramBadge, ModuleBadge, UseCaseTag } from '../components/courses/ProgramBadges'
 import { PAGE_SEO } from '../config/programs'
 import { isProductLabSub, labsPath } from '../config/productLabs'
+import { LABS_STOREFRONT_VISIBLE } from '../config/labsStorefront'
 import { usePurchasedCourses } from '../hooks/usePurchasedCourses'
 import CoursePurchaseButton from '../components/courses/CoursePurchaseButton'
 import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
@@ -223,12 +224,14 @@ export default function Courses() {
           >
             🧠 {COURSES_PORTAL.assessmentChip}
           </Link>
-          <Link
-            to="/labs"
-            className="text-xs font-semibold px-3 py-2 rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition"
-          >
-            🧪 {COURSES_PORTAL.labChip}
-          </Link>
+          {LABS_STOREFRONT_VISIBLE ? (
+            <Link
+              to="/labs"
+              className="text-xs font-semibold px-3 py-2 rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition"
+            >
+              🧪 {COURSES_PORTAL.labChip}
+            </Link>
+          ) : null}
           <Link
             to="/exploration"
             className="text-xs font-semibold px-3 py-2 rounded-full bg-violet-100 text-violet-800 hover:bg-violet-200 transition"
@@ -276,7 +279,9 @@ export default function Courses() {
           >
             {COURSES_PORTAL.allTypes}
           </button>
-          {line.subcategories.map((s) =>
+          {line.subcategories
+            .filter((s) => LABS_STOREFRONT_VISIBLE || !isProductLabSub(line.id, s.id))
+            .map((s) =>
             isProductLabSub(line.id, s.id) ? (
               <Link
                 key={s.id}
@@ -304,7 +309,9 @@ export default function Courses() {
 
         {!subId && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
-            {line.subcategories.map((s) =>
+            {line.subcategories
+              .filter((s) => LABS_STOREFRONT_VISIBLE || !isProductLabSub(line.id, s.id))
+              .map((s) =>
               isProductLabSub(line.id, s.id) ? (
                 <Link
                   key={s.id}

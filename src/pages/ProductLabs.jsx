@@ -11,6 +11,7 @@ import { normalizeLabMaterialSub } from '../config/labMaterials'
 import { isLabMaterialsCatalogRow } from '../lib/catalogCourse'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
+import { LABS_STOREFRONT_VISIBLE } from '../config/labsStorefront'
 
 export default function ProductLabs() {
   const [params, setParams] = useSearchParams()
@@ -71,26 +72,28 @@ export default function ProductLabs() {
         description="Online labs, training labs, and lab kits for Foundations of AI, IOAI competition training, and K12 classroom programs."
       />
 
-      <PageBanner
-        slides={[
-          {
-            id: 'product-labs',
-            gradient: 'from-cyan-500/15 via-sky-50 to-emerald-50',
-            icon: '🧪',
-            eyebrow: 'Labs & kits',
-            title: 'Hands-On Labs Across Three Programs',
-            subtitle:
-              'Cloud labs, training labs, and physical kits — organized by Foundations, IOAI, and K12. Separate from the free AI Exploration game zone.',
-            ctaLabel: 'Browse Foundations labs',
-            href: labsPath('general', 'online-lab'),
-            secondaryLabel: 'Free AI Exploration games',
-            secondaryHref: '/exploration',
-          },
-        ]}
-        autoPlayMs={0}
-      />
+      {LABS_STOREFRONT_VISIBLE ? (
+        <PageBanner
+          slides={[
+            {
+              id: 'product-labs',
+              gradient: 'from-cyan-500/15 via-sky-50 to-emerald-50',
+              icon: '🧪',
+              eyebrow: 'Labs & kits',
+              title: 'Hands-On Labs Across Three Programs',
+              subtitle:
+                'Cloud labs, training labs, and physical kits — organized by Foundations, IOAI, and K12. Separate from the free AI Exploration game zone.',
+              ctaLabel: 'Browse Foundations labs',
+              href: labsPath('general', 'online-lab'),
+              secondaryLabel: 'Free AI Exploration games',
+              secondaryHref: '/exploration',
+            },
+          ]}
+          autoPlayMs={0}
+        />
+      ) : null}
 
-      <PageContent className="py-6 sm:py-10">
+      <PageContent className={`${LABS_STOREFRONT_VISIBLE ? 'py-6 sm:py-10' : 'py-8 sm:py-12'}`}>
         <div
           className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none"
           style={{ WebkitOverflowScrolling: 'touch' }}

@@ -17,6 +17,7 @@ import {
   PORTAL_TESTIMONIALS_FALLBACK,
 } from '../config/homePortal'
 import { lineIdFromHref, adaptiveCountGridClass, productLineSectionTitle } from '../config/productLineVisibility'
+import { isLabsStorefrontLink } from '../config/labsStorefront'
 import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 
 const ACCENT_RING = {
@@ -35,7 +36,10 @@ export default function Home() {
   const { visibleProductLines, isLineVisible } = useProductLineVisibility()
 
   const coreEntries = useMemo(
-    () => PORTAL_CORE_ENTRIES.filter((item) => isLineVisible(lineIdFromHref(item.to))),
+    () =>
+      PORTAL_CORE_ENTRIES.filter(
+        (item) => isLineVisible(lineIdFromHref(item.to)) && isLabsStorefrontLink(item.to)
+      ),
     [isLineVisible]
   )
 

@@ -2,6 +2,7 @@ import { useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { subcategoryLabel } from '../../config/products'
 import { isProductLabSub, labsPath } from '../../config/productLabs'
+import { LABS_STOREFRONT_VISIBLE } from '../../config/labsStorefront'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
 import { filterAndSortCourses, paginateCourses } from '../../lib/courseListUtils'
 import { useCourseFilters } from '../../hooks/useCourseFilters'
@@ -90,7 +91,9 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
           >
             {COURSES_PORTAL.allTypes}
           </Link>
-          {line.subcategories.map((s) =>
+          {line.subcategories
+            .filter((s) => LABS_STOREFRONT_VISIBLE || !isProductLabSub(line.id, s.id))
+            .map((s) =>
             isProductLabSub(line.id, s.id) ? (
               <Link
                 key={s.id}

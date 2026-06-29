@@ -7,6 +7,7 @@ import { ProductLineVisibilityProvider, useProductLineVisibility } from '../cont
 import { authLink } from '../lib/authRedirect'
 import NavDropdown from './NavDropdown'
 import ChatWidget from './ChatWidget'
+import { LABS_STOREFRONT_VISIBLE, isLabsNavPath } from '../config/labsStorefront'
 
 function navLinkClass(active) {
   if (active) return 'bg-cyan-500 text-white'
@@ -45,6 +46,7 @@ function LayoutShell({ children }) {
   const showGuestNav = !authLoading && !isAuthenticated
   const visibleProgramPaths = new Set(visiblePrograms.map((p) => programPath(p.slug)))
   const mobileNavItems = mainNav.filter((item) => {
+    if (!LABS_STOREFRONT_VISIBLE && isLabsNavPath(item.path)) return false
     if (item.path.startsWith('/programs/')) return visibleProgramPaths.has(item.path)
     return true
   })
@@ -60,7 +62,7 @@ function LayoutShell({ children }) {
     { type: 'link', path: '/', label: 'Home' },
     { type: 'programs', label: 'Programs' },
     { type: 'link', path: '/courses', label: 'Courses' },
-    { type: 'link', path: '/labs', label: 'Labs' },
+    ...(LABS_STOREFRONT_VISIBLE ? [{ type: 'link', path: '/labs', label: 'Labs' }] : []),
     { type: 'link', path: '/exploration', label: 'AI Exploration' },
     { type: 'sep' },
     { type: 'link', path: '/showcase', label: 'Achievements' },
@@ -204,7 +206,9 @@ function LayoutShell({ children }) {
             <div>
               <div className="text-white font-medium mb-2">Explore</div>
               <Link to="/courses" className="block hover:text-white">Courses</Link>
-              <Link to="/labs" className="block hover:text-white">Labs & kits</Link>
+              {LABS_STOREFRONT_VISIBLE ? (
+                <Link to="/labs" className="block hover:text-white">Labs & kits</Link>
+              ) : null}
               <Link to="/exploration" className="block hover:text-white">AI Exploration (free games)</Link>
               {visiblePrograms.length > 1 ? (
                 <Link to="/compare" className="block hover:text-white">Compare Programs</Link>
