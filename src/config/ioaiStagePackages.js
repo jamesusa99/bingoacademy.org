@@ -7,7 +7,7 @@ export const IOAI_STAGE_PACKAGES = [
   { id: 'ai-olympian', title: 'AI Olympiad', mallTitle: 'AI Olympiad — All units', emoji: '🥇' },
 ]
 
-export function ioaiStagePackageHref(stageId, { autoBuy = true } = {}) {
+export function ioaiStagePackageHref(stageId, { autoBuy = false } = {}) {
   const params = new URLSearchParams({ line: 'ioai', stage: stageId })
   if (autoBuy) params.set('buy', '1')
   return `/courses?${params.toString()}`
