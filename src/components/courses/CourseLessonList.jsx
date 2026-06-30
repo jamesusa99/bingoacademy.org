@@ -182,6 +182,7 @@ export default function CourseLessonList({
   summaryText = '',
   studyCenter = false,
   ioaiAccess = null,
+  onToggleCurriculum = null,
 }) {
   const activeContext = activeLessonId
     ? curriculum
@@ -192,8 +193,21 @@ export default function CourseLessonList({
   return (
     <div className={`course-lesson-list card overflow-hidden ${compact ? '' : 'sticky top-20'}`}>
       <div className="p-4 border-b border-slate-100 bg-slate-50/80">
-        <h2 className="font-bold text-bingo-dark text-sm">Course curriculum</h2>
-        {summaryText ? <p className="text-xs text-slate-500 mt-0.5">{summaryText}</p> : null}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="font-bold text-bingo-dark text-sm">Course curriculum</h2>
+            {summaryText ? <p className="text-xs text-slate-500 mt-0.5">{summaryText}</p> : null}
+          </div>
+          {onToggleCurriculum ? (
+            <button
+              type="button"
+              onClick={onToggleCurriculum}
+              className="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:border-primary/30 hover:text-primary transition"
+            >
+              {COURSES_PORTAL.hideCurriculum}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className={`overflow-y-auto ${compact ? 'max-h-[420px]' : 'max-h-[calc(100vh-12rem)]'}`}>

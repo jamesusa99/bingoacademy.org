@@ -120,6 +120,8 @@ export const COURSES_PORTAL = {
   purchaseCourse: (price) => `Purchase — ${price}`,
   videoPreviewBadge: 'Free preview',
   videoFullBadge: 'Full lesson',
+  hideCurriculum: 'Hide curriculum',
+  showCurriculum: 'Show curriculum',
   previewLength: (sec) => `${sec}s preview`,
   previewCutoff: (sec) => `Preview ends at ${sec}s`,
   previewLabel: 'preview',

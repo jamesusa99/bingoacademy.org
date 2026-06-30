@@ -51,6 +51,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutMessage, setCheckoutMessage] = useState(null)
   const [apiLessonPatch, setApiLessonPatch] = useState(null)
+  const [curriculumOpen, setCurriculumOpen] = useState(true)
   const { courses, loading: catalogLoading, reload } = useCourseCatalog()
   const catalogItem = findCourseInList(courses, id)
   const curriculumLine = inferProgramLineForSlug(id, catalogItem)
@@ -309,7 +310,6 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
     .map((slug) => EXPLORATION_EXPERIMENTS.find((e) => e.id === slug))
     .filter(Boolean)
 
-  const pageWidth = isProgram ? 'max-w-6xl' : 'max-w-4xl'
   const backHref = studyCenter
     ? STUDY_HOME
     : isLabMaterial
@@ -409,45 +409,61 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
           ) : null}
 
           {showSegmentLearning ? (
-            <div className="grid lg:grid-cols-5 gap-6 mb-6">
-              <div className="lg:col-span-3 min-w-0">
-                <SegmentPlayer
-                  course={displayCourse || item}
-                  hasAccess={effectiveHasAccess}
-                  hasTrack={hasTrack}
-                  onUnlockLesson={unlockLesson}
-                  onUnlockTrack={unlockTrack}
-                  courses={courses}
-                  curriculumTree={tree}
-                  moduleContext={moduleContext}
-                  previewMode={previewMode}
-                  startAtVideo={startAtVideo}
-                  studyCenter={studyCenter}
-                  {...purchaseProps}
-                />
-                {progLine === 'ioai' && item?.id ? (
-                  <LessonResourcePanels catalogSlug={item.id} owned={effectiveHasAccess} />
+            <>
+              {!curriculumOpen ? (
+                <div className="flex justify-end mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurriculumOpen(true)}
+                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-primary/30 hover:text-primary transition"
+                  >
+                    {COURSES_PORTAL.showCurriculum}
+                  </button>
+                </div>
+              ) : null}
+              <div className={`grid gap-6 mb-6 ${curriculumOpen ? 'lg:grid-cols-5' : 'grid-cols-1'}`}>
+                <div className={curriculumOpen ? 'lg:col-span-3 min-w-0' : 'min-w-0'}>
+                  <SegmentPlayer
+                    course={displayCourse || item}
+                    hasAccess={effectiveHasAccess}
+                    hasTrack={hasTrack}
+                    onUnlockLesson={unlockLesson}
+                    onUnlockTrack={unlockTrack}
+                    courses={courses}
+                    curriculumTree={tree}
+                    moduleContext={moduleContext}
+                    previewMode={previewMode}
+                    startAtVideo={startAtVideo}
+                    studyCenter={studyCenter}
+                    {...purchaseProps}
+                  />
+                  {progLine === 'ioai' && item?.id ? (
+                    <LessonResourcePanels catalogSlug={item.id} owned={effectiveHasAccess} />
+                  ) : null}
+                </div>
+                {curriculumOpen ? (
+                  <div className="lg:col-span-2 min-w-0">
+                    <CourseLessonList
+                      activeLessonId={item.id}
+                      purchasedSlugs={purchased}
+                      curriculum={curriculum}
+                      summaryText={summary?.summary ?? ''}
+                      studyCenter={studyCenter}
+                      onToggleCurriculum={() => setCurriculumOpen(false)}
+                      ioaiAccess={
+                        progLine === 'ioai'
+                          ? {
+                              moduleSlugs,
+                              enrolledSlugs: mergedEnrollmentSlugs,
+                              lessonModuleMap,
+                            }
+                          : null
+                      }
+                    />
+                  </div>
                 ) : null}
               </div>
-              <div className="lg:col-span-2">
-                <CourseLessonList
-                  activeLessonId={item.id}
-                  purchasedSlugs={purchased}
-                  curriculum={curriculum}
-                  summaryText={summary?.summary ?? ''}
-                  studyCenter={studyCenter}
-                  ioaiAccess={
-                    progLine === 'ioai'
-                      ? {
-                          moduleSlugs,
-                          enrolledSlugs: mergedEnrollmentSlugs,
-                          lessonModuleMap,
-                        }
-                      : null
-                  }
-                />
-              </div>
-            </div>
+            </>
           ) : null}
 
           {showLegacyVideo ? (
