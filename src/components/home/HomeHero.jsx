@@ -59,7 +59,7 @@ export default function HomeHero() {
   return (
     <section id="get-started" className="relative w-full overflow-hidden border-b border-cyan-500/10 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
       <div className="absolute inset-0 opacity-30 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-transparent" />
-      <div className="page-content relative py-12 sm:py-16 lg:py-20">
+      <div className="page-content relative pt-5 sm:pt-6 lg:pt-8 pb-12 sm:pb-14 lg:pb-16">
         <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
           <p className="text-xs font-bold tracking-[0.2em] text-cyan-400 uppercase mb-3">Bingo AI Academy</p>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-4">Learn AI by Doing</h1>
