@@ -277,8 +277,8 @@ export default function ProgramCoursesModuleView({ line }) {
     <div className="w-full">
       <PageMeta title={PAGE_SEO.courses.title} description={PAGE_SEO.courses.description} />
       <div className="courses-page-dark min-h-[60vh]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <nav className="flex flex-wrap gap-2 mb-4 text-xs" aria-label="Breadcrumb">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
+          <nav className="flex flex-wrap gap-2 mb-3 text-xs" aria-label="Breadcrumb">
             <Link to="/courses" className="text-slate-400 hover:text-white transition">
               {COURSES_PORTAL.backToCourses}
             </Link>
@@ -286,12 +286,12 @@ export default function ProgramCoursesModuleView({ line }) {
             <span className="text-cyan-400 font-medium">{line.name}</span>
           </nav>
 
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
             {visibleProductLines.map((pl) => (
               <Link
                 key={pl.id}
                 to={`/courses?line=${pl.id}`}
-                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition shrink-0 min-h-[44px] inline-flex items-center ${
+                className={`px-3 py-2 rounded-lg text-xs font-semibold transition shrink-0 min-h-[36px] inline-flex items-center ${
                   lineId === pl.id
                     ? 'bg-cyan-500 text-white shadow'
                     : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-500'
@@ -302,17 +302,13 @@ export default function ProgramCoursesModuleView({ line }) {
             ))}
           </div>
 
-          <CoursesHero
-            title={`${line.icon} ${line.name} · ${hero.modulesTitle}`}
-            subtitle={hero.modulesSubtitle}
-            stats={heroStats}
-          />
+          <CoursesHero subtitle={hero.modulesSubtitle} stats={heroStats} />
 
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-4">
             <button
               type="button"
               onClick={() => selectStage('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${
                 stageFilter === 'all' ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'
               }`}
             >
@@ -323,7 +319,7 @@ export default function ProgramCoursesModuleView({ line }) {
                 key={s.id}
                 type="button"
                 onClick={() => selectStage(s.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${
                   stageFilter === s.id ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'
                 }`}
               >

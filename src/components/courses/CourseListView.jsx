@@ -52,8 +52,8 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
 
   return (
     <div className="courses-page-dark min-h-[60vh]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <nav className="flex flex-wrap gap-2 mb-4 text-xs" aria-label="Breadcrumb">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
+        <nav className="flex flex-wrap gap-2 mb-3 text-xs" aria-label="Breadcrumb">
           <Link to="/courses" className="text-slate-400 hover:text-white transition">
             {COURSES_PORTAL.backToCourses}
           </Link>
@@ -66,14 +66,14 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
         </nav>
 
         <div
-          className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none"
+          className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {visibleProductLines.map((pl) => (
             <Link
               key={pl.id}
               to={`/courses?line=${pl.id}&sub=${VIDEO_COURSE_SUB_BY_LINE[pl.id] || subId}`}
-              className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition shrink-0 min-h-[44px] inline-flex items-center ${
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition shrink-0 min-h-[36px] inline-flex items-center ${
                 line.id === pl.id
                   ? 'bg-cyan-500 text-white shadow'
                   : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-500'
@@ -84,7 +84,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
           ))}
         </div>
 
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
           <Link
             to={`/courses?line=${line.id}`}
             className="px-3 py-2 rounded-lg text-xs font-medium shrink-0 min-h-[40px] inline-flex items-center bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-500"
@@ -118,13 +118,9 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
           )}
         </div>
 
-        <CoursesHero
-          title={`${line.icon} ${line.name} · ${hero.modulesTitle}`}
-          subtitle={hero.modulesSubtitle}
-          stats={heroStats}
-        />
+        <CoursesHero subtitle={hero.modulesSubtitle} stats={heroStats} />
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap gap-3 mb-4">
           <Link
             to={`/courses?line=${line.id}`}
             className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition"

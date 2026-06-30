@@ -170,7 +170,7 @@ export const COURSES_PORTAL = {
   buyFullTrack: 'Buy full track',
   ioaiModulesTitle: 'Course units',
   ioaiModulesSubtitle:
-    'Purchase a course unit (L3) to unlock all video lessons inside. Open a unit to see individual lessons (L4).',
+    'Purchase a stage bundle or a course unit to unlock all video lessons inside.',
   ioaiModuleCount: (n) => `${n} course unit${n === 1 ? '' : 's'}`,
   ioaiModuleCardDesc: 'Full video unit — purchase once to unlock all lessons inside.',
   emptyIoaiModules: 'No course units published yet. Check back soon.',
