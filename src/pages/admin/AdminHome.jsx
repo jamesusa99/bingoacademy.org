@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 import AdminAlert from '../../components/admin/AdminAlert'
 import AdminField from '../../components/admin/AdminField'
+import AdminHomeHeroProgramsEditor from '../../components/admin/AdminHomeHeroProgramsEditor'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const STAT_REQUIRED = new Set(['value', 'label'])
@@ -136,10 +137,37 @@ export default function AdminHome() {
       <p className="text-sm text-slate-600 mb-6" dangerouslySetInnerHTML={{ __html: c.t('pages.home.hint') }} />
       {error ? <AdminAlert type="error" onDismiss={() => setError(null)}>{error}</AdminAlert> : null}
       {success ? <AdminAlert type="success" onDismiss={() => setSuccess(null)}>{success}</AdminAlert> : null}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
         <button type="button" onClick={() => setActiveTab('stats')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'stats' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.home.tabStats')}</button>
         <button type="button" onClick={() => setActiveTab('testimonials')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'testimonials' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.home.tabTestimonials')}</button>
+        <button type="button" onClick={() => setActiveTab('heroPrograms')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'heroPrograms' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.home.tabHeroPrograms')}</button>
       </div>
+      {activeTab === 'heroPrograms' ? (
+        <div className="card p-6 mb-6">
+          <AdminHomeHeroProgramsEditor
+            labels={{
+              desc: c.t('pages.home.heroProgramsDesc'),
+              loading: c.loading,
+              saved: c.t('pages.home.heroProgramsSaved'),
+              coverLabel: c.t('pages.home.heroProgramCover'),
+              coverHint: c.t('pages.home.heroProgramCoverHint'),
+              coverUpload: c.t('pages.home.heroProgramCoverUpload'),
+              coverUploading: c.t('pages.home.heroProgramCoverUploading'),
+              coverRemove: c.t('pages.home.heroProgramCoverRemove'),
+              coverDropzone: c.t('pages.home.heroProgramCoverDropzone'),
+              coverDropzoneActive: c.t('pages.home.heroProgramCoverDropzoneActive'),
+              coverReplace: c.t('pages.home.heroProgramCoverReplace'),
+              coverReplaceBtn: c.t('pages.home.heroProgramCoverReplaceBtn'),
+              coverFormats: c.t('pages.home.heroProgramCoverFormats'),
+              coverAdvanced: c.t('pages.home.heroProgramCoverAdvanced'),
+              coverUrlOptional: c.t('pages.home.heroProgramCoverUrlOptional'),
+            }}
+            saveLabel={c.save}
+            savingLabel={c.saving}
+            cancelLabel={c.t('pages.home.heroProgramsReset')}
+          />
+        </div>
+      ) : null}
       {activeTab === 'stats' && (
         <div className="space-y-6">
           <div className="card p-6">

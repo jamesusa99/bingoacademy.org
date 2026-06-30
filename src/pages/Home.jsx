@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useIOAICourseContext } from '../hooks/useIOAICourseContext'
-import ProductLineCard from '../components/ProductLineCard'
 import HomeHero from '../components/home/HomeHero'
 import PageMeta from '../components/PageMeta'
 import PageBanner from '../components/PageBanner'
@@ -16,7 +14,7 @@ import {
   PORTAL_TRUST_STATS_FALLBACK,
   PORTAL_TESTIMONIALS_FALLBACK,
 } from '../config/homePortal'
-import { lineIdFromHref, adaptiveCountGridClass, productLineSectionTitle } from '../config/productLineVisibility'
+import { lineIdFromHref, adaptiveCountGridClass } from '../config/productLineVisibility'
 import { isLabsStorefrontLink } from '../config/labsStorefront'
 import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 
@@ -32,8 +30,7 @@ const ACCENT_RING = {
 export default function Home() {
   const [trustStats, setTrustStats] = useState(PORTAL_TRUST_STATS_FALLBACK)
   const [testimonials, setTestimonials] = useState(PORTAL_TESTIMONIALS_FALLBACK)
-  const { courses } = useIOAICourseContext()
-  const { visibleProductLines, isLineVisible } = useProductLineVisibility()
+  const { isLineVisible } = useProductLineVisibility()
 
   const coreEntries = useMemo(
     () =>
@@ -46,14 +43,6 @@ export default function Home() {
   const competitions = useMemo(
     () => PORTAL_COMPETITIONS.filter((item) => isLineVisible(lineIdFromHref(item.to))),
     [isLineVisible]
-  )
-
-  const featuredCourses = useMemo(
-    () =>
-      courses
-        .filter((c) => c.featured && isLineVisible(c.line))
-        .slice(0, 6),
-    [courses, isLineVisible]
   )
 
   useEffect(() => {
@@ -110,18 +99,6 @@ export default function Home() {
           </div>
         </section>
 
-        {visibleProductLines.length > 0 ? (
-        <section className="mb-14">
-          <h2 className="section-title mb-1">{productLineSectionTitle(visibleProductLines.length)}</h2>
-          <p className="text-slate-500 text-sm mb-6">Choose the path that fits your learning goal</p>
-          <div className={adaptiveCountGridClass(visibleProductLines.length)}>
-            {visibleProductLines.map((line) => (
-              <ProductLineCard key={line.id} line={line} />
-            ))}
-          </div>
-        </section>
-        ) : null}
-
         {/* Authoritative competitions highlight */}
         {competitions.length > 0 ? (
         <section className="mb-14 section-tech rounded-2xl p-6 sm:p-8">
@@ -166,36 +143,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Featured courses */}
-        {featuredCourses.length > 0 ? (
-        <section className="mb-14">
-          <div className="flex items-center justify-between mb-4 gap-2">
-            <div>
-              <h2 className="section-title mb-0">Featured Courses</h2>
-              <p className="text-slate-500 text-sm mt-1">Popular picks across all product lines</p>
-            </div>
-            <Link to="/courses" className="text-sm text-primary hover:underline shrink-0">View catalogue →</Link>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featuredCourses.map((course) => (
-              <Link
-                key={course.id}
-                to={`/courses/detail/${course.id}`}
-                className="card p-5 hover:shadow-md hover:border-primary/30 transition flex flex-col"
-              >
-                <span className="text-[10px] font-bold uppercase tracking-wide text-primary mb-2">{course.badge}</span>
-                <h3 className="font-semibold text-bingo-dark text-sm flex-1">{course.name}</h3>
-                <p className="text-xs text-slate-500 mt-2 line-clamp-2">{course.desc}</p>
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="font-semibold text-primary">{course.price}</span>
-                  <span className="text-slate-400">{course.hours}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-        ) : null}
-
         {/* Quick nav */}
         <section className="mb-14">
           <h2 className="section-title mb-4">Quick Access</h2>
@@ -236,24 +183,6 @@ export default function Home() {
                   <span className="font-medium text-slate-700">{t.name}</span> · {t.role}
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Achievements preview */}
-        <section className="mb-14">
-          <div className="flex items-center justify-between mb-4 gap-2">
-            <h2 className="section-title mb-0">Student Achievements</h2>
-            <Link to="/showcase" className="text-sm text-primary hover:underline shrink-0">View all →</Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {['IOAI Competition', 'AI Literacy Project', 'K12 Lab Work', 'Certified Learner'].map((label, i) => (
-              <Link key={i} to="/showcase" className="card p-4 text-center hover:shadow-md hover:border-primary/30 transition">
-                <div className="rounded-xl bg-gradient-to-br from-primary/10 to-cyan-50 h-14 sm:h-16 flex items-center justify-center text-2xl mb-2">
-                  {['🏆', '🤖', '🔬', '📜'][i]}
-                </div>
-                <p className="text-xs font-medium text-slate-700">{label}</p>
-              </Link>
             ))}
           </div>
         </section>
