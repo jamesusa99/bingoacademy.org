@@ -3,7 +3,9 @@ import { PROGRAMS } from './programs'
 export const HOME_HERO_PROGRAMS_KEY = 'home_hero_programs'
 
 export function defaultHomeHeroPrograms() {
-  return Object.fromEntries(PROGRAMS.map((program) => [program.slug, { coverUrl: '' }]))
+  return Object.fromEntries(
+    PROGRAMS.map((program) => [program.slug, { coverUrl: '', visible: true }])
+  )
 }
 
 export function mergeHomeHeroPrograms(value) {
@@ -16,9 +18,21 @@ export function mergeHomeHeroPrograms(value) {
     if (!row || typeof row !== 'object') continue
     next[program.slug] = {
       coverUrl: typeof row.coverUrl === 'string' ? row.coverUrl.trim() : '',
+      visible: typeof row.visible === 'boolean' ? row.visible : true,
     }
   }
   return next
+}
+
+export function isHomeHeroProgramVisible(heroPrograms, slug) {
+  const row = heroPrograms?.[slug]
+  if (row && typeof row.visible === 'boolean') return row.visible
+  return true
+}
+
+/** Filter storefront programs by hero admin visibility toggles. */
+export function visibleHomeHeroPrograms(programs, heroPrograms) {
+  return (programs || []).filter((program) => isHomeHeroProgramVisible(heroPrograms, program.slug))
 }
 
 export function coverUrlForHomeHeroProgram(heroPrograms, slug) {

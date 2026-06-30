@@ -61,7 +61,14 @@ export default function AdminHomeHeroProgramsEditor({ labels, saveLabel, savingL
   const setCover = (slug, url) => {
     setForm((prev) => ({
       ...prev,
-      [slug]: { coverUrl: url },
+      [slug]: { ...prev[slug], coverUrl: url },
+    }))
+  }
+
+  const setVisible = (slug, visible) => {
+    setForm((prev) => ({
+      ...prev,
+      [slug]: { ...prev[slug], visible },
     }))
   }
 
@@ -106,6 +113,16 @@ export default function AdminHomeHeroProgramsEditor({ labels, saveLabel, savingL
               {program.icon} {program.title}
             </p>
             <p className="text-xs text-slate-500 mb-3">{program.audience}</p>
+            <label className="flex items-center gap-2 mb-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="rounded border-slate-300 text-primary focus:ring-primary/30"
+                checked={form[program.slug]?.visible !== false}
+                onChange={(e) => setVisible(program.slug, e.target.checked)}
+                disabled={saving}
+              />
+              <span className="text-sm text-slate-700">{labels.visibleLabel}</span>
+            </label>
             <AdminImageUpload
               value={form[program.slug]?.coverUrl || ''}
               onChange={(url) => setCover(program.slug, url)}

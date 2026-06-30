@@ -161,6 +161,7 @@ export default function AdminHome() {
               coverFormats: c.t('pages.home.heroProgramCoverFormats'),
               coverAdvanced: c.t('pages.home.heroProgramCoverAdvanced'),
               coverUrlOptional: c.t('pages.home.heroProgramCoverUrlOptional'),
+              visibleLabel: c.t('pages.home.heroProgramVisible'),
             }}
             saveLabel={c.save}
             savingLabel={c.saving}

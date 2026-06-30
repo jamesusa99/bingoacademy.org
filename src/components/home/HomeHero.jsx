@@ -1,6 +1,7 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { programPath } from '../../config/programs'
-import { coverUrlForHomeHeroProgram } from '../../config/homeHeroPrograms'
+import { coverUrlForHomeHeroProgram, visibleHomeHeroPrograms } from '../../config/homeHeroPrograms'
 import { adaptiveCountGridClass } from '../../config/productLineVisibility'
 import { useHomeHeroPrograms } from '../../hooks/useHomeHeroPrograms'
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
@@ -53,7 +54,11 @@ function PathCard({ program, coverUrl = '' }) {
 export default function HomeHero() {
   const { visiblePrograms } = useProductLineVisibility()
   const { programs: heroPrograms } = useHomeHeroPrograms()
-  const programCount = visiblePrograms.length
+  const heroPathPrograms = useMemo(
+    () => visibleHomeHeroPrograms(visiblePrograms, heroPrograms),
+    [visiblePrograms, heroPrograms]
+  )
+  const programCount = heroPathPrograms.length
   const gridClass = adaptiveCountGridClass(programCount)
 
   return (
@@ -68,7 +73,7 @@ export default function HomeHero() {
 
         {programCount > 0 ? (
         <div className={gridClass}>
-          {visiblePrograms.map((p) => (
+          {heroPathPrograms.map((p) => (
             <PathCard
               key={p.slug}
               program={p}
