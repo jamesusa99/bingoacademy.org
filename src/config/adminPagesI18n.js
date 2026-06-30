@@ -586,7 +586,13 @@ export const adminPagesZh = {
       noBundleId: '该套餐尚无数据库记录，请先点击「初始化套餐」。',
       salePriceRequired: '请填写售价。',
       bundleCover: '套餐封面',
-      bundleCoverHint: '支持 JPG、PNG、WebP、GIF，单张最大 3MB。保存后显示在首页套餐卡片、商城与课程页；未上传时使用 emoji 占位。',
+      bundleCoverHome: '首页封面（4:3）',
+      bundleCoverCourses: '课程页封面（2:1）',
+      bundleCoverHint: '支持 JPG、PNG、WebP、GIF，单张最大 3MB。未上传时使用 emoji 占位。',
+      bundleCoverHomeHint:
+        '用于首页 IOAI Course Packages 横向卡片（4:3）。上传后会自动居中裁切并缩放到 800×600，避免变形。',
+      bundleCoverCoursesHint:
+        '用于课程页、商城套餐卡片与详情弹窗（2:1）。上传后会自动居中裁切并缩放到 1200×600，避免变形。',
       bundleCoverUpload: '选择图片',
       bundleCoverUploading: '上传中…',
       bundleCoverRemove: '移除封面',
@@ -595,6 +601,7 @@ export const adminPagesZh = {
       bundleCoverReplace: '点击或拖拽更换封面',
       bundleCoverReplaceBtn: '更换封面',
       bundleCoverFormats: 'JPG / PNG / WebP / GIF · 最大 3MB',
+      bundleCoverFormatsAuto: 'JPG / PNG / WebP · 自动裁切 · 最大 3MB',
       bundleCoverAdvanced: '高级：粘贴图片 URL',
       bundleCoverUrlOptional: '或粘贴图片 URL',
     },
@@ -2124,8 +2131,13 @@ export const adminPagesEn = {
       noBundleId: 'This bundle has no database id yet. Click “Ensure bundles” first.',
       salePriceRequired: 'Sale price is required.',
       bundleCover: 'Bundle cover',
-      bundleCoverHint:
-        'JPG, PNG, WebP, or GIF up to 3MB. Shown on homepage package cards, Mall, and Courses; emoji placeholder when empty.',
+      bundleCoverHome: 'Homepage cover (4:3)',
+      bundleCoverCourses: 'Courses cover (2:1)',
+      bundleCoverHint: 'JPG, PNG, WebP, or GIF up to 3MB. Emoji placeholder when empty.',
+      bundleCoverHomeHint:
+        'Homepage IOAI Course Packages carousel (4:3). Auto center-crops and scales to 800×600 on upload.',
+      bundleCoverCoursesHint:
+        'Courses, Mall cards, and detail modal (2:1). Auto center-crops and scales to 1200×600 on upload.',
       bundleCoverUpload: 'Choose image',
       bundleCoverUploading: 'Uploading…',
       bundleCoverRemove: 'Remove cover',
@@ -2134,6 +2146,7 @@ export const adminPagesEn = {
       bundleCoverReplace: 'Click or drag to replace cover',
       bundleCoverReplaceBtn: 'Replace cover',
       bundleCoverFormats: 'JPG / PNG / WebP / GIF · max 3MB',
+      bundleCoverFormatsAuto: 'JPG / PNG / WebP · auto crop · max 3MB',
       bundleCoverAdvanced: 'Advanced: paste image URL',
       bundleCoverUrlOptional: 'Or paste image URL',
     },

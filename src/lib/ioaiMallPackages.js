@@ -1,4 +1,5 @@
 /** Map storefront course bundle API rows to UI / mall item shape. */
+import { resolveBundleCoursesCoverUrl } from '../config/bundleCover'
 export function bundleCardDesc(bundle) {
   if (!bundle) return ''
   if (bundle.moduleCount > 0) {
@@ -31,7 +32,7 @@ export function mapCourseBundleToDisplayItem(bundle) {
     marketingTags: bundle.marketingTags || [],
     discountPercent: bundle.discountPercent,
     emoji: bundle.emoji,
-    coverUrl: bundle.coverUrl || '',
+    coverUrl: resolveBundleCoursesCoverUrl(bundle),
     ioaiBundleSlug: bundle.slug,
     purchaseType: bundle.purchaseType,
     moduleCount: bundle.moduleCount,

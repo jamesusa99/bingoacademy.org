@@ -5,6 +5,7 @@ import AdminAlert from '../../components/admin/AdminAlert'
 import AdminField from '../../components/admin/AdminField'
 import AdminImageUpload from '../../components/admin/AdminImageUpload'
 import AdminRichTextEditor from '../../components/admin/AdminRichTextEditor'
+import { BUNDLE_COVER_PRESETS } from '../../config/bundleCover'
 import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 import {
@@ -32,6 +33,7 @@ function emptyForm(bundle) {
   return {
     title: bundle?.title || '',
     coverUrl: bundle?.coverUrl || '',
+    coverUrlHome: bundle?.coverUrlHome || '',
     price: centsToDollars(bundle?.priceCents),
     compareAt: centsToDollars(bundle?.compareAtCents ?? bundle?.listPriceCents),
     marketingTags: (bundle?.marketingTags || []).join(', '),
@@ -83,9 +85,9 @@ export default function AdminProgramCourseBundles() {
     return bundles[0]
   }, [bundles, selectedKey])
 
-  const coverLabels = useMemo(
+  const coursesCoverLabels = useMemo(
     () => ({
-      label: p('bundleCover'),
+      label: p('bundleCoverCourses'),
       upload: p('bundleCoverUpload'),
       uploading: p('bundleCoverUploading'),
       remove: p('bundleCoverRemove'),
@@ -93,10 +95,28 @@ export default function AdminProgramCourseBundles() {
       dropzoneActive: p('bundleCoverDropzoneActive'),
       replace: p('bundleCoverReplace'),
       replaceBtn: p('bundleCoverReplaceBtn'),
-      formats: p('bundleCoverFormats'),
+      formats: p('bundleCoverFormatsAuto'),
       advanced: p('bundleCoverAdvanced'),
       urlPlaceholder: p('bundleCoverUrlOptional'),
-      hint: p('bundleCoverHint'),
+      hint: p('bundleCoverCoursesHint'),
+    }),
+    [c]
+  )
+
+  const homeCoverLabels = useMemo(
+    () => ({
+      label: p('bundleCoverHome'),
+      upload: p('bundleCoverUpload'),
+      uploading: p('bundleCoverUploading'),
+      remove: p('bundleCoverRemove'),
+      dropzone: p('bundleCoverDropzone'),
+      dropzoneActive: p('bundleCoverDropzoneActive'),
+      replace: p('bundleCoverReplace'),
+      replaceBtn: p('bundleCoverReplaceBtn'),
+      formats: p('bundleCoverFormatsAuto'),
+      advanced: p('bundleCoverAdvanced'),
+      urlPlaceholder: p('bundleCoverUrlOptional'),
+      hint: p('bundleCoverHomeHint'),
     }),
     [c]
   )
@@ -149,6 +169,7 @@ export default function AdminProgramCourseBundles() {
       const payload = {
         title: form.title.trim(),
         cover_url: form.coverUrl.trim() || null,
+        cover_url_home: form.coverUrlHome.trim() || null,
         price_cents: priceCents,
         compare_at_cents: dollarsToCents(form.compareAt),
         marketing_tags: form.marketingTags
@@ -314,15 +335,28 @@ export default function AdminProgramCourseBundles() {
                 )}
               </div>
 
-              <AdminImageUpload
-                value={form.coverUrl}
-                onChange={(url) => setForm((prev) => ({ ...prev, coverUrl: url }))}
-                labels={coverLabels}
-                folder="bundles"
-                aspectClass="aspect-video"
-                maxWidthClass="max-w-md"
-                disabled={saving}
-              />
+              <div className="grid lg:grid-cols-2 gap-5">
+                <AdminImageUpload
+                  value={form.coverUrlHome}
+                  onChange={(url) => setForm((prev) => ({ ...prev, coverUrlHome: url }))}
+                  labels={homeCoverLabels}
+                  folder="bundles/home"
+                  aspectClass={BUNDLE_COVER_PRESETS.home.aspectClass}
+                  maxWidthClass="max-w-md"
+                  resizePreset={BUNDLE_COVER_PRESETS.home}
+                  disabled={saving}
+                />
+                <AdminImageUpload
+                  value={form.coverUrl}
+                  onChange={(url) => setForm((prev) => ({ ...prev, coverUrl: url }))}
+                  labels={coursesCoverLabels}
+                  folder="bundles/courses"
+                  aspectClass={BUNDLE_COVER_PRESETS.courses.aspectClass}
+                  maxWidthClass="max-w-md"
+                  resizePreset={BUNDLE_COVER_PRESETS.courses}
+                  disabled={saving}
+                />
+              </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <AdminField label={p('displayTitle')}>

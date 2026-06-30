@@ -144,10 +144,10 @@ export function IoaiCourseBundleCard({
     >
       <div className={isDark ? 'relative p-4 pb-0' : 'p-4 pb-0'}>
         <div
-          className={`relative flex items-center justify-center overflow-hidden rounded-lg min-h-[120px] ${
+          className={`relative w-full aspect-[2/1] flex items-center justify-center overflow-hidden rounded-lg ${
             isDark
-              ? 'course-card-dark__thumb bg-gradient-to-br from-amber-500/90 via-orange-600/80 to-amber-950'
-              : 'bg-gradient-to-br from-amber-100 to-orange-100 h-24'
+              ? 'bg-gradient-to-br from-amber-500/90 via-orange-600/80 to-amber-950'
+              : 'bg-gradient-to-br from-amber-100 to-orange-100'
           }`}
         >
           {hasCover ? (

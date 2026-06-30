@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ImagePlus, Loader2, Trash2, Upload, User } from 'lucide-react'
 import { uploadAdminImageFile } from '../../lib/admin/mediaUpload'
+import { resizeImageFileForPreset } from '../../lib/admin/imageResize'
 import AdminField from './AdminField'
 
 export default function AdminImageUpload({
@@ -11,6 +12,7 @@ export default function AdminImageUpload({
   folder = 'uploads',
   aspectClass = 'aspect-square',
   maxWidthClass = 'max-w-xs',
+  resizePreset = null,
 }) {
   const inputRef = useRef(null)
   const localPreviewRef = useRef(null)
@@ -60,7 +62,11 @@ export default function AdminImageUpload({
 
     setUploading(true)
     try {
-      const url = await uploadAdminImageFile(file, { folder })
+      let prepared = file
+      if (resizePreset) {
+        prepared = await resizeImageFileForPreset(file, resizePreset)
+      }
+      const url = await uploadAdminImageFile(prepared, { folder })
       onChange(url)
       clearLocalPreview()
     } catch (err) {

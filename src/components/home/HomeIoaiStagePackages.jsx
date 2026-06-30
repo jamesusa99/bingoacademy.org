@@ -4,6 +4,7 @@ import { IOAI_STAGE_PACKAGES, ioaiStagePackageHref } from '../../config/ioaiStag
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
 import { findCourseBundleForStage, useIoaiCourseBundles } from '../../hooks/useIoaiCourseBundles'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
+import { resolveBundleHomeCoverUrl } from '../../config/bundleCover'
 
 function buildHomePackageItems(bundles) {
   return IOAI_STAGE_PACKAGES.map((pkg) => {
@@ -13,7 +14,7 @@ function buildHomePackageItems(bundles) {
       href: ioaiStagePackageHref(pkg.id, { autoBuy: false }),
       title: bundle?.title || pkg.title,
       emoji: bundle?.emoji || pkg.emoji,
-      coverUrl: bundle?.coverUrl || '',
+      coverUrl: resolveBundleHomeCoverUrl(bundle),
       moduleCount: bundle?.moduleCount ?? 0,
       lessonCount: bundle?.lessonCount ?? 0,
       priceCents: bundle?.priceCents ?? 0,

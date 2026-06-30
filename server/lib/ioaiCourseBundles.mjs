@@ -225,6 +225,7 @@ async function enrichCourseBundleRow(admin, row, def, productLine) {
     shortDesc: stripHtml(row?.intro_html).slice(0, 160),
     marketingTags: row?.marketing_tags || [],
     coverUrl: row?.cover_url || null,
+    coverUrlHome: row?.cover_url_home || null,
     status: row?.status || 'draft',
     sortOrder: row?.sort_order ?? def.sortOrder ?? 0,
     moduleCount: moduleSlugs.length,
@@ -286,9 +287,13 @@ export async function updateAdminCourseBundle(admin, bundleId, body = {}, produc
     const raw = body.cover_url ?? body.coverUrl
     patch.cover_url = typeof raw === 'string' ? raw.trim() || null : raw ?? null
   }
+  if ('cover_url_home' in body || 'coverUrlHome' in body) {
+    const raw = body.cover_url_home ?? body.coverUrlHome
+    patch.cover_url_home = typeof raw === 'string' ? raw.trim() || null : raw ?? null
+  }
   Object.keys(patch).forEach((key) => {
     if (patch[key] === undefined) delete patch[key]
-    if (patch[key] === null && key !== 'cover_url') delete patch[key]
+    if (patch[key] === null && key !== 'cover_url' && key !== 'cover_url_home') delete patch[key]
   })
 
   const { data, error } = await admin
