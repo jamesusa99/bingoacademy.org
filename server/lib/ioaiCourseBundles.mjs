@@ -104,6 +104,11 @@ export async function syncCourseBundleModuleLinks(admin, productLine, bundleId, 
   }))
   const { error } = await admin.from('ioai_bundle_modules').insert(links)
   if (error) throw error
+
+  const moduleIds = modules.map((mod) => mod.id).filter(Boolean)
+  const lessonCount = await countLessonsForModuleIds(admin, moduleIds)
+  await refreshStaleBundleIntroIfNeeded(admin, bundleId, modules.length, lessonCount)
+
   return modules
 }
 
@@ -163,6 +168,32 @@ function stripHtml(html) {
     .trim()
 }
 
+export function isStaleAutoBundleIntro(introHtml) {
+  const text = stripHtml(introHtml)
+  if (!text) return true
+  return (
+    /^All IOAI modules\s*[—-]\s*\d+\s*units?/i.test(text) ||
+    /^One purchase unlocks all \d+ course unit/i.test(text)
+  )
+}
+
+export function buildBundleIntroHtml(moduleCount, lessonCount) {
+  if (!moduleCount) return ''
+  return `<p>One purchase unlocks all ${moduleCount} course unit${moduleCount === 1 ? '' : 's'} (${lessonCount} lesson${lessonCount === 1 ? '' : 's'}).</p>`
+}
+
+export async function refreshStaleBundleIntroIfNeeded(admin, bundleId, moduleCount, lessonCount) {
+  if (!admin || !bundleId || !moduleCount) return false
+
+  const { data: row } = await admin.from('ioai_bundles').select('intro_html').eq('id', bundleId).maybeSingle()
+  if (!isStaleAutoBundleIntro(row?.intro_html)) return false
+
+  const intro_html = buildBundleIntroHtml(moduleCount, lessonCount)
+  const { error } = await admin.from('ioai_bundles').update({ intro_html, updated_at: new Date().toISOString() }).eq('id', bundleId)
+  if (error) throw error
+  return true
+}
+
 async function enrichCourseBundleRow(admin, row, def, productLine) {
   const linkedModules = row?.id ? await listBundleModuleLinks(admin, row.id) : []
   let modules = linkedModules
@@ -199,6 +230,10 @@ async function enrichCourseBundleRow(admin, row, def, productLine) {
     moduleCount: moduleSlugs.length,
     lessonCount,
     moduleSlugs,
+    linkedModules: modules.map((mod) => ({
+      catalogSlug: mod.catalog_slug,
+      title: mod.title || mod.catalog_slug,
+    })),
     isFullTrack: def.packageId === 'all',
     purchaseType: def.packageId === 'all' && productLine === 'ioai' ? 'ioai_track' : 'bundle',
     discountPercent: computeDiscountPercent(priceCents, compareAtCents),

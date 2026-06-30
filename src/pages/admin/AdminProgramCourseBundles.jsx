@@ -42,6 +42,20 @@ function bundleKey(bundle) {
   return bundle?.slug || bundle?.id || null
 }
 
+function buildIntroSummary(moduleCount, lessonCount) {
+  if (!moduleCount) return ''
+  return `<p>One purchase unlocks all ${moduleCount} course unit${moduleCount === 1 ? '' : 's'} (${lessonCount} lesson${lessonCount === 1 ? '' : 's'}).</p>`
+}
+
+function isStaleBundleIntro(html) {
+  const text = String(html || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!text) return true
+  return /^All IOAI modules\s*[—-]\s*\d+\s*units?/i.test(text)
+}
+
 export default function AdminProgramCourseBundles() {
   const { line: lineParam } = useParams()
   const productLine = isCurriculumLine(lineParam) ? lineParam : null
@@ -143,6 +157,7 @@ export default function AdminProgramCourseBundles() {
       const data = await adminSyncProgramCourseBundleModules(productLine, selected.id, selected.levelSlug)
       if (productLine === 'ioai') invalidateIoaiCourseBundlesCache()
       setBundles((rows) => rows.map((row) => (row.id === data.bundle.id ? data.bundle : row)))
+      setForm(emptyForm(data.bundle))
       setSuccess(p('syncSuccess', { count: String(data.moduleCount) }))
     } catch (err) {
       setError(err.message || p('syncFailed'))
@@ -255,6 +270,29 @@ export default function AdminProgramCourseBundles() {
                 </div>
               </div>
 
+              <div className="rounded-xl border border-cyan-200/80 bg-cyan-50/60 px-4 py-3 text-sm text-cyan-950">
+                <p className="font-semibold">{p('howToAddUnitsTitle')}</p>
+                <p className="text-xs text-cyan-900/90 mt-1 leading-relaxed">{p('howToAddUnitsBody')}</p>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-slate-600 mb-2">{p('linkedModulesTitle')}</p>
+                {selected.linkedModules?.length ? (
+                  <ul className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100 text-sm">
+                    {selected.linkedModules.map((mod) => (
+                      <li key={mod.catalogSlug} className="px-3 py-2 flex flex-wrap gap-x-2 gap-y-0.5">
+                        <span className="font-medium text-bingo-dark">{mod.title}</span>
+                        <span className="text-[10px] font-mono text-slate-400">{mod.catalogSlug}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                    {p('noLinkedModules')}
+                  </p>
+                )}
+              </div>
+
               <div className="grid sm:grid-cols-2 gap-4">
                 <AdminField label={p('displayTitle')}>
                   <input
@@ -308,6 +346,24 @@ export default function AdminProgramCourseBundles() {
               </div>
 
               <AdminField label={p('productDetail')}>
+                <p className="text-[11px] text-slate-500 mb-2">{p('cardDescNote')}</p>
+                {isStaleBundleIntro(form.introHtml) ? (
+                  <AdminAlert type="warning">{p('staleIntroWarning')}</AdminAlert>
+                ) : null}
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <button
+                    type="button"
+                    className="text-xs px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        introHtml: buildIntroSummary(selected.moduleCount, selected.lessonCount),
+                      }))
+                    }
+                  >
+                    {p('insertModuleSummary')}
+                  </button>
+                </div>
                 <AdminRichTextEditor
                   key={`intro-${bundleKey(selected)}`}
                   value={form.introHtml}

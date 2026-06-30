@@ -1,4 +1,12 @@
 /** Map storefront course bundle API rows to UI / mall item shape. */
+export function bundleCardDesc(bundle) {
+  if (!bundle) return ''
+  if (bundle.moduleCount > 0) {
+    return `One purchase unlocks all ${bundle.moduleCount} course unit${bundle.moduleCount === 1 ? '' : 's'} (${bundle.lessonCount} lesson${bundle.lessonCount === 1 ? '' : 's'}).`
+  }
+  return 'Stage bundle — course units will appear after modules are synced in admin.'
+}
+
 export function mapCourseBundleToDisplayItem(bundle) {
   if (!bundle) return null
 
@@ -18,9 +26,7 @@ export function mapCourseBundleToDisplayItem(bundle) {
     compareAtCents: bundle.compareAtCents,
     listPriceCents: bundle.listPriceCents,
     currency: bundle.currency || 'usd',
-    desc:
-      bundle.shortDesc ||
-      `One purchase unlocks all ${bundle.moduleCount} course unit${bundle.moduleCount === 1 ? '' : 's'} (${bundle.lessonCount} lesson${bundle.lessonCount === 1 ? '' : 's'}).`,
+    desc: bundleCardDesc(bundle),
     introHtml: bundle.introHtml || '',
     marketingTags: bundle.marketingTags || [],
     discountPercent: bundle.discountPercent,

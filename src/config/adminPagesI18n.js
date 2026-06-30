@@ -522,6 +522,15 @@ export const adminPagesZh = {
       slug: 'Slug',
       includedModules: '包含模块（自动）',
       includedModulesHint: '根据当前已上架的 L3 模块自动统计。Full Track 含全部阶段；阶段套餐仅含该阶段模块。',
+      howToAddUnitsTitle: '如何添加包含的 Units？',
+      howToAddUnitsBody:
+        '不能在此手动逐个勾选模块。请先在「课程管理」中将 L3 模块设为已上架（live）并配置 Stripe 售价，然后点击「同步包含模块」——系统会自动纳入符合条件的模块。',
+      linkedModulesTitle: '当前包含的 L3 模块',
+      noLinkedModules: '尚未关联任何模块。请先在课程管理中上架模块，再点击「同步包含模块」。',
+      cardDescNote:
+        '前台卡片上的单元/课时数来自上方统计（实时准确）。「产品详情」为弹窗富文本；若仍显示旧数字（如 3 units），请点「插入当前统计」或同步模块后保存。',
+      insertModuleSummary: '插入当前统计',
+      staleIntroWarning: '产品详情里仍是旧的模块统计文案，建议点击「插入当前统计」或「同步包含模块」后保存。',
       moduleLessonCount: '{{modules}} 个单元 · {{lessons}} 课时',
       listPrice: '模块原价合计（参考）',
       listPriceHint: '上方包含模块的 L3 售价之和，仅供定价参考，不会自动覆盖您设置的套餐售价。',
@@ -544,7 +553,7 @@ export const adminPagesZh = {
       saveBundle: '保存套餐',
       syncModules: '同步包含模块',
       syncModulesHint:
-        '从课程库重新拉取本套餐应包含的 L3 模块并更新关联。新增/上架模块后点此刷新；结账时将按最新模块列表解锁。不会修改您已保存的售价与文案。',
+        '从课程库重新拉取本套餐应包含的 L3 模块并更新关联。新增/上架模块后点此刷新；若产品详情仍是旧版自动文案，同步后会自动更新。不会修改售价与自定义文案。',
       syncing: '同步中…',
       saved: '套餐已保存。',
       syncSuccess: '已同步 {{count}} 个模块到本套餐。',
@@ -2006,6 +2015,16 @@ export const adminPagesEn = {
       includedModules: 'Included modules (auto)',
       includedModulesHint:
         'Auto-counted from live L3 modules. Full Track includes all stages; stage bundles include that stage only.',
+      howToAddUnitsTitle: 'How are units included?',
+      howToAddUnitsBody:
+        'You cannot pick modules one-by-one here. Publish L3 modules as live with a checkout price under Courses, then click “Sync included modules” to attach all eligible units to this bundle.',
+      linkedModulesTitle: 'Linked L3 modules',
+      noLinkedModules: 'No modules linked yet. Publish modules in Courses, then sync.',
+      cardDescNote:
+        'Storefront cards use the live counts above. Product detail is separate rich text — if it still shows old numbers (e.g. 3 units), use “Insert current stats” or sync modules, then save.',
+      insertModuleSummary: 'Insert current stats',
+      staleIntroWarning:
+        'Product detail still has outdated module counts. Use “Insert current stats” or sync modules, then save.',
       moduleLessonCount: '{{modules}} units · {{lessons}} lessons',
       listPrice: 'List price (sum of L3 modules)',
       listPriceHint: 'Sum of linked L3 module prices for reference only — does not overwrite your bundle sale price.',
@@ -2028,7 +2047,7 @@ export const adminPagesEn = {
       saveBundle: 'Save bundle',
       syncModules: 'Sync included modules',
       syncModulesHint:
-        'Re-scan the curriculum and refresh which L3 modules belong in this bundle. Use after adding or publishing new modules; checkout unlocks the updated list. Does not change saved price or copy.',
+        'Re-scan live L3 modules and refresh bundle links. Run after publishing new modules; outdated auto-generated detail copy is refreshed on sync. Does not change sale price or custom copy.',
       syncing: 'Syncing…',
       saved: 'Course bundle saved.',
       syncSuccess: 'Synced {{count}} modules into this bundle.',
