@@ -42,7 +42,7 @@ export const GOLAB_STEP = {
   id: 'golab',
   label: 'GoLab',
   shortLabel: 'GoLab',
-  icon: '',
+  icon: '🧪',
   type: 'golab',
   desc: 'Python practice workspace (opens in new tab)',
 }

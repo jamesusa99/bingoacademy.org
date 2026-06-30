@@ -45,7 +45,8 @@ const CURRICULUM_ADMIN_SELECT = `
         knowledge_points,
         content_goals,
         cloudflare_video_id,
-        catalog_slug
+        catalog_slug,
+        golab_enabled
       )
     )
   )
@@ -82,6 +83,7 @@ export function flattenCurriculumForAdmin(levels) {
             knowledgePoints: lesson.knowledge_points || '',
             contentGoals: lesson.content_goals || '',
             cloudflareVideoId: lesson.cloudflare_video_id || '',
+            golabEnabled: Boolean(lesson.golab_enabled),
             catalogSlug: lesson.catalog_slug || lesson.slug,
             sortOrder: lesson.sort_order ?? 0,
           })
@@ -118,6 +120,7 @@ export function groupModulesForAdmin(levels) {
           knowledgePoints: lesson.knowledge_points || '',
           contentGoals: lesson.content_goals || '',
           cloudflareVideoId: lesson.cloudflare_video_id || '',
+          golabEnabled: Boolean(lesson.golab_enabled),
           catalogSlug: lesson.catalog_slug || lesson.slug,
           sortOrder: lesson.sort_order ?? 0,
         }))
@@ -617,6 +620,7 @@ export async function saveProgramLessonConfig(productLine, lessonId, patch) {
     content_goals: patch.content_goals ?? null,
     cloudflare_video_id: cloudflareUid,
     catalog_slug: catalogSlug,
+    golab_enabled: Boolean(patch.golab_enabled),
     updated_at: new Date().toISOString(),
   })
 

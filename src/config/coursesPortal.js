@@ -42,6 +42,7 @@ export const COURSES_PORTAL = {
   goLabBack: '← Back to lesson',
   goLabReset: 'Reset notebook',
   goLabLessonNotFound: 'Lesson not found.',
+  goLabDisabled: 'GoLab is not enabled for this lesson.',
   classExercisesDesc: 'Answer all questions below, then submit once to see correct answers and explanations.',
   classExercisesSubmitAll: 'Submit all answers',
   classExercisesSubmitting: 'Submitting…',

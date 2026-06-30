@@ -109,6 +109,9 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
       apiLessonPatch?.knowledgePoints ||
       item.knowledgePoints ||
       ''
+    const golabEnabled = Boolean(
+      lessonInTree?.lesson?.golabEnabled ?? apiLessonPatch?.golabEnabled ?? item.golabEnabled
+    )
     return {
       ...item,
       ...(apiLessonPatch || {}),
@@ -116,6 +119,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
       previewSeconds,
       contentGoals,
       knowledgePoints,
+      golabEnabled,
     }
   }, [item, lessonInTree, progLine, apiLessonPatch])
 
@@ -142,6 +146,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
           desc: lesson.intro || lesson.content_goals || lesson.contentGoals || undefined,
           contentGoals: lesson.content_goals || lesson.contentGoals || '',
           knowledgePoints: lesson.knowledge_points || lesson.knowledgePoints || '',
+          golabEnabled: Boolean(lesson.golab_enabled ?? lesson.golabEnabled),
         })
       })
       .catch(() => {})

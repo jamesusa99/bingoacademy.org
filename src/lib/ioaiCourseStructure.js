@@ -174,6 +174,7 @@ function mergeLessonMeta(lesson, courses, level, theme, mod) {
     cloudflareVideoId: lesson.cloudflareVideoId || row?.cloudflareUid || null,
     knowledgePoints: lesson.knowledgePoints || '',
     contentGoals: lesson.contentGoals || '',
+    golabEnabled: Boolean(lesson.golabEnabled),
   }
 }
 

@@ -29,6 +29,7 @@ const CURRICULUM_SELECT = `
         cloudflare_video_id,
         catalog_slug,
         trial_enabled,
+        golab_enabled,
         knowledge_points,
         content_goals
       )
@@ -65,6 +66,7 @@ export function mapDbCurriculumToTree(rows) {
           title: lesson.title,
           cloudflareVideoId: lesson.cloudflare_video_id || null,
           trialEnabled: Boolean(lesson.trial_enabled),
+          golabEnabled: Boolean(lesson.golab_enabled),
           knowledgePoints: lesson.knowledge_points || '',
           contentGoals: lesson.content_goals || '',
         })),

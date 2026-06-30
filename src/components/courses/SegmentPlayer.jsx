@@ -94,8 +94,8 @@ function SegmentStepper({ currentIndex, segmentsDone, onSelect, hasAccess, hasEx
               }`}
             >
               {seg.icon ? <span aria-hidden>{seg.icon}</span> : null}
-              <span className="hidden sm:inline">{COURSES_PORTAL.goLab}</span>
-              <span className="sm:hidden">{COURSES_PORTAL.goLab}</span>
+              <span className="hidden sm:inline">{seg.label}</span>
+              <span className="sm:hidden">{seg.shortLabel}</span>
             </a>
           )
         }
@@ -264,7 +264,7 @@ export default function SegmentPlayer({
   const { hasExercises } = useLessonExerciseCount(course.id)
   const currentSegment = segmentAtIndex(segmentIndex, hasExercises)
   const productLine = isCurriculumLine(course?.line) ? course.line : 'ioai'
-  const showGoLab = productLine === 'ioai'
+  const showGoLab = Boolean(course?.golabEnabled)
   const fromLine = course?.line || productLine
   const { next: nextLessonId } = getAdjacentLessons(course.id, courses, curriculumTree, productLine)
 

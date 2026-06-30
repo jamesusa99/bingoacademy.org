@@ -297,6 +297,9 @@ export function buildLessonCatalogCourse(found, productLine, catalogRow = null) 
     syllabus: catalogRow?.syllabus || [],
     labSlugs: catalogRow?.labSlugs || [],
     sortOrder: catalogRow?.sortOrder ?? lesson.sortOrder ?? 0,
+    golabEnabled: Boolean(
+      lesson.golabEnabled ?? lesson.golab_enabled ?? catalogRow?.golabEnabled
+    ),
   }
 }
 

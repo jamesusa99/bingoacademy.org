@@ -653,6 +653,7 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
     sort_order: row.catalogSortOrder ?? row.sortOrder ?? 0,
     rating: row.catalogRating ?? 4.85,
     students: row.catalogStudents ?? 800,
+    golab_enabled: Boolean(row.golabEnabled),
   })
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
@@ -752,6 +753,22 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
         labels={labels}
         disabled={saving}
       />
+
+      <AdminField label={labels.goLabEnabled}>
+        <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            className="rounded border-slate-300 text-primary focus:ring-primary/30"
+            checked={Boolean(form.golab_enabled)}
+            onChange={(e) => set('golab_enabled', e.target.checked)}
+            disabled={saving}
+          />
+          <span className="text-sm text-slate-700">
+            {form.golab_enabled ? labels.goLabEnabledOn : labels.goLabEnabledOff}
+          </span>
+        </label>
+        <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{labels.goLabEnabledHint}</p>
+      </AdminField>
 
       <CurriculumCatalogFields form={form} setForm={setForm} labels={labels} />
 

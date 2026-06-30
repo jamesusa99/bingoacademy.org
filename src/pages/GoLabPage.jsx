@@ -5,10 +5,12 @@ import PageMeta from '../components/PageMeta'
 import { COURSES_PORTAL } from '../config/coursesPortal'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import { usePyodide } from '../hooks/usePyodide'
-import { findCourseInList } from '../lib/catalogCourse'
+import { findCourseInList, inferProgramLineForSlug } from '../lib/catalogCourse'
+import { findLessonInTree } from '../lib/ioaiCourseStructure'
 import { clearGoLabCode, GOLAB_STARTER_CODE, loadGoLabCode, saveGoLabCode } from '../lib/goLabStorage'
 import { lessonPathFromGoLab } from '../lib/goLabPaths'
 import { isStudyCenterPath } from '../lib/studyPaths'
+import { useProgramCurriculum } from '../hooks/useProgramCurriculum'
 
 const GOLAB_LAB = { runtime: 'jupyterlite', compute: 'cpu' }
 
@@ -22,7 +24,17 @@ export default function GoLabPage({ studyCenter: studyCenterProp = false }) {
 
   const { courses, loading: catalogLoading } = useCourseCatalog()
   const course = useMemo(() => findCourseInList(courses, lessonId), [courses, lessonId])
-  const lessonTitle = course?.nameEn || course?.name || lessonId
+  const productLine = inferProgramLineForSlug(lessonId, course)
+  const { tree, loading: treeLoading } = useProgramCurriculum(productLine)
+  const lessonInTree = useMemo(
+    () => (lessonId && tree?.length ? findLessonInTree(lessonId, tree) : null),
+    [lessonId, tree]
+  )
+  const golabEnabled = Boolean(
+    lessonInTree?.lesson?.golabEnabled ?? course?.golabEnabled
+  )
+  const lessonTitle = course?.nameEn || course?.name || lessonInTree?.lesson?.title || lessonId
+  const loading = catalogLoading || treeLoading
 
   const [code, setCode] = useState(() => loadGoLabCode(lessonId))
   const [output, setOutput] = useState('')
@@ -108,7 +120,16 @@ export default function GoLabPage({ studyCenter: studyCenterProp = false }) {
       </header>
 
       <main className="flex-1 min-h-0 flex flex-col">
-        {!catalogLoading && !course ? (
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center p-6 text-sm text-slate-400">Loading…</div>
+        ) : !golabEnabled ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
+            <p className="text-sm text-slate-300">{COURSES_PORTAL.goLabDisabled}</p>
+            <Link to={backHref} className="text-sm text-cyan-400 hover:underline">
+              {COURSES_PORTAL.goLabBack}
+            </Link>
+          </div>
+        ) : !course && !lessonInTree ? (
           <div className="flex-1 flex items-center justify-center p-6 text-center text-sm text-slate-400">
             {COURSES_PORTAL.goLabLessonNotFound}
           </div>

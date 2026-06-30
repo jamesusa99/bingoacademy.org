@@ -141,7 +141,7 @@ export function registerIoaiRoutes(app, { verifyAdminUser } = {}) {
           level:course_levels ( slug, title, emoji, product_line )
         ),
         lessons (
-          id, slug, title, intro, trial_enabled, status, sort_order, cloudflare_video_id, catalog_slug,
+          id, slug, title, intro, trial_enabled, golab_enabled, status, sort_order, cloudflare_video_id, catalog_slug,
           content_goals, knowledge_points
         )
       `
