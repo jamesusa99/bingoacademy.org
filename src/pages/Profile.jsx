@@ -539,6 +539,11 @@ export default function Profile() {
     return notifications.filter((n) => isNotificationUnread(n)).length
   }, [notifications, notificationsLoading, notificationsError])
 
+  const dataCards = useMemo(
+    () => buildProfileOverviewCards(overview || mergeProfileOverview(null)),
+    [overview]
+  )
+
   const toggleAccountSettings = useCallback(() => {
     setAccountSettingsOpen((open) => {
       const next = !open
@@ -593,11 +598,6 @@ export default function Profile() {
     { to: '/profile#achievements', icon: '🏅', label: 'My Achievements', share: true },
     { to: '/profile#notifications', icon: '🔔', label: 'Notifications', share: false, badge: unreadNotificationCount },
   ]
-
-  const dataCards = useMemo(
-    () => buildProfileOverviewCards(overview || mergeProfileOverview(null)),
-    [overview]
-  )
 
   return (
     <div className="page-content w-full py-6 sm:py-8">
