@@ -1,6 +1,5 @@
 import { authFetch } from './checkout'
 import { getAllLessonProgress } from './learningProgress'
-import { loadAssessmentRecords } from './assessmentRecords'
 
 const DEFAULT_LESSON_MINUTES = 45
 
@@ -30,12 +29,6 @@ export function computeCourseHoursFromProgress(lessons = getAllLessonProgress())
   return Math.round(totalMinutes / 60)
 }
 
-export function resolveCapabilityLevel(serverLevel, localRecords = loadAssessmentRecords()) {
-  if (serverLevel?.trim()) return serverLevel.trim()
-  const latest = localRecords[0]
-  return latest?.level?.trim() || null
-}
-
 export function formatOverviewHours(hours) {
   const n = Number(hours)
   if (!Number.isFinite(n) || n <= 0) return '0'
@@ -56,26 +49,18 @@ export async function fetchMyProfileOverview() {
 }
 
 export function mergeProfileOverview(serverOverview) {
-  const courseHours = computeCourseHoursFromProgress()
-  const capabilityLevel = resolveCapabilityLevel(serverOverview?.capabilityLevel)
-
   return {
-    courseHours,
-    eventsJoined: serverOverview?.eventsJoined ?? 0,
+    courseHours: computeCourseHoursFromProgress(),
     awardsWorksCount: serverOverview?.awardsWorksCount ?? 0,
     certificatesCount: serverOverview?.certificatesCount ?? 0,
-    capabilityLevel,
     ordersCount: serverOverview?.ordersCount ?? 0,
     commissionBalanceCents: serverOverview?.commissionBalanceCents ?? 0,
   }
 }
 
 export function buildProfileOverviewCards(overview) {
-  const capabilityDisplay = overview.capabilityLevel || '—'
-
   return [
     { label: 'Course hours', value: formatOverviewHours(overview.courseHours), unit: 'hrs', shareModule: null },
-    { label: 'Events joined', value: String(overview.eventsJoined), unit: '', shareModule: overview.eventsJoined ? 'My Events' : null },
     {
       label: 'Awards / works',
       value: String(overview.awardsWorksCount),
@@ -87,12 +72,6 @@ export function buildProfileOverviewCards(overview) {
       value: String(overview.certificatesCount),
       unit: '',
       shareModule: overview.certificatesCount ? 'My Certificates' : null,
-    },
-    {
-      label: 'Capability profile',
-      value: capabilityDisplay,
-      unit: '',
-      shareModule: overview.capabilityLevel ? 'Capability Profile' : null,
     },
     { label: 'Orders', value: String(overview.ordersCount), unit: '', shareModule: overview.ordersCount ? 'My Orders' : null },
     {

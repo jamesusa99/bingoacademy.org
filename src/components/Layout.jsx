@@ -224,7 +224,6 @@ function LayoutShell({ children }) {
                   {p.title}
                 </Link>
               ))}
-              <Link to="/admin" className="block hover:text-white text-slate-500 mt-2">Admin</Link>
             </div>
           </div>
         </div>

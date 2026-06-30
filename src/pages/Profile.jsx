@@ -8,7 +8,6 @@ import {
   profileInitials,
   maskPhone,
   formatAccountId,
-  MEMBER_TIER_LABELS,
 } from '../lib/userProfile'
 import ProfileAccountForm from '../components/ProfileAccountForm'
 import ProfileLabPacksSection from '../components/profile/ProfileLabPacksSection'
@@ -29,27 +28,6 @@ import {
   fetchMyProfileOverview,
   mergeProfileOverview,
 } from '../lib/profileOverview'
-
-// ─── Member tier data ──────────────────────────────────────────────
-
-const MEMBER_TIERS = [
-  { id: 'free', name: 'Free Member', chinese: 'Free Member', price: 0, autoPrice: null, color: 'text-slate-600', bg: 'bg-slate-50' },
-  { id: 'monthly', name: 'Monthly', chinese: 'Monthly Member', price: 39, autoPrice: 35, autoLabel: 'Auto-renew −10%', color: 'text-sky-600', bg: 'bg-sky-50' },
-  { id: 'quarterly', name: 'Quarterly', chinese: 'Quarterly Member', price: 99, autoPrice: 84, autoLabel: 'Auto-renew −15% + 1 trial class', color: 'text-violet-600', bg: 'bg-violet-50' },
-  { id: 'annual', name: 'Annual', chinese: 'Annual Member', price: 299, autoPrice: 239, autoLabel: 'Auto-renew −20% + extra perks', color: 'text-amber-600', bg: 'bg-amber-50' },
-]
-
-const MEMBER_BENEFITS = [
-  ['AI course discount', '—', '10% off', '15% off', '30% off'],
-  ['Competition prep access', 'Free only', 'Partial', 'Most', 'All'],
-  ['Prestigious competition support', 'Entry only', 'Entry + guide', 'Entry + materials', 'Entry + camp + 1v1'],
-  ['STEM planning', '—', 'Basic docs', 'Plan template', '1v1 planning'],
-  ['Mall / teaching kit discount', '—', '5% off', '10% off', '20% off + free ship'],
-  ['Referral commission boost', 'Base', '+5%', '+10%', '+20%'],
-  ['Charity points multiplier', '1×', '1.2×', '1.5×', '2×'],
-  ['Member-only assessments', '—', '1/month', '1/quarter', 'Unlimited'],
-  ['Customer support', '—', 'Online', 'Online', 'Dedicated 1v1'],
-]
 
 // ─── Share modal (multi-channel) ────────────────────────────────────
 
@@ -342,7 +320,6 @@ function ProfileOrdersSection({ orders, loading, error }) {
 export default function Profile() {
   const location = useLocation()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
-  const [view, setView] = useState('home')
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false)
   const [showEarnBySharing, setShowEarnBySharing] = useState(false)
   const [shareModal, setShareModal] = useState(null)
@@ -545,17 +522,11 @@ export default function Profile() {
   )
 
   const toggleAccountSettings = useCallback(() => {
-    setAccountSettingsOpen((open) => {
-      const next = !open
-      if (next) {
-        window.setTimeout(() => scrollToProfileSection('settings'), 80)
-      }
-      return next
-    })
+    setAccountSettingsOpen((open) => !open)
   }, [])
 
   useEffect(() => {
-    if (authLoading || !isAuthenticated || view !== 'home') return
+    if (authLoading || !isAuthenticated) return
 
     const hash = location.hash.replace('#', '')
     if (hash === 'settings') {
@@ -567,7 +538,7 @@ export default function Profile() {
       const timer = window.setTimeout(() => scrollToProfileSection(hash), 80)
       return () => window.clearTimeout(timer)
     }
-  }, [location.hash, view, authLoading, isAuthenticated, profileLoading, ordersLoading, notificationsLoading, certificatesLoading, achievementsLoading])
+  }, [location.hash, authLoading, isAuthenticated, profileLoading, ordersLoading, notificationsLoading, certificatesLoading, achievementsLoading])
 
   if (authLoading) {
     return (
@@ -580,10 +551,6 @@ export default function Profile() {
     return <Navigate to={authLink('/login', profileReturn)} replace />
   }
 
-  const memberTier = profile?.member_tier || 'free'
-  const memberExpiryDays = null
-  const autoRenew = false
-  const memberLabel = MEMBER_TIER_LABELS[memberTier] || MEMBER_TIER_LABELS.free
   const displayName = profileDisplayName(profile, user)
   const displayPhone = maskPhone(profile?.phone)
   const accountId = formatAccountId(user?.id)
@@ -603,7 +570,7 @@ export default function Profile() {
     <div className="page-content w-full py-6 sm:py-8">
       {shareModal && <ShareModal title={shareModal} onClose={() => setShareModal(null)} />}
 
-      {/* ── Top bar: user + member ─────────────────────────────────── */}
+      {/* ── Top bar ─────────────────────────────────── */}
       <section className="mb-8">
         <div className="card p-6 flex flex-wrap items-center gap-4">
           {avatarUrl ? (
@@ -618,32 +585,10 @@ export default function Profile() {
               {profileLoading ? 'Loading…' : displayName}
               {displayPhone ? <span className="text-slate-500 font-normal"> · {displayPhone}</span> : null}
             </div>
-            <div className="text-sm text-slate-500">
-              Account ID: {accountId} ·{' '}
-              <button
-                type="button"
-                onClick={toggleAccountSettings}
-                className="text-primary hover:underline"
-                aria-expanded={accountSettingsOpen}
-              >
-                Account settings
-              </button>
-            </div>
+            <div className="text-sm text-slate-500">Account ID: {accountId}</div>
             {profileError ? (
               <p className="text-xs text-red-600 mt-1">{profileError}</p>
             ) : null}
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${memberTier === 'annual' ? 'bg-amber-100 text-amber-700' : memberTier === 'free' ? 'bg-slate-100 text-slate-600' : 'bg-sky-100 text-sky-700'}`}>
-                {memberLabel}
-              </span>
-              {memberTier !== 'free' && memberExpiryDays != null && (
-                <>
-                  <span className="text-xs text-slate-500">{memberExpiryDays} days left</span>
-                  {autoRenew && <span className="text-xs text-green-600">Auto-renew on · <button type="button" onClick={() => setView('member')} className="hover:underline">Manage</button></span>}
-                </>
-              )}
-              {memberTier === 'free' && <span className="text-xs text-slate-500">Upgrade to unlock perks</span>}
-            </div>
           </div>
           <div className="flex gap-2 flex-wrap shrink-0">
             <button
@@ -651,16 +596,31 @@ export default function Profile() {
               onClick={toggleAccountSettings}
               className="rounded-lg border border-slate-300 text-slate-700 px-4 py-2 text-sm hover:bg-slate-50"
               aria-expanded={accountSettingsOpen}
+              aria-controls="settings"
             >
-              {accountSettingsOpen ? 'Hide profile' : 'Edit profile'}
+              {accountSettingsOpen ? 'Close' : 'Edit profile'}
             </button>
-            {memberTier !== 'free' ? (
-              <button type="button" onClick={() => setView('member')} className="btn-primary px-4 py-2 text-sm">Member benefits →</button>
-            ) : (
-              <button type="button" onClick={() => setView('member')} className="btn-primary px-4 py-2 text-sm">Upgrade now</button>
-            )}
           </div>
         </div>
+        {accountSettingsOpen ? (
+          <div id="settings" className="card p-6 mt-3 scroll-mt-28">
+            {profileLoading ? (
+              <p className="text-sm text-slate-500">Loading account info…</p>
+            ) : profile ? (
+              <ProfileAccountForm
+                userId={user.id}
+                profile={profile}
+                userEmail={userEmail}
+                onSaved={setProfile}
+              />
+            ) : (
+              <p className="text-sm text-slate-600">
+                No profile found. Try signing in again, or contact support if the problem continues.
+              </p>
+            )}
+            <CourseAccessReset />
+          </div>
+        ) : null}
       </section>
 
       {/* ── Core function grid (with share hints) ───────────────────── */}
@@ -753,148 +713,31 @@ export default function Profile() {
         {showEarnBySharing && <div className="mt-4"><EarnBySharing /></div>}
       </section>
 
-      {/* ── Member Center (view) ───────────────────────────────────── */}
-      {view === 'member' && (
-        <section className="mb-10">
-          <div className="flex items-center gap-2 mb-4">
-            <button type="button" onClick={() => setView('home')} className="text-slate-500 hover:text-bingo-dark text-sm">← Back to profile</button>
-          </div>
-
-          <div className="card p-6 mb-6 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/60">
-            <div>
-              <h2 className="font-bold text-bingo-dark text-xl mb-1">Member Center</h2>
-              <p className="text-sm text-slate-600 mb-2">Current: <strong>{memberLabel}</strong> · {memberTier !== 'free' ? `${memberExpiryDays} days left` : 'Upgrade to unlock perks'}</p>
-              {autoRenew && memberTier !== 'free' && <p className="text-xs text-green-600">Auto-renew is on · <button type="button" className="hover:underline">Manage</button></p>}
-            </div>
-            <button type="button" className="btn-primary px-5 py-2.5">{memberTier === 'free' ? 'Upgrade now' : 'Renew / Upgrade'}</button>
-          </div>
-
-          <div className="card p-6 overflow-x-auto mb-6">
-            <h3 className="font-semibold text-bingo-dark mb-4">Member benefits by tier</h3>
-            <table className="w-full text-sm min-w-[600px]">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-3 font-semibold text-slate-800">Benefit</th>
-                  {MEMBER_TIERS.map(t => (
-                    <th key={t.id} className={`text-center py-2 px-2 font-semibold ${t.color}`}>{t.chinese}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="text-slate-600">
-                {MEMBER_BENEFITS.map((row, i) => (
-                  <tr key={i} className="border-b border-slate-100">
-                    <td className="py-2 px-3 text-slate-700">{row[0]}</td>
-                    {row.slice(1).map((cell, j) => (
-                      <td key={j} className="py-2 px-2 text-center">{cell}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-4 mb-6">
-            {MEMBER_TIERS.filter(t => t.id !== 'free').map(t => (
-              <div key={t.id} className={`card p-5 border-2 ${t.id === memberTier ? 'border-primary ring-2 ring-primary/20' : 'border-slate-100'} ${t.bg}`}>
-                <div className={`font-bold ${t.color} mb-1`}>{t.chinese}</div>
-                <div className="text-2xl font-bold text-bingo-dark mb-1">${t.price}<span className="text-sm font-normal text-slate-500">/period</span></div>
-                {t.autoPrice && <p className="text-xs text-green-600 mb-3">Auto-renew ${t.autoPrice} {t.autoLabel}</p>}
-                <div className="flex flex-col gap-2">
-                  <button type="button" className="w-full btn-primary py-2 text-sm">Subscribe</button>
-                  <button type="button" className="w-full border border-slate-200 text-slate-600 py-2 rounded-xl text-sm hover:bg-slate-50">Auto-renew (save)</button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="card p-5">
-            <h3 className="font-semibold text-bingo-dark mb-3">Member management</h3>
-            <div className="flex flex-wrap gap-3">
-              <button type="button" className="px-4 py-2 rounded-xl border border-slate-200 text-sm hover:bg-slate-50">Subscription history</button>
-              <button type="button" className="px-4 py-2 rounded-xl border border-slate-200 text-sm hover:bg-slate-50">Auto-renew settings</button>
-              <button type="button" className="px-4 py-2 rounded-xl border border-slate-200 text-sm hover:bg-slate-50">Claim member benefits</button>
-              <button type="button" className="px-4 py-2 rounded-xl border border-slate-200 text-sm hover:bg-slate-50">Invoice / receipt</button>
-            </div>
-            <p className="text-xs text-slate-500 mt-3">Reminder 3 days before auto-renewal. You can turn off auto-renew at any time; current period is unaffected.</p>
-          </div>
-        </section>
-      )}
-
       {/* ── My Orders ─────────────────────────────────────────────── */}
-      {view === 'home' && (
-        <ProfileOrdersSection orders={orders} loading={ordersLoading} error={ordersError} />
-      )}
+      <ProfileOrdersSection orders={orders} loading={ordersLoading} error={ordersError} />
 
       {/* ── My Certificates ───────────────────────────────────────── */}
-      {view === 'home' && (
-        <ProfileCertificatesSection
-          certificates={certificates}
-          loading={certificatesLoading}
-          error={certificatesError}
-        />
-      )}
+      <ProfileCertificatesSection
+        certificates={certificates}
+        loading={certificatesLoading}
+        error={certificatesError}
+      />
 
       {/* ── My Achievements ───────────────────────────────────────── */}
-      {view === 'home' && (
-        <ProfileAchievementsSection
-          achievements={achievements}
-          loading={achievementsLoading}
-          error={achievementsError}
-        />
-      )}
-
-      {/* ── Account settings (collapsible) ─────────────────────────── */}
-      {view === 'home' && (
-        <section id="settings" className="mb-8 scroll-mt-28">
-          <button
-            type="button"
-            className="w-full flex items-center justify-between gap-4 card p-5 hover:shadow-md transition text-left"
-            onClick={toggleAccountSettings}
-            aria-expanded={accountSettingsOpen}
-          >
-            <div>
-              <h2 className="section-title mb-0">Account settings</h2>
-              <p className="text-sm text-slate-500 mt-1">Name, contact info, and course access</p>
-            </div>
-            <span
-              className={`text-slate-400 shrink-0 transition-transform ${accountSettingsOpen ? 'rotate-180' : ''}`}
-              aria-hidden
-            >
-              ▼
-            </span>
-          </button>
-          {accountSettingsOpen ? (
-            <div className="card p-6 mt-3">
-              {profileLoading ? (
-                <p className="text-sm text-slate-500">Loading account info…</p>
-              ) : profile ? (
-                <ProfileAccountForm
-                  userId={user.id}
-                  profile={profile}
-                  userEmail={userEmail}
-                  onSaved={setProfile}
-                />
-              ) : (
-                <p className="text-sm text-slate-600">
-                  No profile found. Try signing in again, or contact support if the problem continues.
-                </p>
-              )}
-              <CourseAccessReset />
-            </div>
-          ) : null}
-        </section>
-      )}
+      <ProfileAchievementsSection
+        achievements={achievements}
+        loading={achievementsLoading}
+        error={achievementsError}
+      />
 
       {/* ── Notifications ─────────────────────────────────────────── */}
-      {view === 'home' && (
-        <ProfileNotificationsSection
-          notifications={notifications}
-          loading={notificationsLoading}
-          error={notificationsError}
-          userId={user?.id}
-          onRefresh={loadNotifications}
-        />
-      )}
+      <ProfileNotificationsSection
+        notifications={notifications}
+        loading={notificationsLoading}
+        error={notificationsError}
+        userId={user?.id}
+        onRefresh={loadNotifications}
+      />
 
       {/* ── Bottom quick area ──────────────────────────────────────── */}
       <section className="border-t border-slate-200 pt-6">
@@ -903,10 +746,8 @@ export default function Profile() {
             <Link to="/" className="text-slate-600 hover:text-primary">Home</Link>
             <Link to="/profile#help" className="text-slate-600 hover:text-primary">Help</Link>
             <a href="tel:400-xxx-xxxx" className="text-slate-600 hover:text-primary">Contact us</a>
-            {memberTier !== 'free' && <button type="button" onClick={() => setView('member')} className="text-amber-600 hover:text-amber-700 font-medium">Member support</button>}
-            <button type="button" onClick={() => setView('member')} className="text-slate-600 hover:text-primary">Auto-renewal</button>
           </div>
-          <p className="text-xs text-slate-400">Bingo AI Academy · Profile & Member Center</p>
+          <p className="text-xs text-slate-400">Bingo AI Academy · Profile</p>
         </div>
       </section>
     </div>
