@@ -140,8 +140,8 @@ export default function ProfileNotificationsSection({
           <div className="p-6">
             <p className="text-sm text-red-600">{error}</p>
             <p className="text-xs text-slate-500 mt-2">
-              If this is your first visit, run migration{' '}
-              <code className="text-[11px]">032_user_notifications.sql</code> in Supabase.
+              Could not load notifications. Confirm migration{' '}
+              <code className="text-[11px]">032_user_notifications.sql</code> is applied and the API server is running.
             </p>
           </div>
         ) : filtered.length === 0 ? (

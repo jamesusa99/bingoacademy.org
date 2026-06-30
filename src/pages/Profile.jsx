@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authLink } from '../lib/authRedirect'
@@ -24,6 +24,11 @@ import {
 } from '../lib/userAccomplishments'
 import { fetchMyNotifications, isNotificationUnread } from '../lib/userNotifications'
 import { formatIoaiPrice } from '../lib/ioaiStore'
+import {
+  buildProfileOverviewCards,
+  fetchMyProfileOverview,
+  mergeProfileOverview,
+} from '../lib/profileOverview'
 
 // ─── Member tier data ──────────────────────────────────────────────
 
@@ -356,6 +361,8 @@ export default function Profile() {
   const [achievements, setAchievements] = useState([])
   const [achievementsLoading, setAchievementsLoading] = useState(true)
   const [achievementsError, setAchievementsError] = useState('')
+  const [overview, setOverview] = useState(null)
+  const [overviewLoading, setOverviewLoading] = useState(true)
 
   useEffect(() => {
     if (!user?.id) {
@@ -380,35 +387,23 @@ export default function Profile() {
     }
   }, [user?.id])
 
-  useEffect(() => {
+  const refreshOverview = useCallback(async () => {
     if (!isAuthenticated) {
-      setOrders([])
-      setOrdersLoading(false)
+      setOverview(null)
+      setOverviewLoading(false)
       return
     }
 
-    let mounted = true
-    setOrdersLoading(true)
-    setOrdersError('')
-
-    fetchMyOrders()
-      .then(({ orders: rows }) => {
-        if (!mounted) return
-        setOrders(rows || [])
-      })
-      .catch((err) => {
-        if (!mounted) return
-        setOrdersError(err.message || 'Failed to load orders')
-        setOrders([])
-      })
-      .finally(() => {
-        if (mounted) setOrdersLoading(false)
-      })
-
-    return () => {
-      mounted = false
+    setOverviewLoading(true)
+    try {
+      const { overview: serverOverview } = await fetchMyProfileOverview()
+      setOverview(mergeProfileOverview(serverOverview))
+    } catch {
+      setOverview(mergeProfileOverview(null))
+    } finally {
+      setOverviewLoading(false)
     }
-  }, [isAuthenticated, user?.id])
+  }, [isAuthenticated])
 
   const loadNotifications = useCallback(() => {
     if (!user?.id) {
@@ -433,6 +428,40 @@ export default function Profile() {
         setNotificationsLoading(false)
       })
   }, [user?.id])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setOrders([])
+      setOrdersLoading(false)
+      return
+    }
+
+    let mounted = true
+    setOrdersLoading(true)
+    setOrdersError('')
+
+    fetchMyOrders()
+      .then(({ orders: rows }) => {
+        if (!mounted) return
+        setOrders(rows || [])
+      })
+      .catch((err) => {
+        if (!mounted) return
+        setOrdersError(err.message || 'Failed to load orders')
+        setOrders([])
+      })
+      .finally(() => {
+        if (mounted) {
+          setOrdersLoading(false)
+          refreshOverview()
+          loadNotifications()
+        }
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [isAuthenticated, user?.id, refreshOverview, loadNotifications])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -488,7 +517,10 @@ export default function Profile() {
 
     setCertificatesLoading(false)
     setAchievementsLoading(false)
-  }, [user?.id])
+
+    await refreshOverview()
+    await loadNotifications()
+  }, [user?.id, refreshOverview, loadNotifications])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -502,7 +534,10 @@ export default function Profile() {
     loadAccomplishments()
   }, [isAuthenticated, loadAccomplishments])
 
-  const unreadNotificationCount = notifications.filter((n) => isNotificationUnread(n)).length
+  const unreadNotificationCount = useMemo(() => {
+    if (notificationsLoading || notificationsError) return 0
+    return notifications.filter((n) => isNotificationUnread(n)).length
+  }, [notifications, notificationsLoading, notificationsError])
 
   const toggleAccountSettings = useCallback(() => {
     setAccountSettingsOpen((open) => {
@@ -559,20 +594,10 @@ export default function Profile() {
     { to: '/profile#notifications', icon: '🔔', label: 'Notifications', share: false, badge: unreadNotificationCount },
   ]
 
-  const dataCards = [
-    { label: 'Course hours', value: '128', unit: 'hrs', shareModule: null },
-    { label: 'Events joined', value: '6', unit: '', shareModule: 'My Events' },
-    { label: 'Awards / works', value: String(achievements.length), unit: '', shareModule: 'My Works' },
-    { label: 'Certificates', value: String(certificates.length), unit: '', shareModule: 'My Certificates' },
-    { label: 'Capability profile', value: 'Level 3', unit: '', shareModule: 'Capability Profile' },
-    { label: 'Orders', value: String(orders.length), unit: '', shareModule: 'My Orders' },
-    { label: 'Teaching kit stock', value: '2', unit: 'items', shareModule: null },
-    { label: 'Charity points', value: '1,240', unit: 'pts', shareModule: null },
-    { label: 'Commission balance', value: '$86', unit: '', shareModule: null },
-    { label: 'Invited', value: '12', unit: 'friends', shareModule: null },
-    { label: 'Pending commission', value: '$24', unit: '', shareModule: null },
-    { label: 'Member benefits to claim', value: '2', unit: '', shareModule: null },
-  ]
+  const dataCards = useMemo(
+    () => buildProfileOverviewCards(overview || mergeProfileOverview(null)),
+    [overview]
+  )
 
   return (
     <div className="page-content w-full py-6 sm:py-8">
@@ -685,6 +710,9 @@ export default function Profile() {
       {/* ── Data overview + share entry ─────────────────────────────── */}
       <section className="mb-8">
         <h2 className="section-title mb-4">Overview</h2>
+        {overviewLoading ? (
+          <p className="text-sm text-slate-500 mb-3">Loading overview…</p>
+        ) : null}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {dataCards.map((card, i) => (
             <div key={i} className="card p-4 relative">
@@ -705,25 +733,6 @@ export default function Profile() {
       </section>
 
       <ProfileLabPacksSection />
-
-      {/* ── Marketing recommendation ────────────────────────────────── */}
-      <section className="mb-8">
-        <h2 className="section-title mb-4">For you</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="card p-4 border-primary/20 bg-primary/5">
-            <p className="text-xs font-semibold text-primary mb-1">Hot</p>
-            <p className="font-semibold text-bingo-dark text-sm mb-1">Flash sale · Prestigious competition early bird</p>
-            <p className="text-xs text-slate-500 mb-2">Limited time</p>
-            <Link to="/mall" className="text-xs text-primary font-medium hover:underline">Go to Mall →</Link>
-          </div>
-          <div className="card p-4 border-green-200/60 bg-green-50/20">
-            <p className="text-xs font-semibold text-green-700 mb-1">Earn more</p>
-            <p className="font-semibold text-bingo-dark text-sm mb-1">Double commission · Invite friends to join, earn extra</p>
-            <p className="text-xs text-slate-500 mb-2">Earn by Sharing</p>
-            <button type="button" onClick={() => setShowEarnBySharing(true)} className="text-xs text-primary font-medium hover:underline">Earn by Sharing →</button>
-          </div>
-        </div>
-      </section>
 
       {/* ── Earn by Sharing (expandable) ────────────────── */}
       <section id="promo" className="mb-8">

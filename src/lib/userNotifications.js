@@ -1,7 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabase'
-
-const NOTIFICATION_FIELDS =
-  'id, category, title, body, href, read_at, metadata, created_at'
+import { authFetch } from './checkout'
 
 export const NOTIFICATION_CATEGORIES = {
   announcement: { icon: '📢', label: 'Announcement' },
@@ -11,48 +8,37 @@ export const NOTIFICATION_CATEGORIES = {
   system: { icon: '⚙️', label: 'System' },
 }
 
-export async function fetchMyNotifications(userId, { limit = 50 } = {}) {
-  if (!isSupabaseConfigured || !userId) {
-    return { data: [], error: new Error('Sign in required') }
+export async function fetchMyNotifications(_userId, { limit = 50 } = {}) {
+  try {
+    const body = await authFetch(`/api/me/notifications?limit=${limit}`)
+    return { data: body.notifications || [], error: null }
+  } catch (err) {
+    return { data: [], error: err }
   }
-
-  const { data, error } = await supabase
-    .from('user_notifications')
-    .select(NOTIFICATION_FIELDS)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
-  return { data: data || [], error }
 }
 
-export async function markNotificationRead(userId, notificationId) {
-  if (!isSupabaseConfigured || !userId || !notificationId) {
+export async function markNotificationRead(_userId, notificationId) {
+  if (!notificationId) {
     return { error: new Error('Invalid request') }
   }
 
-  const { error } = await supabase
-    .from('user_notifications')
-    .update({ read_at: new Date().toISOString() })
-    .eq('id', notificationId)
-    .eq('user_id', userId)
-    .is('read_at', null)
-
-  return { error }
+  try {
+    await authFetch(`/api/me/notifications/${encodeURIComponent(notificationId)}/read`, {
+      method: 'PATCH',
+    })
+    return { error: null }
+  } catch (err) {
+    return { error: err }
+  }
 }
 
-export async function markAllNotificationsRead(userId) {
-  if (!isSupabaseConfigured || !userId) {
-    return { error: new Error('Sign in required') }
+export async function markAllNotificationsRead(_userId) {
+  try {
+    await authFetch('/api/me/notifications/mark-all-read', { method: 'POST' })
+    return { error: null }
+  } catch (err) {
+    return { error: err }
   }
-
-  const { error } = await supabase
-    .from('user_notifications')
-    .update({ read_at: new Date().toISOString() })
-    .eq('user_id', userId)
-    .is('read_at', null)
-
-  return { error }
 }
 
 export function isNotificationUnread(row) {

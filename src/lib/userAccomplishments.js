@@ -176,8 +176,28 @@ export function formatAccomplishmentDate(iso) {
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+export async function persistAssessmentResult(userId, record) {
+  if (!isSupabaseConfigured || !userId || !record) return { error: null }
+
+  const { error } = await supabase.from('assessment_results').insert({
+    user_id: userId,
+    assessment_type: record.assessmentId || record.title || 'assessment',
+    score: record.score ?? null,
+    total: record.total ?? null,
+    level: record.level || null,
+    feedback: record.pct != null ? `${record.pct}%` : null,
+  })
+
+  if (error && !error.message?.includes('does not exist')) {
+    return { error }
+  }
+  return { error: null }
+}
+
 export async function recordAssessmentAccomplishments(userId, record) {
   if (!userId || !record) return
+
+  await persistAssessmentResult(userId, record)
 
   if (record.pct >= 60) {
     const dedupeKey = `assessment-cert:${record.assessmentId}:${record.at}`

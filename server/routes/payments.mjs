@@ -17,6 +17,11 @@ import {
 import { parseAddonSlugs } from '../lib/ioaiCommerce.mjs'
 import { resolveMallCartLineItems } from '../lib/mallCheckout.mjs'
 import { upsertOrderFromStripe } from './admin.mjs'
+import { buildProfileOverview } from '../lib/profileOverview.mjs'
+import {
+  listUserNotifications,
+  syncUserNotificationsFromActivity,
+} from '../lib/userNotifications.mjs'
 
 function siteOrigin(req) {
   return (
@@ -85,6 +90,67 @@ export function registerPaymentRoutes(app) {
 
     if (error) return res.status(502).json({ error: error.message })
     return res.json({ orders: data || [] })
+  })
+
+  app.get('/api/me/overview', async (req, res) => {
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    try {
+      const overview = await buildProfileOverview(auth.admin, auth.user.id)
+      return res.json({ overview })
+    } catch (err) {
+      console.error('[me/overview]', err)
+      return res.status(502).json({ error: err.message || 'Failed to load profile overview' })
+    }
+  })
+
+  app.get('/api/me/notifications', async (req, res) => {
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100)
+
+    try {
+      await syncUserNotificationsFromActivity(auth.admin, auth.user.id)
+      const notifications = await listUserNotifications(auth.admin, auth.user.id, { limit })
+      return res.json({ notifications })
+    } catch (err) {
+      console.error('[me/notifications]', err)
+      return res.status(502).json({ error: err.message || 'Failed to load notifications' })
+    }
+  })
+
+  app.patch('/api/me/notifications/:id/read', async (req, res) => {
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const notificationId = req.params.id?.trim()
+    if (!notificationId) return res.status(400).json({ error: 'Notification id required' })
+
+    const { error } = await auth.admin
+      .from('user_notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', notificationId)
+      .eq('user_id', auth.user.id)
+      .is('read_at', null)
+
+    if (error) return res.status(502).json({ error: error.message })
+    return res.json({ ok: true })
+  })
+
+  app.post('/api/me/notifications/mark-all-read', async (req, res) => {
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    const { error } = await auth.admin
+      .from('user_notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('user_id', auth.user.id)
+      .is('read_at', null)
+
+    if (error) return res.status(502).json({ error: error.message })
+    return res.json({ ok: true })
   })
 
   app.delete('/api/me/enrollments', async (req, res) => {
