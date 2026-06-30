@@ -42,12 +42,6 @@ export function formatOverviewHours(hours) {
   return String(n)
 }
 
-export function formatOverviewPoints(points) {
-  const n = Number(points)
-  if (!Number.isFinite(n) || n <= 0) return '0'
-  return n.toLocaleString()
-}
-
 export function formatOverviewMoney(cents, currency = 'usd') {
   const n = Number(cents)
   if (!Number.isFinite(n) || n <= 0) return '$0'
@@ -72,12 +66,7 @@ export function mergeProfileOverview(serverOverview) {
     certificatesCount: serverOverview?.certificatesCount ?? 0,
     capabilityLevel,
     ordersCount: serverOverview?.ordersCount ?? 0,
-    teachingKitCount: serverOverview?.teachingKitCount ?? 0,
-    charityPoints: serverOverview?.charityPoints ?? 0,
     commissionBalanceCents: serverOverview?.commissionBalanceCents ?? 0,
-    pendingCommissionCents: serverOverview?.pendingCommissionCents ?? 0,
-    invitedCount: serverOverview?.invitedCount ?? 0,
-    memberBenefitsToClaim: serverOverview?.memberBenefitsToClaim ?? 0,
   }
 }
 
@@ -107,38 +96,8 @@ export function buildProfileOverviewCards(overview) {
     },
     { label: 'Orders', value: String(overview.ordersCount), unit: '', shareModule: overview.ordersCount ? 'My Orders' : null },
     {
-      label: 'Teaching kit stock',
-      value: String(overview.teachingKitCount),
-      unit: 'items',
-      shareModule: null,
-    },
-    {
-      label: 'Charity points',
-      value: formatOverviewPoints(overview.charityPoints),
-      unit: 'pts',
-      shareModule: null,
-    },
-    {
       label: 'Commission balance',
       value: formatOverviewMoney(overview.commissionBalanceCents),
-      unit: '',
-      shareModule: null,
-    },
-    {
-      label: 'Invited',
-      value: String(overview.invitedCount),
-      unit: overview.invitedCount === 1 ? 'friend' : 'friends',
-      shareModule: null,
-    },
-    {
-      label: 'Pending commission',
-      value: formatOverviewMoney(overview.pendingCommissionCents),
-      unit: '',
-      shareModule: null,
-    },
-    {
-      label: 'Member benefits to claim',
-      value: String(overview.memberBenefitsToClaim),
       unit: '',
       shareModule: null,
     },
