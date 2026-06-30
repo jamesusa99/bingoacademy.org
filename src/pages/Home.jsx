@@ -1,9 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
 import HomeHero from '../components/home/HomeHero'
 import PageMeta from '../components/PageMeta'
-import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import { ORG_JSON_LD, PAGE_SEO } from '../config/programs'
 import {
@@ -11,8 +9,6 @@ import {
   PORTAL_CORE_ENTRIES,
   PORTAL_LEARNING_PATH,
   PORTAL_COMPETITIONS,
-  PORTAL_TRUST_STATS_FALLBACK,
-  PORTAL_TESTIMONIALS_FALLBACK,
 } from '../config/homePortal'
 import { lineIdFromHref, adaptiveCountGridClass } from '../config/productLineVisibility'
 import { isLabsStorefrontLink } from '../config/labsStorefront'
@@ -28,8 +24,6 @@ const ACCENT_RING = {
 }
 
 export default function Home() {
-  const [trustStats, setTrustStats] = useState(PORTAL_TRUST_STATS_FALLBACK)
-  const [testimonials, setTestimonials] = useState(PORTAL_TESTIMONIALS_FALLBACK)
   const { isLineVisible } = useProductLineVisibility()
 
   const coreEntries = useMemo(
@@ -44,15 +38,6 @@ export default function Home() {
     () => PORTAL_COMPETITIONS.filter((item) => isLineVisible(lineIdFromHref(item.to))),
     [isLineVisible]
   )
-
-  useEffect(() => {
-    supabase.from('home_stats').select('*').order('sort_order').then(({ data }) => {
-      if (data?.length) setTrustStats(data.map((r) => ({ icon: r.icon, value: r.value, label: r.label })))
-    })
-    supabase.from('home_testimonials').select('*').order('sort_order').then(({ data }) => {
-      if (data?.length) setTestimonials(data.map((r) => ({ quote: r.quote, name: r.name, role: r.role, stars: r.stars ?? 5 })))
-    })
-  }, [])
 
   return (
     <div className="w-full">
@@ -138,50 +123,6 @@ export default function Home() {
                 <div className="text-2xl mb-2">{step.icon}</div>
                 <h3 className="font-semibold text-bingo-dark">{step.title}</h3>
                 <p className="text-xs text-slate-500 mt-2 leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Quick nav */}
-        <section className="mb-14">
-          <h2 className="section-title mb-4">Quick Access</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              { icon: '📚', title: 'AI Courses', desc: 'Browse all product lines', to: '/courses' },
-              { icon: '🏅', title: 'Achievements', desc: 'Student work & awards', to: '/showcase' },
-              { icon: '📜', title: 'Certification', desc: 'Ability certificates', to: '/cert' },
-              { icon: '🛒', title: 'AI Mall', desc: 'Books, kits & materials', to: '/mall' },
-            ].map((item) => (
-              <Link key={item.to} to={item.to} className="card p-4 sm:p-5 hover:shadow-md hover:border-primary/30 transition text-center min-h-[44px]">
-                <div className="text-2xl mb-2">{item.icon}</div>
-                <div className="font-semibold text-bingo-dark text-sm">{item.title}</div>
-                <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* Trust + testimonials */}
-        <section className="mb-14">
-          <h2 className="section-title mb-4">Why Bingo AI Academy</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
-            {trustStats.map((s, i) => (
-              <div key={i} className="card p-4 sm:p-5 text-center">
-                <div className="text-2xl mb-1">{s.icon}</div>
-                <div className="text-lg sm:text-xl font-bold text-primary">{s.value}</div>
-                <div className="text-xs text-slate-600 mt-1">{s.label}</div>
-              </div>
-            ))}
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {testimonials.map((t, i) => (
-              <div key={i} className="card p-5 flex flex-col">
-                <div className="text-yellow-400 text-sm mb-2">{'★'.repeat(t.stars)}</div>
-                <p className="text-slate-600 text-sm leading-relaxed flex-1">&ldquo;{t.quote}&rdquo;</p>
-                <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
-                  <span className="font-medium text-slate-700">{t.name}</span> · {t.role}
-                </div>
               </div>
             ))}
           </div>
