@@ -37,6 +37,16 @@ export const LESSON_SEGMENTS = [
   },
 ]
 
+/** External step — opens GoLab in a new tab; not part of lesson progress indices. */
+export const GOLAB_STEP = {
+  id: 'golab',
+  label: 'GoLab',
+  shortLabel: 'GoLab',
+  icon: '',
+  type: 'golab',
+  desc: 'Python practice workspace (opens in new tab)',
+}
+
 export function segmentIndex(segmentId) {
   return LESSON_SEGMENT_IDS.indexOf(segmentId)
 }

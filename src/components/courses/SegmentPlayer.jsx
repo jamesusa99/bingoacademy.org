@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { Lock, Play, RotateCcw, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { IOAI_MODULE_PREVIEW_SECONDS } from '../../config/ioaiPreview'
-import { LESSON_SEGMENTS } from '../../config/lessonSegments'
+import { GOLAB_STEP, LESSON_SEGMENTS } from '../../config/lessonSegments'
+import { goLabPath } from '../../lib/goLabPaths'
 import LessonExerciseSegment, { useLessonExerciseCount } from './LessonExerciseSegment'
 import { useLessonProgress } from '../../hooks/useLearningProgress'
 import { useStreamPlayback } from '../../hooks/useStreamPlayback'
@@ -23,6 +24,27 @@ function formatTime(seconds) {
 
 function activeSegments(hasExercises) {
   return hasExercises ? LESSON_SEGMENTS : LESSON_SEGMENTS.filter((s) => s.id !== 'checkpoint')
+}
+
+function stepperSegments(hasExercises, showGoLab) {
+  const segments = activeSegments(hasExercises)
+  if (!showGoLab) return segments
+  const result = []
+  for (const seg of segments) {
+    result.push(seg)
+    if (seg.id === 'checkpoint' || (seg.id === 'video' && !hasExercises)) {
+      result.push(GOLAB_STEP)
+    }
+  }
+  return result
+}
+
+function storageIndexForSegment(segmentId, hasExercises) {
+  if (segmentId === 'intro') return 0
+  if (segmentId === 'video') return 1
+  if (segmentId === 'checkpoint') return 2
+  if (segmentId === 'summary') return 3
+  return null
 }
 
 function segmentAtIndex(index, hasExercises) {
@@ -47,12 +69,38 @@ function getLessonTakeaways(course) {
   return { contentGoals, items: uniqueItems }
 }
 
-function SegmentStepper({ currentIndex, segmentsDone, onSelect, hasAccess, hasExercises }) {
-  const segments = activeSegments(hasExercises)
+function SegmentStepper({ currentIndex, segmentsDone, onSelect, hasAccess, hasExercises, showGoLab, lessonId, studyCenter, fromLine }) {
+  const segments = stepperSegments(hasExercises, showGoLab)
   return (
     <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-      {segments.map((seg, i) => {
-        const storageIndex = hasExercises ? i : i >= 2 ? i + 1 : i
+      {segments.map((seg) => {
+        if (seg.id === 'golab') {
+          const href = goLabPath(lessonId, { from: fromLine, studyCenter })
+          const canOpen = hasAccess
+          return (
+            <a
+              key={seg.id}
+              href={canOpen ? href : undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-disabled={!canOpen}
+              onClick={(event) => {
+                if (!canOpen) event.preventDefault()
+              }}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition shrink-0 ${
+                canOpen
+                  ? 'bg-slate-100 text-slate-600 hover:bg-cyan-50 hover:text-cyan-800 border border-slate-200 hover:border-cyan-300'
+                  : 'bg-slate-50 text-slate-400 cursor-not-allowed pointer-events-none'
+              }`}
+            >
+              {seg.icon ? <span aria-hidden>{seg.icon}</span> : null}
+              <span className="hidden sm:inline">{COURSES_PORTAL.goLab}</span>
+              <span className="sm:hidden">{COURSES_PORTAL.goLab}</span>
+            </a>
+          )
+        }
+
+        const storageIndex = storageIndexForSegment(seg.id, hasExercises)
         const done = segmentsDone[seg.id]
         const active = storageIndex === currentIndex
         const canClick =
@@ -216,6 +264,8 @@ export default function SegmentPlayer({
   const { hasExercises } = useLessonExerciseCount(course.id)
   const currentSegment = segmentAtIndex(segmentIndex, hasExercises)
   const productLine = isCurriculumLine(course?.line) ? course.line : 'ioai'
+  const showGoLab = productLine === 'ioai'
+  const fromLine = course?.line || productLine
   const { next: nextLessonId } = getAdjacentLessons(course.id, courses, curriculumTree, productLine)
 
   const showLock = !hasAccess && preview.showLock
@@ -282,6 +332,10 @@ export default function SegmentPlayer({
             onSelect={goToSegment}
             hasAccess={hasAccess}
             hasExercises={hasExercises}
+            showGoLab={showGoLab}
+            lessonId={course.id}
+            studyCenter={studyCenter}
+            fromLine={fromLine}
           />
         </div>
 

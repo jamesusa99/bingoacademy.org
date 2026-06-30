@@ -24,6 +24,7 @@ export default function NotebookPane({
   checking = false,
   pyodideLoading = false,
   pyodideError,
+  showSubmitCheck = true,
 }) {
   const isLite = lab?.runtime === 'jupyterlite'
   const busy = pyodideLoading || running || checking
@@ -94,19 +95,21 @@ export default function NotebookPane({
               )}
               <span className="truncate">{runLabel}</span>
             </button>
-            <button
-              type="button"
-              onClick={onSubmitCheck}
-              disabled={runDisabled}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md bg-amber-500 hover:bg-amber-400 text-slate-900 disabled:opacity-50 transition-all duration-200 shadow-[0_0_0_0_rgba(251,191,36,0)] hover:shadow-[0_0_16px_rgba(251,191,36,0.35)]"
-            >
-              {checking ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" aria-hidden />
-              ) : (
-                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" aria-hidden />
-              )}
-              <span className="truncate">{checkLabel}</span>
-            </button>
+            {showSubmitCheck ? (
+              <button
+                type="button"
+                onClick={onSubmitCheck}
+                disabled={runDisabled}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md bg-amber-500 hover:bg-amber-400 text-slate-900 disabled:opacity-50 transition-all duration-200 shadow-[0_0_0_0_rgba(251,191,36,0)] hover:shadow-[0_0_16px_rgba(251,191,36,0.35)]"
+              >
+                {checking ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" aria-hidden />
+                ) : (
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                )}
+                <span className="truncate">{checkLabel}</span>
+              </button>
+            ) : null}
           </div>
         </div>
         <div className="flex-1 min-h-0 overflow-hidden [&_.cm-editor]:h-full [&_.cm-scroller]:overflow-auto">

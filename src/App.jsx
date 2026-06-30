@@ -41,6 +41,7 @@ import EvolveAICarPage from './pages/lab/EvolveAICarPage'
 import DoodleMonsterPage from './pages/lab/DoodleMonsterPage'
 import AICyberTennisPage from './pages/lab/AICyberTennisPage'
 import CourseDetail from './pages/CourseDetail'
+import GoLabPage from './pages/GoLabPage'
 import Certification from './pages/Certification'
 import Mall from './pages/Mall'
 import Study from './pages/Study'
@@ -189,12 +190,14 @@ export default function App() {
         />
         <Route path="community" element={<Community />} />
         <Route path="community/:section" element={<Community />} />
+        <Route path="courses/detail/:id/golab" element={<GoLabPage />} />
         <Route path="courses/detail/:id" element={<CourseDetail />} />
         <Route path="cert" element={<Certification />} />
         <Route path="mall" element={<Mall />} />
         <Route path="profile" element={<Profile />} />
         <Route path="profile/study" element={<Study />} />
         <Route path="profile/study/module/:moduleSlug" element={<StudyModulePage />} />
+        <Route path="profile/study/lesson/:lessonId/golab" element={<GoLabPage studyCenter />} />
         <Route path="profile/study/lesson/:lessonId" element={<StudyLessonPage />} />
         <Route path="profile/works" element={<ProfileWorks />} />
         <Route path="login" element={<Login />} />
