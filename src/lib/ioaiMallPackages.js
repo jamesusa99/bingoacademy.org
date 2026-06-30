@@ -31,6 +31,7 @@ export function mapCourseBundleToDisplayItem(bundle) {
     marketingTags: bundle.marketingTags || [],
     discountPercent: bundle.discountPercent,
     emoji: bundle.emoji,
+    coverUrl: bundle.coverUrl || '',
     ioaiBundleSlug: bundle.slug,
     purchaseType: bundle.purchaseType,
     moduleCount: bundle.moduleCount,

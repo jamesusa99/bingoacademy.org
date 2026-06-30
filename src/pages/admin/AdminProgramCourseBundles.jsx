@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import AdminField from '../../components/admin/AdminField'
+import AdminImageUpload from '../../components/admin/AdminImageUpload'
 import AdminRichTextEditor from '../../components/admin/AdminRichTextEditor'
 import { getProgramCurriculum, isCurriculumLine } from '../../config/programCurriculum'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
@@ -30,6 +31,7 @@ function dollarsToCents(value) {
 function emptyForm(bundle) {
   return {
     title: bundle?.title || '',
+    coverUrl: bundle?.coverUrl || '',
     price: centsToDollars(bundle?.priceCents),
     compareAt: centsToDollars(bundle?.compareAtCents ?? bundle?.listPriceCents),
     marketingTags: (bundle?.marketingTags || []).join(', '),
@@ -81,6 +83,24 @@ export default function AdminProgramCourseBundles() {
     return bundles[0]
   }, [bundles, selectedKey])
 
+  const coverLabels = useMemo(
+    () => ({
+      label: p('bundleCover'),
+      upload: p('bundleCoverUpload'),
+      uploading: p('bundleCoverUploading'),
+      remove: p('bundleCoverRemove'),
+      dropzone: p('bundleCoverDropzone'),
+      dropzoneActive: p('bundleCoverDropzoneActive'),
+      replace: p('bundleCoverReplace'),
+      replaceBtn: p('bundleCoverReplaceBtn'),
+      formats: p('bundleCoverFormats'),
+      advanced: p('bundleCoverAdvanced'),
+      urlPlaceholder: p('bundleCoverUrlOptional'),
+      hint: p('bundleCoverHint'),
+    }),
+    [c]
+  )
+
   const load = useCallback(async () => {
     if (!productLine) return
     setLoading(true)
@@ -128,6 +148,7 @@ export default function AdminProgramCourseBundles() {
     try {
       const payload = {
         title: form.title.trim(),
+        cover_url: form.coverUrl.trim() || null,
         price_cents: priceCents,
         compare_at_cents: dollarsToCents(form.compareAt),
         marketing_tags: form.marketingTags
@@ -292,6 +313,16 @@ export default function AdminProgramCourseBundles() {
                   </p>
                 )}
               </div>
+
+              <AdminImageUpload
+                value={form.coverUrl}
+                onChange={(url) => setForm((prev) => ({ ...prev, coverUrl: url }))}
+                labels={coverLabels}
+                folder="bundles"
+                aspectClass="aspect-video"
+                maxWidthClass="max-w-md"
+                disabled={saving}
+              />
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <AdminField label={p('displayTitle')}>

@@ -37,16 +37,23 @@ export default function IoaiCourseBundleModal({ item, onClose, onBuy, buying = f
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[90vh]"
+        className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[90vh] overflow-x-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        {item.coverUrl?.trim() ? (
+          <div className="aspect-[2/1] w-full bg-slate-100">
+            <img src={item.coverUrl.trim()} alt="" className="w-full h-full object-cover" />
+          </div>
+        ) : null}
         <div className="p-6 sm:p-8">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-3xl" aria-hidden>
-                  {item.emoji || '🏆'}
-                </span>
+                {!item.coverUrl?.trim() ? (
+                  <span className="text-3xl" aria-hidden>
+                    {item.emoji || '🏆'}
+                  </span>
+                ) : null}
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-700">
                   {item.isFullTrack ? 'Full track' : 'Stage bundle'}
                 </span>
@@ -116,6 +123,7 @@ export function IoaiCourseBundleCard({
     item.compareAtCents != null ? formatIoaiPrice(item.compareAtCents, item.currency) : null
   const price = formatIoaiPrice(item.priceCents, item.currency)
   const isDark = theme === 'dark'
+  const hasCover = Boolean(item.coverUrl?.trim())
 
   return (
     <article
@@ -136,15 +144,19 @@ export function IoaiCourseBundleCard({
     >
       <div className={isDark ? 'relative p-4 pb-0' : 'p-4 pb-0'}>
         <div
-          className={`flex items-center justify-center overflow-hidden rounded-lg min-h-[120px] ${
+          className={`relative flex items-center justify-center overflow-hidden rounded-lg min-h-[120px] ${
             isDark
               ? 'course-card-dark__thumb bg-gradient-to-br from-amber-500/90 via-orange-600/80 to-amber-950'
               : 'bg-gradient-to-br from-amber-100 to-orange-100 h-24'
           }`}
         >
-          <span className="text-4xl" aria-hidden>
-            {item.emoji || '🏆'}
-          </span>
+          {hasCover ? (
+            <img src={item.coverUrl.trim()} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <span className="text-4xl" aria-hidden>
+              {item.emoji || '🏆'}
+            </span>
+          )}
         </div>
       </div>
 

@@ -278,13 +278,17 @@ export async function updateAdminCourseBundle(admin, bundleId, body = {}, produc
     compare_at_cents: body.compare_at_cents ?? body.compareAtCents,
     currency: body.currency,
     marketing_tags: body.marketing_tags ?? body.marketingTags,
-    cover_url: body.cover_url ?? body.coverUrl,
     status: body.status,
     sort_order: body.sort_order ?? body.sortOrder,
     updated_at: new Date().toISOString(),
   }
+  if ('cover_url' in body || 'coverUrl' in body) {
+    const raw = body.cover_url ?? body.coverUrl
+    patch.cover_url = typeof raw === 'string' ? raw.trim() || null : raw ?? null
+  }
   Object.keys(patch).forEach((key) => {
-    if (patch[key] === undefined || patch[key] === null) delete patch[key]
+    if (patch[key] === undefined) delete patch[key]
+    if (patch[key] === null && key !== 'cover_url') delete patch[key]
   })
 
   const { data, error } = await admin
