@@ -44,10 +44,14 @@ function LayoutShell({ children }) {
   const { isAuthenticated, loading: authLoading, signOut } = useAuth()
   const { visiblePrograms } = useProductLineVisibility()
   const showGuestNav = !authLoading && !isAuthenticated
+  const showProgramsNav = visiblePrograms.length > 1
   const visibleProgramPaths = new Set(visiblePrograms.map((p) => programPath(p.slug)))
   const mobileNavItems = mainNav.filter((item) => {
     if (!LABS_STOREFRONT_VISIBLE && isLabsNavPath(item.path)) return false
-    if (item.path.startsWith('/programs/')) return visibleProgramPaths.has(item.path)
+    if (item.path.startsWith('/programs/')) {
+      if (!showProgramsNav) return false
+      return visibleProgramPaths.has(item.path)
+    }
     return true
   })
 
@@ -60,7 +64,7 @@ function LayoutShell({ children }) {
 
   const desktopItems = [
     { type: 'link', path: '/', label: 'Home' },
-    { type: 'programs', label: 'Programs' },
+    ...(showProgramsNav ? [{ type: 'programs', label: 'Programs' }] : []),
     { type: 'link', path: '/courses', label: 'Courses' },
     ...(LABS_STOREFRONT_VISIBLE ? [{ type: 'link', path: '/labs', label: 'Labs' }] : []),
     { type: 'link', path: '/exploration', label: 'AI Exploration' },
@@ -217,6 +221,7 @@ function LayoutShell({ children }) {
               <Link to="/cert" className="block hover:text-white">Certification</Link>
               <Link to="/mall" className="block hover:text-white">AI Mall</Link>
             </div>
+            {showProgramsNav ? (
             <div>
               <div className="text-white font-medium mb-2">Programs</div>
               {visiblePrograms.map((p) => (
@@ -225,6 +230,7 @@ function LayoutShell({ children }) {
                 </Link>
               ))}
             </div>
+            ) : null}
           </div>
         </div>
         <div className="w-full px-4 sm:px-6 mt-6 pt-6 border-t border-gray-700 text-center">
