@@ -71,7 +71,7 @@ export default function HomeHero() {
           <p className="text-lg sm:text-xl text-slate-300 font-medium">From Curiosity to Certified Outcomes</p>
         </div>
 
-        {programCount > 0 ? (
+        {programCount > 1 ? (
         <div className={gridClass}>
           {heroPathPrograms.map((p) => (
             <PathCard
