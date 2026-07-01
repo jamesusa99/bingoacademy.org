@@ -503,6 +503,34 @@ export async function userCanPreviewLesson(admin, lessonSlug) {
   return true
 }
 
+/** Public free-trial lesson configured in admin (lessons.trial_enabled). */
+export async function fetchFreeTrialLesson(admin) {
+  if (!admin) return null
+
+  const { data: rows, error } = await admin
+    .from('lessons')
+    .select('slug, catalog_slug, title, status, cloudflare_video_id, sort_order')
+    .eq('trial_enabled', true)
+    .neq('status', 'hidden')
+    .neq('status', 'draft')
+    .order('sort_order', { ascending: true })
+    .limit(1)
+
+  if (error) throw error
+  const lesson = rows?.[0]
+  if (!lesson) return null
+
+  const catalogSlug = (lesson.catalog_slug || lesson.slug || '').trim()
+  if (!catalogSlug) return null
+
+  return {
+    catalogSlug,
+    slug: lesson.slug,
+    title: lesson.title || null,
+    hasVideo: Boolean(lesson.cloudflare_video_id?.trim()),
+  }
+}
+
 export async function userHasLessonAccess(admin, userId, lessonSlug, { enrolledSlugs } = {}) {
   if (!lessonSlug?.trim()) return false
 

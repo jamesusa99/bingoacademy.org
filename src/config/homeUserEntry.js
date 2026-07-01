@@ -11,7 +11,7 @@ export const HOME_USER_ENTRY = {
   profile: { label: 'My profile', desc: 'Account & settings' },
   freeTrial: {
     label: 'Claim free trial',
-    desc: 'Unlock Lesson 1.1 · Arrays & Strings',
+    desc: 'Unlock your free IOAI lesson',
     claimedLabel: 'Continue free lesson',
     claimedDesc: 'Your trial lesson is ready',
   },
@@ -20,6 +20,6 @@ export const HOME_USER_ENTRY = {
     desc: 'Videos, notes & progress',
     loginRequired: 'Log in to open Study Center',
   },
-  trialSuccess: 'Free trial unlocked! Starting Lesson 1.1…',
+  trialSuccess: 'Free trial unlocked! Opening your lesson…',
   studyRedirect: '/profile/study',
 }

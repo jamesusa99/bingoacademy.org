@@ -18,7 +18,7 @@ import {
   resolveModuleDbId,
   sanitizeQuestions,
 } from '../lib/ioaiQuestions.mjs'
-import { userHasLessonAccess, userHasModuleAccess } from '../lib/ioaiCommerce.mjs'
+import { userHasLessonAccess, userHasModuleAccess, fetchFreeTrialLesson } from '../lib/ioaiCommerce.mjs'
 import {
   fetchProgramStoreLevels,
   isCurriculumProductLine,
@@ -95,6 +95,19 @@ export function registerIoaiRoutes(app, { verifyAdminUser } = {}) {
       return res.json(payload)
     } catch (err) {
       return res.status(502).json({ error: err.message || 'Failed to load store' })
+    }
+  })
+
+  app.get('/api/ioai/trial-lesson', async (_req, res) => {
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    try {
+      const trial = await fetchFreeTrialLesson(admin)
+      if (!trial) return res.json({ trial: null })
+      return res.json({ trial })
+    } catch (err) {
+      return res.status(502).json({ error: err.message || 'Failed to load trial lesson' })
     }
   })
 

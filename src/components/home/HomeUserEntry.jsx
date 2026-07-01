@@ -4,17 +4,15 @@ import { LogIn, UserPlus, GraduationCap, Gift, User } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { HOME_USER_ENTRY } from '../../config/homeUserEntry'
 import { authLink } from '../../lib/authRedirect'
-import {
-  claimFreeTrial,
-  hasClaimedFreeTrial,
-  FREE_TRIAL_COURSE_HREF,
-} from '../../lib/freeTrial'
+import { claimFreeTrial, hasClaimedFreeTrial } from '../../lib/freeTrial'
+import { useFreeTrialLesson } from '../../hooks/useFreeTrialLesson'
 
 const STUDY_PATH = HOME_USER_ENTRY.studyRedirect
 
 export default function HomeUserEntry() {
   const navigate = useNavigate()
   const { isAuthenticated, loading, user } = useAuth()
+  const { catalogSlug, title: trialTitle, href: trialHref } = useFreeTrialLesson()
   const [trialClaimed, setTrialClaimed] = useState(hasClaimedFreeTrial())
   const [claiming, setClaiming] = useState(false)
   const [toast, setToast] = useState('')
@@ -22,14 +20,15 @@ export default function HomeUserEntry() {
   const showGuest = !loading && !isAuthenticated
 
   const handleFreeTrial = () => {
+    if (!catalogSlug) return
     setClaiming(true)
     if (!trialClaimed) {
-      claimFreeTrial()
+      claimFreeTrial(catalogSlug)
       setTrialClaimed(true)
       setToast(HOME_USER_ENTRY.trialSuccess)
     }
     setClaiming(false)
-    navigate(FREE_TRIAL_COURSE_HREF)
+    navigate(trialHref)
   }
 
   const handleStudyCenter = () => {
@@ -45,8 +44,12 @@ export default function HomeUserEntry() {
     : HOME_USER_ENTRY.freeTrial.label
 
   const freeTrialDesc = trialClaimed
-    ? HOME_USER_ENTRY.freeTrial.claimedDesc
-    : HOME_USER_ENTRY.freeTrial.desc
+    ? trialTitle
+      ? `${HOME_USER_ENTRY.freeTrial.claimedDesc} · ${trialTitle}`
+      : HOME_USER_ENTRY.freeTrial.claimedDesc
+    : trialTitle
+      ? `${HOME_USER_ENTRY.freeTrial.desc} · ${trialTitle}`
+      : HOME_USER_ENTRY.freeTrial.desc
 
   return (
     <div className="max-w-4xl mx-auto w-full">

@@ -7,8 +7,8 @@ import { useIOAIStore } from '../hooks/useIOAIStore'
 import { usePurchasedCourses } from '../hooks/usePurchasedCourses'
 import { hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from '../lib/courseAccess'
 import { authLink } from '../lib/authRedirect'
-import { claimFreeTrial, hasClaimedFreeTrial, FREE_TRIAL_LESSON_ID } from '../lib/freeTrial'
-import { getFirstIOAILessonId } from '../lib/ioaiCourseStructure'
+import { claimFreeTrial, hasClaimedFreeTrial } from '../lib/freeTrial'
+import { useFreeTrialLesson } from '../hooks/useFreeTrialLesson'
 import { studyLessonPath } from '../lib/studyPaths'
 import {
   buildStudyCourses,
@@ -50,12 +50,12 @@ export default function Study() {
       }),
     [enrollmentSlugs, ioaiModuleSlugs, catalog, levels]
   )
-  const firstLessonId = getFirstIOAILessonId(catalog, tree)
+  const { catalogSlug: trialCatalogSlug } = useFreeTrialLesson()
   const trialActive = hasClaimedFreeTrial()
-  const trialLessonHref = studyLessonPath(firstLessonId || FREE_TRIAL_LESSON_ID, { play: true })
+  const trialLessonHref = studyLessonPath(trialCatalogSlug, { play: true })
 
   const handleClaimTrial = () => {
-    claimFreeTrial()
+    claimFreeTrial(trialCatalogSlug)
     refresh()
   }
 

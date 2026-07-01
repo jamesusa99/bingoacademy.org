@@ -27,6 +27,7 @@ import {
   saveProgramLevelConfig,
   saveProgramModuleConfig,
 } from '../../lib/ioaiCurriculumAdmin'
+import { invalidateFreeTrialLessonCache } from '../../hooks/useFreeTrialLesson'
 import { fetchQuestionCountsForLessons } from '../../lib/ioaiQuestionsAdmin'
 import { readAdminUiDraft, writeAdminUiDraft, clearAdminUiDraft } from '../../hooks/useAdminFormDraft'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
@@ -397,6 +398,7 @@ export default function AdminIOAICurriculum() {
     setError(null)
     try {
       await saveProgramLessonConfig(productLine, editingRow.lessonId, form)
+      invalidateFreeTrialLessonCache()
       setSuccess(c.t(`${i18nRoot}.saved`))
       setEditingRow(null)
       sessionStorage.removeItem(`admin-curriculum-edit-${editingRow.lessonId}`)

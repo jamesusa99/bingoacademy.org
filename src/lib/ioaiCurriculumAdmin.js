@@ -46,7 +46,8 @@ const CURRICULUM_ADMIN_SELECT = `
         content_goals,
         cloudflare_video_id,
         catalog_slug,
-        golab_enabled
+        golab_enabled,
+        trial_enabled
       )
     )
   )
@@ -84,6 +85,7 @@ export function flattenCurriculumForAdmin(levels) {
             contentGoals: lesson.content_goals || '',
             cloudflareVideoId: lesson.cloudflare_video_id || '',
             golabEnabled: Boolean(lesson.golab_enabled),
+            trialEnabled: Boolean(lesson.trial_enabled),
             catalogSlug: lesson.catalog_slug || lesson.slug,
             sortOrder: lesson.sort_order ?? 0,
           })
@@ -121,6 +123,7 @@ export function groupModulesForAdmin(levels) {
           contentGoals: lesson.content_goals || '',
           cloudflareVideoId: lesson.cloudflare_video_id || '',
           golabEnabled: Boolean(lesson.golab_enabled),
+          trialEnabled: Boolean(lesson.trial_enabled),
           catalogSlug: lesson.catalog_slug || lesson.slug,
           sortOrder: lesson.sort_order ?? 0,
         }))
@@ -594,6 +597,15 @@ export async function createIOAICourse(input) {
   return createProgramCourse('ioai', input)
 }
 
+async function clearOtherTrialLessons(lessonId) {
+  const { error } = await supabase
+    .from('lessons')
+    .update({ trial_enabled: false, updated_at: new Date().toISOString() })
+    .eq('trial_enabled', true)
+    .neq('id', lessonId)
+  if (error) throw new Error(error.message)
+}
+
 export async function saveProgramLessonConfig(productLine, lessonId, patch) {
   const catalogSlug = patch.catalog_slug?.trim() || null
   const cloudflareUid = patch.cloudflare_video_id?.trim() || null
@@ -613,6 +625,10 @@ export async function saveProgramLessonConfig(productLine, lessonId, patch) {
     lessonSlug = await ensureUniqueLessonSlug(catalogSlug, lessonId)
   }
 
+  if (Boolean(patch.trial_enabled)) {
+    await clearOtherTrialLessons(lessonId)
+  }
+
   const data = await adminUpdate('lessons', lessonId, {
     title: patch.title,
     slug: lessonSlug,
@@ -621,6 +637,7 @@ export async function saveProgramLessonConfig(productLine, lessonId, patch) {
     cloudflare_video_id: cloudflareUid,
     catalog_slug: catalogSlug,
     golab_enabled: Boolean(patch.golab_enabled),
+    trial_enabled: Boolean(patch.trial_enabled),
     updated_at: new Date().toISOString(),
   })
 

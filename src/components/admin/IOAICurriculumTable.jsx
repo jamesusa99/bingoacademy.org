@@ -334,6 +334,11 @@ function LessonRow({ row, labels, exerciseCounts, deletingId, onEditLesson, onDe
       <td className="p-3">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-medium text-bingo-dark text-sm">{row.lessonTitle}</p>
+          {row.trialEnabled ? (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 bg-amber-100 text-amber-800">
+              {labels.trialLessonBadge}
+            </span>
+          ) : null}
           <span
             className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${
               counts.total > 0 ? 'bg-violet-100 text-violet-800' : 'bg-slate-100 text-slate-500'
@@ -654,6 +659,7 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
     rating: row.catalogRating ?? 4.85,
     students: row.catalogStudents ?? 800,
     golab_enabled: Boolean(row.golabEnabled),
+    trial_enabled: Boolean(row.trialEnabled),
   })
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
@@ -768,6 +774,22 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
           </span>
         </label>
         <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{labels.goLabEnabledHint}</p>
+      </AdminField>
+
+      <AdminField label={labels.freeTrialLesson}>
+        <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            className="rounded border-slate-300 text-primary focus:ring-primary/30"
+            checked={Boolean(form.trial_enabled)}
+            onChange={(e) => set('trial_enabled', e.target.checked)}
+            disabled={saving}
+          />
+          <span className="text-sm text-slate-700">
+            {form.trial_enabled ? labels.freeTrialLessonOn : labels.freeTrialLessonOff}
+          </span>
+        </label>
+        <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{labels.freeTrialLessonHint}</p>
       </AdminField>
 
       <CurriculumCatalogFields form={form} setForm={setForm} labels={labels} />

@@ -3,9 +3,38 @@ import { clearPurchasedSlugs, getPurchasedSlugs, purchaseLesson, savePurchasedSl
 import { FIRST_IOAI_LESSON_ID } from '../config/ioaiCourseSystem'
 
 export const FREE_TRIAL_STORAGE_KEY = 'bingo-free-trial-claimed'
-/** First IOAI lesson unlocked on free trial */
-export const FREE_TRIAL_LESSON_ID = FIRST_IOAI_LESSON_ID
-export const FREE_TRIAL_COURSE_HREF = `/courses/detail/${FREE_TRIAL_LESSON_ID}`
+
+/** Fallback when no lesson is marked trial_enabled in the database. */
+export const FREE_TRIAL_FALLBACK_LESSON_ID = FIRST_IOAI_LESSON_ID
+
+/** @deprecated use FREE_TRIAL_FALLBACK_LESSON_ID or useFreeTrialLesson() */
+export const FREE_TRIAL_LESSON_ID = FREE_TRIAL_FALLBACK_LESSON_ID
+
+export function freeTrialCourseHref(catalogSlug, { play = false, from = 'ioai' } = {}) {
+  const slug = (catalogSlug || FREE_TRIAL_FALLBACK_LESSON_ID).trim()
+  const params = new URLSearchParams({ from })
+  if (play) params.set('play', '1')
+  return `/courses/detail/${encodeURIComponent(slug)}?${params.toString()}`
+}
+
+/** @deprecated use freeTrialCourseHref(catalogSlug) */
+export const FREE_TRIAL_COURSE_HREF = freeTrialCourseHref(FREE_TRIAL_FALLBACK_LESSON_ID)
+
+export async function fetchFreeTrialLessonConfig() {
+  const res = await fetch('/api/ioai/trial-lesson')
+  if (!res.ok) throw new Error('Failed to load trial lesson')
+
+  const payload = await res.json()
+  const trial = payload?.trial
+  if (!trial?.catalogSlug) return null
+
+  return {
+    catalogSlug: trial.catalogSlug,
+    slug: trial.slug || trial.catalogSlug,
+    title: trial.title || null,
+    hasVideo: Boolean(trial.hasVideo),
+  }
+}
 
 export function getFreeTrialState() {
   try {
@@ -21,17 +50,20 @@ export function hasClaimedFreeTrial() {
 }
 
 /** Unlock trial lesson and persist claim timestamp */
-export function claimFreeTrial() {
-  purchaseLesson(FREE_TRIAL_LESSON_ID)
-  const state = { claimedAt: Date.now(), lessonId: FREE_TRIAL_LESSON_ID }
+export function claimFreeTrial(lessonId) {
+  const id = (lessonId || getFreeTrialState()?.lessonId || FREE_TRIAL_FALLBACK_LESSON_ID).trim()
+  purchaseLesson(id)
+  const state = { claimedAt: Date.now(), lessonId: id }
   localStorage.setItem(FREE_TRIAL_STORAGE_KEY, JSON.stringify(state))
   return state
 }
 
 /** Clear free-trial flag and remove the trial lesson from local unlocks. */
 export function resetFreeTrial() {
+  const state = getFreeTrialState()
   localStorage.removeItem(FREE_TRIAL_STORAGE_KEY)
-  const slugs = getPurchasedSlugs().filter((slug) => slug !== FREE_TRIAL_LESSON_ID)
+  const lessonId = state?.lessonId || FREE_TRIAL_FALLBACK_LESSON_ID
+  const slugs = getPurchasedSlugs().filter((slug) => slug !== lessonId)
   if (slugs.length) savePurchasedSlugs(slugs)
   else clearPurchasedSlugs()
 }
