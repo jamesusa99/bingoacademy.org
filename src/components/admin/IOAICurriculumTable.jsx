@@ -336,7 +336,7 @@ function LessonRow({ row, labels, exerciseCounts, deletingId, onEditLesson, onDe
           <p className="font-medium text-bingo-dark text-sm">{row.lessonTitle}</p>
           {row.trialEnabled ? (
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 bg-amber-100 text-amber-800">
-              {labels.trialLessonBadge}
+              {labels.trialLessonBadge || 'Trial'}
             </span>
           ) : null}
           <span
@@ -760,6 +760,29 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
         disabled={saving}
       />
 
+      {productLine === 'ioai' ? (
+        <AdminField label={labels.freeTrialLesson || 'Free trial lesson'}>
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="rounded border-slate-300 text-primary focus:ring-primary/30"
+              checked={Boolean(form.trial_enabled)}
+              onChange={(e) => set('trial_enabled', e.target.checked)}
+              disabled={saving}
+            />
+            <span className="text-sm text-slate-700">
+              {form.trial_enabled
+                ? labels.freeTrialLessonOn || 'Free trial'
+                : labels.freeTrialLessonOff || 'Not trial'}
+            </span>
+          </label>
+          <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+            {labels.freeTrialLessonHint ||
+              'Mark as the site-wide free trial lesson for the homepage. Upload lesson video for playback.'}
+          </p>
+        </AdminField>
+      ) : null}
+
       <AdminField label={labels.goLabEnabled}>
         <label className="inline-flex items-center gap-2 cursor-pointer select-none">
           <input
@@ -774,22 +797,6 @@ export function IOAILessonEditor({ row, productLine, levels, labels, saving, del
           </span>
         </label>
         <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{labels.goLabEnabledHint}</p>
-      </AdminField>
-
-      <AdminField label={labels.freeTrialLesson}>
-        <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            className="rounded border-slate-300 text-primary focus:ring-primary/30"
-            checked={Boolean(form.trial_enabled)}
-            onChange={(e) => set('trial_enabled', e.target.checked)}
-            disabled={saving}
-          />
-          <span className="text-sm text-slate-700">
-            {form.trial_enabled ? labels.freeTrialLessonOn : labels.freeTrialLessonOff}
-          </span>
-        </label>
-        <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{labels.freeTrialLessonHint}</p>
       </AdminField>
 
       <CurriculumCatalogFields form={form} setForm={setForm} labels={labels} />
