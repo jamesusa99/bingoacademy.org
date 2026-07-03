@@ -68,6 +68,7 @@ import NewsArticle from './pages/NewsArticle'
 import IOAILevelPage from './pages/ioai/IOAILevelPage'
 import IOAIModulePage from './pages/ioai/IOAIModulePage'
 import IOAIPublicExperimentPage from './pages/ioai/IOAIPublicExperimentPage'
+import ScrollToTop from './components/ScrollToTop'
 
 const ProgramPage = lazy(() => import('./pages/programs/ProgramPage'))
 const Compare = lazy(() => import('./pages/Compare'))
@@ -95,6 +96,7 @@ export default function App() {
   return (
     <>
       <HashRedirect />
+      <ScrollToTop />
       <Routes>
       <Route path="/labs/ioai/training-lab/:labId" element={<IOAITrainingLabSession />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
