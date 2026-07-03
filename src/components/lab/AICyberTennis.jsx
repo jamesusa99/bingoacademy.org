@@ -23,6 +23,9 @@ import {
   TENNIS_ARM_BONES,
   TENNIS_ARM_JOINTS,
 } from '../../config/cyberTennis'
+import { PLG_AHA_TRIGGERS } from '../../config/plgAhaMoments'
+import { usePlgAhaMoment } from '../../hooks/usePlgAhaMoment'
+import PlgAhaMomentModal from '../plg/PlgAhaMomentModal'
 
 const MATRIX_UI_MS = 100
 
@@ -40,7 +43,11 @@ function getJoint(keypoints, name) {
 /**
  * AI Cyber Tennis — Phase 4: swing velocity math + educational telemetry.
  */
-export default function AICyberTennis() {
+const COMBO_AHA_THRESHOLD = PLG_AHA_TRIGGERS['cyber-tennis-combo-10'].comboThreshold
+
+export default function AICyberTennis({ landingMode = false, autoStart = false, onGameStart }) {
+  const plgAha = usePlgAhaMoment(landingMode ? null : 'cyber-tennis-combo-10')
+  const { open: ahaOpen, close: closeAha, trigger: triggerAha } = plgAha
   const webcamRef = useRef(null)
   const overlayRef = useRef(null)
   const stageRef = useRef(null)
@@ -233,6 +240,10 @@ export default function AICyberTennis() {
     setCombo(0)
     pushTelemetry({ collisions: '0' })
   }, [pushTelemetry])
+
+  useEffect(() => {
+    if (combo >= COMBO_AHA_THRESHOLD) triggerAha()
+  }, [combo, triggerAha])
 
   const drawHitFlashes = useCallback((ctx) => {
     const now = performance.now()
@@ -473,7 +484,15 @@ export default function AICyberTennis() {
     setCombo(0)
     setTelemetry({ collisions: '0', ballZ: '100' })
     setGameActive(true)
+    onGameStart?.()
   }
+
+  const autoStartedRef = useRef(false)
+  useEffect(() => {
+    if (!autoStart || !modelReady || autoStartedRef.current || gameActive) return
+    autoStartedRef.current = true
+    startGame()
+  }, [autoStart, modelReady, gameActive])
 
   const stopGame = () => {
     setGameActive(false)
@@ -495,7 +514,9 @@ export default function AICyberTennis() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#050810] text-slate-100 flex flex-col">
+    <div
+      className={`${landingMode ? 'flex-1 min-h-0' : 'min-h-[calc(100vh-3.5rem)]'} bg-[#050810] text-slate-100 flex flex-col`}
+    >
       <div
         className="pointer-events-none fixed inset-0 opacity-35"
         aria-hidden
@@ -508,12 +529,14 @@ export default function AICyberTennis() {
       <header className="relative shrink-0 border-b border-emerald-500/20 bg-slate-950/90 backdrop-blur px-4 sm:px-6 py-3">
         <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="min-w-0">
-            <Link
-              to="/exploration"
-              className="text-xs text-emerald-400/90 hover:text-emerald-300 font-medium inline-flex items-center mb-1 transition-colors"
-            >
-              ← AI Exploration Lab
-            </Link>
+            {!landingMode ? (
+              <Link
+                to="/exploration"
+                className="text-xs text-emerald-400/90 hover:text-emerald-300 font-medium inline-flex items-center mb-1 transition-colors"
+              >
+                ← AI Exploration Lab
+              </Link>
+            ) : null}
             <h1 className="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-emerald-200 via-white to-cyan-200 bg-clip-text text-transparent">
               AI Cyber Tennis
             </h1>
@@ -636,6 +659,8 @@ export default function AICyberTennis() {
 
         <CyberTennisTelemetry active={gameActive && cameraReady && modelReady} metrics={telemetry} />
       </main>
+
+      <PlgAhaMomentModal open={!landingMode && ahaOpen} onClose={closeAha} />
     </div>
   )
 }

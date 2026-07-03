@@ -17,6 +17,16 @@ import {
 import { useIOAILabProgress } from '../../hooks/useIOAILabProgress'
 import { usePyodide } from '../../hooks/usePyodide'
 import { celebrateCheckpoint } from '../../utils/labCelebration'
+import { usePlgAhaMoment } from '../../hooks/usePlgAhaMoment'
+import PlgAhaMomentModal from '../../components/plg/PlgAhaMomentModal'
+import { useLazyAuth } from '../../contexts/LazyAuthContext'
+import { useAuth } from '../../contexts/AuthContext'
+import LabSessionActions from '../../components/funnel/LabSessionActions'
+import {
+  buildLabReportMarkdown,
+  consumePendingAuthAction,
+  downloadTextFile,
+} from '../../lib/lazyRegistration'
 
 function gradeLegacy(code, grader, output) {
   const hints = []
@@ -42,6 +52,9 @@ function appendLine(base, line) {
 
 export default function IOAITrainingLabSession() {
   const { labId } = useParams()
+  const { isAuthenticated } = useAuth()
+  const { gateAction } = useLazyAuth()
+  const { open: ahaOpen, close: closeAha, trigger: triggerAha } = usePlgAhaMoment('python-lists-lab-1')
   const lab = getLabById(labId)
   const content = getLabContent(labId)
   const { markLabComplete, stats } = useIOAILabProgress()
@@ -61,6 +74,7 @@ export default function IOAITrainingLabSession() {
   const [dockStatus, setDockStatus] = useState('idle')
   const [dockMessage, setDockMessage] = useState('')
   const [progressCelebrate, setProgressCelebrate] = useState(false)
+  const [progressSynced, setProgressSynced] = useState(false)
 
   const progress = loadProgress()
   const module = lab ? getModule(lab.moduleId) : null
@@ -76,6 +90,49 @@ export default function IOAITrainingLabSession() {
     const timer = setTimeout(() => setProgressCelebrate(false), 1200)
     return () => clearTimeout(timer)
   }, [progressCelebrate])
+
+  const downloadReport = useCallback(() => {
+    if (!lab) return
+    const markdown = buildLabReportMarkdown({
+      lab,
+      code,
+      output,
+      passed: dockStatus === 'pass',
+    })
+    downloadTextFile(`ioai-lab-${labId}-report.md`, markdown)
+  }, [lab, labId, code, output, dockStatus])
+
+  const markProgressSynced = useCallback(() => {
+    setProgressSynced(true)
+  }, [])
+
+  const handleSaveProgress = useCallback(() => {
+    gateAction({
+      copyKey: 'saveProgress',
+      pendingAction: { type: 'lab-save', labId },
+      onAuthed: markProgressSynced,
+    })
+  }, [gateAction, labId, markProgressSynced])
+
+  const handleDownloadReport = useCallback(() => {
+    gateAction({
+      copyKey: 'downloadReport',
+      pendingAction: { type: 'lab-download', labId },
+      onAuthed: downloadReport,
+    })
+  }, [gateAction, labId, downloadReport])
+
+  useEffect(() => {
+    if (!isAuthenticated || !labId) return
+    const pending = consumePendingAuthAction()
+    if (!pending || pending.labId !== labId) return
+    if (pending.type === 'lab-save') {
+      markProgressSynced()
+    }
+    if (pending.type === 'lab-download') {
+      downloadReport()
+    }
+  }, [isAuthenticated, labId, markProgressSynced, downloadReport])
 
   const tutorialMarkdown =
     content.tutorialMarkdown ||
@@ -151,6 +208,7 @@ export default function IOAITrainingLabSession() {
           markLabComplete(labId, 1)
           setProgressCelebrate(true)
           celebrateCheckpoint()
+          if (labId === 'lab-1') triggerAha()
           return
         }
 
@@ -181,6 +239,7 @@ export default function IOAITrainingLabSession() {
         markLabComplete(labId, 1)
         setProgressCelebrate(true)
         celebrateCheckpoint()
+        if (labId === 'lab-1') triggerAha()
       } else {
         setOutput(appendLine(runResult.output, `💡 Hint: ${legacy.message}`))
         setOutputTone('hint')
@@ -202,6 +261,7 @@ export default function IOAITrainingLabSession() {
     executeCode,
     labId,
     markLabComplete,
+    triggerAha,
   ])
 
   if (!lab) {
@@ -235,7 +295,18 @@ export default function IOAITrainingLabSession() {
         progressPercent={progressPercent}
         progressLabel={`${stats.completedCount}/${stats.totalLabs} labs · Lab ${labIndex} of ${IOAI_LABS.length}`}
         progressCelebrate={progressCelebrate}
-        footer={<AssessmentDock status={dockStatus} message={dockMessage} />}
+        footer={
+          <>
+            <AssessmentDock status={dockStatus} message={dockMessage} />
+            {dockStatus === 'pass' ? (
+              <LabSessionActions
+                onSaveProgress={handleSaveProgress}
+                onDownloadReport={handleDownloadReport}
+                savedHint={progressSynced && isAuthenticated}
+              />
+            ) : null}
+          </>
+        }
       >
         <TutorialPane markdown={tutorialMarkdown} sections={content.tutorial} />
         <NotebookPane
@@ -253,6 +324,8 @@ export default function IOAITrainingLabSession() {
           pyodideError={pyodideLoadError?.message}
         />
       </LabSessionLayout>
+
+      <PlgAhaMomentModal open={ahaOpen} onClose={closeAha} />
     </>
   )
 }

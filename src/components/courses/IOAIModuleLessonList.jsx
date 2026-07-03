@@ -5,6 +5,7 @@ import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { hasIoaiLessonAccess, canPreviewIoaiLesson } from '../../lib/ioaiAccess'
 import { resolveLessonCatalogSlug } from '../../lib/ioaiStore'
 import { studyLessonPath } from '../../lib/studyPaths'
+import CheckoutTrustMicrocopy from '../checkout/CheckoutTrustMicrocopy'
 
 const LESSON_DURATION_MINUTES = 14
 
@@ -198,14 +199,17 @@ export default function IOAIModuleLessonList({
               </div>
             </div>
             {canPurchase ? (
-              <button
-                type="button"
-                onClick={onBuy}
-                disabled={checkoutLoading || accessLoading}
-                className="btn-primary text-sm px-5 py-2.5 shrink-0 disabled:opacity-60"
-              >
-                {checkoutLoading ? COURSES_PORTAL.redirecting : COURSES_PORTAL.buyModule(price)}
-              </button>
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={onBuy}
+                  disabled={checkoutLoading || accessLoading}
+                  className="btn-primary text-sm px-5 py-2.5 disabled:opacity-60"
+                >
+                  {checkoutLoading ? COURSES_PORTAL.redirecting : COURSES_PORTAL.buyModule(price)}
+                </button>
+                <CheckoutTrustMicrocopy variant="light" align="right" className="max-w-[220px]" />
+              </div>
             ) : (
               <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full shrink-0">
                 {COURSES_PORTAL.comingSoonBadge}

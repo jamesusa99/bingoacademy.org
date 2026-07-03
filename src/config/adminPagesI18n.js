@@ -40,6 +40,7 @@ export const adminPagesZh = {
       tabStats: '信任数据',
       tabTestimonials: '用户评价',
       tabHeroPrograms: 'Hero 路径卡片',
+      tabHeroVideo: 'Hero 背景视频',
       heroProgramsDesc:
         '配置首页 Hero 区域三条产品线路径卡片的封面与是否显示。关闭显示的卡片不会出现在首页；若全部关闭，则整块路径卡片区域隐藏。',
       heroProgramsSaved: 'Hero 路径卡片已保存。',
@@ -57,6 +58,13 @@ export const adminPagesZh = {
       heroProgramCoverFormats: 'JPG / PNG / WebP / GIF · 最大 3MB',
       heroProgramCoverAdvanced: '高级：粘贴图片 URL',
       heroProgramCoverUrlOptional: '或粘贴图片 URL',
+      heroVideoDesc:
+        '首页首屏背景 B-roll（建议 15 秒、无声、MP4/WebM）。留空则显示代码 + 具身 AI 动画占位。上传至 Cloudflare Stream 或 CDN 后粘贴 URL。',
+      heroVideoSaved: 'Hero 背景视频已保存。',
+      heroVideoReset: '清空视频',
+      heroVideoUrl: '背景视频 URL',
+      heroVideoPosterUrl: '封面图 URL（可选）',
+      heroVideoHint: '建议内容：左侧写代码、右侧 Cyber Tennis / BingoClaw 实时联动。竖屏用户会自动裁切居中。',
       editStat: '编辑信任数据',
       addStat: '添加信任数据',
       editTestimonial: '编辑评价',
@@ -1603,6 +1611,7 @@ export const adminPagesEn = {
       tabStats: 'Trust stats',
       tabTestimonials: 'Testimonials',
       tabHeroPrograms: 'Hero path cards',
+      tabHeroVideo: 'Hero background video',
       heroProgramsDesc:
         'Configure cover images and visibility for the three homepage hero path cards. Hidden cards are omitted; if all are hidden, the entire path-card row is hidden.',
       heroProgramsSaved: 'Hero path cards saved.',
@@ -1620,6 +1629,13 @@ export const adminPagesEn = {
       heroProgramCoverFormats: 'JPG / PNG / WebP / GIF · max 3MB',
       heroProgramCoverAdvanced: 'Advanced: paste image URL',
       heroProgramCoverUrlOptional: 'Or paste image URL',
+      heroVideoDesc:
+        'Golden hero B-roll (≈15s, silent, MP4/WebM). Leave empty for the code + embodied-AI animated fallback. Paste a CDN or Cloudflare Stream URL after upload.',
+      heroVideoSaved: 'Hero background video saved.',
+      heroVideoReset: 'Clear video',
+      heroVideoUrl: 'Background video URL',
+      heroVideoPosterUrl: 'Poster image URL (optional)',
+      heroVideoHint: 'Ideal footage: code on the left, Cyber Tennis or BingoClaw responding on the right. Portrait view crops center.',
       editStat: 'Edit trust stat',
       addStat: 'Add trust stat',
       editTestimonial: 'Edit testimonial',

@@ -57,7 +57,9 @@ import AuthCallback from './pages/AuthCallback'
 import AIAssessment from './pages/AIAssessment'
 import Community from './pages/Community'
 import Curriculum from './pages/Curriculum'
-import IOAIStore from './pages/ioai/IOAIStore'
+import Privacy from './pages/Privacy'
+import IOAIMasterclassLanding from './pages/landing/IOAIMasterclassLanding'
+import TryAiLanding from './pages/landing/TryAiLanding'
 import IOAILevelPage from './pages/ioai/IOAILevelPage'
 import IOAIModulePage from './pages/ioai/IOAIModulePage'
 import IOAIPublicExperimentPage from './pages/ioai/IOAIPublicExperimentPage'
@@ -134,6 +136,9 @@ export default function App() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
+      {/* Channel landing pages — minimal chrome, no main nav */}
+      <Route path="/try-ai" element={<TryAiLanding />} />
+      <Route path="/ioai-masterclass" element={<IOAIMasterclassLanding />} />
       {/* Main site routes */}
       <Route path="/" element={<Layout><Outlet /></Layout>}>
         <Route index element={<Home />} />
@@ -194,6 +199,7 @@ export default function App() {
         <Route path="courses/detail/:id" element={<CourseDetail />} />
         <Route path="cert" element={<Certification />} />
         <Route path="mall" element={<Mall />} />
+        <Route path="privacy" element={<Privacy />} />
         <Route path="profile" element={<Profile />} />
         <Route path="profile/study" element={<Study />} />
         <Route path="profile/study/module/:moduleSlug" element={<StudyModulePage />} />

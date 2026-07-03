@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 import RichHtmlContent from '../shared/RichHtmlContent'
+import CheckoutTrustMicrocopy from '../checkout/CheckoutTrustMicrocopy'
 
 function BundleDiscountTags({ item, className = '' }) {
   const tags = useMemo(() => {
@@ -106,6 +107,7 @@ export default function IoaiCourseBundleModal({ item, onClose, onBuy, buying = f
               Close
             </button>
           </div>
+          <CheckoutTrustMicrocopy variant="light" className="mt-3 w-full" />
         </div>
       </div>
     </div>

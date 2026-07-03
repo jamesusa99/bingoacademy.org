@@ -228,7 +228,7 @@ export const COURSES_PORTAL = {
   modulePreviewBadge: (sec) => `Preview ${sec}s`,
   moduleUnlockAllTitle: 'Unlock all lessons',
   moduleUnlockAllDesc: 'Get full access to every lesson and enjoy the complete learning experience.',
-  moduleTrustGuarantee: '30-day money-back guarantee',
+  moduleTrustGuarantee: '14-day money-back guarantee',
   moduleTrustLifetime: 'Lifetime access',
   moduleTrustCertificate: 'Certificate of completion',
   moduleTrustSupport: 'Support 24/7',

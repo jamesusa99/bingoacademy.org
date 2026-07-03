@@ -13,6 +13,7 @@ import { purchaseIoaiBundle } from '../../lib/ioaiPurchase'
 import { authLink } from '../../lib/authRedirect'
 import { IOAI_TRACK_ID, isIOAILessonId } from '../../lib/ioaiCourseStructure'
 import { buildModuleCatalogSlug, formatIoaiPrice } from '../../lib/ioaiStore'
+import CheckoutTrustMicrocopy from '../checkout/CheckoutTrustMicrocopy'
 
 export default function CoursePurchasePanel({
   course,
@@ -154,6 +155,7 @@ export default function CoursePurchasePanel({
           >
             {checkoutLoading ? 'Redirecting…' : hasTrack ? COURSES_PORTAL.trackOwned : COURSES_PORTAL.unlockTrack}
           </button>
+          <CheckoutTrustMicrocopy variant="dark" className="mt-2" align="left" />
         </div>
         <Link to="/courses?line=ioai" className="text-xs text-cyan-400 hover:underline">
           Or browse individual course units →
@@ -184,6 +186,7 @@ export default function CoursePurchasePanel({
         >
           {checkoutLoading ? 'Redirecting…' : COURSES_PORTAL.purchaseCourse(checkoutLabel)}
         </button>
+        <CheckoutTrustMicrocopy variant="dark" className="mt-2" align="left" />
       </div>
 
       {!isAuthenticated ? (

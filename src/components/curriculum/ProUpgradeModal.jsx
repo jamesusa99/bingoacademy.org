@@ -1,25 +1,25 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { X, Sparkles, Shield, PlayCircle, Loader2 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { authLink } from '../../lib/authRedirect'
 import { startIOAIMasterclassCheckout } from '../../lib/checkout'
 import { PRICING } from '../../lib/courseAccess'
+import CheckoutTrustMicrocopy from '../checkout/CheckoutTrustMicrocopy'
+import { useLazyAuth } from '../../contexts/LazyAuthContext'
+import { getStoredPromoCode } from '../../lib/lazyRegistration'
+import { EARLY_BIRD_PROMO } from '../../config/funnel'
 
 export default function ProUpgradeModal({ open, onClose }) {
   const { isAuthenticated } = useAuth()
+  const { gateAction } = useLazyAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   if (!open) return null
 
   const price = (PRICING?.ioaiTrack?.price ?? 2990).toLocaleString()
+  const promo = getStoredPromoCode()
 
-  const handleUnlock = async () => {
-    if (!isAuthenticated) {
-      window.location.href = authLink('/login', '/curriculum')
-      return
-    }
+  const runCheckout = async () => {
     setLoading(true)
     setError(null)
     try {
@@ -30,6 +30,16 @@ export default function ProUpgradeModal({ open, onClose }) {
       setError(err.message || 'Checkout failed')
       setLoading(false)
     }
+  }
+
+  const handleUnlock = () => {
+    gateAction({
+      title: 'Sign in to unlock IOAI Masterclass',
+      subtitle:
+        'Google one-tap sign-in — then secure Stripe checkout. Enter promo codes like BINGO2026 on the payment page.',
+      googleLabel: 'Continue with Google to checkout',
+      onAuthed: runCheckout,
+    })
   }
 
   return (
@@ -81,6 +91,13 @@ export default function ProUpgradeModal({ open, onClose }) {
           </p>
           <p className="text-xs text-slate-500 mb-6">One-time · lifetime access</p>
 
+          {promo ? (
+            <p className="text-xs text-amber-400/90 mb-4">
+              Promo <span className="font-mono font-bold">{promo || EARLY_BIRD_PROMO.code}</span> — enter at Stripe
+              checkout
+            </p>
+          ) : null}
+
           {error ? (
             <p className="text-sm text-red-400 mb-4">{error}</p>
           ) : null}
@@ -101,12 +118,11 @@ export default function ProUpgradeModal({ open, onClose }) {
             )}
           </button>
 
+          <CheckoutTrustMicrocopy variant="dark" className="mt-3" />
+
           {!isAuthenticated ? (
             <p className="text-xs text-slate-500 mt-4">
-              <Link to={authLink('/login', '/curriculum')} className="text-cyan-400 hover:underline">
-                Sign in
-              </Link>{' '}
-              to continue checkout
+              One-tap Google sign-in — no lengthy registration form
             </p>
           ) : null}
         </div>

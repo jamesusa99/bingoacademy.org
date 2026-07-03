@@ -1172,3 +1172,124 @@
   justify-content: center;
   shrink: 0;
 }
+
+@keyframes hero-fallback-ball {
+  0%,
+  100% {
+    transform: translate(-80%, -30%) rotate(12deg);
+  }
+  20% {
+    transform: translate(20%, -90%) rotate(24deg);
+  }
+  45% {
+    transform: translate(90%, 10%) rotate(6deg);
+  }
+  70% {
+    transform: translate(-10%, 80%) rotate(-8deg);
+  }
+}
+
+.hero-fallback-ball {
+  animation: hero-fallback-ball 2.8s ease-in-out infinite;
+}
+
+@keyframes hero-arm-sweep {
+  0%,
+  100% {
+    transform: rotate(-32deg);
+  }
+  50% {
+    transform: rotate(28deg);
+  }
+}
+
+@keyframes hero-forearm-bend {
+  0%,
+  100% {
+    transform: rotate(15deg);
+  }
+  50% {
+    transform: rotate(-35deg);
+  }
+}
+
+@keyframes hero-claw-pinch {
+  0%,
+  100% {
+    gap: 0.85rem;
+  }
+  50% {
+    gap: 0.25rem;
+  }
+}
+
+@keyframes hero-sync-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes hero-code-cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes hero-target-ring {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+}
+
+.hero-arm-pivot {
+  transform-origin: bottom center;
+  animation: hero-arm-sweep 2.8s ease-in-out infinite;
+}
+
+.hero-arm-forearm {
+  animation: hero-forearm-bend 2.8s ease-in-out infinite;
+}
+
+.hero-claw {
+  animation: hero-claw-pinch 2.8s ease-in-out infinite;
+}
+
+.hero-sync-pulse {
+  animation: hero-sync-pulse 1.4s ease-in-out infinite;
+}
+
+.hero-code-cursor {
+  animation: hero-code-cursor 1s step-end infinite;
+}
+
+.hero-target-ring {
+  animation: hero-target-ring 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-fallback-ball,
+  .hero-arm-pivot,
+  .hero-arm-forearm,
+  .hero-claw,
+  .hero-sync-pulse,
+  .hero-code-cursor,
+  .hero-target-ring {
+    animation: none;
+  }
+}

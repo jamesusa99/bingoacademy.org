@@ -11,6 +11,10 @@ import { clearGoLabCode, GOLAB_STARTER_CODE, loadGoLabCode, saveGoLabCode } from
 import { lessonPathFromGoLab } from '../lib/goLabPaths'
 import { isStudyCenterPath } from '../lib/studyPaths'
 import { useProgramCurriculum } from '../hooks/useProgramCurriculum'
+import { useLazyAuth } from '../contexts/LazyAuthContext'
+import { useAuth } from '../contexts/AuthContext'
+import { CloudUpload } from 'lucide-react'
+import { consumePendingAuthAction } from '../lib/lazyRegistration'
 
 const GOLAB_LAB = { runtime: 'jupyterlite', compute: 'cpu' }
 
@@ -40,6 +44,10 @@ export default function GoLabPage({ studyCenter: studyCenterProp = false }) {
   const [output, setOutput] = useState('')
   const [outputTone, setOutputTone] = useState('normal')
   const [running, setRunning] = useState(false)
+  const [codeSaved, setCodeSaved] = useState(false)
+
+  const { isAuthenticated } = useAuth()
+  const { gateAction } = useLazyAuth()
 
   const {
     isLoading: pyodideLoading,
@@ -59,6 +67,15 @@ export default function GoLabPage({ studyCenter: studyCenterProp = false }) {
     const timer = setTimeout(() => saveGoLabCode(lessonId, code), 400)
     return () => clearTimeout(timer)
   }, [lessonId, code])
+
+  useEffect(() => {
+    if (!isAuthenticated || !lessonId) return
+    const pending = consumePendingAuthAction()
+    if (pending?.type === 'golab-save' && pending.lessonId === lessonId) {
+      saveGoLabCode(lessonId, code)
+      setCodeSaved(true)
+    }
+  }, [isAuthenticated, lessonId, code])
 
   const backHref = lessonPathFromGoLab(lessonId, { from, studyCenter, play: true })
 
@@ -88,7 +105,17 @@ export default function GoLabPage({ studyCenter: studyCenterProp = false }) {
   const handleResetCode = useCallback(() => {
     setCode(GOLAB_STARTER_CODE)
     clearGoLabCode(lessonId)
+    setCodeSaved(false)
   }, [lessonId])
+
+  const handleSaveToAccount = useCallback(() => {
+    saveGoLabCode(lessonId, code)
+    gateAction({
+      copyKey: 'saveCode',
+      pendingAction: { type: 'golab-save', lessonId },
+      onAuthed: () => setCodeSaved(true),
+    })
+  }, [code, gateAction, lessonId])
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white">
@@ -110,6 +137,14 @@ export default function GoLabPage({ studyCenter: studyCenterProp = false }) {
             </p>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={handleSaveToAccount}
+          className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-md border border-cyan-600/50 text-cyan-300 hover:bg-cyan-950/50 transition"
+        >
+          <CloudUpload className="w-3.5 h-3.5" aria-hidden />
+          {codeSaved && isAuthenticated ? 'Saved ✓' : 'Save to account'}
+        </button>
         <button
           type="button"
           onClick={handleResetCode}

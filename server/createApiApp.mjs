@@ -13,6 +13,7 @@ import { registerIoaiRoutes } from './routes/ioai.mjs'
 import { registerMediaRoutes } from './routes/media.mjs'
 import { registerLabRoutes } from './routes/labs.mjs'
 import { registerIoaiExperimentRoutes } from './routes/ioaiExperiments.mjs'
+import { registerLeadRoutes } from './routes/leads.mjs'
 
 /** Express app for /api/* (admin, webhooks). Used by local server and Vercel serverless. */
 export function createApiApp() {
@@ -36,6 +37,7 @@ export function createApiApp() {
   registerIoaiRoutes(app, { verifyAdminUser })
   registerLabRoutes(app, { verifyAdminUser })
   registerIoaiExperimentRoutes(app, { verifyAdminUser })
+  registerLeadRoutes(app)
 
   return app
 }

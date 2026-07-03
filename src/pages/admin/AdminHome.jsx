@@ -4,6 +4,7 @@ import { adminInsert, adminUpdate, adminDelete } from '../../lib/admin/db'
 import AdminAlert from '../../components/admin/AdminAlert'
 import AdminField from '../../components/admin/AdminField'
 import AdminHomeHeroProgramsEditor from '../../components/admin/AdminHomeHeroProgramsEditor'
+import AdminHomeHeroVideoEditor from '../../components/admin/AdminHomeHeroVideoEditor'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
 const STAT_REQUIRED = new Set(['value', 'label'])
@@ -141,7 +142,25 @@ export default function AdminHome() {
         <button type="button" onClick={() => setActiveTab('stats')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'stats' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.home.tabStats')}</button>
         <button type="button" onClick={() => setActiveTab('testimonials')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'testimonials' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.home.tabTestimonials')}</button>
         <button type="button" onClick={() => setActiveTab('heroPrograms')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'heroPrograms' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.home.tabHeroPrograms')}</button>
+        <button type="button" onClick={() => setActiveTab('heroVideo')} className={`px-4 py-2 rounded-xl text-sm font-medium ${activeTab === 'heroVideo' ? 'bg-primary text-white' : 'bg-slate-200'}`}>{c.t('pages.home.tabHeroVideo')}</button>
       </div>
+      {activeTab === 'heroVideo' ? (
+        <div className="card p-6 mb-6">
+          <AdminHomeHeroVideoEditor
+            labels={{
+              desc: c.t('pages.home.heroVideoDesc'),
+              loading: c.loading,
+              saved: c.t('pages.home.heroVideoSaved'),
+              hint: c.t('pages.home.heroVideoHint'),
+              videoUrl: c.t('pages.home.heroVideoUrl'),
+              posterUrl: c.t('pages.home.heroVideoPosterUrl'),
+            }}
+            saveLabel={c.save}
+            savingLabel={c.saving}
+            resetLabel={c.t('pages.home.heroVideoReset')}
+          />
+        </div>
+      ) : null}
       {activeTab === 'heroPrograms' ? (
         <div className="card p-6 mb-6">
           <AdminHomeHeroProgramsEditor

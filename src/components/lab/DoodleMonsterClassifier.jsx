@@ -21,6 +21,8 @@ import { parseMonsterPrediction, PREDICT_INTERVAL_MS } from '../../lib/doodleMon
 import { useDoodleCanvas } from '../../hooks/useDoodleCanvas'
 import { useDoodleClassifier } from '../../hooks/useDoodleClassifier'
 import DoodleConfidenceMeter from './DoodleConfidenceMeter'
+import { usePlgAhaMoment } from '../../hooks/usePlgAhaMoment'
+import PlgAhaMomentModal from '../plg/PlgAhaMomentModal'
 
 const CLASS_A = {
   id: CLASS_ROUND,
@@ -110,6 +112,7 @@ function ExampleBucket({ bucket, examples, onAddExample, disabled, minRequired }
  * Doodle Monster Classifier — train with KNN + live Test Mode guesses.
  */
 export default function DoodleMonsterClassifier() {
+  const { open: ahaOpen, close: closeAha, trigger: triggerAha } = usePlgAhaMoment('doodle-test-mode')
   const [examplesA, setExamplesA] = useState([])
   const [examplesB, setExamplesB] = useState([])
   const [message, setMessage] = useState(null)
@@ -207,7 +210,8 @@ export default function DoodleMonsterClassifier() {
     setMessage(
       `Test Mode! Draw a brand-new monster — the AI guesses Round vs Spiky every ${PREDICT_INTERVAL_MS / 1000}s.`
     )
-  }, [clearCanvas])
+    triggerAha()
+  }, [clearCanvas, triggerAha])
 
   const exitTestMode = useCallback(() => {
     setTestMode(false)
@@ -432,6 +436,8 @@ export default function DoodleMonsterClassifier() {
           onMobileClose={() => setNotesOpen(false)}
         />
       </div>
+
+      <PlgAhaMomentModal open={ahaOpen} onClose={closeAha} />
     </div>
   )
 }

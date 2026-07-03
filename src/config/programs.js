@@ -136,9 +136,9 @@ export const COMPARISON_ROWS = [
 
 export const PAGE_SEO = {
   home: {
-    title: 'Bingo Academy — AI Courses & Labs for K12, Competition & Self-Learners',
+    title: 'Bingo Academy — Learn AI by Building | Courses, Labs & Embodied AI',
     description:
-      'AI science education for self-learners, IOAI competition teams, and K12 schools — courses, labs, kits, and certification.',
+      'Build AI that sees, moves, and thinks. Free browser labs, IOAI competition training, and K12 curriculum — from code to Cyber Tennis and hardware.',
   },
   compare: {
     title: 'Compare AI Programs — Foundations, IOAI & K12 | Bingo Academy',

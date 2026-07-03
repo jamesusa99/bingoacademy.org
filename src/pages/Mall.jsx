@@ -16,6 +16,7 @@ import {
   isMallRetailItem,
 } from '../lib/mallTabFilters'
 import IoaiMallPackageGrid from '../components/mall/IoaiMallPackageGrid'
+import CheckoutTrustMicrocopy from '../components/checkout/CheckoutTrustMicrocopy'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -135,6 +136,7 @@ function ProductModal({ item, onClose, onCart, onBuy, sellingPoints = [] }) {
               </>
             )}
           </div>
+          {item.price ? <CheckoutTrustMicrocopy variant="light" className="mt-3 w-full" /> : null}
         </div>
       </div>
     </div>
@@ -271,6 +273,7 @@ function CheckoutModal({
                   >
                     {checkoutLoading ? 'Redirecting…' : `Pay $${total.toFixed(2)} with Stripe`}
                   </button>
+                  <CheckoutTrustMicrocopy variant="light" className="mt-3" />
                 </div>
               ) : stripeCheckout && allStripeReady && !isAuthenticated ? null : (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 mb-4 text-sm text-slate-600">

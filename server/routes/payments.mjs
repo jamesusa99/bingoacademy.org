@@ -22,6 +22,7 @@ import {
   listUserNotifications,
   syncUserNotificationsFromActivity,
 } from '../lib/userNotifications.mjs'
+import { buildStripeCheckoutSession } from '../lib/stripeCheckout.mjs'
 
 function siteOrigin(req) {
   return (
@@ -205,35 +206,36 @@ export function registerPaymentRoutes(app) {
     const cancelUrl = `${origin}${returnPath}?checkout=canceled`
 
     try {
-      const session = await stripe.checkout.sessions.create({
-        mode: 'payment',
-        customer_email: auth.user.email || undefined,
-        line_items: [
-          {
-            quantity: 1,
-            price_data: {
-              currency: quote.currency,
-              unit_amount: quote.amountCents,
-              product_data: {
-                name: quote.productName,
-                metadata: {
-                  course_slug: courseSlug.trim(),
-                  purchase_type: quote.purchaseType,
+      const session = await stripe.checkout.sessions.create(
+        buildStripeCheckoutSession({
+          customerEmail: auth.user.email,
+          lineItems: [
+            {
+              quantity: 1,
+              price_data: {
+                currency: quote.currency,
+                unit_amount: quote.amountCents,
+                product_data: {
+                  name: quote.productName,
+                  metadata: {
+                    course_slug: courseSlug.trim(),
+                    purchase_type: quote.purchaseType,
+                  },
                 },
               },
             },
+          ],
+          successUrl,
+          cancelUrl,
+          metadata: {
+            product_name: quote.productName,
+            course_slug: courseSlug.trim(),
+            purchase_type: quote.purchaseType,
+            addon_slugs: JSON.stringify(quote.addonSlugs || []),
+            user_id: auth.user.id,
           },
-        ],
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        metadata: {
-          product_name: quote.productName,
-          course_slug: courseSlug.trim(),
-          purchase_type: quote.purchaseType,
-          addon_slugs: JSON.stringify(quote.addonSlugs || []),
-          user_id: auth.user.id,
-        },
-      })
+        })
+      )
 
       return res.json({ url: session.url, sessionId: session.id })
     } catch (err) {
@@ -277,31 +279,32 @@ export function registerPaymentRoutes(app) {
     const cancelUrl = `${origin}${returnPath}?checkout=canceled`
 
     try {
-      const session = await stripe.checkout.sessions.create({
-        mode: 'payment',
-        customer_email: auth.user.email || undefined,
-        line_items: [
-          {
-            quantity: 1,
-            price_data: {
-              currency: quote.currency,
-              unit_amount: quote.amountCents,
-              product_data: {
-                name: quote.productName || 'IOAI Masterclass',
-                metadata: { course_slug: courseSlug, purchase_type: purchaseType },
+      const session = await stripe.checkout.sessions.create(
+        buildStripeCheckoutSession({
+          customerEmail: auth.user.email,
+          lineItems: [
+            {
+              quantity: 1,
+              price_data: {
+                currency: quote.currency,
+                unit_amount: quote.amountCents,
+                product_data: {
+                  name: quote.productName || 'IOAI Masterclass',
+                  metadata: { course_slug: courseSlug, purchase_type: purchaseType },
+                },
               },
             },
+          ],
+          successUrl,
+          cancelUrl,
+          metadata: {
+            product_name: quote.productName,
+            course_slug: courseSlug,
+            purchase_type: purchaseType,
+            user_id: auth.user.id,
           },
-        ],
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        metadata: {
-          product_name: quote.productName,
-          course_slug: courseSlug,
-          purchase_type: purchaseType,
-          user_id: auth.user.id,
-        },
-      })
+        })
+      )
       return res.json({ url: session.url, sessionId: session.id })
     } catch (err) {
       console.error('[checkout/ioai]', err)
@@ -330,19 +333,20 @@ export function registerPaymentRoutes(app) {
     const cancelUrl = `${origin}/mall?checkout=canceled`
 
     try {
-      const session = await stripe.checkout.sessions.create({
-        mode: 'payment',
-        customer_email: auth.user.email || undefined,
-        line_items: quote.lineItems,
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        metadata: {
-          product_name: quote.productName,
-          purchase_type: 'mall',
-          user_id: auth.user.id,
-          mall_items: JSON.stringify(quote.metaItems),
-        },
-      })
+      const session = await stripe.checkout.sessions.create(
+        buildStripeCheckoutSession({
+          customerEmail: auth.user.email,
+          lineItems: quote.lineItems,
+          successUrl,
+          cancelUrl,
+          metadata: {
+            product_name: quote.productName,
+            purchase_type: 'mall',
+            user_id: auth.user.id,
+            mall_items: JSON.stringify(quote.metaItems),
+          },
+        })
+      )
 
       return res.json({ url: session.url, sessionId: session.id })
     } catch (err) {

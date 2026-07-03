@@ -7,6 +7,7 @@ import { ProductLineVisibilityProvider, useProductLineVisibility } from '../cont
 import { authLink } from '../lib/authRedirect'
 import NavDropdown from './NavDropdown'
 import ChatWidget from './ChatWidget'
+import FooterCompliance from './layout/FooterCompliance'
 import { LABS_STOREFRONT_VISIBLE, isLabsNavPath } from '../config/labsStorefront'
 
 function navLinkClass(active) {
@@ -231,11 +232,13 @@ function LayoutShell({ children }) {
               ))}
             </div>
             ) : null}
+            <div>
+              <div className="text-white font-medium mb-2">Legal</div>
+              <Link to="/privacy" className="block hover:text-white">Privacy Policy</Link>
+            </div>
           </div>
         </div>
-        <div className="w-full px-4 sm:px-6 mt-6 pt-6 border-t border-gray-700 text-center">
-          Courses · Labs · Materials · Certification
-        </div>
+        <FooterCompliance />
       </footer>
       <ChatWidget />
     </div>

@@ -3,6 +3,7 @@ import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import PageMeta from '../components/PageMeta'
 import ExperimentCard from '../components/lab/ExperimentCard'
+import ExplorationLeadMagnet from '../components/plg/ExplorationLeadMagnet'
 import {
   LAB_VALUE_PROPS,
   LAB_UX_PRINCIPLES,
@@ -64,10 +65,10 @@ export default function AIExploration() {
             subtitle:
               'Six gamified experiments in computer vision, NLP, and machine learning. No sign-up, no course enrollment — completely separate from product labs and kits.',
             wideSubtitle: true,
-            ctaLabel: 'Start playing',
-            onCta: scrollToExperiments,
-            secondaryLabel: 'How it works',
-            onCtaSecondary: scrollToLearningLoop,
+            ctaLabel: 'Play AI Cyber Tennis',
+            href: '/exploration/cyber-tennis',
+            secondaryLabel: 'Browse all experiments',
+            onCtaSecondary: scrollToExperiments,
           },
         ]}
         autoPlayMs={0}
@@ -90,6 +91,8 @@ export default function AIExploration() {
             </div>
           </section>
         )}
+
+        <ExplorationLeadMagnet />
 
         <section id="experiments" className="scroll-mt-24 mb-12">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">

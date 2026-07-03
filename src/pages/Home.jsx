@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import HomeHero from '../components/home/HomeHero'
+import HomeTrustAuthority from '../components/home/HomeTrustAuthority'
 import PageMeta from '../components/PageMeta'
 import PageContent from '../components/PageContent'
 import { ORG_JSON_LD, PAGE_SEO } from '../config/programs'
@@ -43,6 +44,8 @@ export default function Home() {
     <div className="w-full">
       <PageMeta title={PAGE_SEO.home.title} description={PAGE_SEO.home.description} jsonLd={ORG_JSON_LD} />
       <HomeHero />
+
+      <HomeTrustAuthority showIoaiLink={isLineVisible('ioai')} />
 
       {/* Mission — brand positioning (bingoacademy.cn hero follow-up) */}
       <section className="w-full border-b border-cyan-500/10 bg-white/80 backdrop-blur-sm">
