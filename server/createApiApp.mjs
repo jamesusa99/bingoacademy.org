@@ -14,10 +14,13 @@ import { registerMediaRoutes } from './routes/media.mjs'
 import { registerLabRoutes } from './routes/labs.mjs'
 import { registerIoaiExperimentRoutes } from './routes/ioaiExperiments.mjs'
 import { registerLeadRoutes } from './routes/leads.mjs'
+import { registerSitemapRoutes } from './routes/sitemap.mjs'
 
 /** Express app for /api/* (admin, webhooks). Used by local server and Vercel serverless. */
 export function createApiApp() {
   const app = express()
+
+  registerSitemapRoutes(app)
 
   registerStripeWebhook(app)
 

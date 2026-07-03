@@ -27,6 +27,7 @@ export const ADMIN_NAV_GROUPS = [
       GENERAL_ADMIN_COLLAPSIBLE,
       K12_ADMIN_COLLAPSIBLE,
       { path: '/admin/showcase', labelKey: 'nav.achievements', icon: '🏅' },
+      { path: '/admin/news', labelKey: 'nav.news', icon: '📰' },
       { path: '/admin/cert', labelKey: 'nav.certification', icon: '📜' },
       COMMUNITY_ADMIN_COLLAPSIBLE,
       MALL_ADMIN_COLLAPSIBLE,

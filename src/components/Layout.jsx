@@ -219,8 +219,14 @@ function LayoutShell({ children }) {
                 <Link to="/compare" className="block hover:text-white">Compare Programs</Link>
               ) : null}
               <Link to="/showcase" className="block hover:text-white">Achievements</Link>
+              <Link to="/news" className="block hover:text-white">News</Link>
               <Link to="/cert" className="block hover:text-white">Certification</Link>
               <Link to="/mall" className="block hover:text-white">AI Mall</Link>
+            </div>
+            <div>
+              <div className="text-white font-medium mb-2">For US Families</div>
+              <Link to="/ai-classes-for-kids" className="block hover:text-white">AI Classes for Kids</Link>
+              <Link to="/usaaio-prep" className="block hover:text-white">USAAIO Prep</Link>
             </div>
             {showProgramsNav ? (
             <div>

@@ -1,27 +1,82 @@
 import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import { SITE_DEFAULT_SEO, SITE_OG, SITE_TWITTER, SITE_URL } from '../config/siteSeo'
 
-const DEFAULT_TITLE = 'Bingo Academy — AI Courses & Labs'
-const DEFAULT_DESC =
-  'AI courses, exploration labs, and certification for self-learners, IOAI competition teams, and K12 schools.'
+function upsertMeta(attr, key, content) {
+  if (!content) return
+  let el = document.querySelector(`meta[${attr}="${key}"]`)
+  if (!el) {
+    el = document.createElement('meta')
+    el.setAttribute(attr, key)
+    document.head.appendChild(el)
+  }
+  el.content = content
+}
+
+function upsertLink(rel, href) {
+  if (!href) return
+  let el = document.querySelector(`link[rel="${rel}"]`)
+  if (!el) {
+    el = document.createElement('link')
+    el.rel = rel
+    document.head.appendChild(el)
+  }
+  el.href = href
+}
 
 /**
- * Sets document title + meta description. Optional JSON-LD for SEO.
+ * Sets document title, meta keywords/description, Open Graph, Twitter Card, and optional JSON-LD.
  */
-export default function PageMeta({ title, description, jsonLd }) {
-  const fullTitle = title || DEFAULT_TITLE
-  const desc = description || DEFAULT_DESC
+export default function PageMeta({
+  title,
+  description,
+  keywords,
+  ogTitle,
+  ogDescription,
+  ogImage,
+  ogUrl,
+  ogType,
+  canonical,
+  jsonLd,
+  noindex,
+}) {
+  const { pathname } = useLocation()
+
+  const fullTitle = title || SITE_DEFAULT_SEO.title
+  const desc = description || SITE_DEFAULT_SEO.description
+  const kw = keywords || SITE_DEFAULT_SEO.keywords
+  const ogT = ogTitle || SITE_OG.title
+  const ogD = ogDescription || desc
+  const ogImg = ogImage || SITE_OG.image
+  const ogU = ogUrl || `${SITE_URL}${pathname === '/' ? '' : pathname}`
+  const ogTy = ogType || SITE_OG.type
+  const canon = canonical || ogU
 
   useEffect(() => {
     document.title = fullTitle
-
-    let meta = document.querySelector('meta[name="description"]')
-    if (!meta) {
-      meta = document.createElement('meta')
-      meta.name = 'description'
-      document.head.appendChild(meta)
+    upsertMeta('name', 'description', desc)
+    upsertMeta('name', 'keywords', kw)
+    if (noindex) {
+      upsertMeta('name', 'robots', 'noindex, nofollow')
+    } else {
+      const robots = document.querySelector('meta[name="robots"]')
+      robots?.remove()
     }
-    meta.content = desc
-  }, [fullTitle, desc])
+
+    upsertMeta('property', 'og:title', ogT)
+    upsertMeta('property', 'og:description', ogD)
+    upsertMeta('property', 'og:image', ogImg)
+    upsertMeta('property', 'og:url', ogU)
+    upsertMeta('property', 'og:type', ogTy)
+    upsertMeta('property', 'og:site_name', 'BingoAcademy')
+
+    upsertMeta('name', 'twitter:card', SITE_TWITTER.card)
+    upsertMeta('name', 'twitter:title', ogT)
+    upsertMeta('name', 'twitter:description', ogD)
+    upsertMeta('name', 'twitter:image', ogImg)
+
+    upsertLink('canonical', canon)
+  }, [fullTitle, desc, kw, ogT, ogD, ogImg, ogU, ogTy, canon, noindex])
 
   useEffect(() => {
     if (!jsonLd) return undefined

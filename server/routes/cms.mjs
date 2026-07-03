@@ -20,6 +20,7 @@ export const CMS_TABLES = new Set([
   'charity_projects',
   'mall_products',
   'cert_tiers',
+  'news_articles',
   'career_jobs',
   'video_assets',
   'course_levels',

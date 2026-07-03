@@ -15,6 +15,7 @@ import AdminProgramCourseBundles from './pages/admin/AdminProgramCourseBundles'
 import AdminCommunity from './pages/admin/AdminCommunity'
 import AdminHome from './pages/admin/AdminHome'
 import AdminShowcase from './pages/admin/AdminShowcase'
+import AdminNews from './pages/admin/AdminNews'
 import AdminCert from './pages/admin/AdminCert'
 import AdminMall from './pages/admin/AdminMall'
 import AdminPayments from './pages/admin/AdminPayments'
@@ -60,6 +61,10 @@ import Curriculum from './pages/Curriculum'
 import Privacy from './pages/Privacy'
 import IOAIMasterclassLanding from './pages/landing/IOAIMasterclassLanding'
 import TryAiLanding from './pages/landing/TryAiLanding'
+import UsParentsLanding from './pages/landing/UsParentsLanding'
+import UsaaioPrepLanding from './pages/landing/UsaaioPrepLanding'
+import News from './pages/News'
+import NewsArticle from './pages/NewsArticle'
 import IOAILevelPage from './pages/ioai/IOAILevelPage'
 import IOAIModulePage from './pages/ioai/IOAIModulePage'
 import IOAIPublicExperimentPage from './pages/ioai/IOAIPublicExperimentPage'
@@ -115,6 +120,7 @@ export default function App() {
         <Route path="settings" element={<AdminSettings />} />
         <Route path="home" element={<AdminHome />} />
         <Route path="showcase" element={<AdminShowcase />} />
+        <Route path="news" element={<AdminNews />} />
         <Route path="labs-materials" element={<AdminCoursesCatalog />} />
         <Route path="labs-materials/:packSlug/experiments" element={<AdminLabPackExperiments />} />
         <Route path="ioai-experiments" element={<AdminIOAIExperimentLibrary />} />
@@ -139,6 +145,8 @@ export default function App() {
       {/* Channel landing pages — minimal chrome, no main nav */}
       <Route path="/try-ai" element={<TryAiLanding />} />
       <Route path="/ioai-masterclass" element={<IOAIMasterclassLanding />} />
+      <Route path="/ai-classes-for-kids" element={<UsParentsLanding />} />
+      <Route path="/usaaio-prep" element={<UsaaioPrepLanding />} />
       {/* Main site routes */}
       <Route path="/" element={<Layout><Outlet /></Layout>}>
         <Route index element={<Home />} />
@@ -200,6 +208,8 @@ export default function App() {
         <Route path="cert" element={<Certification />} />
         <Route path="mall" element={<Mall />} />
         <Route path="privacy" element={<Privacy />} />
+        <Route path="news" element={<News />} />
+        <Route path="news/:slug" element={<NewsArticle />} />
         <Route path="profile" element={<Profile />} />
         <Route path="profile/study" element={<Study />} />
         <Route path="profile/study/module/:moduleSlug" element={<StudyModulePage />} />

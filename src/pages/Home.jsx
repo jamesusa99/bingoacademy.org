@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import HomeHero from '../components/home/HomeHero'
 import HomeTrustAuthority from '../components/home/HomeTrustAuthority'
+import HomeSeoSection from '../components/home/HomeSeoSection'
 import PageMeta from '../components/PageMeta'
 import PageContent from '../components/PageContent'
 import { ORG_JSON_LD, PAGE_SEO } from '../config/programs'
@@ -42,7 +43,12 @@ export default function Home() {
 
   return (
     <div className="w-full">
-      <PageMeta title={PAGE_SEO.home.title} description={PAGE_SEO.home.description} jsonLd={ORG_JSON_LD} />
+      <PageMeta
+        title={PAGE_SEO.home.title}
+        description={PAGE_SEO.home.description}
+        keywords={PAGE_SEO.home.keywords}
+        jsonLd={ORG_JSON_LD}
+      />
       <HomeHero />
 
       <HomeTrustAuthority showIoaiLink={isLineVisible('ioai')} />
@@ -147,6 +153,8 @@ export default function Home() {
           </div>
         </section>
       </PageContent>
+
+      <HomeSeoSection />
     </div>
   )
 }

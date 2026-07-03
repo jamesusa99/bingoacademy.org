@@ -136,9 +136,11 @@ export const COMPARISON_ROWS = [
 
 export const PAGE_SEO = {
   home: {
-    title: 'Bingo Academy — Learn AI by Building | Courses, Labs & Embodied AI',
+    title: 'AI Courses for Kids & Teens | K-12 AI Education Platform | BingoAcademy',
     description:
-      'Build AI that sees, moves, and thinks. Free browser labs, IOAI competition training, and K12 curriculum — from code to Cyber Tennis and hardware.',
+      'Discover AI courses, competitions and hands-on learning programs for K-12 students. BingoAcademy helps children and teens learn artificial intelligence through projects, creativity and innovation, enabling them to participate in the IOAI competition.',
+    keywords:
+      'AI Education, AI Courses, AI for Kids, K12 AI Education, AI Curriculum, Artificial Intelligence for Students, AI Competitions, AI Literacy, STEM Education, AI Learning, IOAI, AI classes for kids, AI course for teens',
   },
   compare: {
     title: 'Compare AI Programs — Foundations, IOAI & K12 | Bingo Academy',

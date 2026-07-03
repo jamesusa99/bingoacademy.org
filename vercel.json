@@ -14,6 +14,8 @@
     { "source": "/api/program/:path*", "destination": "/api/server" },
     { "source": "/api/labs/:path*", "destination": "/api/server" },
     { "source": "/api/video/:path*", "destination": "/api/server" },
+    { "source": "/sitemap.xml", "destination": "/api/server" },
+    { "source": "/robots.txt", "destination": "/api/server" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
