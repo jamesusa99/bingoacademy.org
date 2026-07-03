@@ -15,7 +15,7 @@ export const LINE_TO_PROGRAM_SLUG = {
 }
 
 export function programSlugFromLine(lineId) {
-  return LINE_TO_PROGRAM_SLUG[lineId] || 'foundations'
+  return LINE_TO_PROGRAM_SLUG[lineId] || 'ioai'
 }
 
 export function lineFromProgramSlug(slug) {
@@ -163,8 +163,8 @@ export const PAGE_SEO = {
     description: 'Textbooks, classroom video courses, online/offline labs, and school kits for K12 institutions.',
   },
   courses: {
-    title: 'AI Courses — Browse by Program | Bingo Academy',
-    description: 'Browse AI video courses, labs, and materials across Foundations, IOAI, and K12 product lines.',
+    title: 'IOAI Competition Training — AI Courses | Bingo Academy',
+    description: 'IOAI competition training — video courses, training labs, mock assessments, and Olympiad prep for students.',
   },
   lab: {
     title: 'AI Exploration Lab — Free Hands-On AI Experiments | Bingo Academy',
@@ -177,11 +177,11 @@ export const ORG_JSON_LD = {
   '@type': 'EducationalOrganization',
   name: 'Bingo Academy',
   url: 'https://www.bingoacademy.org',
-  description: 'AI Science Education Platform for K12, Competition, and Self-Learners',
+  description: 'IOAI competition training and AI Olympiad prep for K-12 students',
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
-    name: 'AI Courses',
-    itemListElement: PROGRAMS.map((p) => ({
+    name: 'IOAI Competition Training',
+    itemListElement: PROGRAMS.filter((p) => p.lineId === 'ioai').map((p) => ({
       '@type': 'Course',
       name: p.shortTitle,
       description: p.heroBody,

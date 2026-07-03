@@ -1,22 +1,22 @@
 /** Static fallbacks from page components — used for Supabase seeding */
 
 export const HOME_TRUST_STATS = [
-  { icon: '🎓', value: '3', label: 'Product Lines' },
   { icon: '🏆', value: 'IOAI', label: 'Whitelist Training' },
-  { icon: '🏫', value: 'K12', label: 'School Edition' },
+  { icon: '🧪', value: 'Labs', label: 'Hands-On Projects' },
+  { icon: '📊', value: 'USAAIO', label: 'Olympiad Pathway' },
   { icon: '📜', value: 'Certified', label: 'Ability Credentials' },
   { icon: '🧪', value: 'Cloud', label: 'Online Labs' },
-  { icon: '📦', value: 'Mall', label: 'Books & Kits' },
+  { icon: '📦', value: 'Mall', label: 'Training Materials' },
 ]
 
 export const HOME_TESTIMONIALS = [
   { quote: 'The IOAI video course and training camp helped our child go from zero to competition-ready in one term.', name: 'Parent · Shanghai', role: 'IOAI Training', stars: 5 },
-  { quote: 'K12 classroom edition fits our school schedule — books, courseware, and lab kits in one package.', name: 'Teacher · Shenzhen', role: 'K12 School Edition', stars: 5 },
-  { quote: 'Self-study general AI courses are clear and hands-on. The materials pack made home experiments easy.', name: 'Student · Grade 7', role: 'Foundations of AI Program', stars: 5 },
+  { quote: 'Dual-pane Jupyter labs and IOAI rubrics — the only program that felt like real engineering for our daughter.', name: 'Parent · California', role: 'IOAI Competition Trainee', stars: 5 },
+  { quote: 'Mock defence prep and portfolio projects gave us confidence for the IOAI selection round.', name: 'Parent · Singapore', role: 'IOAI Training', stars: 5 },
 ]
 
 export const HOME_BANNER_SLIDES = [
-  { id: 'brand', gradient: 'from-primary/30 via-cyan-50 to-sky-100', icon: '🎓', eyebrow: 'Bingo AI Academy', title: 'AI Courses + Authoritative Competitions', subtitle: 'Literacy, IOAI whitelist training, and K12 classroom solutions — learn, compete, and earn certified outcomes.', ctaLabel: 'Explore Courses', href: '/courses', secondaryLabel: 'View Achievements', secondaryHref: '/showcase' },
+  { id: 'brand', gradient: 'from-primary/30 via-cyan-50 to-sky-100', icon: '🎓', eyebrow: 'Bingo AI Academy', title: 'AI Courses + IOAI Competition Training', subtitle: 'IOAI whitelist training, hands-on labs, and competition-ready outcomes for students and teams.', ctaLabel: 'Explore Courses', href: '/courses', secondaryLabel: 'View Achievements', secondaryHref: '/showcase' },
   { id: 'ioai', gradient: 'from-amber-500/20 via-orange-50 to-amber-50', icon: '🏆', eyebrow: 'Authoritative Competitions', title: 'IOAI Whitelist Competition Training', subtitle: 'Video lessons, training camps, and sprint coaching for whitelist-format AI innovation competitions.', ctaLabel: 'IOAI Training', href: '/courses?line=ioai', secondaryLabel: 'Certification', secondaryHref: '/cert' },
 ]
 

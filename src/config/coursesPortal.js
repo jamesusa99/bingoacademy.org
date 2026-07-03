@@ -17,7 +17,7 @@ export const COURSES_PORTAL = {
   ioaiFeaturedDesc:
     `The IOAI Competition Course System (${IOAI_STATS}) — intro math/Python/AI, advanced tiers, and competition prep.`,
   comingSoonHint:
-    'Self-study / classroom items marked “Coming soon” — try AI Exploration free or browse product labs.',
+    'Some modules are marked “Coming soon” — try AI Exploration free or browse IOAI training labs.',
   allTypes: 'All types',
   courseCount: (n) => `${n} course${n === 1 ? '' : 's'}`,
   emptyCategory: 'No courses in this category yet. Check back soon.',

@@ -69,7 +69,7 @@ export default function ProductLabs() {
     <div className="w-full">
       <PageMeta
         title="AI Labs & Kits by Program | Bingo Academy"
-        description="Online labs, training labs, and lab kits for Foundations of AI, IOAI competition training, and K12 classroom programs."
+        description="Online labs, training labs, and lab kits for IOAI competition training."
       />
 
       {LABS_STOREFRONT_VISIBLE ? (
@@ -80,11 +80,11 @@ export default function ProductLabs() {
               gradient: 'from-cyan-500/15 via-sky-50 to-emerald-50',
               icon: '🧪',
               eyebrow: 'Labs & kits',
-              title: 'Hands-On Labs Across Three Programs',
+              title: 'IOAI Training Labs & Kits',
               subtitle:
-                'Cloud labs, training labs, and physical kits — organized by Foundations, IOAI, and K12. Separate from the free AI Exploration game zone.',
-              ctaLabel: 'Browse Foundations labs',
-              href: labsPath('general', 'online-lab'),
+                'Cloud labs, training labs, and competition materials for IOAI — separate from the free AI Exploration game zone.',
+              ctaLabel: 'Browse IOAI labs',
+              href: labsPath('ioai', 'online-lab'),
               secondaryLabel: 'Free AI Exploration games',
               secondaryHref: '/exploration',
             },

@@ -7,8 +7,8 @@ export const PORTAL_BANNER_SLIDES = [
     gradient: 'from-primary/30 via-cyan-50 to-sky-100',
     icon: '🎓',
     eyebrow: 'Bingo AI Academy',
-    title: 'AI Courses + Authoritative Competitions',
-    subtitle: 'Literacy, IOAI whitelist training, and K12 classroom solutions — learn, compete, and earn certified outcomes.',
+    title: 'AI Courses + IOAI Competition Training',
+    subtitle: 'IOAI whitelist training, hands-on labs, and competition-ready outcomes for students and teams.',
     ctaLabel: 'Explore Courses',
     href: '/courses',
     secondaryLabel: 'View Achievements',
@@ -66,11 +66,11 @@ export const PORTAL_BANNER_SLIDES = [
 
 export const PORTAL_MISSION = {
   title: 'Empowering learners for the AI era',
-  body: 'Bingo AI Academy connects self-study literacy, IOAI-oriented competition training, and school-ready classroom delivery — so every learner can move from curiosity to certified outcomes.',
+  body: 'Bingo AI Academy focuses on IOAI-oriented competition training — structured courses, hands-on labs, and mock assessments so students move from curiosity to competition-ready outcomes.',
   pillars: [
-    { icon: '🧠', label: 'AI Literacy', desc: 'Foundations through hands-on practice' },
-    { icon: '🏆', label: 'Whitelist Competitions', desc: 'IOAI-aligned training & camps' },
-    { icon: '🏫', label: 'School Delivery', desc: 'Books, courses, labs & kits' },
+    { icon: '🏆', label: 'IOAI Training', desc: 'Whitelist competition prep & camps' },
+    { icon: '🧪', label: 'Hands-On Labs', desc: 'Jupyter & browser AI projects' },
+    { icon: '📊', label: 'Olympiad Pathway', desc: 'USAAIO · IAIO · IOAI readiness' },
     { icon: '📜', label: 'Certified Outcomes', desc: 'Verifiable ability credentials' },
   ],
 }
@@ -81,13 +81,13 @@ export const PORTAL_CORE_ENTRIES = [
   { icon: '🏆', title: 'IOAI Competition Training', desc: 'Whitelist prep · video courses & training camps open', to: '/courses?line=ioai', accent: 'amber' },
   { icon: '🧪', title: 'Labs & kits', desc: 'Online labs & physical kits by program', to: '/labs', accent: 'cyan' },
   { icon: '🧭', title: 'AI Exploration', desc: 'Free browser games — no sign-up', to: '/exploration', accent: 'violet' },
-  { icon: '📘', title: 'Self-Study & Classroom', desc: 'Literacy courses and school packs — rolling out', to: '/courses?line=general', accent: 'slate' },
   { icon: '🏅', title: 'Achievements', desc: 'Student portfolio · awards & admissions', to: '/showcase', accent: 'rose' },
+  { icon: '📜', title: 'Certification', desc: 'Competition & course credentials', to: '/cert', accent: 'slate' },
   { icon: '💬', title: 'Community', desc: 'Discussions, resources & AI tools', to: '/community', accent: 'emerald' },
 ]
 
 export const PORTAL_LEARNING_PATH = [
-  { step: '01', icon: '📚', title: 'Learn', desc: 'Pick a product line and follow structured courses or video tracks.' },
+  { step: '01', icon: '📚', title: 'Learn', desc: 'Follow the IOAI curriculum — video lessons and structured modules.' },
   { step: '02', icon: '🧪', title: 'Practice', desc: 'Complete online labs and project tasks with auto-graded feedback.' },
   { step: '03', icon: '🏆', title: 'Compete', desc: 'Apply skills in IOAI whitelist and authoritative competition formats.' },
   { step: '04', icon: '📜', title: 'Certify', desc: 'Earn Bingo certificates and showcase outcomes in your portfolio.' },
@@ -118,18 +118,18 @@ export const PORTAL_COMPETITIONS = [
 ]
 
 export const PORTAL_TRUST_STATS_FALLBACK = [
-  { icon: '🎓', value: '3', label: 'Product Lines' },
   { icon: '🏆', value: 'IOAI', label: 'Whitelist Training' },
-  { icon: '🏫', value: 'K12', label: 'School Edition' },
+  { icon: '🧪', value: 'Labs', label: 'Hands-On Projects' },
+  { icon: '📊', value: 'USAAIO', label: 'Olympiad Pathway' },
   { icon: '📜', value: 'Certified', label: 'Ability Credentials' },
   { icon: '🧪', value: 'Cloud', label: 'Online Labs' },
-  { icon: '📦', value: 'Mall', label: 'Books & Kits' },
+  { icon: '📦', value: 'Mall', label: 'Training Materials' },
 ]
 
 export const PORTAL_TESTIMONIALS_FALLBACK = [
   { quote: 'The IOAI video course and training camp helped our child go from zero to competition-ready in one term.', name: 'Parent · Shanghai', role: 'IOAI Training', stars: 5 },
-  { quote: 'K12 classroom edition fits our school schedule — books, courseware, and lab kits in one package.', name: 'Teacher · Shenzhen', role: 'K12 School Edition', stars: 5 },
-  { quote: 'Self-study general AI courses are clear and hands-on. The materials pack made home experiments easy.', name: 'Student · Grade 7', role: 'Foundations of AI Program', stars: 5 },
+  { quote: 'Dual-pane Jupyter labs and IOAI rubrics — the only program that felt like real engineering for our daughter.', name: 'Parent · California', role: 'IOAI Competition Trainee', stars: 5 },
+  { quote: 'Mock defence prep and portfolio projects gave us confidence for the IOAI selection round.', name: 'Parent · Singapore', role: 'IOAI Training', stars: 5 },
 ]
 
 export { PRODUCT_LINES }

@@ -11,7 +11,7 @@ import { SHOWCASE_PORTAL } from '../config/showcasePortal'
 const STATS = [
   { value: '500+', label: 'Competition Award Winners' },
   { value: '300+', label: 'STEM Admissions Cases' },
-  { value: '120+', label: 'K12 Classroom Projects' },
+  { value: '120+', label: 'IOAI Lab Projects' },
   { value: '98%+', label: 'Parent Satisfaction Rate' },
   { value: '1,000+', label: 'AI Works Produced' },
   { value: '50+', label: 'Prestigious Competition Wins' },
@@ -363,7 +363,7 @@ export default function Showcase() {
                     <p className="text-sm text-slate-700 mb-2">Worried your child just uses AI passively — copy-pasting instead of thinking? Will AI make them lazy rather than capable?</p>
                     <p className="text-xs font-semibold text-green-600">Bingo Solution: AI Literacy courses train questioning, creation, and critical evaluation — not just tool usage.</p>
                   </div>
-                  <Link to="/courses?line=general" className="btn-primary text-sm px-4 py-2 shrink-0">Foundations of AI Program →</Link>
+                  <Link to="/courses?line=ioai" className="btn-primary text-sm px-4 py-2 shrink-0">IOAI Competition Training →</Link>
                 </div>
               </div>
 
@@ -413,10 +413,10 @@ export default function Showcase() {
           {/* C-end bottom promo row */}
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { icon: '📚', title: 'Foundations of AI Program', desc: 'Self-study literacy, labs, and materials', cta: 'Browse Courses', href: '/courses?line=general' },
-              { icon: '📚', title: '1-on-1 Learning Plan', desc: 'Personalised roadmap from advisor · competition + admissions aligned', cta: 'Book Free Consult', href: null },
-              { icon: '🏆', title: 'IOAI Training', desc: 'Video lessons and training camps for competitions', cta: 'View Programmes', href: '/courses?line=ioai' },
-            ].map((p,i) => (
+              { icon: '🏆', title: 'IOAI Competition Training', desc: 'Video lessons, labs, and training camps', cta: 'View Programmes', href: '/courses?line=ioai' },
+              { icon: '📊', title: 'Free AI Assessment', desc: 'Personalised roadmap · competition readiness', cta: 'Start Assessment', href: '/assessment' },
+              { icon: '🧭', title: 'AI Exploration Lab', desc: 'Free browser games — try AI hands-on', cta: 'Play Free Labs', href: '/exploration' },
+            ].map((p, i) => (
               <div key={i} className="card p-5 text-center hover:shadow-md transition">
                 <div className="text-2xl mb-2">{p.icon}</div>
                 <h3 className="font-semibold text-bingo-dark text-sm mb-1">{p.title}</h3>

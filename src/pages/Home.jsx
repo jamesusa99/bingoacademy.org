@@ -140,7 +140,7 @@ export default function Home() {
         <section className="card p-6 sm:p-8 text-center bg-gradient-to-r from-cyan-50 to-sky-50 border-primary/20">
           <h2 className="text-xl font-bold text-bingo-dark mb-2">Start learning today</h2>
           <p className="text-slate-600 text-sm mb-5">
-            AI courses and authoritative competitions — pick a product line, complete labs, earn your certificate.
+            AI courses and IOAI competition training — complete labs, earn your certificate.
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center">
             <Link to="/courses" className="btn-primary px-6 py-3 text-sm min-h-[44px]">AI Courses</Link>

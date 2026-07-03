@@ -1,31 +1,57 @@
 import { useState, useRef, useEffect } from 'react'
 
-const GREETING = 'Hi! I\'m Bingo AI Assistant. Ask about our three product lines: Foundations of AI Program, IOAI Competition Training, or K12 Classroom Edition.'
-const FALLBACK = 'Thanks for your message. Browse AI Courses, Certification, or AI Mall — or email us for school partnerships.'
+const GREETING =
+  "Hi! I'm Bingo AI Assistant. Ask about our IOAI Competition Training."
+
+const FALLBACK =
+  'Thanks for your message. Explore IOAI courses at /courses?line=ioai, free labs at /exploration, or book a free assessment at /assessment.'
 
 const QUICK_REPLIES = {
-  course: 'We have three lines: (1) Foundations of AI Program — courses, online labs, materials packs; (2) IOAI Competition Training — video lessons & training camps; (3) K12 Classroom — books, courses, labs for schools. Visit /courses',
-  ioai: 'IOAI Competition Training includes AI video courses and training camps. See /courses?line=ioai',
-  k12: 'K12 Classroom Edition includes books, classroom courses, online/offline labs, and offline lab kits. See /courses?line=k12',
+  course:
+    'Our focus is IOAI Competition Training — video courses, training labs, mock assessments, and Olympiad prep. Visit /courses?line=ioai',
+  ioai: 'IOAI Competition Training includes video courses, Jupyter labs, and competition prep. See /courses?line=ioai or /usaaio-prep',
   cert: 'Bingo AI Certification validates course completion. Visit the Certification page for tiers and application.',
-  mall: 'AI Mall offers books, experiment kits, and materials packs. Visit /mall',
+  mall: 'AI Mall offers IOAI training materials and lab kits. Visit /mall?tab=ioai',
+  school:
+    'We are currently focused on IOAI Competition Training for students and families. For school partnerships, email us via the contact form on /profile.',
+  foundations:
+    'Foundations of AI and K12 Classroom programs are coming later. Today we specialize in IOAI Competition Training — see /courses?line=ioai',
 }
 
 function getReply(text) {
   const lower = text.toLowerCase()
-  if (lower.includes('ioai') || lower.includes('competition')) return QUICK_REPLIES.ioai
-  if (lower.includes('k12') || lower.includes('classroom') || lower.includes('school')) return QUICK_REPLIES.k12
+  if (lower.includes('ioai') || lower.includes('competition') || lower.includes('olympiad')) {
+    return QUICK_REPLIES.ioai
+  }
+  if (
+    lower.includes('k12') ||
+    lower.includes('classroom') ||
+    lower.includes('school') ||
+    lower.includes('teacher')
+  ) {
+    return QUICK_REPLIES.school
+  }
+  if (
+    lower.includes('foundation') ||
+    lower.includes('self-study') ||
+    lower.includes('self study') ||
+    lower.includes('literacy')
+  ) {
+    return QUICK_REPLIES.foundations
+  }
   if (lower.includes('cert') || lower.includes('certificate')) return QUICK_REPLIES.cert
-  if (lower.includes('mall') || lower.includes('materials') || lower.includes('kit')) return QUICK_REPLIES.mall
-  if (lower.includes('course') || lower.includes('lesson')) return QUICK_REPLIES.course
+  if (lower.includes('mall') || lower.includes('materials') || lower.includes('kit')) {
+    return QUICK_REPLIES.mall
+  }
+  if (lower.includes('course') || lower.includes('lesson') || lower.includes('training')) {
+    return QUICK_REPLIES.course
+  }
   return FALLBACK
 }
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState([
-    { role: 'assistant', text: GREETING, id: 0 },
-  ])
+  const [messages, setMessages] = useState([{ role: 'assistant', text: GREETING, id: 0 }])
   const [input, setInput] = useState('')
   const messagesEndRef = useRef(null)
 
@@ -46,7 +72,6 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, userMsg])
     setInput('')
 
-    // Simulate AI response
     setTimeout(() => {
       const reply = getReply(text)
       setMessages((prev) => [...prev, { role: 'assistant', text: reply, id: Date.now() + 1 }])
@@ -59,18 +84,29 @@ export default function ChatWidget() {
         type="button"
         onClick={() => setOpen(!open)}
         className="fixed z-40 w-14 h-14 rounded-full bg-primary text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
-        style={{ bottom: 'max(1.5rem, env(safe-area-inset-bottom))', right: 'max(1.5rem, env(safe-area-inset-right))' }}
+        style={{
+          bottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+          right: 'max(1.5rem, env(safe-area-inset-right))',
+        }}
         aria-label="Open chat"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
         </svg>
       </button>
 
       {open && (
         <div
           className="fixed z-50 w-[380px] max-w-[calc(100vw-2rem)] max-h-[min(480px,calc(100vh-8rem))] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
-          style={{ bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem))', right: 'max(1rem, env(safe-area-inset-right))' }}
+          style={{
+            bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem))',
+            right: 'max(1rem, env(safe-area-inset-right))',
+          }}
         >
           <div className="bg-primary text-white px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -98,10 +134,7 @@ export default function ChatWidget() {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
             {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+              <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                     m.role === 'user'
@@ -131,7 +164,12 @@ export default function ChatWidget() {
                 aria-label="Send"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
                 </svg>
               </button>
             </div>

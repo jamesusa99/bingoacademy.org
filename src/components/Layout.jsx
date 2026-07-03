@@ -205,7 +205,7 @@ function LayoutShell({ children }) {
                 height={209}
               />
             </Link>
-            <p className="mt-2 text-slate-500">Foundations of AI · IOAI Training · K12 Classroom</p>
+            <p className="mt-2 text-slate-500">IOAI Competition Training</p>
           </div>
           <div className="flex gap-8">
             <div>

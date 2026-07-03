@@ -13,9 +13,11 @@ export const PRODUCT_LINE_VISIBILITY_KEY = 'product_lines'
 
 export const PRODUCT_LINE_IDS = ['ioai', 'general', 'k12']
 
-export const DEFAULT_PRODUCT_LINE_VISIBILITY = Object.fromEntries(
-  PRODUCT_LINE_IDS.map((id) => [id, true])
-)
+export const DEFAULT_PRODUCT_LINE_VISIBILITY = {
+  ioai: true,
+  general: false,
+  k12: false,
+}
 
 /** Admin UI labels — matches storefront product line names */
 export const PRODUCT_LINE_ADMIN_META = [

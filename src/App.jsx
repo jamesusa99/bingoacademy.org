@@ -225,7 +225,7 @@ export default function App() {
         {/* Legacy routes → new product structure */}
         <Route path="research" element={<Navigate to="/programs/ioai" replace />} />
         <Route path="events" element={<Navigate to="/programs/ioai" replace />} />
-        <Route path="career" element={<Navigate to="/programs/k12" replace />} />
+        <Route path="career" element={<Navigate to="/programs/ioai" replace />} />
         <Route path="charity" element={<Navigate to="/" replace />} />
         <Route path="tools" element={<Navigate to="/mall" replace />} />
         <Route path="tools/detail/:id" element={<Navigate to="/mall" replace />} />
