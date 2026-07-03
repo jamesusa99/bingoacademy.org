@@ -70,11 +70,11 @@ export default function UsaaioPrepLanding() {
           <h2 className="text-2xl sm:text-3xl font-black text-bingo-dark mb-8">{copy.curriculum.title}</h2>
           <div className="grid sm:grid-cols-2 gap-5">
             {copy.curriculum.modules.map((m) => (
-              <article key={m.num} className="card p-6 relative">
-                <span className="absolute -top-3 left-4 text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full">
+              <article key={m.num} className="card p-6">
+                <span className="inline-block text-[10px] font-bold uppercase tracking-wide bg-primary text-white px-2.5 py-1 rounded-full mb-3">
                   Module {m.num}
                 </span>
-                <h3 className="font-bold text-bingo-dark mb-2 mt-1">{m.title}</h3>
+                <h3 className="font-bold text-bingo-dark mb-2">{m.title}</h3>
                 <p className="text-sm text-slate-600 leading-relaxed">{m.desc}</p>
               </article>
             ))}

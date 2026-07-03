@@ -86,8 +86,8 @@ export default function IOAIMasterclassLanding() {
 
           <div className="grid md:grid-cols-3 gap-5 mb-12">
             {copy.curriculumPath.map((step, index) => (
-              <article key={step.stage} className="card p-5 relative">
-                <span className="absolute -top-3 left-4 text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full">
+              <article key={step.stage} className="card p-5">
+                <span className="inline-block text-[10px] font-bold uppercase tracking-wide bg-primary text-white px-2.5 py-1 rounded-full mb-3">
                   Stage {index + 1}
                 </span>
                 <span className="text-3xl mb-3 block" aria-hidden>
