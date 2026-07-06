@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import Hls from 'hls.js'
+
+function isHlsSource(src) {
+  if (!src) return false
+  return src.includes('.m3u8') || src.includes('cloudflarestream.com')
+}
 
 function CodePanel() {
   return (
@@ -115,11 +121,37 @@ export default function HomeHeroVideoBackdrop({ videoUrl = '', posterUrl = '' })
     const el = videoRef.current
     if (!el || !hasVideo) return undefined
 
-    const play = () => {
+    const src = videoUrl.trim()
+    const useHls = isHlsSource(src)
+    let hls = null
+
+    const markReady = () => setReady(true)
+
+    if (useHls && Hls.isSupported()) {
+      hls = new Hls({ enableWorker: true, startLevel: -1 })
+      hls.loadSource(src)
+      hls.attachMedia(el)
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        el.play().catch(() => {})
+        markReady()
+      })
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad()
+      })
+    } else if (useHls && el.canPlayType('application/vnd.apple.mpegurl')) {
+      el.src = src
+      el.addEventListener('canplay', markReady)
+      el.play().catch(() => {})
+    } else {
+      el.src = src
+      el.addEventListener('canplay', markReady)
       el.play().catch(() => {})
     }
-    play()
-    return undefined
+
+    return () => {
+      el.removeEventListener('canplay', markReady)
+      hls?.destroy()
+    }
   }, [hasVideo, videoUrl])
 
   if (!hasVideo) {
@@ -136,14 +168,12 @@ export default function HomeHeroVideoBackdrop({ videoUrl = '', posterUrl = '' })
         className={`absolute inset-0 w-full h-full object-cover scale-105 transition-opacity duration-700 ${
           ready ? 'opacity-100' : 'opacity-0'
         }`}
-        src={videoUrl.trim()}
         poster={posterUrl || undefined}
         autoPlay
         muted
         loop
         playsInline
         preload="auto"
-        onCanPlay={() => setReady(true)}
       />
       {/* Split-screen vignette — reinforces code ↔ physical world even with uploaded B-roll */}
       <div className="absolute inset-0 hidden lg:block bg-gradient-to-r from-[#0f172a]/55 via-transparent to-[#0f172a]/55" />
