@@ -1,5 +1,7 @@
 /** Map storefront course bundle API rows to UI / mall item shape. */
 import { resolveBundleCoursesCoverUrl } from '../config/bundleCover'
+import { getPurchasedSlugs, hasFullIOAITrack } from './courseAccess'
+
 export function bundleCardDesc(bundle) {
   if (!bundle) return ''
   if (bundle.moduleCount > 0) {
@@ -46,6 +48,21 @@ export function mapCourseBundleToDisplayItem(bundle) {
 
 export function mapCourseBundlesToDisplayItems(bundles) {
   return (bundles || []).map(mapCourseBundleToDisplayItem).filter(Boolean)
+}
+
+/** True when the user already owns this bundle (full track, stage bundle, or all modules). */
+export function isBundleDisplayItemOwned(
+  item,
+  { hasFullTrack = false, hasModule, enrolledSlugs = getPurchasedSlugs() } = {}
+) {
+  if (!item) return false
+
+  const slugs = enrolledSlugs || []
+  if (item.isFullTrack && (hasFullTrack || hasFullIOAITrack(slugs))) return true
+  if (item.ioaiBundleSlug && slugs.includes(item.ioaiBundleSlug)) return true
+
+  if (!item.moduleSlugs?.length || !hasModule) return false
+  return item.moduleSlugs.every((slug) => hasModule(slug))
 }
 
 export function isIoaiMallBundleItem(item) {

@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { useIOAIAccess } from '../../hooks/useIOAIStore'
 import { purchaseCourseSlug } from '../../lib/courseAccess'
 import { fetchPaymentsConfig } from '../../lib/checkout'
 import { purchaseIoaiBundle } from '../../lib/ioaiPurchase'
-import { mapCourseBundlesToDisplayItems } from '../../lib/ioaiMallPackages'
+import { mapCourseBundlesToDisplayItems, isBundleDisplayItemOwned } from '../../lib/ioaiMallPackages'
 import { useIoaiCourseBundles } from '../../hooks/useIoaiCourseBundles'
 import { IoaiCourseBundleCards } from '../ioai/IoaiCourseBundleModal'
 
 export default function IoaiMallPackageGrid() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { hasFullTrack, hasModule, enrolledSlugs } = useIOAIAccess()
   const { bundles, loading, error } = useIoaiCourseBundles()
   const [stripeCheckout, setStripeCheckout] = useState(false)
   const [buyingSlug, setBuyingSlug] = useState(null)
@@ -22,6 +24,11 @@ export default function IoaiMallPackageGrid() {
   }, [])
 
   const items = useMemo(() => mapCourseBundlesToDisplayItems(bundles), [bundles])
+
+  const isItemOwned = useCallback(
+    (item) => isBundleDisplayItemOwned(item, { hasFullTrack, hasModule, enrolledSlugs }),
+    [hasFullTrack, hasModule, enrolledSlugs]
+  )
 
   const handleBuy = (item) => {
     setBuyingSlug(item.ioaiBundleSlug)
@@ -64,7 +71,13 @@ export default function IoaiMallPackageGrid() {
           Full track or stage bundles — one checkout unlocks every course unit in that package.
         </p>
       </div>
-      <IoaiCourseBundleCards items={items} theme="light" onBuy={handleBuy} buyingSlug={buyingSlug} />
+      <IoaiCourseBundleCards
+        items={items}
+        theme="light"
+        onBuy={handleBuy}
+        buyingSlug={buyingSlug}
+        isItemOwned={isItemOwned}
+      />
     </section>
   )
 }

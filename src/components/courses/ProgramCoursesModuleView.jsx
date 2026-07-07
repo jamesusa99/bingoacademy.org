@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { PRODUCT_LINES } from '../../config/products'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
@@ -7,7 +7,7 @@ import { useIOAIAccess } from '../../hooks/useIOAIStore'
 import { useProgramStore } from '../../hooks/useProgramStore'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
 import { flattenIoaiModules, formatIoaiPrice, isIoaiModuleComingSoon, isIoaiModulePurchasable } from '../../lib/ioaiStore'
-import { mapCourseBundleToDisplayItem } from '../../lib/ioaiMallPackages'
+import { mapCourseBundleToDisplayItem, isBundleDisplayItemOwned } from '../../lib/ioaiMallPackages'
 import { findCourseBundleForStage, useIoaiCourseBundles } from '../../hooks/useIoaiCourseBundles'
 import { IoaiCourseBundleCards } from '../ioai/IoaiCourseBundleModal'
 import { purchaseIoaiModule, purchaseIoaiBundle } from '../../lib/ioaiPurchase'
@@ -51,9 +51,8 @@ function buyStageBundleItem({
   })
 }
 
-function isBundleItemOwned(item, hasModule) {
-  if (!item?.moduleSlugs?.length) return false
-  return item.moduleSlugs.every((slug) => hasModule(slug))
+function isBundleItemOwned(item, { hasFullTrack, hasModule, enrolledSlugs }) {
+  return isBundleDisplayItemOwned(item, { hasFullTrack, hasModule, enrolledSlugs })
 }
 
 function lineBadgeLabel(lineId) {
@@ -190,6 +189,20 @@ export default function ProgramCoursesModuleView({ line }) {
     return (catalogSlug) => purchase.hasAccess?.(catalogSlug)
   }, [lineId, ioaiAccess.hasModule, purchase.hasAccess])
 
+  const bundleOwnership = useMemo(
+    () => ({
+      hasFullTrack: ioaiAccess.hasFullTrack,
+      hasModule,
+      enrolledSlugs: ioaiAccess.enrolledSlugs,
+    }),
+    [ioaiAccess.hasFullTrack, ioaiAccess.enrolledSlugs, hasModule]
+  )
+
+  const isBundleOwned = useCallback(
+    (item) => isBundleDisplayItemOwned(item, bundleOwnership),
+    [bundleOwnership]
+  )
+
   const modules = useMemo(() => flattenIoaiModules(levels), [levels])
 
   const stages = useMemo(() => {
@@ -230,7 +243,7 @@ export default function ProgramCoursesModuleView({ line }) {
   useEffect(() => {
     if (!shouldAutoBuy || autoBuyStarted.current || loading || bundlesLoading || lineId !== 'ioai') return
 
-    if (!stageBundleItem || isBundleItemOwned(stageBundleItem, hasModule)) {
+    if (!stageBundleItem || isBundleItemOwned(stageBundleItem, bundleOwnership)) {
       const next = new URLSearchParams(searchParams)
       next.delete('buy')
       setSearchParams(next, { replace: true })
@@ -257,7 +270,8 @@ export default function ProgramCoursesModuleView({ line }) {
     bundlesLoading,
     lineId,
     stageBundleItem,
-    hasModule,
+    isBundleOwned,
+    bundleOwnership,
     stageFilter,
     stripeCheckout,
     isAuthenticated,
@@ -346,6 +360,7 @@ export default function ProgramCoursesModuleView({ line }) {
                     theme="dark"
                     gridClass="contents"
                     buyingSlug={buyingSlug}
+                    isItemOwned={isBundleOwned}
                     onBuy={(item) => {
                       setBuyingSlug(item.ioaiBundleSlug)
                       buyStageBundleItem({

@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
+import { COURSES_PORTAL } from '../../config/coursesPortal'
 import RichHtmlContent from '../shared/RichHtmlContent'
 import CheckoutTrustMicrocopy from '../checkout/CheckoutTrustMicrocopy'
 
@@ -28,7 +30,7 @@ function BundleDiscountTags({ item, className = '' }) {
   )
 }
 
-export default function IoaiCourseBundleModal({ item, onClose, onBuy, buying = false }) {
+export default function IoaiCourseBundleModal({ item, onClose, onBuy, buying = false, owned = false }) {
   if (!item) return null
 
   const compare =
@@ -95,14 +97,29 @@ export default function IoaiCourseBundleModal({ item, onClose, onBuy, buying = f
           )}
 
           <div className="flex gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => onBuy?.(item)}
-              disabled={buying}
-              className="flex-1 min-w-[140px] btn-primary text-sm py-2.5 disabled:opacity-60"
-            >
-              {buying ? 'Redirecting…' : `Buy now — ${price}`}
-            </button>
+            {owned ? (
+              <>
+                <span className="flex-1 min-w-[140px] inline-flex items-center justify-center text-sm font-semibold text-emerald-700 bg-emerald-50 px-4 py-2.5 rounded-xl">
+                  {item.isFullTrack ? COURSES_PORTAL.trackOwned : COURSES_PORTAL.moduleUnlocked}
+                </span>
+                <Link
+                  to="/profile/study"
+                  className="flex-1 min-w-[140px] btn-primary text-sm py-2.5 text-center"
+                  onClick={onClose}
+                >
+                  {COURSES_PORTAL.continueLearning}
+                </Link>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onBuy?.(item)}
+                disabled={buying}
+                className="flex-1 min-w-[140px] btn-primary text-sm py-2.5 disabled:opacity-60"
+              >
+                {buying ? 'Redirecting…' : `Buy now — ${price}`}
+              </button>
+            )}
             <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-slate-300 text-sm">
               Close
             </button>
@@ -119,6 +136,7 @@ export function IoaiCourseBundleCard({
   onOpen,
   onBuy,
   buying = false,
+  owned = false,
   theme = 'light',
 }) {
   const compare =
@@ -197,18 +215,31 @@ export function IoaiCourseBundleCard({
             {compare ? <p className="text-[10px] text-slate-400 line-through">{compare}</p> : null}
             <span className={`text-lg font-bold ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>{price}</span>
           </div>
-          <button
-            type="button"
-            onClick={() => onBuy?.(item)}
-            disabled={buying}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60 ${
-              isDark
-                ? 'bg-amber-500 hover:bg-amber-400 text-slate-900'
-                : 'bg-amber-500 hover:bg-amber-400 text-white'
-            }`}
-          >
-            {buying ? '…' : 'Buy now'}
-          </button>
+          {owned ? (
+            <Link
+              to="/profile/study"
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg ${
+                isDark
+                  ? 'text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/10'
+                  : 'text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100'
+              }`}
+            >
+              {item.isFullTrack ? COURSES_PORTAL.trackOwned : COURSES_PORTAL.moduleUnlocked}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onBuy?.(item)}
+              disabled={buying}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60 ${
+                isDark
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-900'
+                  : 'bg-amber-500 hover:bg-amber-400 text-white'
+              }`}
+            >
+              {buying ? '…' : 'Buy now'}
+            </button>
+          )}
         </div>
       </div>
     </article>
@@ -221,10 +252,13 @@ export function IoaiCourseBundleCards({
   gridClass = 'grid sm:grid-cols-2 lg:grid-cols-3 gap-4',
   onBuy,
   buyingSlug = null,
+  isItemOwned,
 }) {
   const [selected, setSelected] = useState(null)
 
   if (!items?.length) return null
+
+  const selectedOwned = selected ? Boolean(isItemOwned?.(selected)) : false
 
   return (
     <>
@@ -234,6 +268,7 @@ export function IoaiCourseBundleCards({
           onClose={() => setSelected(null)}
           onBuy={(item) => onBuy?.(item)}
           buying={buyingSlug === selected.ioaiBundleSlug}
+          owned={selectedOwned}
         />
       ) : null}
       <div className={gridClass}>
@@ -245,6 +280,7 @@ export function IoaiCourseBundleCards({
             onOpen={setSelected}
             onBuy={onBuy}
             buying={buyingSlug === item.ioaiBundleSlug}
+            owned={Boolean(isItemOwned?.(item))}
           />
         ))}
       </div>
