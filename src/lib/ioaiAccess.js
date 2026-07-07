@@ -31,8 +31,12 @@ export function buildLessonModuleMapFromTree(tree) {
   return map
 }
 
-export function hasIoaiModuleAccess(moduleCatalogSlug, { moduleSlugs = [], enrolledSlugs = getPurchasedSlugs() } = {}) {
-  if (!moduleCatalogSlug) return false
+export function hasIoaiModuleAccess(
+  moduleCatalogSlug,
+  { moduleSlugs = [], enrolledSlugs = getPurchasedSlugs(), hasFullTrack = false } = {}
+) {
+  if (hasFullTrack) return true
+  if (!moduleCatalogSlug) return hasFullIOAITrack([...(moduleSlugs || []), ...(enrolledSlugs || [])])
   const merged = [...new Set([...(moduleSlugs || []), ...(enrolledSlugs || [])])]
   if (merged.includes(moduleCatalogSlug)) return true
   if (hasFullIOAITrack(merged)) return true

@@ -114,7 +114,7 @@ export function studyCourseContinueHref(course, catalog, tree) {
   return studyLessonPath(course.id, { play: course.accessType === 'lesson' })
 }
 
-export function studyCourseProgressLabel(course, catalog, levels) {
+export function studyCourseProgressLabel(course, catalog, levels, curriculumTree) {
   if (course.accessType === 'module') {
     const lessonIds = course.lessonIds?.length
       ? course.lessonIds
@@ -126,7 +126,7 @@ export function studyCourseProgressLabel(course, catalog, levels) {
     return 'All lessons unlocked'
   }
   if (isIOAITrackId(course.id)) {
-    const stats = getTrackProgressStats(getAllIOAILessonIds(catalog, tree))
+    const stats = getTrackProgressStats(getAllIOAILessonIds(catalog, curriculumTree))
     return `${stats.percent}% · ${stats.completed}/${stats.total} lessons`
   }
   const p = getLessonProgress(course.id)
@@ -135,7 +135,7 @@ export function studyCourseProgressLabel(course, catalog, levels) {
   return 'Not started'
 }
 
-export function studyCourseProgressStats(course, catalog, levels) {
+export function studyCourseProgressStats(course, catalog, levels, curriculumTree) {
   if (course.accessType === 'module') {
     const lessonIds = course.lessonIds?.length
       ? course.lessonIds
@@ -143,7 +143,7 @@ export function studyCourseProgressStats(course, catalog, levels) {
     return lessonIds.length ? getTrackProgressStats(lessonIds) : null
   }
   if (isIOAITrackId(course.id)) {
-    return getTrackProgressStats(getAllIOAILessonIds(catalog, tree))
+    return getTrackProgressStats(getAllIOAILessonIds(catalog, curriculumTree))
   }
   return null
 }

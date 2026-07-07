@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.mjs'
 import { verifyAuthUser } from '../lib/supabaseAuth.mjs'
-import { listEnrollmentSlugs } from '../lib/courseEntitlements.mjs'
+import { listEnrollmentSlugs, userHasIOAIAccess } from '../lib/courseEntitlements.mjs'
 import {
   IOAI_FULL_BUNDLE_SLUG,
   resolveUnlockedModuleSlugs,
@@ -210,12 +210,13 @@ export function registerIoaiRoutes(app, { verifyAdminUser } = {}) {
     const moduleSlugs = [...(await resolveUnlockedModuleSlugs(auth.admin, auth.user.id, enrolledSlugs))]
     const lessonSlugs = await resolveUnlockedLessonSlugs(auth.admin, auth.user.id, enrolledSlugs)
 
+    const hasFullTrack = await userHasIOAIAccess(auth.admin, auth.user.id)
+
     return res.json({
       enrolledSlugs,
       moduleSlugs,
       lessonSlugs,
-      hasFullTrack:
-        enrolledSlugs.includes(IOAI_FULL_BUNDLE_SLUG) || enrolledSlugs.includes('ioai-track'),
+      hasFullTrack,
     })
   })
 

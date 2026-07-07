@@ -22,6 +22,7 @@ export function usePurchasedCourses() {
   const [remoteSlugs, setRemoteSlugs] = useState([])
   const [ioaiModuleSlugs, setIoaiModuleSlugs] = useState([])
   const [ioaiLessonSlugs, setIoaiLessonSlugs] = useState([])
+  const [ioaiHasFullTrack, setIoaiHasFullTrack] = useState(false)
   const [stripeCheckout, setStripeCheckout] = useState(false)
   const [checkoutSlug, setCheckoutSlug] = useState(null)
 
@@ -36,6 +37,7 @@ export function usePurchasedCourses() {
       setRemoteSlugs([])
       setIoaiModuleSlugs([])
       setIoaiLessonSlugs([])
+      setIoaiHasFullTrack(false)
       return
     }
     try {
@@ -46,6 +48,7 @@ export function usePurchasedCourses() {
       setRemoteSlugs(slugs || [])
       setIoaiModuleSlugs(ioai.moduleSlugs || [])
       setIoaiLessonSlugs(ioai.lessonSlugs || [])
+      setIoaiHasFullTrack(Boolean(ioai.hasFullTrack))
       if (slugs?.length) {
         savePurchasedSlugs(mergeSlugs(getPurchasedSlugs(), slugs))
       }
@@ -53,6 +56,7 @@ export function usePurchasedCourses() {
       setRemoteSlugs([])
       setIoaiModuleSlugs([])
       setIoaiLessonSlugs([])
+      setIoaiHasFullTrack(false)
     }
     setVersion((v) => v + 1)
   }, [isAuthenticated])
@@ -67,8 +71,8 @@ export function usePurchasedCourses() {
   )
 
   const purchased = useMemo(
-    () => mergeSlugs(enrollmentSlugs, ioaiLessonSlugs),
-    [enrollmentSlugs, ioaiLessonSlugs, version]
+    () => mergeSlugs(mergeSlugs(enrollmentSlugs, ioaiModuleSlugs), ioaiLessonSlugs),
+    [enrollmentSlugs, ioaiModuleSlugs, ioaiLessonSlugs, version]
   )
 
   const hasAccess = useCallback(
@@ -76,7 +80,10 @@ export function usePurchasedCourses() {
     [purchased, version]
   )
 
-  const hasTrack = useMemo(() => hasFullIOAITrack(purchased), [purchased, version])
+  const hasTrack = useMemo(
+    () => ioaiHasFullTrack || hasFullIOAITrack(purchased),
+    [ioaiHasFullTrack, purchased, version]
+  )
 
   const refresh = useCallback(() => {
     loadEnrollments()

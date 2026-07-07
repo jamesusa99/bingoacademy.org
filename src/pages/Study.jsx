@@ -91,8 +91,8 @@ export default function Study() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.map((course) => {
               const href = studyCourseContinueHref(course, catalog, tree)
-              const progressText = studyCourseProgressLabel(course, catalog, levels)
-              const trackStats = studyCourseProgressStats(course, catalog, levels)
+              const progressText = studyCourseProgressLabel(course, catalog, levels, tree)
+              const trackStats = studyCourseProgressStats(course, catalog, levels, tree)
 
               return (
                 <Link

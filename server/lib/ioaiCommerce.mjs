@@ -383,15 +383,24 @@ export async function resolveStageComboBundle(admin, slug) {
 }
 
 export async function listBundleModuleCatalogSlugs(admin, bundleSlug) {
-  const bundle = await getBundleBySlug(admin, bundleSlug)
+  const trimmed = bundleSlug?.trim()
+  if (!trimmed) return []
+
+  const bundle = await getBundleBySlug(admin, trimmed)
   if (bundle) {
     const slugs = await listModuleSlugsForBundleRecord(admin, bundle)
     if (slugs.length) return slugs
   }
 
-  if (isStageComboBundleSlug(bundleSlug)) {
-    const combo = await resolveStageComboBundle(admin, bundleSlug)
+  if (isStageComboBundleSlug(trimmed)) {
+    const combo = await resolveStageComboBundle(admin, trimmed)
     return combo?.moduleSlugs || []
+  }
+
+  // Full track: fall back to all live IOAI modules when bundle_module links are missing
+  if (trimmed === IOAI_FULL_BUNDLE_SLUG || trimmed === 'ioai-track') {
+    const modules = await listLivePurchasableModulesForLevel(admin, 'all')
+    return modules.map((mod) => mod.catalog_slug).filter(Boolean)
   }
 
   return []

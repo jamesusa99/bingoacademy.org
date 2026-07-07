@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchMyEnrollments } from '../lib/checkout'
+import { getPurchasedSlugs, hasFullIOAITrack, savePurchasedSlugs } from '../lib/courseAccess'
 import { hasIoaiModuleAccess } from '../lib/ioaiAccess'
 import { fetchMyIoaiAccess, fetchIoaiStore } from '../lib/ioaiStore'
 
@@ -55,22 +56,21 @@ export function useIOAIAccess() {
       ])
       const enrolledSlugs = [
         ...new Set([
+          ...getPurchasedSlugs(),
           ...(data.enrolledSlugs || data.slugs || []),
           ...(enrollments.slugs || []),
         ]),
       ]
+      if (enrollments.slugs?.length) {
+        savePurchasedSlugs(enrolledSlugs)
+      }
+      const trackOwned = Boolean(data.hasFullTrack || hasFullIOAITrack(enrolledSlugs))
       const moduleSlugs = data.moduleSlugs?.length
         ? data.moduleSlugs
         : enrolledSlugs.filter((slug) => slug.startsWith('ioai-') && !slug.includes('competition-system'))
       setModuleSlugs(moduleSlugs)
       setEnrolledSlugs(enrolledSlugs)
-      setHasFullTrack(
-        Boolean(
-          data.hasFullTrack ||
-            enrolledSlugs.includes('ioai-competition-system') ||
-            enrolledSlugs.includes('ioai-track')
-        )
-      )
+      setHasFullTrack(trackOwned)
     } catch {
       setModuleSlugs([])
       setEnrolledSlugs([])
@@ -87,7 +87,7 @@ export function useIOAIAccess() {
   const hasModule = useCallback(
     (catalogSlug) =>
       hasFullTrack ||
-      hasIoaiModuleAccess(catalogSlug, { moduleSlugs, enrolledSlugs }),
+      hasIoaiModuleAccess(catalogSlug, { moduleSlugs, enrolledSlugs, hasFullTrack }),
     [moduleSlugs, enrolledSlugs, hasFullTrack]
   )
 

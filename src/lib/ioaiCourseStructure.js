@@ -192,6 +192,11 @@ function buildFromTree(curriculumTree, courses) {
         title: mod.title,
         levelId: level.id,
         themeId: theme.id,
+        catalogSlug:
+          mod.catalogSlug ||
+          mod.catalog_slug ||
+          buildModuleCatalogSlug(level.id, theme.id, mod.id) ||
+          null,
         lessons: (mod.lessons || [])
           .map((lesson) => mergeLessonMeta(lesson, courses, level, theme, mod))
           .filter(Boolean),

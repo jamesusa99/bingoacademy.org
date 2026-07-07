@@ -194,6 +194,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
     return hasIoaiModuleAccess(moduleContext.catalogSlug, {
       moduleSlugs,
       enrolledSlugs: mergedEnrollmentSlugs,
+      hasFullTrack: hasIoaiFullTrack,
     })
   }, [progLine, moduleContext?.catalogSlug, moduleSlugs, mergedEnrollmentSlugs])
 
@@ -456,6 +457,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
                               moduleSlugs,
                               enrolledSlugs: mergedEnrollmentSlugs,
                               lessonModuleMap,
+                              hasFullTrack: hasIoaiFullTrack,
                             }
                           : null
                       }

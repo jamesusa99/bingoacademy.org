@@ -3,14 +3,15 @@ import { Link } from 'react-router-dom'
 import { CheckCircle2, Circle, PlayCircle, ChevronDown, ChevronRight, Lock } from 'lucide-react'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { getLessonProgress } from '../../lib/learningProgress'
-import { hasCourseAccess } from '../../lib/courseAccess'
+import { hasCourseAccess, hasFullIOAITrack } from '../../lib/courseAccess'
 import { hasIoaiLessonAccess, hasIoaiModuleAccess } from '../../lib/ioaiAccess'
 import { buildModuleCatalogSlug } from '../../lib/ioaiStore'
 import { studyLessonPath } from '../../lib/studyPaths'
 
 function resolveLessonHasAccess(lesson, purchasedSlugs, ioaiAccess) {
   if (hasCourseAccess(lesson.id, purchasedSlugs)) return true
-  if (!ioaiAccess?.lessonModuleMap) return false
+  if (ioaiAccess?.hasFullTrack) return true
+  if (!ioaiAccess?.lessonModuleMap) return hasFullIOAITrack(purchasedSlugs)
   return hasIoaiLessonAccess(lesson.id, {
     moduleSlugs: ioaiAccess.moduleSlugs,
     enrolledSlugs: ioaiAccess.enrolledSlugs,
@@ -34,11 +35,19 @@ function LessonStatusIcon({ lessonId, activeLessonId, hasAccess }) {
 }
 
 function resolveModuleHasAccess(module, purchasedSlugs, ioaiAccess) {
-  const catalogSlug = buildModuleCatalogSlug(module.levelId, module.themeId, module.id)
+  if (ioaiAccess?.hasFullTrack || hasFullIOAITrack(purchasedSlugs)) return true
+  const merged = [
+    ...new Set([...(ioaiAccess?.enrolledSlugs || []), ...(ioaiAccess?.moduleSlugs || []), ...(purchasedSlugs || [])]),
+  ]
+  if (hasFullIOAITrack(merged)) return true
+
+  const catalogSlug =
+    module.catalogSlug || buildModuleCatalogSlug(module.levelId, module.themeId, module.id)
   if (catalogSlug && ioaiAccess) {
     return hasIoaiModuleAccess(catalogSlug, {
       moduleSlugs: ioaiAccess.moduleSlugs,
       enrolledSlugs: ioaiAccess.enrolledSlugs,
+      hasFullTrack: ioaiAccess.hasFullTrack,
     })
   }
   return module.lessons.some((lesson) => resolveLessonHasAccess(lesson, purchasedSlugs, ioaiAccess))
