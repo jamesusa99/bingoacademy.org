@@ -38,7 +38,7 @@ function accessTypeLabel(accessType) {
 export default function Study() {
   const { isAuthenticated, loading } = useAuth()
   const { courses: catalog, tree, loading: catalogLoading } = useIOAICourseContext()
-  const { levels, loading: storeLoading } = useIOAIStore()
+  const { levels, fullBundle, loading: storeLoading } = useIOAIStore()
   const { enrollmentSlugs, ioaiModuleSlugs, refresh, stripeCheckout } = usePurchasedCourses()
   const courses = useMemo(
     () =>
@@ -47,8 +47,9 @@ export default function Study() {
         ioaiModuleSlugs,
         catalog,
         levels,
+        fullBundle,
       }),
-    [enrollmentSlugs, ioaiModuleSlugs, catalog, levels]
+    [enrollmentSlugs, ioaiModuleSlugs, catalog, levels, fullBundle]
   )
   const { catalogSlug: trialCatalogSlug } = useFreeTrialLesson()
   const trialActive = hasClaimedFreeTrial()
@@ -100,7 +101,7 @@ export default function Study() {
                   to={href}
                   className="card p-5 hover:shadow-md hover:border-primary/30 transition group flex flex-col overflow-hidden"
                 >
-                  {course.accessType === 'module' && course.coverUrl ? (
+                  {(course.accessType === 'module' || course.accessType === 'full-track') && course.coverUrl ? (
                     <div className="relative -mx-5 -mt-5 mb-3 aspect-[16/9] bg-slate-100 overflow-hidden">
                       <ModuleCoverImage
                         coverUrl={course.coverUrl}

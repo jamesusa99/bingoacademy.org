@@ -1,9 +1,40 @@
 import { findCourseInList } from './catalogCourse'
+import { resolveBundleCoursesCoverUrl } from '../config/bundleCover'
+import { COURSES_PORTAL } from '../config/coursesPortal'
 import { hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from './courseAccess'
 import { getAllIOAILessonIds, isIOAITrackId, getFirstIOAILessonId } from './ioaiCourseStructure'
 import { getTrackProgressStats, getContinueLessonId, getLessonProgress } from './learningProgress'
-import { findModule, resolveLessonCatalogSlug } from './ioaiStore'
+import { findModule, flattenIoaiModules, isIoaiModulePurchasable, resolveLessonCatalogSlug } from './ioaiStore'
 import { studyLessonPath, studyModulePath } from './studyPaths'
+
+function buildFullTrackStudyItem(track, fullBundle, levels) {
+  const purchasableModules = flattenIoaiModules(levels).filter(isIoaiModulePurchasable)
+  const moduleCount = purchasableModules.length
+  const lessonCount = purchasableModules.reduce((n, mod) => n + (mod.lessonCount || 0), 0)
+  const title = fullBundle?.title?.trim() || COURSES_PORTAL.fullTrack
+  const coverUrl =
+    resolveBundleCoursesCoverUrl({
+      coverUrl: fullBundle?.cover_url || fullBundle?.coverUrl,
+    }) ||
+    track?.thumbnail ||
+    track?.videoPoster ||
+    null
+  const hours =
+    moduleCount > 0
+      ? `${moduleCount} unit${moduleCount === 1 ? '' : 's'} · ${lessonCount} lesson${lessonCount === 1 ? '' : 's'}`
+      : track?.hours || ''
+
+  return {
+    ...(track || { id: IOAI_FULL_TRACK_SLUG }),
+    id: IOAI_FULL_TRACK_SLUG,
+    accessType: 'full-track',
+    name: title,
+    nameEn: title,
+    badge: COURSES_PORTAL.fullTrack,
+    coverUrl,
+    hours,
+  }
+}
 
 function collectModuleLessonIds(levels, moduleCatalogSlug) {
   const found = findModule(levels, moduleCatalogSlug)
@@ -43,13 +74,19 @@ export function lessonSlugsCoveredByModules(moduleSlugs, levels) {
  * Build Study Center cards: IOAI modules as units; other purchases as individual courses/lessons.
  * @returns {Array<object>}
  */
-export function buildStudyCourses({ enrollmentSlugs = [], ioaiModuleSlugs = [], catalog = [], levels = [] }) {
+export function buildStudyCourses({
+  enrollmentSlugs = [],
+  ioaiModuleSlugs = [],
+  catalog = [],
+  levels = [],
+  fullBundle = null,
+}) {
   const items = []
   const fullTrack = hasFullIOAITrack(enrollmentSlugs)
 
   if (fullTrack) {
     const track = findCourseInList(catalog, IOAI_FULL_TRACK_SLUG)
-    if (track) items.push({ ...track, accessType: 'full-track' })
+    items.push(buildFullTrackStudyItem(track, fullBundle, levels))
   }
 
   const moduleSlugs = resolveOwnedIoaiModuleSlugs({ enrollmentSlugs, ioaiModuleSlugs, catalog, levels })
