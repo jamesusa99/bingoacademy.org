@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useIsDesktop } from '../hooks/useMediaQuery'
 import { getProductLine, isCourseComingSoon, isCourseOffline, subcategoryLabel } from '../config/products'
 import { EXPLORATION_EXPERIMENTS } from '../config/explorationLab'
 import { COURSES_PORTAL } from '../config/coursesPortal'
@@ -51,7 +52,8 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutMessage, setCheckoutMessage] = useState(null)
   const [apiLessonPatch, setApiLessonPatch] = useState(null)
-  const [curriculumOpen, setCurriculumOpen] = useState(true)
+  const isDesktop = useIsDesktop()
+  const [curriculumOpen, setCurriculumOpen] = useState(isDesktop)
   const { courses, loading: catalogLoading, reload } = useCourseCatalog()
   const catalogItem = findCourseInList(courses, id)
   const curriculumLine = inferProgramLineForSlug(id, catalogItem)
@@ -201,6 +203,10 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
   const reloadAll = useCallback(async () => {
     await Promise.all([reload(), progLine ? reloadTree() : Promise.resolve()])
   }, [reload, reloadTree, progLine])
+
+  useEffect(() => {
+    if (!isDesktop) setCurriculumOpen(false)
+  }, [isDesktop])
 
   const startAtVideo = searchParams.get('play') === '1'
   const adminReloadToken = searchParams.get('reload')

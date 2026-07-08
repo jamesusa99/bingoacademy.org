@@ -102,7 +102,7 @@ export default function ChatWidget() {
 
       {open && (
         <div
-          className="fixed z-50 w-[380px] max-w-[calc(100vw-2rem)] max-h-[min(480px,calc(100vh-8rem))] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+          className="fixed z-50 inset-x-4 sm:inset-x-auto sm:w-[380px] sm:max-w-[calc(100vw-2rem)] max-h-[min(480px,calc(100dvh-8rem))] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
           style={{
             bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem))',
             right: 'max(1rem, env(safe-area-inset-right))',
@@ -156,11 +156,11 @@ export default function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-base sm:text-sm min-h-[44px] focus:border-primary focus:ring-1 focus:ring-primary outline-none"
               />
               <button
                 type="submit"
-                className="shrink-0 w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition"
+                className="shrink-0 w-11 h-11 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition"
                 aria-label="Send"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

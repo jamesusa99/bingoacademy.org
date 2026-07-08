@@ -83,7 +83,13 @@ function LayoutShell({ children }) {
         <div className="w-full px-4 sm:px-6">
           <div className="flex items-center gap-2 lg:gap-4 min-h-14">
             <Link to="/" className="shrink-0 flex items-center" aria-label="BingoAcademy home">
-              <img src="/logo.png" alt="BingoAcademy" className="h-9 sm:h-10 w-auto" width={895} height={209} />
+              <img
+                src="/logo.png"
+                alt="BingoAcademy"
+                className="h-9 sm:h-10 w-auto max-w-[148px] sm:max-w-none"
+                width={895}
+                height={209}
+              />
             </Link>
             <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 min-w-0" aria-label="Main">
               {desktopItems.map((item, i) => {
@@ -187,15 +193,22 @@ function LayoutShell({ children }) {
                     {label}
                   </Link>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => signOut()}
+                  className="px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center bg-white/10 text-slate-300"
+                >
+                  Sign out
+                </button>
               </>
             )}
           </nav>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">{children}</main>
       <footer className="bg-bingo-dark text-slate-400 text-sm py-8 border-t border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b] pb-[max(2rem,env(safe-area-inset-bottom))]">
-        <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-wrap justify-between gap-6">
-          <div>
+        <div className="w-full px-4 sm:px-6 lg:px-8 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-between lg:gap-6">
+          <div className="col-span-2 sm:col-span-3 lg:col-auto">
             <Link to="/" className="inline-block">
               <img
                 src="/logo.png"
@@ -207,29 +220,28 @@ function LayoutShell({ children }) {
             </Link>
             <p className="mt-2 text-slate-500">IOAI Competition Training</p>
           </div>
-          <div className="flex gap-8">
-            <div>
-              <div className="text-white font-medium mb-2">Explore</div>
-              <Link to="/courses" className="block hover:text-white">Courses</Link>
+          <div className="col-span-1">
+            <div className="text-white font-medium mb-2">Explore</div>
+              <Link to="/courses" className="block hover:text-white py-0.5">Courses</Link>
               {LABS_STOREFRONT_VISIBLE ? (
-                <Link to="/labs" className="block hover:text-white">Labs & kits</Link>
+                <Link to="/labs" className="block hover:text-white py-0.5">Labs & kits</Link>
               ) : null}
-              <Link to="/exploration" className="block hover:text-white">AI Exploration (free games)</Link>
+              <Link to="/exploration" className="block hover:text-white py-0.5">AI Exploration (free games)</Link>
               {visiblePrograms.length > 1 ? (
-                <Link to="/compare" className="block hover:text-white">Compare Programs</Link>
+                <Link to="/compare" className="block hover:text-white py-0.5">Compare Programs</Link>
               ) : null}
-              <Link to="/showcase" className="block hover:text-white">Achievements</Link>
-              <Link to="/news" className="block hover:text-white">News</Link>
-              <Link to="/cert" className="block hover:text-white">Certification</Link>
-              <Link to="/mall" className="block hover:text-white">AI Mall</Link>
+              <Link to="/showcase" className="block hover:text-white py-0.5">Achievements</Link>
+              <Link to="/news" className="block hover:text-white py-0.5">News</Link>
+              <Link to="/cert" className="block hover:text-white py-0.5">Certification</Link>
+              <Link to="/mall" className="block hover:text-white py-0.5">AI Mall</Link>
             </div>
-            <div>
-              <div className="text-white font-medium mb-2">For US Families</div>
+          <div className="col-span-1">
+            <div className="text-white font-medium mb-2">For US Families</div>
               <Link to="/ai-classes-for-kids" className="block hover:text-white">AI Classes for Kids</Link>
               <Link to="/usaaio-prep" className="block hover:text-white">USAAIO Prep</Link>
             </div>
             {showProgramsNav ? (
-            <div>
+            <div className="col-span-1">
               <div className="text-white font-medium mb-2">Programs</div>
               {visiblePrograms.map((p) => (
                 <Link key={p.slug} to={programPath(p.slug)} className="block hover:text-white">
@@ -238,11 +250,10 @@ function LayoutShell({ children }) {
               ))}
             </div>
             ) : null}
-            <div>
+            <div className="col-span-1">
               <div className="text-white font-medium mb-2">Legal</div>
-              <Link to="/privacy" className="block hover:text-white">Privacy Policy</Link>
+              <Link to="/privacy" className="block hover:text-white py-0.5">Privacy Policy</Link>
             </div>
-          </div>
         </div>
         <FooterCompliance />
       </footer>

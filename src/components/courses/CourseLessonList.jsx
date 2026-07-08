@@ -200,7 +200,7 @@ export default function CourseLessonList({
     : null
 
   return (
-    <div className={`course-lesson-list card overflow-hidden ${compact ? '' : 'sticky top-20'}`}>
+    <div className={`course-lesson-list card overflow-hidden ${compact ? '' : 'lg:sticky lg:top-20'}`}>
       <div className="p-4 border-b border-slate-100 bg-slate-50/80">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -219,7 +219,11 @@ export default function CourseLessonList({
         </div>
       </div>
 
-      <div className={`overflow-y-auto ${compact ? 'max-h-[420px]' : 'max-h-[calc(100vh-12rem)]'}`}>
+      <div
+        className={`overflow-y-auto ${
+          compact ? 'max-h-[420px]' : 'max-h-[min(420px,55vh)] lg:max-h-[calc(100vh-12rem)]'
+        }`}
+      >
         {curriculum.length === 0 ? (
           <p className="p-4 text-xs text-slate-500">No curriculum published yet.</p>
         ) : (
