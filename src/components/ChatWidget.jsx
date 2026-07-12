@@ -4,18 +4,18 @@ const GREETING =
   "Hi! I'm Bingo AI Assistant. Ask about our IOAI Competition Training."
 
 const FALLBACK =
-  'Thanks for your message. Explore IOAI courses at /courses?line=ioai, free labs at /exploration, or book a free assessment at /assessment.'
+  'Thanks for your message. Explore IOAI courses at /courses/ioai, free labs at /exploration, or book a free assessment at /assessment.'
 
 const QUICK_REPLIES = {
   course:
-    'Our focus is IOAI Competition Training — video courses, training labs, mock assessments, and Olympiad prep. Visit /courses?line=ioai',
-  ioai: 'IOAI Competition Training includes video courses, Jupyter labs, and competition prep. See /courses?line=ioai or /usaaio-prep',
+    'Our focus is IOAI Competition Training — video courses, training labs, mock assessments, and Olympiad prep. Visit /courses/ioai',
+  ioai: 'IOAI Competition Training includes video courses, Jupyter labs, and competition prep. See /courses/ioai or /usaaio-prep',
   cert: 'Bingo AI Certification validates course completion. Visit the Certification page for tiers and application.',
   mall: 'AI Mall offers IOAI training materials and lab kits. Visit /mall?tab=ioai',
   school:
     'We are currently focused on IOAI Competition Training for students and families. For school partnerships, email us via the contact form on /profile.',
   foundations:
-    'Foundations of AI and K12 Classroom programs are coming later. Today we specialize in IOAI Competition Training — see /courses?line=ioai',
+    'Foundations of AI and K12 Classroom programs are coming later. Today we specialize in IOAI Competition Training — see /courses/ioai',
 }
 
 function getReply(text) {

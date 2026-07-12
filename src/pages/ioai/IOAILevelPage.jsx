@@ -110,7 +110,7 @@ export default function IOAILevelPage() {
     return (
       <PageContent className="py-12">
         <p className="text-sm text-slate-600">Track not found.</p>
-        <Link to="/courses?line=ioai" className="text-primary text-sm mt-2 inline-block">
+        <Link to="/courses/ioai" className="text-primary text-sm mt-2 inline-block">
           ← Back to IOAI
         </Link>
       </PageContent>
@@ -121,7 +121,7 @@ export default function IOAILevelPage() {
     <div className="w-full">
       <PageMeta title={`${level.title} · IOAI`} />
       <PageContent className="py-8">
-        <Link to="/courses?line=ioai" className="text-xs text-primary hover:underline">
+        <Link to="/courses/ioai" className="text-xs text-primary hover:underline">
           ← All IOAI tracks
         </Link>
         <header className="mt-4 mb-8">

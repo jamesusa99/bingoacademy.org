@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import Hls from 'hls.js'
+import { loadHls } from '../../lib/loadHls'
 
 function isHlsSource(src) {
   if (!src) return false
@@ -44,42 +44,60 @@ export default function CourseStreamVideo({
     if (!video || !src) return undefined
 
     const useHls = isHlsSource(src)
+    let cancelled = false
 
-    if (useHls && Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        startLevel: -1,
-        capLevelToPlayerSize: false,
-      })
-      hlsRef.current = hls
-      hls.loadSource(src)
-      hls.attachMedia(video)
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        hls.currentLevel = -1
-      })
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal) {
-          console.warn('[CourseStreamVideo] HLS fatal error', data.type, data.details)
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            hls.startLoad()
-          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-            hls.recoverMediaError()
+    async function setup() {
+      if (useHls) {
+        const { default: Hls } = await loadHls()
+        if (cancelled) return undefined
+        if (Hls.isSupported()) {
+          const hls = new Hls({
+            enableWorker: true,
+            startLevel: -1,
+            capLevelToPlayerSize: false,
+          })
+          hlsRef.current = hls
+          hls.loadSource(src)
+          hls.attachMedia(video)
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            hls.currentLevel = -1
+          })
+          hls.on(Hls.Events.ERROR, (_event, data) => {
+            if (data.fatal) {
+              console.warn('[CourseStreamVideo] HLS fatal error', data.type, data.details)
+              if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                hls.startLoad()
+              } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                hls.recoverMediaError()
+              }
+            }
+          })
+          return () => {
+            hls.destroy()
+            hlsRef.current = null
           }
         }
-      })
-      return () => {
-        hls.destroy()
-        hlsRef.current = null
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = src
+          return undefined
+        }
       }
-    }
 
-    if (useHls && video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = src
       return undefined
     }
 
-    video.src = src
-    return undefined
+    let cleanup
+    setup()
+      .then((fn) => {
+        cleanup = fn
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+      cleanup?.()
+    }
   }, [src])
 
   return (

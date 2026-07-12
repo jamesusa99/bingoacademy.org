@@ -1,4 +1,5 @@
 import { PRODUCT_LINES } from './products'
+import { SITE_BRAND } from './siteSeo'
 
 /** Hero carousel — aligned with bingoacademy.cn: courses + authoritative competitions */
 export const PORTAL_BANNER_SLIDES = [
@@ -6,7 +7,7 @@ export const PORTAL_BANNER_SLIDES = [
     id: 'brand',
     gradient: 'from-primary/30 via-cyan-50 to-sky-100',
     icon: '🎓',
-    eyebrow: 'Bingo AI Academy',
+    eyebrow: SITE_BRAND,
     title: 'AI Courses + IOAI Competition Training',
     subtitle: 'IOAI whitelist training, hands-on labs, and competition-ready outcomes for students and teams.',
     ctaLabel: 'Explore Courses',
@@ -22,7 +23,7 @@ export const PORTAL_BANNER_SLIDES = [
     title: 'IOAI Whitelist Competition Training',
     subtitle: 'Video lessons, training camps, and sprint coaching for whitelist-format AI innovation competitions.',
     ctaLabel: 'IOAI Training',
-    href: '/courses?line=ioai',
+    href: '/courses/ioai',
     secondaryLabel: 'Certification',
     secondaryHref: '/cert',
   },
@@ -34,7 +35,7 @@ export const PORTAL_BANNER_SLIDES = [
     title: 'Build AI Literacy at Your Own Pace',
     subtitle: 'Structured courses, cloud labs, and home experiment materials packs for families and independent learners.',
     ctaLabel: 'Self-Study Courses',
-    href: '/courses?line=general',
+    href: '/courses/foundations',
     secondaryLabel: 'AI Mall',
     secondaryHref: '/mall',
   },
@@ -46,7 +47,7 @@ export const PORTAL_BANNER_SLIDES = [
     title: 'Complete AI Classroom for Schools',
     subtitle: 'Textbooks, teacher course packs, online/offline labs, and offline lab kits — one partner for campus rollout.',
     ctaLabel: 'School Edition',
-    href: '/courses?line=k12',
+    href: '/courses/k12',
     secondaryLabel: 'Contact Us',
     secondaryHref: '/profile',
   },
@@ -78,7 +79,7 @@ export const PORTAL_MISSION = {
 /** Core entry grid — mirrors classic bingoacademy.cn homepage business tiles */
 export const PORTAL_CORE_ENTRIES = [
   { icon: '🧠', title: 'Assessment', desc: 'Quick AI placement · matched course path', to: '/assessment', accent: 'violet' },
-  { icon: '🏆', title: 'IOAI Competition Training', desc: 'Whitelist prep · video courses & training camps open', to: '/courses?line=ioai', accent: 'amber' },
+  { icon: '🏆', title: 'IOAI Competition Training', desc: 'Whitelist prep · video courses & training camps open', to: '/courses/ioai', accent: 'amber' },
   { icon: '🧪', title: 'Labs & kits', desc: 'Online labs & physical kits by program', to: '/labs', accent: 'cyan' },
   { icon: '🧭', title: 'AI Exploration', desc: 'Free browser games — no sign-up', to: '/exploration', accent: 'violet' },
   { icon: '🏅', title: 'Achievements', desc: 'Student portfolio · awards & admissions', to: '/showcase', accent: 'rose' },
@@ -98,14 +99,14 @@ export const PORTAL_COMPETITIONS = [
     icon: '🏆',
     name: 'IOAI Whitelist Track',
     desc: 'Official-style AI innovation competition preparation with video + lab bundles.',
-    to: '/courses?line=ioai',
+    to: '/courses/ioai',
     tag: 'Featured',
   },
   {
     icon: '🤖',
     name: 'AIGC Innovation Events',
     desc: 'Generative-AI project builds aligned to youth competition rubrics.',
-    to: '/courses?line=ioai',
+    to: '/courses/ioai',
     tag: 'Hot',
   },
   {

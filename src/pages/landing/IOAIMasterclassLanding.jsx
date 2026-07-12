@@ -162,7 +162,7 @@ export default function IOAIMasterclassLanding() {
               ) : null}
 
               <Link
-                to="/courses?line=ioai"
+                to="/courses/ioai"
                 className="block text-center text-xs text-primary hover:underline mt-4"
               >
                 {copy.purchase.fullTrackCta}

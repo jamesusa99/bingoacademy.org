@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import PageMeta from '../components/PageMeta'
 import PageContent from '../components/PageContent'
+import NotFound from './NotFound'
 import { NEWS_CATEGORIES } from '../config/newsArticles'
 import { SITE_URL } from '../config/siteSeo'
 import { fetchNewsArticleBySlug } from '../lib/newsArticlesApi'
+import { getInstructor } from '../config/trust/instructors'
+import {
+  buildGraph,
+  newsArticleEntity,
+  personEntity,
+  breadcrumbEntity,
+} from '../config/structuredData'
 
 function formatDate(iso) {
   try {
@@ -48,11 +56,31 @@ export default function NewsArticle() {
   }
 
   if (notFound || !article) {
-    return <Navigate to="/news" replace />
+    return <NotFound status={404} />
   }
 
   const cat = NEWS_CATEGORIES.find((c) => c.id === article.category)
   const keywords = article.keywords?.join(', ') || ''
+  const articlePath = `/news/${article.slug}`
+  const breadcrumbs = [
+    { label: 'Home', href: '/' },
+    { label: 'News', href: '/news' },
+    { label: article.title },
+  ]
+  const authorInstructor = article.authorSlug ? getInstructor(article.authorSlug) : null
+  const jsonLd = buildGraph(
+    newsArticleEntity(article, articlePath),
+    breadcrumbEntity(breadcrumbs, articlePath),
+    authorInstructor
+      ? personEntity({
+          slug: authorInstructor.slug,
+          name: authorInstructor.name,
+          title: authorInstructor.title,
+          image: authorInstructor.photo,
+          description: authorInstructor.bio,
+        })
+      : null
+  )
 
   return (
     <div className="w-full">
@@ -63,17 +91,9 @@ export default function NewsArticle() {
         ogTitle={article.title}
         ogDescription={article.excerpt}
         ogImage={article.ogImage || undefined}
-        ogUrl={`${SITE_URL}/news/${article.slug}`}
+        ogUrl={`${SITE_URL}${articlePath}`}
         ogType="article"
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@type': 'NewsArticle',
-          headline: article.title,
-          description: article.excerpt,
-          datePublished: article.date,
-          author: { '@type': 'Organization', name: 'BingoAcademy' },
-          publisher: { '@type': 'Organization', name: 'BingoAcademy', url: SITE_URL },
-        }}
+        jsonLd={jsonLd}
       />
 
       <PageContent className="py-10 sm:py-14">
@@ -87,6 +107,12 @@ export default function NewsArticle() {
           <header className="mb-8">
             <div className="flex items-center gap-2 mb-3 text-xs text-slate-500">
               <time dateTime={article.date}>{formatDate(article.date)}</time>
+              {article.updatedAt && article.updatedAt !== article.date ? (
+                <>
+                  <span aria-hidden>·</span>
+                  <span>Updated {formatDate(article.updatedAt)}</span>
+                </>
+              ) : null}
               {cat ? (
                 <>
                   <span aria-hidden>·</span>

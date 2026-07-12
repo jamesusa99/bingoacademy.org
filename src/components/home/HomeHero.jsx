@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { lazy, Suspense, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { programPath } from '../../config/programs'
@@ -8,9 +8,10 @@ import { adaptiveCountGridClass } from '../../config/productLineVisibility'
 import { useHomeHeroPrograms } from '../../hooks/useHomeHeroPrograms'
 import { useHomeHeroVideo } from '../../hooks/useHomeHeroVideo'
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
-import HomeUserEntry from './HomeUserEntry'
-import HomeIoaiStagePackages from './HomeIoaiStagePackages'
 import HomeHeroVideoBackdrop from './HomeHeroVideoBackdrop'
+
+const HomeIoaiStagePackages = lazy(() => import('./HomeIoaiStagePackages'))
+const HomeUserEntry = lazy(() => import('./HomeUserEntry'))
 
 function PathCard({ program, coverUrl = '' }) {
   const accent =
@@ -34,6 +35,10 @@ function PathCard({ program, coverUrl = '' }) {
           <img
             src={coverUrl.trim()}
             alt=""
+            width={500}
+            height={300}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           />
         </div>
@@ -123,10 +128,14 @@ export default function HomeHero() {
             </div>
           ) : null}
 
-          <HomeIoaiStagePackages />
+          <Suspense fallback={null}>
+            <HomeIoaiStagePackages />
+          </Suspense>
 
           <div className="mt-8 sm:mt-10">
-            <HomeUserEntry />
+            <Suspense fallback={null}>
+              <HomeUserEntry />
+            </Suspense>
           </div>
         </div>
       </div>

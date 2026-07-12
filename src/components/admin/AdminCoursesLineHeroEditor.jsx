@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminAlert from './AdminAlert'
 import AdminField from './AdminField'
+import { coursePathForLineId } from '../../config/coursePaths'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
 import { defaultCoursesLineHero, coursesLineHeroKey } from '../../config/coursesLineHero'
 import { upsertPlatformSetting } from '../../lib/platformSettings'
@@ -24,8 +25,8 @@ export default function AdminCoursesLineHeroEditor({ lineId, labels }) {
   const settingKey = coursesLineHeroKey(lineId)
   const previewHref =
     lineId === 'ioai'
-      ? '/courses?line=ioai'
-      : `/courses?line=${lineId}&sub=${VIDEO_COURSE_SUB_BY_LINE[lineId] || 'course'}`
+      ? '/courses/ioai'
+      : coursePathForLineId(lineId, VIDEO_COURSE_SUB_BY_LINE[lineId] || 'course')
 
   const [form, setForm] = useState(defaults)
   const [loading, setLoading] = useState(true)

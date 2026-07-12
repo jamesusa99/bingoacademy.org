@@ -6,7 +6,7 @@ import { LABS_STOREFRONT_VISIBLE } from '../../config/labsStorefront'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
 import { filterAndSortCourses, paginateCourses } from '../../lib/courseListUtils'
 import { useCourseFilters } from '../../hooks/useCourseFilters'
-import { COURSES_PORTAL } from '../../config/coursesPortal'
+import { coursePathForLineId } from '../../config/coursePaths'
 import { usePurchasedCourses } from '../../hooks/usePurchasedCourses'
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
 import CoursesHero from './CoursesHero'
@@ -58,7 +58,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
             {COURSES_PORTAL.backToCourses}
           </Link>
           <span className="text-slate-600">/</span>
-          <Link to={`/courses?line=${line.id}`} className="text-slate-400 hover:text-white transition">
+          <Link to={coursePathForLineId(line.id)} className="text-slate-400 hover:text-white transition">
             {line.name}
           </Link>
           <span className="text-slate-600">/</span>
@@ -72,7 +72,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
           {visibleProductLines.map((pl) => (
             <Link
               key={pl.id}
-              to={`/courses?line=${pl.id}&sub=${VIDEO_COURSE_SUB_BY_LINE[pl.id] || subId}`}
+              to={coursePathForLineId(pl.id, VIDEO_COURSE_SUB_BY_LINE[pl.id] || subId)}
               className={`px-3 py-2 rounded-lg text-xs font-semibold transition shrink-0 min-h-[36px] inline-flex items-center ${
                 line.id === pl.id
                   ? 'bg-cyan-500 text-white shadow'
@@ -86,7 +86,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
 
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
           <Link
-            to={`/courses?line=${line.id}`}
+            to={coursePathForLineId(line.id)}
             className="px-3 py-2 rounded-lg text-xs font-medium shrink-0 min-h-[40px] inline-flex items-center bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-500"
           >
             {COURSES_PORTAL.allTypes}
@@ -105,7 +105,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
             ) : (
               <Link
                 key={s.id}
-                to={`/courses?line=${line.id}&sub=${s.id}`}
+                to={coursePathForLineId(line.id, s.id)}
                 className={`px-3 py-2 rounded-lg text-xs font-medium shrink-0 min-h-[40px] inline-flex items-center transition ${
                   subId === s.id
                     ? 'bg-white text-slate-900'
@@ -122,7 +122,7 @@ export default function CourseListView({ line, subId, courses = [], curriculumSu
 
         <div className="flex flex-wrap gap-3 mb-4">
           <Link
-            to={`/courses?line=${line.id}`}
+            to={coursePathForLineId(line.id)}
             className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition"
           >
             🎬 {COURSES_PORTAL.ioaiModulesTitle}

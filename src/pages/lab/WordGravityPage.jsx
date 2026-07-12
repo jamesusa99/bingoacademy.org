@@ -1,6 +1,10 @@
 import WordGravityField from '../../components/lab/WordGravityField'
+import ExplorationLabShell from '../../components/lab/ExplorationLabShell'
 
-/** Standalone route for Word Gravity Field (Matter.js NLP lab) */
 export default function WordGravityPage() {
-  return <WordGravityField />
+  return (
+    <ExplorationLabShell experimentId="word-gravity">
+      <WordGravityField />
+    </ExplorationLabShell>
+  )
 }

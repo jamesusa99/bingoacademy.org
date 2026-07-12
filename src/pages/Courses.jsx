@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Link, useSearchParams, Navigate } from 'react-router-dom'
+import { Link, useSearchParams, Navigate, useParams, useNavigate } from 'react-router-dom'
 import {
   getProductLine,
   subcategoryLabel,
@@ -17,12 +17,21 @@ import CourseListView from '../components/courses/CourseListView'
 import ProgramCoursesModuleView from '../components/courses/ProgramCoursesModuleView'
 import PageMeta from '../components/PageMeta'
 import { ProgramBadge, ModuleBadge, UseCaseTag } from '../components/courses/ProgramBadges'
-import { PAGE_SEO } from '../config/programs'
+import {
+  coursePathForLineId,
+  coursesSeoForRoute,
+  courseLineHasSecondaryFilters,
+  resolveCoursesLegacyRedirect,
+  lineIdFromCourseSlug,
+  isValidCourseSub,
+} from '../config/coursePaths'
+import { SITE_URL } from '../config/siteSeo'
 import { isProductLabSub, labsPath } from '../config/productLabs'
 import { LABS_STOREFRONT_VISIBLE } from '../config/labsStorefront'
 import { usePurchasedCourses } from '../hooks/usePurchasedCourses'
 import CoursePurchaseButton from '../components/courses/CoursePurchaseButton'
 import { useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
+import NotFound from './NotFound'
 
 function CourseCard({ item, purchase }) {
   const soon = isCourseComingSoon(item)
@@ -97,18 +106,32 @@ function CourseCard({ item, purchase }) {
   )
 }
 
+function CoursesPageMeta({ hub, lineSlug, subId, hasSecondaryFilters }) {
+  const seo = coursesSeoForRoute({ hub, lineSlug, subSlug: subId })
+  return (
+    <PageMeta
+      title={seo.title}
+      description={seo.description}
+      canonical={`${SITE_URL}${seo.canonical}`}
+      noindex={hasSecondaryFilters}
+    />
+  )
+}
+
 export default function Courses() {
-  const [params, setParams] = useSearchParams()
+  const { lineSlug: lineSlugParam, subSlug: subSlugParam } = useParams()
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
   const { visibleProductLines, isLineVisible, defaultLineId } = useProductLineVisibility()
-  const lineId = params.get('line') || defaultLineId
-  const subId = params.get('sub') || ''
 
-  if (!isLineVisible(lineId)) {
-    return <Navigate to={`/courses?line=${defaultLineId}`} replace />
-  }
-
+  const isHub = !lineSlugParam
+  const resolvedLineId = isHub ? defaultLineId : lineIdFromCourseSlug(lineSlugParam)
+  const lineId = resolvedLineId || defaultLineId
+  const subId = subSlugParam || ''
   const line = getProductLine(lineId)
+  const hasSecondaryFilters = !isHub && courseLineHasSecondaryFilters(params)
   const videoListMode = isVideoCoursesSub(line.id, subId)
+
   const { courses, loading: catalogLoading } = useCourseCatalog()
   const curriculumLine = isCurriculumLine(line.id) ? line.id : null
   const { summary: curriculumSummary } = useProgramCurriculum(videoListMode ? curriculumLine : null)
@@ -120,16 +143,20 @@ export default function Courses() {
     return list
   }, [courses, line.id, subId])
 
-  const bannerSlides = visibleProductLines.map((pl) => ({
-    id: pl.id,
-    gradient: pl.gradient,
-    icon: pl.icon,
-    eyebrow: COURSES_PORTAL.bannerEyebrow,
-    title: pl.name,
-    subtitle: pl.tagline,
-    ctaLabel: COURSES_PORTAL.browseCourses,
-    href: `/courses?line=${pl.id}`,
-  }))
+  const bannerSlides = useMemo(
+    () =>
+      visibleProductLines.map((pl) => ({
+        id: pl.id,
+        gradient: pl.gradient,
+        icon: pl.icon,
+        eyebrow: COURSES_PORTAL.bannerEyebrow,
+        title: pl.name,
+        subtitle: pl.tagline,
+        ctaLabel: COURSES_PORTAL.browseCourses,
+        href: coursePathForLineId(pl.id),
+      })),
+    [visibleProductLines]
+  )
 
   const subCounts = useMemo(() => {
     const counts = {}
@@ -143,20 +170,51 @@ export default function Courses() {
     return counts
   }, [courses, line.id, line.subcategories])
 
-  const videoSubId = VIDEO_COURSE_SUB_BY_LINE[line.id]
-  const curriculumHref = `/courses?line=${line.id}`
+  const legacyTarget = resolveCoursesLegacyRedirect(params)
+  if (legacyTarget) {
+    return <Navigate to={legacyTarget} replace />
+  }
 
-  if (subId && isProductLabSub(lineId, subId)) {
+  if (isHub) {
+    return <Navigate to={coursePathForLineId('ioai')} replace />
+  }
+
+  if (!resolvedLineId) {
+    return <NotFound />
+  }
+
+  if (!isHub && subId === 'module' && lineId === 'ioai') {
+    return <Navigate to={coursePathForLineId('ioai')} replace />
+  }
+
+  if (!isHub && !isLineVisible(lineId)) {
+    return <Navigate to={coursePathForLineId(defaultLineId)} replace />
+  }
+
+  if (!isHub && subId && isProductLabSub(lineId, subId)) {
     return <Navigate to={labsPath(lineId, subId)} replace />
   }
 
+  if (!isHub && subId && !isValidCourseSub(lineId, subId)) {
+    return <NotFound />
+  }
+
+  const videoSubId = VIDEO_COURSE_SUB_BY_LINE[line.id]
+  const curriculumHref = coursePathForLineId(line.id)
+
   const programModuleView =
-    isCurriculumLine(lineId) &&
-    (!subId || subId === videoSubId || (lineId === 'ioai' && subId === 'module'))
+    lineId === 'ioai' &&
+    (!subId || subId === videoSubId || subId === 'module')
 
   if (programModuleView) {
     return (
       <>
+        <CoursesPageMeta
+          hub={false}
+          lineSlug={lineSlugParam}
+          subId={subId}
+          hasSecondaryFilters={hasSecondaryFilters}
+        />
         <ProgramCoursesModuleView line={line} />
         <PageContent className="py-8">
           <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
@@ -176,7 +234,12 @@ export default function Courses() {
   if (videoListMode) {
     return (
       <div className="w-full">
-        <PageMeta title={PAGE_SEO.courses.title} description={PAGE_SEO.courses.description} />
+        <CoursesPageMeta
+          hub={isHub}
+          lineSlug={lineSlugParam}
+          subId={subId}
+          hasSecondaryFilters={hasSecondaryFilters}
+        />
         {catalogLoading ? (
           <div className="courses-page-dark py-16 text-center text-slate-400 text-sm">Loading courses…</div>
         ) : (
@@ -199,7 +262,12 @@ export default function Courses() {
 
   return (
     <div className="w-full">
-      <PageMeta title={PAGE_SEO.courses.title} description={PAGE_SEO.courses.description} />
+      <CoursesPageMeta
+        hub={isHub}
+        lineSlug={lineSlugParam}
+        subId={subId}
+        hasSecondaryFilters={hasSecondaryFilters}
+      />
       <PageBanner slides={bannerSlides} autoPlayMs={8000} />
 
       <PageContent className="py-6 sm:py-8">
@@ -212,7 +280,7 @@ export default function Courses() {
           </Link>
           {videoSubId ? (
             <Link
-              to={`/courses?line=${line.id}&sub=${videoSubId}`}
+              to={coursePathForLineId(line.id, videoSubId)}
               className="text-xs font-semibold px-3 py-2 rounded-full bg-indigo-100 text-indigo-900 hover:bg-indigo-200 transition"
             >
               📺 {line.id === 'ioai' ? COURSES_PORTAL.ioaiModulesTitle : COURSES_PORTAL.videoCoursesChip}
@@ -248,7 +316,7 @@ export default function Courses() {
             <button
               key={pl.id}
               type="button"
-              onClick={() => setParams({ line: pl.id })}
+              onClick={() => navigate(coursePathForLineId(pl.id))}
               className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition shrink-0 min-h-[44px] ${
                 line.id === pl.id ? 'bg-primary text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
@@ -272,7 +340,7 @@ export default function Courses() {
         >
           <button
             type="button"
-            onClick={() => setParams({ line: line.id })}
+            onClick={() => navigate(coursePathForLineId(line.id))}
             className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] ${
               !subId ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
@@ -296,7 +364,7 @@ export default function Courses() {
               <button
                 key={s.id}
                 type="button"
-                onClick={() => setParams({ line: line.id, sub: s.id })}
+                onClick={() => navigate(coursePathForLineId(line.id, s.id))}
                 className={`px-3 py-2 rounded-lg text-xs font-medium transition shrink-0 min-h-[40px] ${
                   subId === s.id ? 'bg-bingo-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
@@ -334,7 +402,7 @@ export default function Courses() {
                 <div key={s.id} className="card p-4 text-left hover:border-primary/40 hover:shadow-sm transition">
                   <button
                     type="button"
-                    onClick={() => setParams({ line: line.id, sub: s.id })}
+                    onClick={() => navigate(coursePathForLineId(line.id, s.id))}
                     className="w-full text-left"
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -350,7 +418,7 @@ export default function Courses() {
                   </button>
                   {VIDEO_COURSE_SUB_BY_LINE[line.id] === s.id ? (
                     <Link
-                      to={`/courses?line=${line.id}`}
+                      to={coursePathForLineId(line.id)}
                       className="text-[10px] text-primary font-medium mt-2 inline-block hover:underline"
                     >
                       Open course units →

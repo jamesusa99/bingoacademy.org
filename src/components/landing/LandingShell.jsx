@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import FooterCompliance from '../layout/FooterCompliance'
+import { SITE_BRAND } from '../../config/siteSeo'
 
 /**
  * Minimal chrome for paid/organic landing pages — logo only, no main nav distraction.
@@ -18,7 +19,7 @@ export default function LandingShell({ children, variant = 'dark', className = '
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <Link to="/" className="inline-flex items-center gap-2 shrink-0">
-            <img src="/logo.png" alt="Bingo AI Academy" className="h-8 w-auto opacity-90" width={895} height={209} />
+            <img src="/logo.png" alt={SITE_BRAND} className="h-8 w-auto opacity-90" width={895} height={209} />
           </Link>
           <Link
             to="/privacy"
@@ -36,7 +37,7 @@ export default function LandingShell({ children, variant = 'dark', className = '
           <FooterCompliance />
         ) : (
           <div className="px-4 py-6 text-center text-xs text-slate-500">
-            © {new Date().getFullYear()} Bingo AI Academy ·{' '}
+            © {new Date().getFullYear()} {SITE_BRAND} ·{' '}
             <Link to="/privacy" className="text-primary hover:underline">
               Privacy Policy
             </Link>

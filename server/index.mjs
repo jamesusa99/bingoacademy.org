@@ -6,6 +6,8 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { handleChatRequest } from '../lib/guardChat.js'
 import { createApiApp } from './createApiApp.mjs'
+import { createSpaHandler } from './lib/seo/spaHandler.mjs'
+import { createEarlyRouteMiddleware } from './lib/seo/earlyRoute.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.PORT) || 8787
@@ -45,10 +47,9 @@ app.post('/api/chat', async (req, res) => {
 })
 
 if (hasDist) {
-  app.use(express.static(distPath, { index: false }))
-  app.get(/^(?!\/api\/).*/, (_req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'))
-  })
+  app.use(createEarlyRouteMiddleware())
+  app.use(express.static(distPath, { index: false, redirect: false }))
+  app.get(/^(?!\/api\/).*/, createSpaHandler(distPath))
 }
 
 const server = app.listen(PORT, () => {

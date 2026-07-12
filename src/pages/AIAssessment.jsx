@@ -9,6 +9,7 @@ import {
   formatPriceLabel,
 } from '../config/assessmentCatalog'
 import { loadAssessmentRecords, clearAssessmentRecords } from '../lib/assessmentRecords'
+import { getAttribution, trackConversion } from '../lib/analytics'
 
 function AssessmentPaperCard({ paper, onStart, onShare }) {
   const price = formatPriceLabel(paper)
@@ -162,7 +163,18 @@ export default function AIAssessment() {
     }
   }, [paperParam])
 
+  useEffect(() => {
+    const landing = getAttribution().firstTouch?.landingPath || ''
+    if (
+      /\/programs\/k12|\/guides\/k12|\/courses\/k12|school/i.test(landing) ||
+      /utm_campaign=.*school/i.test(window.location.search)
+    ) {
+      trackConversion('demo_intent', { entry: 'assessment_center' })
+    }
+  }, [])
+
   const startAssessment = (id) => {
+    trackConversion('assessment_start', { assessment_id: id })
     setActivePaperId(id)
     setSearchParams({ paper: id }, { replace: true })
   }

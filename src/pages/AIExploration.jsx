@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import PageBanner from '../components/PageBanner'
 import PageContent from '../components/PageContent'
 import PageMeta from '../components/PageMeta'
@@ -19,10 +20,6 @@ function scrollToExperiments() {
   document.getElementById('experiments')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-function scrollToLearningLoop() {
-  document.getElementById('learning-loop')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
 function loadBadges() {
   try {
     const raw = localStorage.getItem(BADGE_STORAGE_KEY)
@@ -35,10 +32,6 @@ function loadBadges() {
 export default function AIExploration() {
   const [badges, setBadges] = useState(loadBadges)
   const [activeCategory, setActiveCategory] = useState('all')
-
-  useEffect(() => {
-    setBadges(loadBadges())
-  }, [])
 
   const filteredExperiments = useMemo(() => {
     if (activeCategory === 'all') return EXPLORATION_EXPERIMENTS
@@ -63,7 +56,7 @@ export default function AIExploration() {
             eyebrow: 'AI Exploration',
             title: 'Free Browser Games — Play to Understand AI',
             subtitle:
-              'Six gamified experiments in computer vision, NLP, and machine learning. No sign-up, no course enrollment — completely separate from product labs and kits.',
+              `${EXPLORATION_EXPERIMENTS.length} gamified experiments in computer vision, NLP, and machine learning. No sign-up, no course enrollment — completely separate from product labs and kits.`,
             wideSubtitle: true,
             ctaLabel: 'Play AI Cyber Tennis',
             href: '/exploration/cyber-tennis',
@@ -168,6 +161,17 @@ export default function AIExploration() {
               ))}
             </div>
           )}
+        </section>
+
+        <section className="mb-12 card p-6 border-primary/20 bg-primary/5">
+          <h2 className="font-bold text-bingo-dark mb-2">Lab knowledge base</h2>
+          <p className="text-sm text-slate-600 leading-relaxed mb-4">
+            Each experiment includes learning goals, steps, expected results, common errors, and safety notes — crawlable
+            content for students and generative search, not just a play button.
+          </p>
+          <Link to="/guides" className="text-sm font-semibold text-primary hover:underline">
+            See all knowledge guides (parents, IOAI, schools) →
+          </Link>
         </section>
 
         <section

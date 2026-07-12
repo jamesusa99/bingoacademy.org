@@ -1,5 +1,10 @@
 import AIVirtualConductor from '../../components/lab/AIVirtualConductor'
+import ExplorationLabShell from '../../components/lab/ExplorationLabShell'
 
 export default function AIVirtualConductorPage() {
-  return <AIVirtualConductor />
+  return (
+    <ExplorationLabShell experimentId="statue-conductor">
+      <AIVirtualConductor />
+    </ExplorationLabShell>
+  )
 }

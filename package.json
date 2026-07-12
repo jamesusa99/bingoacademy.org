@@ -11,7 +11,9 @@
     "dev": "concurrently -k -n web,api -c cyan,green \"npm run dev:web\" \"npm run dev:api\"",
     "dev:web": "vite",
     "dev:api": "API_SERVE_STATIC=0 node server/index.mjs",
-    "build": "vite build",
+    "build": "vite build && node scripts/check-bundle-budget.mjs && node scripts/prerender-seo.mjs",
+    "measure:sitemap": "node scripts/measurement/sitemap-index-count.mjs",
+    "measure:geo-export": "node scripts/measurement/export-geo-questions.mjs",
     "start": "node server/index.mjs",
     "seed": "node scripts/seed-supabase.mjs",
     "seed:ioai": "node scripts/seed-ioai-catalog.mjs",
@@ -57,6 +59,7 @@
     "remark-gfm": "^4.0.1",
     "stripe": "^22.1.1",
     "tus-js-client": "^4.3.1",
+    "web-vitals": "^4.2.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import PageMeta from '../components/PageMeta'
 import { signUpWithEmail, signInWithGoogle, formatAuthError } from '../lib/auth'
+import { trackConversion } from '../lib/analytics'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { safeRedirectPath, authLink, storePostLoginRedirect } from '../lib/authRedirect'
@@ -51,9 +53,12 @@ export default function Register() {
     }
 
     if (data.session) {
+      trackConversion('register', { method: 'email' })
       navigate(redirectTo, { replace: true })
       return
     }
+
+    trackConversion('register', { method: 'email', pending_confirmation: true })
 
     setSuccess(
       'Account created. Check your email for a confirmation link if required, then sign in.'
@@ -81,6 +86,7 @@ export default function Register() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
+      <PageMeta title="Register | BingoAcademy" noindex />
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Register</h1>
       <p className="text-slate-600 mb-8">
         Create an account with email or Google to save progress, enroll in courses, and join the community.

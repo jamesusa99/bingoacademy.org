@@ -37,6 +37,7 @@ export default function IOAIModuleLessonList({
   canPurchase = true,
   comingSoon = false,
   studyMode = false,
+  anchorPrefix = 'lesson',
 }) {
   const unlockedCount = useMemo(
     () =>
@@ -90,7 +91,11 @@ export default function IOAIModuleLessonList({
             : `/courses/detail/${encodeURIComponent(lessonSlug)}?from=ioai&play=1`
 
           return (
-            <article key={lessonSlug} className={canWatch ? '' : 'bg-slate-50/60'}>
+            <article
+              key={lessonSlug}
+              id={`${anchorPrefix}-${lesson.catalogSlug || lessonSlug}`}
+              className={`scroll-mt-24 ${canWatch ? '' : 'bg-slate-50/60'}`}
+            >
               <button
                 type="button"
                 onClick={() => setExpandedId(expanded ? null : lessonSlug)}

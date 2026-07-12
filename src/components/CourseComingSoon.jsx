@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { coursePathForLineId } from '../config/coursePaths'
 
 /**
  * Shown when self-study / classroom course is not yet on shelf.
@@ -26,14 +27,14 @@ export default function CourseComingSoon({ course, line }) {
         Now enrolling: <strong>IOAI video courses & training camps</strong>
       </p>
       <div className="flex flex-wrap gap-3 justify-center">
-        <Link to="/courses?line=ioai" className="btn-primary text-sm px-5 py-2.5">
+        <Link to="/courses/ioai" className="btn-primary text-sm px-5 py-2.5">
           View live IOAI courses
         </Link>
         <Link to="/exploration" className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-white">
           Try AI Exploration free
         </Link>
         <Link
-          to={`/courses?line=${line?.id ?? 'general'}`}
+          to={coursePathForLineId(line?.id ?? 'general')}
           className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-white"
         >
           Back to course list

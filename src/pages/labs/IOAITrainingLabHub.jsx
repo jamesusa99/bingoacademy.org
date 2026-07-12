@@ -25,7 +25,7 @@ export default function IOAITrainingLabHub() {
       <header className="border-b border-amber-500/20 bg-gradient-to-br from-slate-900 via-amber-950/30 to-slate-900">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
           <nav className="text-xs text-slate-400 mb-4 flex flex-wrap gap-2">
-            <Link to="/courses?line=ioai" className="hover:text-cyan-400">
+            <Link to="/courses/ioai" className="hover:text-cyan-400">
               IOAI Courses
             </Link>
             <span>/</span>

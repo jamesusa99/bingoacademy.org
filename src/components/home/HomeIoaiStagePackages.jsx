@@ -45,6 +45,10 @@ function HomeIoaiPackageCard({ pkg }) {
           <img
             src={pkg.coverUrl.trim()}
             alt=""
+            width={200}
+            height={150}
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (

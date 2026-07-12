@@ -87,7 +87,7 @@ export default function LabMaterialCourseDetail({
           <p className="text-sm text-slate-700 leading-relaxed">
             {COURSES_PORTAL.labMaterialIoaiAddonNote}
           </p>
-          <Link to="/courses?line=ioai" className="text-sm text-primary font-semibold hover:underline mt-2 inline-block">
+          <Link to="/courses/ioai" className="text-sm text-primary font-semibold hover:underline mt-2 inline-block">
             {COURSES_PORTAL.browseIoaiUnits} →
           </Link>
         </section>

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import RouteFallback from './RouteFallback'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useAdminAuth } from '../hooks/useAdminAuth'
@@ -157,7 +158,9 @@ export default function AdminLayout() {
       <main className="min-h-screen ml-60 overflow-auto">
         <div className="p-6">
           <AdminErrorBoundary>
-            <Outlet />
+            <Suspense fallback={<RouteFallback />}>
+              <Outlet />
+            </Suspense>
           </AdminErrorBoundary>
         </div>
       </main>

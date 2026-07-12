@@ -1,5 +1,7 @@
 import { PRODUCT_LINES } from './products'
+import { SITE_BRAND, ORG_JSON_LD } from './siteSeo'
 import { isProductLabSub, labsPath } from './productLabs'
+import { courseLinePath } from './coursePaths'
 
 /** URL slug ↔ courses `line` query param */
 export const PROGRAM_SLUG_TO_LINE = {
@@ -27,9 +29,7 @@ export function programPath(slug) {
 }
 
 export function coursesPathForProgram(slug, sub) {
-  const line = lineFromProgramSlug(slug)
-  if (sub) return `/courses?line=${line}&sub=${sub}`
-  return `/courses?line=${line}`
+  return courseLinePath(slug, sub || undefined)
 }
 
 /** Hero path cards + program landing copy */
@@ -83,7 +83,7 @@ export const PROGRAMS = [
     audience: 'For schools & educators',
     cta: 'Request Demo',
     ctaSecondary: 'View school modules',
-    secondaryHref: '/courses?line=k12',
+    secondaryHref: '/courses/k12',
     heroHeadline: 'Complete AI classroom for schools',
     heroBody:
       'Textbooks, teacher packs, online and offline labs, and bulk kits — one partner for campus rollout.',
@@ -136,56 +136,45 @@ export const COMPARISON_ROWS = [
 
 export const PAGE_SEO = {
   home: {
-    title: 'AI Courses for Kids & Teens | K-12 AI Education Platform | BingoAcademy',
-    description:
-      'Discover AI courses, competitions and hands-on learning programs for K-12 students. BingoAcademy helps children and teens learn artificial intelligence through projects, creativity and innovation, enabling them to participate in the IOAI competition.',
+    title: `AI Courses for Kids & Teens | K-12 AI Education Platform | ${SITE_BRAND}`,
+    description: `Discover AI courses, competitions and hands-on learning programs for K-12 students. ${SITE_BRAND} helps children and teens learn artificial intelligence through projects, creativity and innovation.`,
     keywords:
       'AI Education, AI Courses, AI for Kids, K12 AI Education, AI Curriculum, Artificial Intelligence for Students, AI Competitions, AI Literacy, STEM Education, AI Learning, IOAI, AI classes for kids, AI course for teens',
   },
   compare: {
-    title: 'Compare AI Programs — Foundations, IOAI & K12 | Bingo Academy',
-    description: 'See which Bingo Academy program fits your goal: self-study, competition training, or school deployment.',
+    title: `Compare AI Programs — Foundations, IOAI & K12 | ${SITE_BRAND}`,
+    description: `See which ${SITE_BRAND} program fits your goal: self-study, competition training, or school deployment.`,
   },
   exploration: {
-    title: 'AI Exploration Lab — Free Hands-On AI Experiments | Bingo Academy',
-    description: 'Try AI hands-on in the browser — free experiments in computer vision, NLP, and generative AI. No sign-up required.',
+    title: `AI Exploration Lab — Free Hands-On AI Experiments | ${SITE_BRAND}`,
+    description:
+      'Try AI hands-on in the browser — free experiments in computer vision, NLP, and generative AI. No sign-up required.',
   },
   foundations: {
-    title: 'Foundations of AI Program — Self-Paced AI Learning | Bingo Academy',
-    description: 'Self-paced AI literacy courses, online labs, and home experiment kits for independent learners.',
+    title: `Foundations of AI Program — Self-Paced AI Learning | ${SITE_BRAND}`,
+    description:
+      'Self-paced AI literacy courses, online labs, and home experiment kits for independent learners.',
   },
   ioai: {
-    title: 'IOAI Competition Training — AI Olympiad Prep | Bingo Academy',
-    description: 'IOAI whitelist competition training — video courses, training camps, and mock assessments.',
+    title: `IOAI Competition Training — AI Olympiad Prep | ${SITE_BRAND}`,
+    description:
+      'IOAI whitelist competition training — video courses, training camps, and mock assessments.',
   },
   k12: {
-    title: 'K12 AI Classroom Edition — Complete School Solution | Bingo Academy',
-    description: 'Textbooks, classroom video courses, online/offline labs, and school kits for K12 institutions.',
+    title: `K12 AI Classroom Edition — Complete School Solution | ${SITE_BRAND}`,
+    description:
+      'Textbooks, classroom video courses, online/offline labs, and school kits for K12 institutions.',
   },
   courses: {
-    title: 'IOAI Competition Training — AI Courses | Bingo Academy',
-    description: 'IOAI competition training — video courses, training labs, mock assessments, and Olympiad prep for students.',
+    title: `AI Courses for Kids & Teens — IOAI, Foundations & K12 | ${SITE_BRAND}`,
+    description:
+      'Browse AI video courses, training labs, and classroom programs across IOAI competition, Foundations, and K12 school editions.',
   },
   lab: {
-    title: 'AI Exploration Lab — Free Hands-On AI Experiments | Bingo Academy',
-    description: 'Gamified in-browser AI experiments — play to understand machine learning. Free, no enrollment required.',
+    title: `AI Labs & Experiment Kits — Hands-On Learning | ${SITE_BRAND}`,
+    description:
+      'Gamified in-browser AI experiments and structured lab packs — learn machine learning by doing.',
   },
 }
 
-export const ORG_JSON_LD = {
-  '@context': 'https://schema.org',
-  '@type': 'EducationalOrganization',
-  name: 'Bingo Academy',
-  url: 'https://www.bingoacademy.org',
-  description: 'IOAI competition training and AI Olympiad prep for K-12 students',
-  hasOfferCatalog: {
-    '@type': 'OfferCatalog',
-    name: 'IOAI Competition Training',
-    itemListElement: PROGRAMS.filter((p) => p.lineId === 'ioai').map((p) => ({
-      '@type': 'Course',
-      name: p.shortTitle,
-      description: p.heroBody,
-      url: `https://www.bingoacademy.org${programPath(p.slug)}`,
-    })),
-  },
-}
+export { ORG_JSON_LD }

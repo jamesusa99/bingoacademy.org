@@ -34,16 +34,16 @@ export const MALL_PAGE_DEFAULT = {
     },
     ioai: {
       header: tabHeader('🏆', 'IOAI Competition Training', 'Video courses and training camps for whitelist competition preparation.', 'bg-amber-50/30 border-amber-200/60'),
-      footerLink: { text: 'View IOAI courses →', href: '/courses?line=ioai' },
+      footerLink: { text: 'View IOAI courses →', href: '/courses/ioai' },
     },
     general: {
       header: tabHeader('🌐', 'Foundations of AI Program', 'AI literacy courses, online experiments, and home materials packs.', 'bg-cyan-50/50 border-cyan-200/60'),
-      footerLink: { text: 'View all general courses →', href: '/courses?line=general' },
+      footerLink: { text: 'View all general courses →', href: '/courses/foundations' },
       materialPreviewCount: 2,
     },
     k12: {
       header: tabHeader('🏫', 'K12 Classroom School Edition', 'Books, classroom courses, online/offline labs, and school experiment kits.', 'bg-violet-50/30 border-violet-200/60'),
-      footerLink: { text: 'View K12 classroom products →', href: '/courses?line=k12' },
+      footerLink: { text: 'View K12 classroom products →', href: '/courses/k12' },
     },
     cert: {
       header: tabHeader('📜', 'Certification Products', 'Learner and teacher certification products. Dual-endorsed, nationally verifiable. Admissions-referenced at top tiers.', 'bg-primary/5 border-primary/20'),

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import PageMeta from '../components/PageMeta'
 import { signInWithEmail, signInWithGoogle, formatAuthError } from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
@@ -78,6 +79,7 @@ export default function Login() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
+      <PageMeta title="Login | BingoAcademy" noindex />
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Login</h1>
       <p className="text-slate-600 mb-6">
         Sign in with email or Google to access courses, your profile, and saved progress.

@@ -60,7 +60,7 @@ export default function CoursePurchasePanel({
       isAuthenticated,
       navigate,
       setCheckoutLoading,
-      returnPath: isIOAITrackPage ? `/courses/detail/${IOAI_TRACK_ID}` : `/courses?line=ioai`,
+      returnPath: isIOAITrackPage ? `/courses/detail/${IOAI_TRACK_ID}` : `/courses/ioai`,
       onDemoUnlock: { bundle: onUnlockTrack },
     })
   }
@@ -77,7 +77,7 @@ export default function CoursePurchasePanel({
             {COURSES_PORTAL.continueLearning}
           </Link>
           {isIOAIContext ? (
-            <Link to="/courses?line=ioai" className="text-sm px-4 py-2 rounded-lg border border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/10">
+            <Link to="/courses/ioai" className="text-sm px-4 py-2 rounded-lg border border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/10">
               {COURSES_PORTAL.viewFullTrack}
             </Link>
           ) : null}
@@ -123,7 +123,7 @@ export default function CoursePurchasePanel({
       >
         <p className="text-sm font-semibold text-bingo-dark mb-1">{COURSES_PORTAL.contactSalesTitle}</p>
         <p className="text-xs text-slate-600 mb-4">{COURSES_PORTAL.notOnlinePurchase}</p>
-        <Link to="/courses?line=ioai" className="btn-primary text-sm px-4 py-2 inline-block mr-2">
+        <Link to="/courses/ioai" className="btn-primary text-sm px-4 py-2 inline-block mr-2">
           Browse IOAI courses
         </Link>
         <Link to="/contact" className="text-sm text-primary hover:underline">
@@ -157,7 +157,7 @@ export default function CoursePurchasePanel({
           </button>
           <CheckoutTrustMicrocopy variant="dark" className="mt-2" align="left" />
         </div>
-        <Link to="/courses?line=ioai" className="text-xs text-cyan-400 hover:underline">
+        <Link to="/courses/ioai" className="text-xs text-cyan-400 hover:underline">
           Or browse individual course units →
         </Link>
       </div>

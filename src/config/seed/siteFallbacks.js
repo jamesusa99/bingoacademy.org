@@ -17,7 +17,7 @@ export const HOME_TESTIMONIALS = [
 
 export const HOME_BANNER_SLIDES = [
   { id: 'brand', gradient: 'from-primary/30 via-cyan-50 to-sky-100', icon: '🎓', eyebrow: 'Bingo AI Academy', title: 'AI Courses + IOAI Competition Training', subtitle: 'IOAI whitelist training, hands-on labs, and competition-ready outcomes for students and teams.', ctaLabel: 'Explore Courses', href: '/courses', secondaryLabel: 'View Achievements', secondaryHref: '/showcase' },
-  { id: 'ioai', gradient: 'from-amber-500/20 via-orange-50 to-amber-50', icon: '🏆', eyebrow: 'Authoritative Competitions', title: 'IOAI Whitelist Competition Training', subtitle: 'Video lessons, training camps, and sprint coaching for whitelist-format AI innovation competitions.', ctaLabel: 'IOAI Training', href: '/courses?line=ioai', secondaryLabel: 'Certification', secondaryHref: '/cert' },
+  { id: 'ioai', gradient: 'from-amber-500/20 via-orange-50 to-amber-50', icon: '🏆', eyebrow: 'Authoritative Competitions', title: 'IOAI Whitelist Competition Training', subtitle: 'Video lessons, training camps, and sprint coaching for whitelist-format AI innovation competitions.', ctaLabel: 'IOAI Training', href: '/courses/ioai', secondaryLabel: 'Certification', secondaryHref: '/cert' },
 ]
 
 export const EVENT_LIST = [

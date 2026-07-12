@@ -1,5 +1,10 @@
 import AICyberTennis from '../../components/lab/AICyberTennis'
+import ExplorationLabShell from '../../components/lab/ExplorationLabShell'
 
 export default function AICyberTennisPage() {
-  return <AICyberTennis />
+  return (
+    <ExplorationLabShell experimentId="cyber-tennis">
+      <AICyberTennis />
+    </ExplorationLabShell>
+  )
 }

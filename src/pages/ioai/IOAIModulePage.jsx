@@ -10,7 +10,7 @@ export default function IOAIModulePage() {
   return (
     <IOAIModuleDetail
       catalogSlug={catalogSlug}
-      backHref="/courses?line=ioai"
+      backHref="/courses/ioai"
       backLabel={COURSES_PORTAL.backToCourses}
     />
   )

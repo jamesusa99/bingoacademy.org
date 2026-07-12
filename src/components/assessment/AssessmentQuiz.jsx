@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getQuestionsForPaper, getResult } from '../../data/assessmentQuestionBanks'
 import { saveAssessmentRecord } from '../../lib/assessmentRecords'
+import { trackConversion } from '../../lib/analytics'
 import { recordAssessmentAccomplishments } from '../../lib/userAccomplishments'
 import { useAuth } from '../../contexts/AuthContext'
 import { ASSESSMENT_PORTAL } from '../../config/assessmentPortal'
@@ -21,6 +22,7 @@ function Results({ score, total, result, paper, onBack }) {
       at: Date.now(),
     }
     saveAssessmentRecord(record)
+    trackConversion('assessment_complete', { assessment_id: paper.id, score_pct: result.pct })
     if (user?.id) {
       recordAssessmentAccomplishments(user.id, record)
     }

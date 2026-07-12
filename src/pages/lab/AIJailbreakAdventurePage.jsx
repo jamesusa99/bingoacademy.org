@@ -1,6 +1,10 @@
 import AIJailbreakAdventure from '../../components/lab/AIJailbreakAdventure'
+import ExplorationLabShell from '../../components/lab/ExplorationLabShell'
 
-/** Standalone route for AI Jailbreak Adventure */
 export default function AIJailbreakAdventurePage() {
-  return <AIJailbreakAdventure />
+  return (
+    <ExplorationLabShell experimentId="jailbreak-adventure">
+      <AIJailbreakAdventure />
+    </ExplorationLabShell>
+  )
 }

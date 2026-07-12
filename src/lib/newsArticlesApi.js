@@ -6,6 +6,7 @@ import { NEWS_ARTICLES_FALLBACK } from '../config/newsArticles'
 export function mapNewsRow(row) {
   if (!row) return null
   const published = row.published_at || row.date
+  const updated = row.updated_at || published
   return {
     id: row.id,
     slug: row.slug,
@@ -15,8 +16,11 @@ export function mapNewsRow(row) {
     category: row.category,
     keywords: Array.isArray(row.keywords) ? row.keywords : [],
     date: typeof published === 'string' ? published.slice(0, 10) : published,
+    updatedAt: typeof updated === 'string' ? updated.slice(0, 10) : updated,
     status: row.status,
     ogImage: row.og_image || null,
+    authorSlug: row.author_slug || row.authorSlug || null,
+    authorName: row.author_name || row.authorName || null,
     sortOrder: row.sort_order ?? 0,
   }
 }

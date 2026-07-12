@@ -1,15 +1,6 @@
-const LEAD_STORAGE_KEY = 'bingo-marketing-leads-local'
+import { getConversionAttribution, readCurrentUtms, trackConversion } from './analytics'
 
-function readUtmParams() {
-  if (typeof window === 'undefined') return {}
-  const params = new URLSearchParams(window.location.search)
-  const utm = {}
-  for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
-    const value = params.get(key)
-    if (value) utm[key] = value
-  }
-  return utm
-}
+const LEAD_STORAGE_KEY = 'bingo-marketing-leads-local'
 
 function persistLocalLead(entry) {
   try {
@@ -27,13 +18,15 @@ export async function submitMarketingLead({ email, source, campaign, name = '' }
     throw new Error('Please enter a valid email address')
   }
 
+  const attribution = getConversionAttribution()
   const payload = {
     email: trimmed,
     name: name?.trim() || null,
     source: source || 'unknown',
     campaign: campaign || null,
-    utm: readUtmParams(),
+    utm: { ...attribution.utm, ...readCurrentUtms() },
     page: typeof window !== 'undefined' ? window.location.pathname : null,
+    attribution,
   }
 
   persistLocalLead({ ...payload, submittedAt: Date.now() })
@@ -48,6 +41,8 @@ export async function submitMarketingLead({ email, source, campaign, name = '' }
   if (!res.ok) {
     throw new Error(body.error || 'Could not submit — try again')
   }
+
+  trackConversion('lead', { source: payload.source, campaign: payload.campaign })
 
   return body
 }

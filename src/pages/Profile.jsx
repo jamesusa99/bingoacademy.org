@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
+import PageMeta from '../components/PageMeta'
 import { useAuth } from '../contexts/AuthContext'
 import { authLink } from '../lib/authRedirect'
 import {
@@ -258,7 +259,7 @@ function ProfileOrdersSection({ orders, loading, error }) {
             <p className="text-xs text-slate-500 mt-2">
               Course purchases appear here after checkout completes.
             </p>
-            <Link to="/courses?line=ioai" className="text-sm text-primary font-medium hover:underline mt-3 inline-block">
+            <Link to="/courses/ioai" className="text-sm text-primary font-medium hover:underline mt-3 inline-block">
               Browse courses →
             </Link>
           </div>
@@ -568,6 +569,7 @@ export default function Profile() {
 
   return (
     <div className="page-content w-full py-6 sm:py-8">
+      <PageMeta title="My Profile | BingoAcademy" noindex />
       {shareModal && <ShareModal title={shareModal} onClose={() => setShareModal(null)} />}
 
       {/* ── Top bar ─────────────────────────────────── */}

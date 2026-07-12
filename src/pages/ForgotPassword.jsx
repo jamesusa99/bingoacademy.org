@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageMeta from '../components/PageMeta'
 import { sendPasswordReset } from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
 import AuthAlert from '../components/auth/AuthAlert'
@@ -25,6 +26,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
+      <PageMeta title="Reset Password | Bingo Academy" noindex />
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Reset password</h1>
       <p className="text-slate-600 mb-8">
         Enter your registered email and we will send a link to reset your password.

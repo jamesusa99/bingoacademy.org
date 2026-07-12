@@ -1,17 +1,14 @@
-import { getSupabaseAdmin } from './supabaseAdmin.mjs'
-import { SITE_URL, SITEMAP_STATIC_ROUTES } from '../config/sitemapStatic.mjs'
-
-/** Fallback news slugs when DB is unavailable (matches migration seed) */
-const FALLBACK_NEWS_SLUGS = [
-  'ai-classes-for-kids-guide-2026',
-  'usaaio-prep-course-overview',
-  'machine-learning-high-school-syllabus',
-  'ai-classroom-activities-k12',
-  'ai-summer-camp-online-2026',
-  'how-to-prepare-usaaio',
-  'best-ai-coding-classes-7-12',
-  'ioai-competition-training-update',
-]
+import { SITE_URL } from '../config/sitemapStatic.mjs'
+import { SITEMAP_PAGE_ROUTES, SITEMAP_PROGRAM_ROUTES } from '../config/sitemapRoutes.mjs'
+import { buildRobotsTxt } from '../config/crawlers.mjs'
+import {
+  fetchAllLiveNewsSlugs,
+  fetchCourseSitemapEntries,
+  fetchLabPackSitemapEntries,
+} from './seo/fetchDynamic.mjs'
+import { guideSitemapPaths } from './seo/guideSeo.mjs'
+import { trustSitemapPaths } from './seo/trustSeo.mjs'
+import { courseSitemapPaths } from './seo/courseSeo.mjs'
 
 function escapeXml(value) {
   return String(value)
@@ -32,10 +29,33 @@ function urlEntry(loc, { lastmod, changefreq, priority } = {}) {
   return xml
 }
 
-async function fetchLiveNewsEntries() {
+function buildUrlset(entries) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+  for (const entry of entries) {
+    xml += urlEntry(`${SITE_URL}${entry.path}`, entry)
+  }
+  xml += '</urlset>\n'
+  return xml
+}
+
+function buildSitemapIndex(sitemaps) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+  xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+  for (const name of sitemaps) {
+    xml += '  <sitemap>\n'
+    xml += `    <loc>${escapeXml(`${SITE_URL}/${name}`)}</loc>\n`
+    xml += '  </sitemap>\n'
+  }
+  xml += '</sitemapindex>\n'
+  return xml
+}
+
+async function fetchNewsSitemapEntries() {
   const admin = getSupabaseAdmin()
   if (!admin) {
-    return FALLBACK_NEWS_SLUGS.map((slug) => ({
+    const slugs = await fetchAllLiveNewsSlugs()
+    return slugs.map((slug) => ({
       path: `/news/${slug}`,
       changefreq: 'monthly',
       priority: '0.7',
@@ -49,7 +69,8 @@ async function fetchLiveNewsEntries() {
     .order('published_at', { ascending: false })
 
   if (error || !data?.length) {
-    return FALLBACK_NEWS_SLUGS.map((slug) => ({
+    const slugs = await fetchAllLiveNewsSlugs()
+    return slugs.map((slug) => ({
       path: `/news/${slug}`,
       changefreq: 'monthly',
       priority: '0.7',
@@ -64,37 +85,65 @@ async function fetchLiveNewsEntries() {
   }))
 }
 
-export async function buildSitemapXml() {
-  const newsEntries = await fetchLiveNewsEntries()
-  const today = new Date().toISOString().slice(0, 10)
-
-  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-
-  for (const route of SITEMAP_STATIC_ROUTES) {
-    xml += urlEntry(`${SITE_URL}${route.path}`, {
-      lastmod: today,
-      changefreq: route.changefreq,
-      priority: route.priority,
-    })
-  }
-
-  for (const entry of newsEntries) {
-    xml += urlEntry(`${SITE_URL}${entry.path}`, {
-      lastmod: entry.lastmod || today,
-      changefreq: entry.changefreq,
-      priority: entry.priority,
-    })
-  }
-
-  xml += '</urlset>\n'
-  return xml
+export function buildSitemapPagesXml() {
+  const guidePaths = guideSitemapPaths()
+  const explorationPaths = [
+    'hide-and-seek',
+    'virtual-conductor',
+    'word-gravity',
+    'jailbreak-adventure',
+    'evolve-car',
+    'doodle-monsters',
+    'cyber-tennis',
+  ].map((slug) => ({
+    path: `/exploration/${slug}`,
+    changefreq: 'monthly',
+    priority: '0.7',
+    lastmod: '2026-03-01',
+  }))
+  return buildUrlset([...SITEMAP_PAGE_ROUTES, ...guidePaths, ...trustSitemapPaths(), ...explorationPaths])
 }
 
-export function buildRobotsTxt() {
-  return `User-agent: *
-Allow: /
+export function buildSitemapProgramsXml() {
+  return buildUrlset(SITEMAP_PROGRAM_ROUTES)
+}
 
-Sitemap: ${SITE_URL}/sitemap.xml
-`
+export async function buildSitemapCoursesXml() {
+  const linePaths = courseSitemapPaths()
+  const detailEntries = await fetchCourseSitemapEntries()
+  return buildUrlset([...linePaths, ...detailEntries])
+}
+
+export async function buildSitemapLabsXml() {
+  const entries = await fetchLabPackSitemapEntries()
+  return buildUrlset(entries)
+}
+
+export async function buildSitemapNewsXml() {
+  const entries = await fetchNewsSitemapEntries()
+  return buildUrlset(entries)
+}
+
+export function buildSitemapIndexXml() {
+  return buildSitemapIndex([
+    'sitemap-pages.xml',
+    'sitemap-programs.xml',
+    'sitemap-courses.xml',
+    'sitemap-labs.xml',
+    'sitemap-news.xml',
+  ])
+}
+
+/** @deprecated Use buildSitemapIndexXml + sub-sitemaps */
+export async function buildSitemapXml() {
+  const [courses, labs, news] = await Promise.all([
+    fetchCourseSitemapEntries(),
+    fetchLabPackSitemapEntries(),
+    fetchNewsSitemapEntries(),
+  ])
+  return buildUrlset([...SITEMAP_PAGE_ROUTES, ...SITEMAP_PROGRAM_ROUTES, ...news, ...courses, ...labs])
+}
+
+export function buildRobotsTxtFile() {
+  return buildRobotsTxt(SITE_URL)
 }

@@ -151,7 +151,7 @@ export default function Study() {
               </li>
               <li>
                 <strong>IOAI module unit</strong> — purchase a module on the{' '}
-                <Link to="/courses?line=ioai" className="text-primary hover:underline">
+                <Link to="/courses/ioai" className="text-primary hover:underline">
                   IOAI courses page
                 </Link>{' '}
                 to unlock every lesson inside.
@@ -180,7 +180,7 @@ export default function Study() {
                 </Link>
               )}
               <Link
-                to="/courses?line=ioai&sub=video"
+                to="/courses/ioai/video"
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
               >
                 Browse &amp; purchase courses

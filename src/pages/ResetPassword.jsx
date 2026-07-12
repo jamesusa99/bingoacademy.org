@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import PageMeta from '../components/PageMeta'
 import {
   establishRecoverySession,
   hasRecoveryParams,
@@ -88,6 +89,7 @@ export default function ResetPassword() {
     if (recoveryError) {
       return (
         <div className="max-w-md mx-auto px-4 py-12">
+          <PageMeta title="Reset Password | Bingo Academy" noindex />
           <h1 className="text-2xl font-bold text-bingo-dark mb-2">Reset link expired</h1>
           <AuthAlert>
             {pkceRecoveryHint(recoveryError) || recoveryError}
@@ -130,6 +132,7 @@ export default function ResetPassword() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
+      <PageMeta title="Set New Password | Bingo Academy" noindex />
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Set new password</h1>
       <p className="text-slate-600 mb-6">Choose a new password for your account.</p>
 

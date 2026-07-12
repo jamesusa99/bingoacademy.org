@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import Hls from 'hls.js'
+import { loadHls } from '../../lib/loadHls'
 
 function isHlsSource(src) {
   if (!src) return false
@@ -124,31 +124,44 @@ export default function HomeHeroVideoBackdrop({ videoUrl = '', posterUrl = '' })
     const src = videoUrl.trim()
     const useHls = isHlsSource(src)
     let hls = null
+    let cancelled = false
 
     const markReady = () => setReady(true)
 
-    if (useHls && Hls.isSupported()) {
-      hls = new Hls({ enableWorker: true, startLevel: -1 })
-      hls.loadSource(src)
-      hls.attachMedia(el)
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        el.play().catch(() => {})
-        markReady()
-      })
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad()
-      })
-    } else if (useHls && el.canPlayType('application/vnd.apple.mpegurl')) {
-      el.src = src
-      el.addEventListener('canplay', markReady)
-      el.play().catch(() => {})
-    } else {
+    async function setup() {
+      if (useHls) {
+        const { default: Hls } = await loadHls()
+        if (cancelled) return
+        if (Hls.isSupported()) {
+          hls = new Hls({ enableWorker: true, startLevel: -1 })
+          hls.loadSource(src)
+          hls.attachMedia(el)
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            el.play().catch(() => {})
+            markReady()
+          })
+          hls.on(Hls.Events.ERROR, (_event, data) => {
+            if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad()
+          })
+          return
+        }
+        if (el.canPlayType('application/vnd.apple.mpegurl')) {
+          el.src = src
+          el.addEventListener('canplay', markReady)
+          el.play().catch(() => {})
+          return
+        }
+      }
+
       el.src = src
       el.addEventListener('canplay', markReady)
       el.play().catch(() => {})
     }
 
+    setup().catch(() => {})
+
     return () => {
+      cancelled = true
       el.removeEventListener('canplay', markReady)
       hls?.destroy()
     }
@@ -161,7 +174,15 @@ export default function HomeHeroVideoBackdrop({ videoUrl = '', posterUrl = '' })
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
       {!ready && posterUrl ? (
-        <img src={posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
+        <img
+          src={posterUrl}
+          alt=""
+          width={1920}
+          height={1080}
+          decoding="async"
+          fetchPriority="high"
+          className="absolute inset-0 w-full h-full object-cover scale-105"
+        />
       ) : null}
       <video
         ref={videoRef}

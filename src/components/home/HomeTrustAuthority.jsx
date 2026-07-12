@@ -23,7 +23,13 @@ function AcademicLineageBlock() {
             <li key={lab.name} className="flex gap-3 text-sm">
               <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" aria-hidden />
               <div>
-                <span className="font-semibold text-bingo-dark">{lab.name}</span>
+                {lab.href ? (
+                  <Link to={lab.href} className="font-semibold text-bingo-dark hover:text-primary transition">
+                    {lab.name}
+                  </Link>
+                ) : (
+                  <span className="font-semibold text-bingo-dark">{lab.name}</span>
+                )}
                 <span className="text-slate-500"> — {lab.focus}</span>
               </div>
             </li>
@@ -142,7 +148,8 @@ function TrustBadgesRow() {
 }
 
 export default function HomeTrustAuthority({ showIoaiLink = true }) {
-  const { credentials, proofTitle, proofSubtitle, showcaseCta, ioaiCta } = HOME_TRUST_AUTHORITY
+  const { credentials, proofTitle, proofSubtitle, showcaseCta, ioaiCta, outcomesCta, outcomesHref } =
+    HOME_TRUST_AUTHORITY
 
   return (
     <section className="w-full border-b border-slate-200 bg-gradient-to-b from-white via-slate-50/80 to-white">
@@ -159,23 +166,33 @@ export default function HomeTrustAuthority({ showIoaiLink = true }) {
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-4">
               {HOME_TRUST_AUTHORITY.body}
             </p>
-            <p className="text-sm text-slate-500 leading-relaxed border-l-4 border-primary/40 pl-4">
+            <p className="text-sm text-slate-500 leading-relaxed border-l-4 border-primary/40 pl-4 mb-4">
               {HOME_TRUST_AUTHORITY.peerReview}
             </p>
+            {HOME_TRUST_AUTHORITY.verifyHref ? (
+              <Link
+                to={HOME_TRUST_AUTHORITY.verifyHref}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+              >
+                {HOME_TRUST_AUTHORITY.verifyCta}
+                <ArrowRight className="w-4 h-4" aria-hidden />
+              </Link>
+            ) : null}
           </div>
 
           <div className="lg:col-span-7 grid sm:grid-cols-3 gap-4">
             {credentials.map((item) => (
-              <div
+              <Link
                 key={item.title}
-                className="card p-5 sm:p-6 border-slate-200/80 bg-white shadow-sm hover:shadow-md transition"
+                to={item.href || '/about'}
+                className="card p-5 sm:p-6 border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:border-primary/30 transition block"
               >
                 <span className="text-3xl block mb-3" aria-hidden>
                   {item.icon}
                 </span>
                 <h3 className="font-bold text-bingo-dark text-sm sm:text-base mb-2">{item.title}</h3>
                 <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">{item.desc}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -206,10 +223,19 @@ export default function HomeTrustAuthority({ showIoaiLink = true }) {
                 </Link>
                 {showIoaiLink ? (
                   <Link
-                    to="/courses?line=ioai"
+                    to="/courses/ioai"
                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-300 hover:text-amber-200 transition"
                   >
                     {ioaiCta}
+                    <ArrowRight className="w-4 h-4" aria-hidden />
+                  </Link>
+                ) : null}
+                {outcomesHref ? (
+                  <Link
+                    to={outcomesHref}
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-300 hover:text-emerald-200 transition"
+                  >
+                    {outcomesCta}
                     <ArrowRight className="w-4 h-4" aria-hidden />
                   </Link>
                 ) : null}

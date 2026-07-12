@@ -665,7 +665,7 @@ export default function Mall() {
 
       {tab === 'events' && (
         <div className="p-4 text-center">
-          <Link to="/courses?line=ioai" className="text-primary hover:underline">IOAI training moved to IOAI tab →</Link>
+          <Link to="/courses/ioai" className="text-primary hover:underline">IOAI training moved to IOAI tab →</Link>
         </div>
       )}
 

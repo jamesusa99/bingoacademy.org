@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { PRODUCT_LINES } from '../../config/products'
 import { VIDEO_COURSE_SUB_BY_LINE } from '../../config/courseListFilters'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
@@ -18,8 +18,15 @@ import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityCo
 import CoursesHero from './CoursesHero'
 import { useCoursesLineHero, buildLineHeroStats } from '../../hooks/useCoursesLineHero'
 import PageMeta from '../PageMeta'
-import { PAGE_SEO } from '../../config/programs'
+import { coursePathForLineId, coursesSeoForRoute, courseLineHasSecondaryFilters, courseSlugFromLineId } from '../../config/coursePaths'
+import { getLineDecisionPage, decisionFaqJsonLd } from '../../config/courseDecisionPages'
+import CourseDecisionSections from '../decision/CourseDecisionSections'
+import { SITE_URL } from '../../config/siteSeo'
 import ModuleCoverImage from './ModuleCoverImage'
+import { IOAI_STAGE_PACKAGES_ANCHOR } from '../../config/ioaiStagePackages'
+import { scrollToAnchor } from '../../lib/scrollToAnchor'
+
+const STAGE_PACKAGES_SCROLL_OFFSET = 96
 
 function buyStageBundleItem({
   item,
@@ -30,7 +37,7 @@ function buyStageBundleItem({
   setCheckoutLoading,
 }) {
   if (!item) return
-  const returnPath = `/courses?line=ioai&stage=${encodeURIComponent(stageId)}&buy=1`
+  const returnPath = `${coursePathForLineId('ioai')}?stage=${encodeURIComponent(stageId)}&buy=1#${IOAI_STAGE_PACKAGES_ANCHOR}`
 
   purchaseIoaiBundle({
     bundleSlug: item.ioaiBundleSlug,
@@ -162,6 +169,7 @@ function ModuleCard({ mod, lineId, hasModule, stripeCheckout, isAuthenticated, n
 
 export default function ProgramCoursesModuleView({ line }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
   const { visibleProductLines } = useProductLineVisibility()
@@ -177,6 +185,7 @@ export default function ProgramCoursesModuleView({ line }) {
   const shouldAutoBuy = searchParams.get('buy') === '1'
   const [stageFilter, setStageFilter] = useState(stageParam || 'all')
   const autoBuyStarted = useRef(false)
+  const lastPackagesScrollKey = useRef('')
 
   useEffect(() => {
     fetchPaymentsConfig()
@@ -231,10 +240,42 @@ export default function ProgramCoursesModuleView({ line }) {
     }
   }, [stageParam, stages])
 
+  useEffect(() => {
+    if (!stageParam || lineId !== 'ioai' || shouldAutoBuy) return
+
+    const hasAnchor = location.hash === `#${IOAI_STAGE_PACKAGES_ANCHOR}`
+    if (!hasAnchor && lastPackagesScrollKey.current) return
+
+    const pass = hasAnchor
+      ? `${stageParam}|${location.hash}|${loading || bundlesLoading ? 'pending' : 'ready'}`
+      : `${stageParam}|ready`
+
+    if (lastPackagesScrollKey.current === pass) return
+    lastPackagesScrollKey.current = pass
+
+    const timer = window.setTimeout(
+      () =>
+        scrollToAnchor(IOAI_STAGE_PACKAGES_ANCHOR, {
+          offset: STAGE_PACKAGES_SCROLL_OFFSET,
+          behavior: 'auto',
+          maxRetries: 72,
+        }),
+      loading || bundlesLoading ? 0 : 60
+    )
+    return () => clearTimeout(timer)
+  }, [
+    stageParam,
+    lineId,
+    shouldAutoBuy,
+    location.hash,
+    loading,
+    bundlesLoading,
+  ])
+
   const selectStage = (stageId) => {
     setStageFilter(stageId)
     const next = new URLSearchParams(searchParams)
-    next.set('line', lineId)
+    next.delete('line')
     next.set('stage', stageId)
     next.delete('buy')
     setSearchParams(next, { replace: true })
@@ -286,10 +327,32 @@ export default function ProgramCoursesModuleView({ line }) {
   )
 
   const videoSubId = VIDEO_COURSE_SUB_BY_LINE[lineId]
+  const lineSlug = courseSlugFromLineId(lineId)
+  const seo = coursesSeoForRoute({ lineSlug, subSlug: '' })
+  const decision = getLineDecisionPage(lineId)
+  const hasSecondaryFilters = courseLineHasSecondaryFilters(searchParams)
 
   return (
     <div className="w-full">
-      <PageMeta title={PAGE_SEO.courses.title} description={PAGE_SEO.courses.description} />
+      <PageMeta
+        title={seo.title}
+        description={decision?.directAnswer?.slice(0, 160) || seo.description}
+        canonical={`${SITE_URL}${seo.canonical}`}
+        noindex={hasSecondaryFilters}
+        jsonLd={
+          decision
+            ? decisionFaqJsonLd(decision, seo.canonical, {
+                breadcrumbs: [
+                  { label: 'Home', href: '/' },
+                  { label: 'Courses', href: '/courses' },
+                  { label: line.name },
+                ],
+                courseName: line.name,
+                courseDescription: decision.directAnswer,
+              })
+            : undefined
+        }
+      />
       <div className="courses-page-dark min-h-[60vh]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <nav className="flex flex-wrap gap-2 mb-3 text-xs" aria-label="Breadcrumb">
@@ -304,7 +367,7 @@ export default function ProgramCoursesModuleView({ line }) {
             {visibleProductLines.map((pl) => (
               <Link
                 key={pl.id}
-                to={`/courses?line=${pl.id}`}
+                to={coursePathForLineId(pl.id)}
                 className={`px-3 py-2 rounded-lg text-xs font-semibold transition shrink-0 min-h-[36px] inline-flex items-center ${
                   lineId === pl.id
                     ? 'bg-cyan-500 text-white shadow'
@@ -318,29 +381,36 @@ export default function ProgramCoursesModuleView({ line }) {
 
           <CoursesHero subtitle={hero.modulesSubtitle} stats={heroStats} />
 
-          <div className="flex flex-wrap gap-2 mb-4">
-            <button
-              type="button"
-              onClick={() => selectStage('all')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${
-                stageFilter === 'all' ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'
-              }`}
-            >
-              {COURSES_PORTAL.allStages}
-            </button>
-            {stages.map((s) => (
+          {decision ? (
+            <div className="mb-8 mt-6">
+              <CourseDecisionSections decision={decision} theme="dark" showCta={false} />
+            </div>
+          ) : null}
+
+          <section id={IOAI_STAGE_PACKAGES_ANCHOR} className="scroll-mt-24">
+            <div className="flex flex-wrap gap-2 mb-4">
               <button
-                key={s.id}
                 type="button"
-                onClick={() => selectStage(s.id)}
+                onClick={() => selectStage('all')}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${
-                  stageFilter === s.id ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'
+                  stageFilter === 'all' ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'
                 }`}
               >
-                {s.title}
+                {COURSES_PORTAL.allStages}
               </button>
-            ))}
-          </div>
+              {stages.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => selectStage(s.id)}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${
+                    stageFilter === s.id ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'
+                  }`}
+                >
+                  {s.title}
+                </button>
+              ))}
+            </div>
 
           {loading ? (
             <p className="text-sm text-slate-400 py-12 text-center">{COURSES_PORTAL.loadingModules}</p>
@@ -390,11 +460,12 @@ export default function ProgramCoursesModuleView({ line }) {
               </div>
             </>
           )}
+          </section>
 
           {videoSubId ? (
             <p className="text-xs text-slate-500 mt-8">
               {lineId === 'ioai' ? COURSES_PORTAL.ioaiLegacyNote : COURSES_PORTAL.legacyCatalogNote}{' '}
-              <Link to={`/courses?line=${lineId}&sub=${videoSubId}`} className="text-cyan-400 hover:underline">
+              <Link to={coursePathForLineId(lineId, videoSubId)} className="text-cyan-400 hover:underline">
                 {COURSES_PORTAL.videoCoursesChip}
               </Link>
             </p>

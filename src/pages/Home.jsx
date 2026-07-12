@@ -102,7 +102,7 @@ export default function Home() {
               <p className="text-slate-500 text-sm">IOAI whitelist training and competition-ready outcomes</p>
             </div>
             {isLineVisible('ioai') ? (
-            <Link to="/courses?line=ioai" className="text-sm text-primary font-medium hover:underline shrink-0">
+            <Link to="/courses/ioai" className="text-sm text-primary font-medium hover:underline shrink-0">
               All competition courses →
             </Link>
             ) : null}

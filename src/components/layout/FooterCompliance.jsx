@@ -8,7 +8,7 @@ export default function FooterCompliance() {
         {LEGAL_COMPLIANCE.badges.map((badge) => (
           <Link
             key={badge.id}
-            to="/privacy"
+            to={badge.id === 'coppa' || badge.id === 'gdpr' ? '/safety-and-privacy' : '/privacy'}
             title={badge.short}
             className="inline-flex items-center gap-2 rounded-full border border-slate-600/80 bg-slate-800/50 px-3.5 py-1.5 text-xs text-slate-300 hover:border-cyan-500/40 hover:text-white transition-colors"
           >
@@ -21,6 +21,10 @@ export default function FooterCompliance() {
         {LEGAL_COMPLIANCE.footerTagline}.{' '}
         <Link to="/privacy" className="text-cyan-400/90 hover:text-cyan-300 hover:underline">
           Privacy Policy
+        </Link>
+        {' · '}
+        <Link to="/safety-and-privacy" className="text-cyan-400/90 hover:text-cyan-300 hover:underline">
+          Child safety & data
         </Link>
       </p>
       <p className="text-center text-xs text-slate-600">

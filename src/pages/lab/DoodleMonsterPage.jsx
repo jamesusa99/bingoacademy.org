@@ -1,6 +1,10 @@
 import DoodleMonsterClassifier from '../../components/lab/DoodleMonsterClassifier'
+import ExplorationLabShell from '../../components/lab/ExplorationLabShell'
 
-/** Standalone route for Doodle Monster Classifier lab */
 export default function DoodleMonsterPage() {
-  return <DoodleMonsterClassifier />
+  return (
+    <ExplorationLabShell experimentId="doodle-monsters">
+      <DoodleMonsterClassifier />
+    </ExplorationLabShell>
+  )
 }

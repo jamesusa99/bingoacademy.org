@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import PageMeta from '../components/PageMeta'
 import PageContent from '../components/PageContent'
 import { NEWS_CATEGORIES } from '../config/newsArticles'
@@ -49,6 +49,12 @@ export default function News() {
           <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
             Guides for parents and educators — AI classes for kids, AI course for teens, USAAIO preparation, and
             classroom-ready AI lesson plans.
+          </p>
+          <p className="mt-4 text-sm">
+            <Link to="/guides" className="text-primary font-semibold hover:underline">
+              Browse versioned knowledge guides →
+            </Link>
+            <span className="text-slate-500"> — parent decisions, IOAI prep, K–12 deployment, and first-party evidence.</span>
           </p>
         </header>
 

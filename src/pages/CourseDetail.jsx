@@ -38,8 +38,15 @@ import CourseLessonList from '../components/courses/CourseLessonList'
 import CourseTrackOverview from '../components/courses/CourseTrackOverview'
 import CoursePreviewBar from '../components/courses/CoursePreviewBar'
 import PageContent from '../components/PageContent'
+import PageMeta from '../components/PageMeta'
+import { SITE_URL } from '../config/siteSeo'
+import { buildPageGraph, courseEntity } from '../config/structuredData'
 import { confirmCheckoutSession } from '../lib/checkout'
 import { normalizeLabMaterialSub } from '../config/labMaterials'
+import { coursePathForLineId } from '../config/coursePaths'
+import { getLineDecisionPage } from '../config/courseDecisionPages'
+import { buildCatalogCourseDecisionPage } from '../lib/decisionPageBuilders'
+import CourseDecisionSections from '../components/decision/CourseDecisionSections'
 import { labsPath } from '../config/productLabs'
 import { STUDY_HOME, studyLessonPath, studyModulePath, isStudyCenterPath } from '../lib/studyPaths'
 
@@ -317,11 +324,19 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
     .map((slug) => EXPLORATION_EXPERIMENTS.find((e) => e.id === slug))
     .filter(Boolean)
 
+  const lineDecision = getLineDecisionPage(item.line)
+  const catalogDecision = useMemo(
+    () => (item && !isProgram ? buildCatalogCourseDecisionPage(item, lineDecision) : null),
+    [item, isProgram, lineDecision]
+  )
+  const showCatalogDecision =
+    catalogDecision && !comingSoon && !showTrackOverview && !showSegmentLearning
+
   const backHref = studyCenter
     ? STUDY_HOME
     : isLabMaterial
       ? labsPath(item.line, normalizeLabMaterialSub(item.sub, item.line))
-      : `/courses?line=${item.line}&sub=${item.sub}`
+      : coursePathForLineId(item.line, item.sub)
 
   if (isLabMaterial) {
     return <Navigate to={`/labs/pack/${encodeURIComponent(item.id)}`} replace />
@@ -329,8 +344,48 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
 
   const pageWidthDefault = isProgram ? 'max-w-6xl' : 'max-w-4xl'
 
+  const coursePath = item ? `/courses/detail/${item.id}` : undefined
+  const courseBreadcrumbs = item
+    ? [
+        { label: 'Home', href: '/' },
+        { label: 'Courses', href: '/courses' },
+        { label: item.name },
+      ]
+    : undefined
+
   return (
     <PageContent className={`py-6 sm:py-8 ${pageWidthDefault} mx-auto`}>
+      <PageMeta
+        title={item ? `${item.name} | AI Course | BingoAcademy` : 'Course | BingoAcademy'}
+        description={
+          catalogDecision?.directAnswer?.slice(0, 160) || item?.desc || item?.description
+        }
+        ogTitle={item?.name}
+        ogDescription={catalogDecision?.directAnswer?.slice(0, 160) || item?.desc || item?.description}
+        ogImage={item?.thumbnail || undefined}
+        ogUrl={coursePath ? `${SITE_URL}${coursePath}` : undefined}
+        jsonLd={
+          item && coursePath
+            ? buildPageGraph({
+                pageUrl: coursePath,
+                breadcrumbs: courseBreadcrumbs,
+                entities: [
+                  courseEntity({
+                    name: item.name,
+                    description:
+                      catalogDecision?.directAnswer || item.desc || item.description || item.name,
+                    url: coursePath,
+                    image: item.thumbnail,
+                    priceCents: item.priceCents ?? item.price_cents,
+                    price: item.price,
+                    currency: item.currency || 'usd',
+                  }),
+                ],
+                faq: catalogDecision?.faq,
+              })
+            : undefined
+        }
+      />
       {previewMode ? <CoursePreviewBar course={item} fromAdmin={fromAdmin} /> : null}
 
       {!previewMode ? (
@@ -489,14 +544,20 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
             <p className="text-sm text-slate-700 leading-relaxed mb-6">{item.desc}</p>
           ) : null}
 
-          {!isProgram && item.audience ? (
+          {showCatalogDecision ? (
+            <div className="mb-8">
+              <CourseDecisionSections decision={catalogDecision} showCta={false} />
+            </div>
+          ) : null}
+
+          {!showCatalogDecision && !isProgram && item.audience ? (
             <section className="card p-5 mb-4">
               <h2 className="font-bold text-bingo-dark text-sm mb-2">{COURSES_PORTAL.audience}</h2>
               <p className="text-sm text-slate-600">{item.audience}</p>
             </section>
           ) : null}
 
-          {!isProgram && item.outcomes?.length > 0 ? (
+          {!showCatalogDecision && !isProgram && item.outcomes?.length > 0 ? (
             <section className="card p-5 mb-4">
               <h2 className="font-bold text-bingo-dark text-sm mb-3">{COURSES_PORTAL.outcomes}</h2>
               <ul className="space-y-2">
@@ -510,7 +571,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
             </section>
           ) : null}
 
-          {!isProgram && item.syllabus?.length > 0 ? (
+          {!showCatalogDecision && !isProgram && item.syllabus?.length > 0 ? (
             <section className="card overflow-hidden mb-6">
               <div className="p-4 border-b border-slate-100 font-semibold text-bingo-dark text-sm">
                 {COURSES_PORTAL.syllabus}
@@ -606,7 +667,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
             )}
             {isTrack ? (
               <Link
-                to="/courses?line=ioai&sub=video"
+                to="/courses/ioai/video"
                 className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
               >
                 Browse all lessons

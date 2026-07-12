@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, X } from 'lucide-react'
+import { coursePathForLineId } from '../../config/coursePaths'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { ADMIN_LABS_MATERIALS_PATH } from '../../config/adminNav'
 
 export default function CoursePreviewBar({ course, fromAdmin = false }) {
   const coursesHref = course
-    ? `/courses?line=${course.line}&sub=${course.sub || 'course'}`
+    ? coursePathForLineId(course.line, course.sub || 'course')
     : '/courses'
 
   return (

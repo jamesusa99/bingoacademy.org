@@ -73,4 +73,4 @@ if (delErr) {
   console.log(`[seed-ioai] Removed ${REMOVED_LEGACY.length} legacy IOAI video slugs`)
 }
 
-console.log('[seed-ioai] Done. Open /courses?line=ioai&sub=video')
+console.log('[seed-ioai] Done. Open /courses/ioai/video')

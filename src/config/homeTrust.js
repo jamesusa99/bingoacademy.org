@@ -3,18 +3,20 @@
 export const HOME_TRUST_AUTHORITY = {
   eyebrow: 'Trust & Authority',
   title: 'University-grade AI — not another kids’ coding class',
-  body:
-    'Bingo AI Academy is led by full-time professors and AI PhD researchers. Our IOAI curriculum draws on research traditions from leading university AI and engineering labs — the same rigor behind embodied intelligence and human–machine interaction, not weekend coding camps.',
-  peerReview:
-    'Curriculum design follows peer-reviewed standards from leading AI and STEM education research — structured hypotheses, reproducible experiments, and defence-ready documentation families and schools can audit.',
-  academicLineage: {
-    title: 'Research lineage · Embodied AI & VUA',
     body:
-      'Course architecture is rooted in top-tier lab research on Embodied AI — agents that see, understand, and act in the physical world. Our pedagogical spine follows the Vision–Understanding–Action (VUA) framework: perception models, reasoning layers, and real-world actuation (browser labs, Jupyter notebooks, and BingoClaw hardware).',
+    'Bingo Academy courses are designed by named professors and AI PhD researchers with public profiles listing education, research areas, and reviewed guides. Pedagogy draws on published embodied-AI and constructionist research traditions, not generic weekend camp scripts.',
+  peerReview:
+    'Curriculum changes follow internal faculty peer review against published rubrics and IOAI formats — structured hypotheses, reproducible experiments, and defence-ready documentation. See our methodology page for research citations and what “peer-review aligned” means.',
+  verifyCta: 'Verify our team & evidence',
+  verifyHref: '/about',
+  academicLineage: {
+    title: 'Research-inspired pedagogy · Embodied AI & VUA',
+    body:
+      'Course architecture is informed by published work on Embodied AI and constructionist learning (e.g., Papert, Resnick). Bingo Academy is an independent provider — not affiliated with MIT Media Lab or any university unless stated on /about.',
     labs: [
-      { name: 'MIT Media Lab tradition', focus: 'Human–machine symbiosis & creative robotics' },
-      { name: 'University AI & engineering labs', focus: 'Computer vision, RL & deployable ML systems' },
-      { name: 'IOAI competition R&D', focus: 'Selection-round lab reports & reproducible pipelines' },
+      { name: 'Constructionist learning traditions', focus: 'Build → reflect → iterate (inspired by public Media Lab pedagogy research)', href: '/methodology' },
+      { name: 'University AI & engineering research', focus: 'Computer vision, RL & deployable ML — cited in course guides', href: '/instructors' },
+      { name: 'IOAI competition formats', focus: 'Selection-round lab reports & reproducible pipelines', href: '/guides/ioai/competition-map' },
     ],
     vuaSteps: [
       { label: 'Vision', desc: 'Cameras, pose models, object detection in-browser' },
@@ -26,17 +28,20 @@ export const HOME_TRUST_AUTHORITY = {
     {
       icon: '🎓',
       title: 'Professor-led R&D',
-      desc: 'Full-time faculty and doctoral researchers design courses, labs, and competition pathways — not generic script tutors.',
+      desc: 'Named faculty design courses and rubrics — profiles at /instructors with education, research areas, and reviewed guides.',
+      href: '/instructors',
     },
     {
       icon: '🤖',
       title: 'Embodied AI specialists',
-      desc: 'Deep expertise in vision-to-action pipelines — the same stack used in industrial robotics and IOAI lab defence.',
+      desc: 'Vision-to-action pipelines in browser labs and Jupyter — methodology and citations at /methodology.',
+      href: '/methodology',
     },
     {
       icon: '🏛️',
-      title: 'Institution-ready',
-      desc: 'Audit-ready portfolios for schools and families — peer-review discipline, not badge-chasing workshops.',
+      title: 'Evidence-published',
+      desc: 'Outcomes report sample sizes, methods, and data types — not training accuracy passed off as student results.',
+      href: '/outcomes',
     },
   ],
   proofTitle: 'Proof of work — IOAI training outcomes',
@@ -44,6 +49,8 @@ export const HOME_TRUST_AUTHORITY = {
     'Real deliverables from competition trainees: datasets, notebooks, and defence-ready reports — not slide decks alone.',
   showcaseCta: 'View student showcase',
   ioaiCta: 'Explore IOAI training',
+  outcomesCta: 'See published outcomes',
+  outcomesHref: '/outcomes',
 }
 
 /** Industrial-grade stack — what students actually train on */
@@ -115,7 +122,7 @@ export const HOME_TRUST_BADGES = [
     icon: '🛡️',
     label: 'COPPA Compliant',
     desc: '100% student privacy by design',
-    href: '/privacy',
+    href: '/safety-and-privacy',
   },
   {
     id: 'stripe',
@@ -129,14 +136,14 @@ export const HOME_TRUST_BADGES = [
     icon: '🇪🇺',
     label: 'GDPR Ready',
     desc: 'EU data protection standards',
-    href: '/privacy',
+    href: '/safety-and-privacy',
   },
   {
     id: 'peer',
     icon: '📄',
     label: 'Peer-review aligned',
     desc: 'Evidence-based curriculum design',
-    href: '/curriculum?line=ioai',
+    href: '/methodology',
   },
 ]
 
@@ -150,6 +157,7 @@ export const HOME_PROOF_OF_WORK = [
     highlights: ['Custom dataset curation', 'Full .ipynb report', 'Defence-ready narrative'],
     tag: 'IOAI · Computer Vision',
     to: '/showcase/works',
+    outcomesHref: '/outcomes',
   },
   {
     id: 'waste-sorting-vision',
@@ -160,6 +168,7 @@ export const HOME_PROOF_OF_WORK = [
     highlights: ['MobileNet fine-tuning', '91% pilot accuracy', 'IOAI provincial award'],
     tag: 'IOAI · ML Project',
     to: '/showcase/works',
+    outcomesHref: '/outcomes',
   },
   {
     id: 'multimodal-research',
@@ -170,5 +179,6 @@ export const HOME_PROOF_OF_WORK = [
     highlights: ['Multimodal fusion', 'Ethics appendix', 'Recorded defence'],
     tag: 'Research · Admissions',
     to: '/showcase/works',
+    outcomesHref: '/outcomes',
   },
 ]

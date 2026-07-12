@@ -257,7 +257,7 @@ export default function Showcase() {
                     <p className="text-sm text-slate-700 mb-2">Which AI competitions should my child enter? Are they realistic for a zero-background student? Will coaching actually lead to wins?</p>
                     <p className="text-xs font-semibold text-primary">Bingo Solution: Competition Bootcamp + prestigious competition pathway + dedicated competition coach. From first lesson to award stage.</p>
                   </div>
-                  <Link to="/courses?line=ioai" className="btn-primary text-sm px-4 py-2 shrink-0">IOAI Training Courses →</Link>
+                  <Link to="/courses/ioai" className="btn-primary text-sm px-4 py-2 shrink-0">IOAI Training Courses →</Link>
                 </div>
               </div>
 
@@ -363,7 +363,7 @@ export default function Showcase() {
                     <p className="text-sm text-slate-700 mb-2">Worried your child just uses AI passively — copy-pasting instead of thinking? Will AI make them lazy rather than capable?</p>
                     <p className="text-xs font-semibold text-green-600">Bingo Solution: AI Literacy courses train questioning, creation, and critical evaluation — not just tool usage.</p>
                   </div>
-                  <Link to="/courses?line=ioai" className="btn-primary text-sm px-4 py-2 shrink-0">IOAI Competition Training →</Link>
+                  <Link to="/courses/ioai" className="btn-primary text-sm px-4 py-2 shrink-0">IOAI Competition Training →</Link>
                 </div>
               </div>
 
@@ -413,7 +413,7 @@ export default function Showcase() {
           {/* C-end bottom promo row */}
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { icon: '🏆', title: 'IOAI Competition Training', desc: 'Video lessons, labs, and training camps', cta: 'View Programmes', href: '/courses?line=ioai' },
+              { icon: '🏆', title: 'IOAI Competition Training', desc: 'Video lessons, labs, and training camps', cta: 'View Programmes', href: '/courses/ioai' },
               { icon: '📊', title: 'Free AI Assessment', desc: 'Personalised roadmap · competition readiness', cta: 'Start Assessment', href: '/assessment' },
               { icon: '🧭', title: 'AI Exploration Lab', desc: 'Free browser games — try AI hands-on', cta: 'Play Free Labs', href: '/exploration' },
             ].map((p, i) => (

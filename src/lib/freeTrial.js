@@ -1,4 +1,5 @@
 import { clearPurchasedSlugs, getPurchasedSlugs, purchaseLesson, savePurchasedSlugs } from './courseAccess'
+import { trackConversion } from './analytics'
 
 import { FIRST_IOAI_LESSON_ID } from '../config/ioaiCourseSystem'
 
@@ -55,6 +56,7 @@ export function claimFreeTrial(lessonId) {
   purchaseLesson(id)
   const state = { claimedAt: Date.now(), lessonId: id }
   localStorage.setItem(FREE_TRIAL_STORAGE_KEY, JSON.stringify(state))
+  trackConversion('trial', { lesson_id: id })
   return state
 }
 

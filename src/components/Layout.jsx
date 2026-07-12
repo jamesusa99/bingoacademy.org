@@ -6,9 +6,10 @@ import { useAuth } from '../contexts/AuthContext'
 import { ProductLineVisibilityProvider, useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
 import { authLink } from '../lib/authRedirect'
 import NavDropdown from './NavDropdown'
-import ChatWidget from './ChatWidget'
+import LazyChatWidget from './LazyChatWidget'
 import FooterCompliance from './layout/FooterCompliance'
 import { LABS_STOREFRONT_VISIBLE, isLabsNavPath } from '../config/labsStorefront'
+import { SITE_BRAND } from '../config/siteSeo'
 
 function navLinkClass(active) {
   if (active) return 'bg-cyan-500 text-white'
@@ -82,10 +83,10 @@ function LayoutShell({ children }) {
       <header className="sticky top-0 z-50 bg-bingo-dark text-white shadow-lg border-b border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b] pt-[env(safe-area-inset-top)]">
         <div className="w-full px-4 sm:px-6">
           <div className="flex items-center gap-2 lg:gap-4 min-h-14">
-            <Link to="/" className="shrink-0 flex items-center" aria-label="BingoAcademy home">
+            <Link to="/" className="shrink-0 flex items-center" aria-label={`${SITE_BRAND} home`}>
               <img
                 src="/logo.png"
-                alt="BingoAcademy"
+                alt={SITE_BRAND}
                 className="h-9 sm:h-10 w-auto max-w-[148px] sm:max-w-none"
                 width={895}
                 height={209}
@@ -212,13 +213,13 @@ function LayoutShell({ children }) {
             <Link to="/" className="inline-block">
               <img
                 src="/logo.png"
-                alt="BingoAcademy"
+                alt={SITE_BRAND}
                 className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity"
                 width={895}
                 height={209}
               />
             </Link>
-            <p className="mt-2 text-slate-500">IOAI Competition Training</p>
+            <p className="mt-2 text-slate-500">K-12 AI Education</p>
           </div>
           <div className="col-span-1">
             <div className="text-white font-medium mb-2">Explore</div>
@@ -232,6 +233,7 @@ function LayoutShell({ children }) {
               ) : null}
               <Link to="/showcase" className="block hover:text-white py-0.5">Achievements</Link>
               <Link to="/news" className="block hover:text-white py-0.5">News</Link>
+              <Link to="/guides" className="block hover:text-white py-0.5">Knowledge guides</Link>
               <Link to="/cert" className="block hover:text-white py-0.5">Certification</Link>
               <Link to="/mall" className="block hover:text-white py-0.5">AI Mall</Link>
             </div>
@@ -251,13 +253,21 @@ function LayoutShell({ children }) {
             </div>
             ) : null}
             <div className="col-span-1">
+              <div className="text-white font-medium mb-2">Company</div>
+              <Link to="/about" className="block hover:text-white py-0.5">About</Link>
+              <Link to="/instructors" className="block hover:text-white py-0.5">Instructors</Link>
+              <Link to="/methodology" className="block hover:text-white py-0.5">Methodology</Link>
+              <Link to="/outcomes" className="block hover:text-white py-0.5">Outcomes</Link>
+              <Link to="/safety-and-privacy" className="block hover:text-white py-0.5">Safety & privacy</Link>
+            </div>
+            <div className="col-span-1">
               <div className="text-white font-medium mb-2">Legal</div>
               <Link to="/privacy" className="block hover:text-white py-0.5">Privacy Policy</Link>
             </div>
         </div>
         <FooterCompliance />
       </footer>
-      <ChatWidget />
+      <LazyChatWidget />
     </div>
   )
 }

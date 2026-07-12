@@ -55,6 +55,10 @@ export default function Privacy() {
         <h1 className="text-3xl font-black text-bingo-dark mb-2">Privacy Policy</h1>
         <p className="text-sm text-slate-600 mb-8 leading-relaxed">
           Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          {' · '}
+          <Link to="/safety-and-privacy" className="text-primary hover:underline">
+            Child safety & operational data use
+          </Link>
         </p>
 
         <div className="flex flex-wrap gap-2 mb-10">

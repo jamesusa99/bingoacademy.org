@@ -2,8 +2,51 @@
   "functions": {
     "api/server.js": {
       "maxDuration": 60
+    },
+    "api/html.js": {
+      "maxDuration": 30
     }
   },
+  "redirects": [
+    { "source": "/events", "destination": "/programs/ioai", "permanent": true },
+    { "source": "/research", "destination": "/programs/ioai", "permanent": true },
+    { "source": "/career", "destination": "/community", "permanent": true },
+    { "source": "/pricing", "destination": "/cert", "permanent": true },
+    { "source": "/tools", "destination": "/mall", "permanent": true },
+    { "source": "/tools/detail/:id", "destination": "/mall", "permanent": true },
+    { "source": "/ai-test", "destination": "/assessment", "permanent": true },
+    { "source": "/mall/materials", "destination": "/mall", "permanent": true },
+    { "source": "/lab", "destination": "/labs", "permanent": true },
+    { "source": "/showcase/school", "destination": "/showcase", "permanent": true },
+    { "source": "/ioai", "destination": "/courses/ioai", "permanent": true },
+    { "source": "/lab/hide-and-seek", "destination": "/exploration/hide-and-seek", "permanent": true },
+    { "source": "/lab/virtual-conductor", "destination": "/exploration/virtual-conductor", "permanent": true },
+    { "source": "/lab/word-gravity", "destination": "/exploration/word-gravity", "permanent": true },
+    { "source": "/lab/jailbreak-adventure", "destination": "/exploration/jailbreak-adventure", "permanent": true },
+    { "source": "/lab/evolve-car", "destination": "/exploration/evolve-car", "permanent": true },
+    { "source": "/lab/doodle-monsters", "destination": "/exploration/doodle-monsters", "permanent": true },
+    { "source": "/lab/cyber-tennis", "destination": "/exploration/cyber-tennis", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "video" }], "destination": "/courses/ioai/video", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "course" }], "destination": "/courses/foundations/course", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "module" }], "destination": "/courses/ioai", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "event" }], "destination": "/programs/ioai", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "events" }], "destination": "/programs/ioai", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "exam" }], "destination": "/assessment", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "exams" }], "destination": "/assessment", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "literacy" }], "destination": "/programs/foundations", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "k12" }], "destination": "/courses/k12", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "ioai" }], "destination": "/courses/ioai", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "general" }], "destination": "/courses/foundations", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "foundations" }], "destination": "/programs/foundations", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "lab" }], "destination": "/labs", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "material" }], "destination": "/mall", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "line", "value": "ioai" }], "destination": "/courses/ioai", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "line", "value": "general" }], "destination": "/courses/foundations", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "line", "value": "k12" }], "destination": "/courses/k12", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "cert" }], "destination": "/cert", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "pricing" }], "destination": "/cert", "permanent": true },
+    { "source": "/courses", "destination": "/courses/ioai", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/api/admin/:path*", "destination": "/api/server" },
     { "source": "/api/webhooks/:path*", "destination": "/api/server" },
@@ -15,7 +58,12 @@
     { "source": "/api/labs/:path*", "destination": "/api/server" },
     { "source": "/api/video/:path*", "destination": "/api/server" },
     { "source": "/sitemap.xml", "destination": "/api/server" },
+    { "source": "/sitemap-pages.xml", "destination": "/api/server" },
+    { "source": "/sitemap-programs.xml", "destination": "/api/server" },
+    { "source": "/sitemap-courses.xml", "destination": "/api/server" },
+    { "source": "/sitemap-labs.xml", "destination": "/api/server" },
+    { "source": "/sitemap-news.xml", "destination": "/api/server" },
     { "source": "/robots.txt", "destination": "/api/server" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/|assets/|favicon|images/|.*\\..*).*)", "destination": "/api/html" }
   ]
 }

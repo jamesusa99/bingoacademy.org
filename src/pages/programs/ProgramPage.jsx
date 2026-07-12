@@ -1,6 +1,7 @@
 import { Link, useParams, Navigate } from 'react-router-dom'
 import PageMeta from '../../components/PageMeta'
 import PageContent from '../../components/PageContent'
+import NotFound from '../NotFound'
 import {
   getProgram,
   programModules,
@@ -13,6 +14,9 @@ import {
 import { getProductLine } from '../../config/products'
 import { useCourseCatalog } from '../../hooks/useCourseCatalog'
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
+import { getProgramDecisionPage, decisionFaqJsonLd } from '../../config/courseDecisionPages'
+import CourseDecisionSections from '../../components/decision/CourseDecisionSections'
+import { SITE_URL } from '../../config/siteSeo'
 
 function LearningPath({ steps }) {
   return (
@@ -41,7 +45,7 @@ export default function ProgramPage() {
   const showCompare = visiblePrograms.length > 1
 
   if (!PROGRAM_SLUG_TO_LINE[slug]) {
-    return <Navigate to="/courses" replace />
+    return <NotFound status={404} />
   }
 
   const lineId = lineFromProgramSlug(slug)
@@ -53,6 +57,7 @@ export default function ProgramPage() {
   const line = getProductLine(program.lineId)
   const modules = programModules(slug)
   const seo = PAGE_SEO[slug] || PAGE_SEO.courses
+  const decision = getProgramDecisionPage(slug)
   const secondaryHref = program.secondaryHref || '/compare'
   const secondaryIsCompare = secondaryHref === '/compare'
 
@@ -62,7 +67,23 @@ export default function ProgramPage() {
 
   return (
     <div className="w-full">
-      <PageMeta title={seo.title} description={seo.description} />
+      <PageMeta
+        title={seo.title}
+        description={decision?.directAnswer?.slice(0, 160) || seo.description}
+        jsonLd={
+          decision
+            ? decisionFaqJsonLd(decision, `/programs/${slug}`, {
+                breadcrumbs: [
+                  { label: 'Home', href: '/' },
+                  { label: 'Programs', href: '/courses' },
+                  { label: program.heroHeadline },
+                ],
+                courseName: program.heroHeadline,
+                courseDescription: decision.directAnswer,
+              })
+            : undefined
+        }
+      />
 
       <section className={`border-b border-slate-200 bg-gradient-to-br ${line.gradient} py-10 sm:py-14`}>
         <div className="page-content">
@@ -92,6 +113,12 @@ export default function ProgramPage() {
       </section>
 
       <PageContent className="py-8 sm:py-10">
+        {decision ? (
+          <section className="mb-12">
+            <CourseDecisionSections decision={decision} showCta={false} />
+          </section>
+        ) : null}
+
         <section className="mb-12">
           <h2 className="section-title mb-2 text-center">Your learning path</h2>
           <p className="text-sm text-slate-500 text-center mb-6">Typical progression for {program.shortTitle}</p>
@@ -138,6 +165,26 @@ export default function ProgramPage() {
             Compare programs →
           </Link>
         </section>
+        ) : null}
+
+        {decision?.primaryCta ? (
+          <section className="mt-10 card p-6 sm:p-8 bg-primary/5 border-primary/20 text-center">
+            <h2 className="font-bold text-bingo-dark mb-2">Ready to start?</h2>
+            <p className="text-sm text-slate-600 mb-4 max-w-lg mx-auto">{decision.directAnswer.slice(0, 120)}…</p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <Link to={decision.primaryCta.href} className="btn-primary px-5 py-2.5 text-sm min-h-[44px]">
+                {decision.primaryCta.label}
+              </Link>
+              {decision.secondaryCta ? (
+                <Link
+                  to={decision.secondaryCta.href}
+                  className="px-5 py-2.5 text-sm rounded-xl border border-slate-300 text-slate-700 hover:bg-white transition min-h-[44px] inline-flex items-center"
+                >
+                  {decision.secondaryCta.label}
+                </Link>
+              ) : null}
+            </div>
+          </section>
         ) : null}
       </PageContent>
     </div>

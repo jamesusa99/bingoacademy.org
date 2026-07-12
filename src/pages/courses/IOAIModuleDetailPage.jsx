@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import IOAIModuleDetail from '../../components/courses/IOAIModuleDetail'
+import { coursePathForLineId } from '../../config/coursePaths'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
 import { fetchIoaiModule } from '../../lib/ioaiStore'
 
 export default function IOAIModuleDetailPage() {
   const { moduleSlug } = useParams()
   const catalogSlug = decodeURIComponent(moduleSlug || '')
-  const [backHref, setBackHref] = useState('/courses?line=ioai')
+  const [backHref, setBackHref] = useState('/courses/ioai')
 
   useEffect(() => {
     let cancelled = false
@@ -15,10 +16,10 @@ export default function IOAIModuleDetailPage() {
       .then((mod) => {
         if (cancelled) return
         const line = mod?.theme?.level?.product_line || 'ioai'
-        setBackHref(`/courses?line=${line}`)
+        setBackHref(coursePathForLineId(line))
       })
       .catch(() => {
-        if (!cancelled) setBackHref('/courses?line=ioai')
+        if (!cancelled) setBackHref('/courses/ioai')
       })
     return () => {
       cancelled = true

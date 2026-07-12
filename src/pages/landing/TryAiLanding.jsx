@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageMeta from '../../components/PageMeta'
 import LandingShell from '../../components/landing/LandingShell'
 import TryAiCuriosityModal from '../../components/landing/TryAiCuriosityModal'
-import AICyberTennis from '../../components/lab/AICyberTennis'
 import { TRY_AI_LANDING } from '../../config/landingPages'
 import { claimFreeTrial, hasClaimedFreeTrial } from '../../lib/freeTrial'
 import { useFreeTrialLesson } from '../../hooks/useFreeTrialLesson'
+
+const AICyberTennis = lazy(() => import('../../components/lab/AICyberTennis'))
 
 const STORAGE_KEY = 'bingo-try-ai-curiosity-seen'
 
@@ -69,7 +70,15 @@ export default function TryAiLanding() {
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <AICyberTennis landingMode autoStart onGameStart={handleGameStart} />
+        <Suspense
+          fallback={
+            <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
+              Loading AI demo…
+            </div>
+          }
+        >
+          <AICyberTennis landingMode autoStart onGameStart={handleGameStart} />
+        </Suspense>
       </div>
 
       <TryAiCuriosityModal

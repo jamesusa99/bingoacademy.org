@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { SITE_DEFAULT_SEO, SITE_OG, SITE_TWITTER, SITE_URL } from '../config/siteSeo'
+import { SITE_BRAND, SITE_DEFAULT_SEO, SITE_OG, SITE_TWITTER, SITE_URL } from '../config/siteSeo'
 
 function upsertMeta(attr, key, content) {
   if (!content) return
@@ -57,7 +57,7 @@ export default function PageMeta({
     upsertMeta('name', 'description', desc)
     upsertMeta('name', 'keywords', kw)
     if (noindex) {
-      upsertMeta('name', 'robots', 'noindex, nofollow')
+      upsertMeta('name', 'robots', 'noindex, follow')
     } else {
       const robots = document.querySelector('meta[name="robots"]')
       robots?.remove()
@@ -68,7 +68,7 @@ export default function PageMeta({
     upsertMeta('property', 'og:image', ogImg)
     upsertMeta('property', 'og:url', ogU)
     upsertMeta('property', 'og:type', ogTy)
-    upsertMeta('property', 'og:site_name', 'BingoAcademy')
+    upsertMeta('property', 'og:site_name', SITE_BRAND)
 
     upsertMeta('name', 'twitter:card', SITE_TWITTER.card)
     upsertMeta('name', 'twitter:title', ogT)

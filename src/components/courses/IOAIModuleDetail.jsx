@@ -20,6 +20,10 @@ import IOAIModuleInfoCards, { buildModuleInfoContent } from './IOAIModuleInfoCar
 import IOAIModuleLessonList from './IOAIModuleLessonList'
 import ModuleTestSection from './ModuleTestSection'
 import { studyLessonPath } from '../../lib/studyPaths'
+import { buildModuleDecisionPage } from '../../lib/decisionPageBuilders'
+import { decisionFaqJsonLd } from '../../config/courseDecisionPages'
+import CourseDecisionSections from '../decision/CourseDecisionSections'
+import { SITE_URL } from '../../config/siteSeo'
 
 const LESSON_DURATION_MINUTES = 14
 
@@ -29,7 +33,7 @@ const LESSON_DURATION_MINUTES = 14
  */
 export default function IOAIModuleDetail({
   catalogSlug,
-  backHref = '/courses?line=ioai',
+  backHref = '/courses/ioai',
   backLabel = COURSES_PORTAL.backToCourses,
   studyMode = false,
 }) {
@@ -186,6 +190,19 @@ export default function IOAIModuleDetail({
     [mod, detail]
   )
 
+  const decision = useMemo(
+    () =>
+      buildModuleDecisionPage({
+        mod,
+        detail,
+        lessons,
+        productLine,
+      }),
+    [mod, detail, lessons, productLine]
+  )
+
+  const modulePath = `/courses/module/${encodeURIComponent(catalogSlug)}`
+
   const totalMinutes = lessons.length * LESSON_DURATION_MINUTES
   const categoryLabel = found?.theme?.categoryLabel || found?.theme?.title || ''
   const levelLabel = found?.level?.title || COURSES_PORTAL.moduleLevelBeginner
@@ -245,7 +262,20 @@ export default function IOAIModuleDetail({
 
   return (
     <div className="w-full">
-      <PageMeta title={`${mod.title} · ${productLine === 'ioai' ? 'IOAI' : productLine === 'k12' ? 'K12' : 'Foundations'}`} />
+      <PageMeta
+        title={`${mod.title} · ${productLine === 'ioai' ? 'IOAI' : productLine === 'k12' ? 'K12' : 'Foundations'} | Bingo Academy`}
+        description={decision.directAnswer?.slice(0, 160) || subtitle}
+        canonical={`${SITE_URL}${modulePath}`}
+        jsonLd={decisionFaqJsonLd(decision, modulePath, {
+          breadcrumbs: [
+            { label: 'Home', href: '/' },
+            { label: 'Courses', href: '/courses' },
+            { label: mod.title },
+          ],
+          courseName: mod.title,
+          courseDescription: decision.directAnswer,
+        })}
+      />
       <PageContent className="py-8 max-w-6xl mx-auto">
         <Link to={backHref} className="text-sm text-primary hover:underline inline-flex items-center gap-1">
           ← {backLabel}
@@ -282,7 +312,7 @@ export default function IOAIModuleDetail({
                 ) : null}
               </div>
 
-              <div className="mt-6 pt-6 border-t border-slate-200">
+              <div id="purchase" className="mt-6 pt-6 border-t border-slate-200 scroll-mt-24">
                 <div className="flex flex-wrap items-end gap-3">
                   {compare ? (
                     <span className="text-base text-slate-400 line-through pb-1">{compare}</span>
@@ -357,6 +387,10 @@ export default function IOAIModuleDetail({
           </div>
         </header>
 
+        <div className="mb-10">
+          <CourseDecisionSections decision={decision} showCta={false} />
+        </div>
+
         <IOAIModuleInfoCards
           intro={moduleInfo.intro}
           objectives={moduleInfo.objectives}
@@ -376,6 +410,7 @@ export default function IOAIModuleDetail({
           canPurchase={canPurchase}
           comingSoon={comingSoon}
           studyMode={studyMode}
+          anchorPrefix="lesson"
         />
 
         <ModuleTestSection
@@ -481,6 +516,31 @@ export default function IOAIModuleDetail({
                 )
               })}
             </ul>
+          </section>
+        ) : null}
+
+        {decision?.primaryCta ? (
+          <section className="mb-8 card p-6 bg-primary/5 border-primary/20 text-center">
+            <h2 className="text-lg font-bold text-bingo-dark mb-2">Ready to enroll?</h2>
+            <p className="text-sm text-slate-600 mb-4 max-w-xl mx-auto">{decision.directAnswer.slice(0, 140)}…</p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <button
+                type="button"
+                onClick={buy}
+                disabled={checkoutLoading || accessLoading || !canPurchase || comingSoon || owned}
+                className="btn-primary text-sm px-6 py-2.5 disabled:opacity-60"
+              >
+                {owned ? COURSES_PORTAL.moduleUnlocked : COURSES_PORTAL.buyModule(price)}
+              </button>
+              {decision.secondaryCta ? (
+                <Link
+                  to={decision.secondaryCta.href}
+                  className="text-sm px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  {decision.secondaryCta.label}
+                </Link>
+              ) : null}
+            </div>
           </section>
         ) : null}
 
