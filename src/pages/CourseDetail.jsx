@@ -245,6 +245,14 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
   const effectiveHasAccess =
     hasAccess || ioaiLessonAccess || ioaiModuleAccess || hasIoaiFullTrack || previewMode
 
+  const lineDecision = getLineDecisionPage(item?.line ?? 'general')
+  const isProgramForDecision =
+    Boolean(progLine && item && !isLabMaterial && isProgramVideoCourse(item.id, courses, tree, progLine))
+  const catalogDecision = useMemo(
+    () => (item && !isProgramForDecision ? buildCatalogCourseDecisionPage(item, lineDecision) : null),
+    [item, isProgramForDecision, lineDecision]
+  )
+
   useEffect(() => {
     const status = searchParams.get('checkout')
     const sessionId = searchParams.get('session_id')
@@ -324,11 +332,6 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
     .map((slug) => EXPLORATION_EXPERIMENTS.find((e) => e.id === slug))
     .filter(Boolean)
 
-  const lineDecision = getLineDecisionPage(item.line)
-  const catalogDecision = useMemo(
-    () => (item && !isProgram ? buildCatalogCourseDecisionPage(item, lineDecision) : null),
-    [item, isProgram, lineDecision]
-  )
   const showCatalogDecision =
     catalogDecision && !comingSoon && !showTrackOverview && !showSegmentLearning
 
