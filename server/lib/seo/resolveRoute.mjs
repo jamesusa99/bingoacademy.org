@@ -38,6 +38,8 @@ const EXPLORATION_LABS = new Set([
   'evolve-car',
   'doodle-monsters',
   'cyber-tennis',
+  'beatbox-composer',
+  'mars-lander',
 ])
 
 const COMMUNITY_SECTIONS = new Set([
@@ -81,7 +83,7 @@ const KNOWN_PATH_PATTERNS = [
   /^\/guides\/(parents|ioai|k12)$/,
   /^\/guides\/(parents|ioai|k12)\/[^/]+$/,
   /^\/exploration$/,
-  /^\/exploration\/(hide-and-seek|virtual-conductor|word-gravity|jailbreak-adventure|evolve-car|doodle-monsters|cyber-tennis)$/,
+  /^\/exploration\/(hide-and-seek|virtual-conductor|word-gravity|jailbreak-adventure|evolve-car|doodle-monsters|cyber-tennis|beatbox-composer|mars-lander)$/,
   /^\/programs\/(ioai|foundations|k12)$/,
   /^\/compare$/,
   /^\/community$/,

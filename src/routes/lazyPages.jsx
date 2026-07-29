@@ -56,6 +56,8 @@ export const AIJailbreakAdventurePage = lazy(() => import('../pages/lab/AIJailbr
 export const EvolveAICarPage = lazy(() => import('../pages/lab/EvolveAICarPage'))
 export const DoodleMonsterPage = lazy(() => import('../pages/lab/DoodleMonsterPage'))
 export const AICyberTennisPage = lazy(() => import('../pages/lab/AICyberTennisPage'))
+export const AIBeatboxComposerPage = lazy(() => import('../pages/lab/AIBeatboxComposerPage'))
+export const AIMarsLanderPage = lazy(() => import('../pages/lab/AIMarsLanderPage'))
 
 /** Trust & GEO guides */
 export const GuidesHub = lazy(() => import('../pages/guides/GuidesHub'))

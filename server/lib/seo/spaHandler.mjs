@@ -150,6 +150,8 @@ export async function collectPrerenderPaths() {
     'evolve-car',
     'doodle-monsters',
     'cyber-tennis',
+    'beatbox-composer',
+    'mars-lander',
   ]
   for (const slug of explorationSlugs) {
     paths.add(`/exploration/${slug}`)

@@ -26,6 +26,8 @@
     { "source": "/lab/evolve-car", "destination": "/exploration/evolve-car", "permanent": true },
     { "source": "/lab/doodle-monsters", "destination": "/exploration/doodle-monsters", "permanent": true },
     { "source": "/lab/cyber-tennis", "destination": "/exploration/cyber-tennis", "permanent": true },
+    { "source": "/lab/beatbox-composer", "destination": "/exploration/beatbox-composer", "permanent": true },
+    { "source": "/lab/mars-lander", "destination": "/exploration/mars-lander", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "video" }], "destination": "/courses/ioai/video", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "course" }], "destination": "/courses/foundations/course", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "module" }], "destination": "/courses/ioai", "permanent": true },

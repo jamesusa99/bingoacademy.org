@@ -221,6 +221,91 @@ export const EXPLORATION_KNOWLEDGE = {
     version: '2026.1',
     updatedAt: '2026-03-01',
   },
+
+  'beatbox-composer': {
+    learningGoals: [
+      'See how AI turns sound into a spectrogram for pattern recognition',
+      'Distinguish Kick / Snare / Hi-hat by frequency-band energy',
+      'Connect onset detection to real-time interactive music systems',
+    ],
+    coreConcepts: ['Spectrogram', 'Onset detection', 'Audio classification', 'Frequency bands'],
+    modelsAndData:
+      'Web Audio AnalyserNode FFT features (RMS onset + spectral centroid / band ratios) — runs fully in-browser; synthesized electronic drum samples',
+    inputOutput: {
+      input: 'Microphone short vocal / beatbox bursts',
+      output: 'Class label (kick | snare | hihat), pad flash, optional 16-step loop pattern',
+    },
+    steps: [
+      'Allow microphone access; keep room noise low',
+      'Make short “动 / Kick”, “打 / Snare”, or “次 / Hi-hat” sounds',
+      'Watch neon pads light up and Science view spectrogram update',
+      'Enable Record hits, then Play loop to hear your electronic pattern',
+    ],
+    expectedResults:
+      'Clear short bursts classify into the matching pad most of the time; Science view shows low-band energy for kicks and high-band for hi-hats.',
+    whyItWorks:
+      'Audio is windowed into a spectrum: low energy ≈ kick, mid broadband ≈ snare, high hiss ≈ hi-hat. This is the same spectrogram idea behind speech and music classifiers, simplified to three buckets.',
+    commonMistakes: [
+      'Long continuous humming without onsets',
+      'Very quiet mic gain below RMS threshold',
+      'Background music competing with beatbox bursts',
+    ],
+    extensions: [
+      'Log centroid Hz for 20 kicks vs. 20 hi-hats and compare means',
+      'Add a fourth class (clap) using a new band-ratio rule',
+      'Discuss how production speech models use mel-spectrograms + neural nets',
+    ],
+    safetyPrivacy:
+      'Microphone audio is processed locally in the browser and is not uploaded to Bingo Academy. Supervise minors; revoke mic permission when finished.',
+    relatedCourses: [
+      { label: 'IOAI Explorer modules', href: '/courses/ioai' },
+      { label: 'Age-appropriate AI projects', href: '/guides/parents/age-appropriate-ai-projects' },
+    ],
+    version: '2026.1',
+    updatedAt: '2026-07-29',
+  },
+
+  'mars-lander': {
+    learningGoals: [
+      'Feel why hand-tuned control is hard, then see evolution find a policy',
+      'Design a reward function and predict how behaviour changes',
+      'Explain selection, mutation, and fitness in plain language',
+    ],
+    coreConcepts: ['Reinforcement learning', 'Reward function', 'Genetic algorithm', 'Neuroevolution'],
+    modelsAndData:
+      'Population of 50 feedforward networks (6 sensors → 8 hidden → thrust/rotate); fitness from student-tuned reward weights; fully local Canvas simulation',
+    inputOutput: {
+      input: 'Altitude, velocity, angle, angular rate, fuel + reward sliders',
+      output: 'Thruster on/off and rotation; generation fitness stats',
+    },
+    steps: [
+      'Attempt a manual soft landing on the green PAD (Arrow keys / WASD)',
+      'Open God mode and set soft-landing, crash, and fuel reward weights',
+      'Click Evolve and watch translucent landers crash or land in parallel',
+      'Let generations run; note when champion fitness rises after soft landings appear',
+    ],
+    expectedResults:
+      'Early generations mostly crash; within tens of generations some landers approach soft pad landings if rewards favour gentle upright touchdowns.',
+    whyItWorks:
+      'Agents are not given flight rules. High-fitness brains are cloned and mutated — trial-and-error shaped by rewards, the same idea behind RL and evolutionary strategies.',
+    commonMistakes: [
+      'Crash penalty too low → reckless thruster spam',
+      'Fuel penalty too high → engines never fire and freefall',
+      'Stopping evolve before enough generations to see improvement',
+    ],
+    extensions: [
+      'Compare two reward setups and chart best fitness vs. generation',
+      'New canyon + same weights — does the policy transfer?',
+      'Relate to Evolve! AI Car and IOAI reward-design discussions',
+    ],
+    safetyPrivacy: 'Fully local simulation; no camera, mic, or network calls.',
+    relatedCourses: [
+      { label: 'Evolve! AI Car', href: '/exploration/evolve-car' },
+      { label: 'AI Builder stage', href: '/courses/ioai' },
+    ],
+    version: '2026.1',
+    updatedAt: '2026-07-29',
+  },
 }
 
 /** Map exploration route experiment id */

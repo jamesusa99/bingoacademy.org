@@ -61,6 +61,8 @@ export const PERMANENT_REDIRECTS = {
   '/lab/evolve-car': '/exploration/evolve-car',
   '/lab/doodle-monsters': '/exploration/doodle-monsters',
   '/lab/cyber-tennis': '/exploration/cyber-tennis',
+  '/lab/beatbox-composer': '/exploration/beatbox-composer',
+  '/lab/mars-lander': '/exploration/mars-lander',
   '/case-studies': '/outcomes',
 }
 

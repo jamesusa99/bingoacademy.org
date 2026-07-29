@@ -42,7 +42,7 @@ export const SAFETY_PRIVACY = {
       id: 'camera-mic',
       title: 'Camera & microphone use',
       body:
-        'Several free exploration labs (e.g., AI Cyber Tennis, Hide & Seek) request camera access in the browser for on-device pose or vision demos.',
+        'Several free exploration labs (e.g., AI Cyber Tennis, Hide & Seek, AI Beatbox Composer) request camera or microphone access in the browser for on-device pose, vision, or audio demos.',
       items: [
         { label: 'Processing', detail: 'Inference runs locally in the browser (TensorFlow.js / MediaPipe). Frames are not uploaded to Bingo servers in the free tier.' },
         { label: 'Account not required', detail: 'Exploration games work without sign-in; no gameplay video is stored server-side.' },

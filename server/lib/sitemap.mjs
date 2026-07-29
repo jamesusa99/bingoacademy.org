@@ -95,6 +95,8 @@ export function buildSitemapPagesXml() {
     'evolve-car',
     'doodle-monsters',
     'cyber-tennis',
+    'beatbox-composer',
+    'mars-lander',
   ].map((slug) => ({
     path: `/exploration/${slug}`,
     changefreq: 'monthly',
