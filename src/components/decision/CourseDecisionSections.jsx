@@ -24,6 +24,33 @@ function SectionHeading({ id, children, theme }) {
   )
 }
 
+/** Collapsed-by-default section — content stays in DOM for SEO. */
+function CollapsibleSection({ id, headingId, title, theme, children }) {
+  const isDark = theme === 'dark'
+  const border = isDark ? 'border-slate-700' : 'border-slate-200'
+  const titleCls = isDark ? 'text-white' : 'text-bingo-dark'
+  const chevron = isDark ? 'text-slate-400' : 'text-slate-400'
+
+  return (
+    <details id={id} className={`group border ${border} rounded-xl scroll-mt-24`}>
+      <summary
+        className={`list-none cursor-pointer flex items-center justify-between gap-3 p-4 sm:p-5 select-none [&::-webkit-details-marker]:hidden ${titleCls}`}
+      >
+        <h2 id={headingId} className="text-lg sm:text-xl font-bold m-0">
+          {title}
+        </h2>
+        <span
+          className={`${chevron} text-base leading-none transition-transform group-open:rotate-180 shrink-0`}
+          aria-hidden
+        >
+          ▾
+        </span>
+      </summary>
+      <div className={`px-4 sm:px-5 pb-4 sm:pb-5 border-t ${border}`}>{children}</div>
+    </details>
+  )
+}
+
 function QuickFactsTable({ facts, theme }) {
   if (!facts) return null
   const rows = Object.entries(QUICK_FACT_LABELS)
@@ -81,34 +108,38 @@ export default function CourseDecisionSections({
   const muted = isDark ? 'text-slate-400' : 'text-slate-500'
 
   return (
-    <article className={`space-y-10 sm:space-y-12 ${wrap} ${className}`} itemScope itemType="https://schema.org/Course">
-      {/* Direct answer */}
-      <section id="decision-overview" aria-labelledby="decision-overview-heading">
+    <article className={`space-y-3 sm:space-y-4 ${wrap} ${className}`} itemScope itemType="https://schema.org/Course">
+      {/* Direct answer — always expanded */}
+      <section id="decision-overview" aria-labelledby="decision-overview-heading" className="mb-6 sm:mb-8">
         <SectionHeading id="decision-overview-heading" theme={theme}>
           Overview
         </SectionHeading>
-        <p className="mt-3 text-sm sm:text-base leading-relaxed max-w-3xl" itemProp="description">
+        <p className="mt-3 text-sm sm:text-base leading-relaxed" itemProp="description">
           {decision.directAnswer}
         </p>
       </section>
 
       {/* Quick facts */}
-      <section id="decision-quick-facts" aria-labelledby="decision-facts-heading">
-        <SectionHeading id="decision-facts-heading" theme={theme}>
-          Quick facts
-        </SectionHeading>
+      <CollapsibleSection
+        id="decision-quick-facts"
+        headingId="decision-facts-heading"
+        title="Quick facts"
+        theme={theme}
+      >
         <div className="mt-4">
           <QuickFactsTable facts={decision.quickFacts} theme={theme} />
         </div>
-      </section>
+      </CollapsibleSection>
 
       {/* Outline */}
       {decision.outline?.length ? (
-        <section id="decision-outline" aria-labelledby="decision-outline-heading">
-          <SectionHeading id="decision-outline-heading" theme={theme}>
-            Full syllabus
-          </SectionHeading>
-          <p className={`text-sm mt-2 mb-4 ${muted}`}>
+        <CollapsibleSection
+          id="decision-outline"
+          headingId="decision-outline-heading"
+          title="Full syllabus"
+          theme={theme}
+        >
+          <p className={`text-sm mt-4 mb-4 ${muted}`}>
             Stable section anchors for each module — expandable in the app, fully indexed here.
           </p>
           <div className="space-y-4">
@@ -134,15 +165,17 @@ export default function CourseDecisionSections({
               </div>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
       ) : null}
 
       {/* Samples */}
       {decision.samples?.length ? (
-        <section id="decision-samples" aria-labelledby="decision-samples-heading">
-          <SectionHeading id="decision-samples-heading" theme={theme}>
-            Samples & previews
-          </SectionHeading>
+        <CollapsibleSection
+          id="decision-samples"
+          headingId="decision-samples-heading"
+          title="Samples & previews"
+          theme={theme}
+        >
           <div className="mt-4 grid sm:grid-cols-2 gap-4">
             {decision.samples.map((sample) => (
               <div key={sample.href + sample.title} className={`${card} p-4 sm:p-5 flex flex-col`}>
@@ -176,15 +209,17 @@ export default function CourseDecisionSections({
               </div>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
       ) : null}
 
       {/* Faculty & methodology */}
       {(decision.faculty?.length || decision.methodology) && (
-        <section id="decision-faculty" aria-labelledby="decision-faculty-heading">
-          <SectionHeading id="decision-faculty-heading" theme={theme}>
-            Faculty & method
-          </SectionHeading>
+        <CollapsibleSection
+          id="decision-faculty"
+          headingId="decision-faculty-heading"
+          title="Faculty & method"
+          theme={theme}
+        >
           {decision.methodology ? (
             <div className={`${card} p-4 sm:p-5 mt-4`}>
               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-bingo-dark'}`}>
@@ -215,15 +250,17 @@ export default function CourseDecisionSections({
               ))}
             </ul>
           ) : null}
-        </section>
+        </CollapsibleSection>
       )}
 
       {/* Results */}
       {decision.results?.length ? (
-        <section id="decision-results" aria-labelledby="decision-results-heading">
-          <SectionHeading id="decision-results-heading" theme={theme}>
-            Results & evidence
-          </SectionHeading>
+        <CollapsibleSection
+          id="decision-results"
+          headingId="decision-results-heading"
+          title="Results & evidence"
+          theme={theme}
+        >
           <div className="mt-4 grid sm:grid-cols-2 gap-4">
             {decision.results.map((result) => (
               <Link
@@ -241,21 +278,23 @@ export default function CourseDecisionSections({
               </Link>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
       ) : null}
 
       {/* FAQ */}
       {decision.faq?.length ? (
-        <section id="decision-faq" aria-labelledby="decision-faq-heading">
-          <SectionHeading id="decision-faq-heading" theme={theme}>
-            FAQ
-          </SectionHeading>
+        <CollapsibleSection
+          id="decision-faq"
+          headingId="decision-faq-heading"
+          title="FAQ"
+          theme={theme}
+        >
           <div className={`mt-4 ${card} divide-y ${isDark ? 'divide-slate-700' : 'divide-slate-100'}`}>
             {decision.faq.map((item) => (
-              <details key={item.q} className="group p-4 sm:p-5">
+              <details key={item.q} className="group/faq p-4 sm:p-5">
                 <summary className={`font-semibold text-sm cursor-pointer list-none flex justify-between gap-2 ${isDark ? 'text-white' : 'text-bingo-dark'}`}>
                   {item.q}
-                  <span className="text-slate-400 group-open:rotate-180 transition" aria-hidden>
+                  <span className="text-slate-400 group-open/faq:rotate-180 transition" aria-hidden>
                     ▾
                   </span>
                 </summary>
@@ -263,41 +302,7 @@ export default function CourseDecisionSections({
               </details>
             ))}
           </div>
-        </section>
-      ) : null}
-
-      {/* Content metadata */}
-      {decision.contentMeta ? (
-        <footer id="decision-meta" className={`text-xs ${muted} border-t ${isDark ? 'border-slate-700' : 'border-slate-200'} pt-6`}>
-          {decision.contentMeta.updatedAt ? (
-            <p>
-              <span className="font-semibold">Updated:</span> {decision.contentMeta.updatedAt}
-            </p>
-          ) : null}
-          {decision.contentMeta.author ? (
-            <p className="mt-1">
-              <span className="font-semibold">Author:</span> {decision.contentMeta.author}
-            </p>
-          ) : null}
-          {decision.contentMeta.reviewer ? (
-            <p className="mt-1">
-              <span className="font-semibold">Reviewed by:</span> {decision.contentMeta.reviewer}
-            </p>
-          ) : null}
-          {decision.contentMeta.references?.length ? (
-            <p className="mt-2">
-              <span className="font-semibold">References:</span>{' '}
-              {decision.contentMeta.references.map((ref, i) => (
-                <span key={ref.href}>
-                  {i > 0 ? ' · ' : ''}
-                  <Link to={ref.href} className="text-primary hover:underline">
-                    {ref.label}
-                  </Link>
-                </span>
-              ))}
-            </p>
-          ) : null}
-        </footer>
+        </CollapsibleSection>
       ) : null}
 
       {/* Audience-specific CTA */}
