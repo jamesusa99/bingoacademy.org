@@ -152,6 +152,7 @@ export async function collectPrerenderPaths() {
     'cyber-tennis',
     'beatbox-composer',
     'mars-lander',
+    'prompt-wizard',
   ]
   for (const slug of explorationSlugs) {
     paths.add(`/exploration/${slug}`)

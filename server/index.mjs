@@ -5,6 +5,7 @@ import { getSupabaseConfig } from './lib/supabaseAdmin.mjs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { handleChatRequest } from '../lib/guardChat.js'
+import { handleKnightChatRequest } from '../lib/knightChat.js'
 import { createApiApp } from './createApiApp.mjs'
 import { createSpaHandler } from './lib/seo/spaHandler.mjs'
 import { createEarlyRouteMiddleware } from './lib/seo/earlyRoute.mjs'
@@ -18,31 +19,44 @@ const hasDist =
 
 const app = createApiApp()
 
+async function pipeWebResponse(webResponse, res) {
+  res.status(webResponse.status)
+  webResponse.headers.forEach((value, key) => {
+    if (key.toLowerCase() === 'content-length') return
+    res.setHeader(key, value)
+  })
+
+  if (!webResponse.body) {
+    res.end()
+    return
+  }
+
+  const reader = webResponse.body.getReader()
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    res.write(Buffer.from(value))
+  }
+  res.end()
+}
+
 app.post('/api/chat', async (req, res) => {
   try {
     const webResponse = await handleChatRequest(req.body)
-
-    res.status(webResponse.status)
-    webResponse.headers.forEach((value, key) => {
-      if (key.toLowerCase() === 'content-length') return
-      res.setHeader(key, value)
-    })
-
-    if (!webResponse.body) {
-      res.end()
-      return
-    }
-
-    const reader = webResponse.body.getReader()
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      res.write(Buffer.from(value))
-    }
-    res.end()
+    await pipeWebResponse(webResponse, res)
   } catch (err) {
     console.error('[api/chat]', err)
     res.status(500).json({ error: err.message || 'Chat request failed' })
+  }
+})
+
+app.post('/api/knight-chat', async (req, res) => {
+  try {
+    const webResponse = await handleKnightChatRequest(req.body)
+    await pipeWebResponse(webResponse, res)
+  } catch (err) {
+    console.error('[api/knight-chat]', err)
+    res.status(500).json({ error: err.message || 'Knight chat failed' })
   }
 })
 

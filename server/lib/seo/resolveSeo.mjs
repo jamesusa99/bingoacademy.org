@@ -377,6 +377,7 @@ async function resolveSeoForPathOnly(path) {
       'cyber-tennis': 'cyber-tennis',
       'beatbox-composer': 'beatbox-composer',
       'mars-lander': 'mars-lander',
+      'prompt-wizard': 'prompt-wizard',
     }
     const expId = slugToId[explorationMatch[1]]
     const experiment = expId ? getExperimentById(expId) : null

@@ -97,6 +97,7 @@ export function buildSitemapPagesXml() {
     'cyber-tennis',
     'beatbox-composer',
     'mars-lander',
+    'prompt-wizard',
   ].map((slug) => ({
     path: `/exploration/${slug}`,
     changefreq: 'monthly',

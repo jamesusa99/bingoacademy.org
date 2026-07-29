@@ -63,6 +63,7 @@ export const PERMANENT_REDIRECTS = {
   '/lab/cyber-tennis': '/exploration/cyber-tennis',
   '/lab/beatbox-composer': '/exploration/beatbox-composer',
   '/lab/mars-lander': '/exploration/mars-lander',
+  '/lab/prompt-wizard': '/exploration/prompt-wizard',
   '/case-studies': '/outcomes',
 }
 

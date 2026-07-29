@@ -226,6 +226,25 @@ export const EXPLORATION_EXPERIMENTS = [
     playPath: '/exploration/mars-lander',
     dashboardMetrics: ['generation', 'fitness', 'alive', 'fuel'],
   },
+  {
+    id: 'prompt-wizard',
+    category: 'nlp',
+    number: 10,
+    emoji: '🧙',
+    title: 'Prompt Wizard: Bypass the Guard',
+    subtitle: 'LLMs & Prompt Injection',
+    gameplay:
+      'A medieval knight (powered by a live LLM) guards Bingo Academy’s treasure door and must never say OPEN. Cast natural-language “spells” (prompts) to role-play, confuse, or jailbreak the knight until the door opens — then celebrate with confetti.',
+    concepts: ['Prompt Engineering', 'Prompt Injection', 'System Prompt', 'Guardrails'],
+    tech: 'OpenAI API (gpt-4o-mini) · AI SDK streaming chat · win-phrase detector',
+    techTags: ['LLM', 'prompt injection', 'chat UI'],
+    badge: { id: 'prompt-wizard', name: 'Prompt Wizard', icon: '🪄' },
+    difficulty: 'Intermediate',
+    duration: '10–20 min',
+    status: 'live',
+    playPath: '/exploration/prompt-wizard',
+    dashboardMetrics: ['turns', 'tokens', 'jailbreak', 'safety'],
+  },
 ]
 
 export const BADGE_STORAGE_KEY = 'bingo-lab-badges'

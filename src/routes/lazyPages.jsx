@@ -58,6 +58,7 @@ export const DoodleMonsterPage = lazy(() => import('../pages/lab/DoodleMonsterPa
 export const AICyberTennisPage = lazy(() => import('../pages/lab/AICyberTennisPage'))
 export const AIBeatboxComposerPage = lazy(() => import('../pages/lab/AIBeatboxComposerPage'))
 export const AIMarsLanderPage = lazy(() => import('../pages/lab/AIMarsLanderPage'))
+export const PromptWizardPage = lazy(() => import('../pages/lab/PromptWizardPage'))
 
 /** Trust & GEO guides */
 export const GuidesHub = lazy(() => import('../pages/guides/GuidesHub'))

@@ -306,6 +306,49 @@ export const EXPLORATION_KNOWLEDGE = {
     version: '2026.1',
     updatedAt: '2026-07-29',
   },
+
+  'prompt-wizard': {
+    learningGoals: [
+      'Practice prompt design against a locked system instruction',
+      'Recognize prompt injection and why guardrails matter',
+      'Contrast what the model is told vs. what the user types',
+    ],
+    coreConcepts: ['Prompt engineering', 'Prompt injection', 'System prompts', 'Guardrails'],
+    modelsAndData:
+      'Live OpenAI chat model (default gpt-4o-mini) with a knight persona system prompt; streaming via AI SDK; win detection on forbidden OPEN / door-grant phrases',
+    inputOutput: {
+      input: 'Natural-language prompts in a medieval chat UI',
+      output: 'Knight replies; victory if the model says OPEN or grants entry',
+    },
+    steps: [
+      'Read the knight’s challenge — the door must stay closed',
+      'Optional: open Knight’s oath to peek at the hidden system rules',
+      'Cast creative spells: role-play, hypotheticals, encoding tricks',
+      'When the model leaks OPEN or unlocks the door, celebrate and discuss why',
+    ],
+    expectedResults:
+      'Most naive asks fail; creative jailbreaks sometimes succeed — illustrating that alignment is imperfect and prompts are a control surface.',
+    whyItWorks:
+      'The model follows a system prompt until user text overrides or confuses those priorities. Detecting the forbidden word shows a real safety failure mode, taught as a lab — not as a production attack guide.',
+    commonMistakes: [
+      'Treating jailbreak as the only goal instead of learning guardrails',
+      'Sharing personal data in prompts',
+      'Assuming one winning phrase works forever after model updates',
+    ],
+    extensions: [
+      'Compare with AI Jailbreak Adventure (password leak) at /exploration/jailbreak-adventure',
+      'Write two defence rules that would have blocked your winning spell',
+      'Discuss why production apps add classifiers beyond the system prompt',
+    ],
+    safetyPrivacy:
+      'Chat text is sent to the configured OpenAI API for this lab only. Do not enter personal data. Supervised use recommended for minors.',
+    relatedCourses: [
+      { label: 'AI Jailbreak Adventure', href: '/exploration/jailbreak-adventure' },
+      { label: 'IOAI Explorer modules', href: '/courses/ioai' },
+    ],
+    version: '2026.1',
+    updatedAt: '2026-07-29',
+  },
 }
 
 /** Map exploration route experiment id */
