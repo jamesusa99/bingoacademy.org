@@ -59,6 +59,7 @@ export const AICyberTennisPage = lazy(() => import('../pages/lab/AICyberTennisPa
 export const AIBeatboxComposerPage = lazy(() => import('../pages/lab/AIBeatboxComposerPage'))
 export const AIMarsLanderPage = lazy(() => import('../pages/lab/AIMarsLanderPage'))
 export const PromptWizardPage = lazy(() => import('../pages/lab/PromptWizardPage'))
+export const AIFingerTetrisPage = lazy(() => import('../pages/lab/AIFingerTetrisPage'))
 
 /** Trust & GEO guides */
 export const GuidesHub = lazy(() => import('../pages/guides/GuidesHub'))

@@ -29,6 +29,7 @@
     { "source": "/lab/beatbox-composer", "destination": "/exploration/beatbox-composer", "permanent": true },
     { "source": "/lab/mars-lander", "destination": "/exploration/mars-lander", "permanent": true },
     { "source": "/lab/prompt-wizard", "destination": "/exploration/prompt-wizard", "permanent": true },
+    { "source": "/lab/finger-tetris", "destination": "/exploration/finger-tetris", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "video" }], "destination": "/courses/ioai/video", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "course" }], "destination": "/courses/foundations/course", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "module" }], "destination": "/courses/ioai", "permanent": true },

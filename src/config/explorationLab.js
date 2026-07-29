@@ -56,6 +56,26 @@ export const LAB_CATEGORIES = [
 
 export const EXPLORATION_EXPERIMENTS = [
   {
+    id: 'finger-tetris',
+    category: 'cv',
+    number: 11,
+    emoji: '🧱',
+    title: 'AI Finger Tetris',
+    subtitle: 'AI Cyber Tetris · Hand Landmarks',
+    gameplay:
+      'Control falling blocks with your index finger and pinch gestures. Real-time hand landmark tracking turns your camera into a cyber Tetris controller — no keyboard required.',
+    concepts: ['MediaPipe Hands', 'Kinematic AI', 'Canvas'],
+    tech: 'MediaPipe Hands · kinematic gesture mapping · Canvas render',
+    techTags: ['MediaPipe Hands', 'Kinematic AI', 'Canvas'],
+    badge: { id: 'finger-tetris-pilot', name: 'Tetris Pilot', icon: '🕹️' },
+    difficulty: 'Beginner',
+    duration: '10–15 min',
+    status: 'live',
+    isNew: true,
+    playPath: '/exploration/finger-tetris',
+    dashboardMetrics: ['landmarks', 'gesture', 'fps', 'lines'],
+  },
+  {
     id: 'hide-and-seek',
     category: 'cv',
     number: 1,

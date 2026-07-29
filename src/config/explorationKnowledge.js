@@ -307,6 +307,38 @@ export const EXPLORATION_KNOWLEDGE = {
     updatedAt: '2026-07-29',
   },
 
+  'finger-tetris': {
+    learningGoals: [
+      'Map hand landmarks to continuous game controls',
+      'Distinguish point vs. pinch gestures in real time',
+      'Experience kinematic AI as an embodied input channel',
+    ],
+    coreConcepts: ['MediaPipe Hands', 'Hand landmarks', 'Gesture mapping', 'Real-time CV'],
+    modelsAndData: 'MediaPipe Hands (21 landmarks per hand) in-browser; Canvas Tetris renderer',
+    inputOutput: {
+      input: 'Webcam hand pose stream',
+      output: 'Block move / rotate / drop from finger and pinch gestures',
+    },
+    steps: [
+      'Allow camera access; wait for “MediaPipe Hands ready”, then click Start Arena',
+      'Show one hand clearly — green skeleton and red index tip should appear on the webcam',
+      'Move your index finger left/right to steer; pinch thumb+index to rotate; flick down to hard-drop',
+      'Watch Index X / Pinch Distance / AI Confidence update under the camera while you play',
+    ],
+    expectedResults: 'Playable control within a minute of practice under even lighting.',
+    whyItWorks:
+      'Hand landmark models regress joint positions each frame; game logic maps tip position and pinch distance to Tetris actions — a Vision→Understanding→Action loop.',
+    commonMistakes: ['Hand cropped by frame', 'Busy background', 'Two hands confusing single-hand mode'],
+    extensions: ['Log gesture accuracy vs. FPS', 'Design an alternate mapping (wrist angle → soft drop)'],
+    safetyPrivacy: 'Video processed locally in-browser; frames are not uploaded to Bingo Academy.',
+    relatedCourses: [
+      { label: 'AI Cyber Tennis', href: '/exploration/cyber-tennis' },
+      { label: 'IOAI Explorer modules', href: '/courses/ioai' },
+    ],
+    version: '2026.1',
+    updatedAt: '2026-07-29',
+  },
+
   'prompt-wizard': {
     learningGoals: [
       'Practice prompt design against a locked system instruction',

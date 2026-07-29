@@ -64,6 +64,7 @@ export const PERMANENT_REDIRECTS = {
   '/lab/beatbox-composer': '/exploration/beatbox-composer',
   '/lab/mars-lander': '/exploration/mars-lander',
   '/lab/prompt-wizard': '/exploration/prompt-wizard',
+  '/lab/finger-tetris': '/exploration/finger-tetris',
   '/case-studies': '/outcomes',
 }
 

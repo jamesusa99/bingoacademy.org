@@ -206,6 +206,7 @@ export default function App() {
           <Route path="exploration/beatbox-composer" element={<Pages.AIBeatboxComposerPage />} />
           <Route path="exploration/mars-lander" element={<Pages.AIMarsLanderPage />} />
           <Route path="exploration/prompt-wizard" element={<Pages.PromptWizardPage />} />
+          <Route path="exploration/finger-tetris" element={<Pages.AIFingerTetrisPage />} />
           <Route path="lab" element={<Navigate to="/labs" replace />} />
           <Route path="lab/hide-and-seek" element={<Navigate to="/exploration/hide-and-seek" replace />} />
           <Route path="lab/virtual-conductor" element={<Navigate to="/exploration/virtual-conductor" replace />} />
@@ -217,6 +218,7 @@ export default function App() {
           <Route path="lab/beatbox-composer" element={<Navigate to="/exploration/beatbox-composer" replace />} />
           <Route path="lab/mars-lander" element={<Navigate to="/exploration/mars-lander" replace />} />
           <Route path="lab/prompt-wizard" element={<Navigate to="/exploration/prompt-wizard" replace />} />
+          <Route path="lab/finger-tetris" element={<Navigate to="/exploration/finger-tetris" replace />} />
           <Route path="pricing" element={<Navigate to="/cert" replace />} />
           <Route path="programs/:slug" element={<Pages.ProgramPage />} />
           <Route path="compare" element={<Pages.Compare />} />

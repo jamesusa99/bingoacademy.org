@@ -34,8 +34,9 @@ export default function AIExploration() {
   const [activeCategory, setActiveCategory] = useState('all')
 
   const filteredExperiments = useMemo(() => {
-    if (activeCategory === 'all') return EXPLORATION_EXPERIMENTS
-    return getExperimentsByCategory(activeCategory)
+    const list =
+      activeCategory === 'all' ? EXPLORATION_EXPERIMENTS : getExperimentsByCategory(activeCategory)
+    return [...list].sort((a, b) => Number(Boolean(b.isNew)) - Number(Boolean(a.isNew)))
   }, [activeCategory])
 
   const unlockedBadgeDetails = useMemo(
@@ -58,8 +59,8 @@ export default function AIExploration() {
             subtitle:
               `${EXPLORATION_EXPERIMENTS.length} gamified experiments in computer vision, NLP, and machine learning. No sign-up, no course enrollment — completely separate from product labs and kits.`,
             wideSubtitle: true,
-            ctaLabel: 'Play AI Cyber Tennis',
-            href: '/exploration/cyber-tennis',
+            ctaLabel: 'Play AI Finger Tetris',
+            href: '/exploration/finger-tetris',
             secondaryLabel: 'Browse all experiments',
             onCtaSecondary: scrollToExperiments,
           },
