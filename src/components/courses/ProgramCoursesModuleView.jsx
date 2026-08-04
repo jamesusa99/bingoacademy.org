@@ -383,7 +383,7 @@ export default function ProgramCoursesModuleView({ line }) {
 
           {decision ? (
             <div className="mb-8 mt-6">
-              <CourseDecisionSections decision={decision} theme="dark" showCta={false} />
+              <CourseDecisionSections decision={decision} theme="dark" showCta={false} parts="intro" />
             </div>
           ) : null}
 
@@ -461,6 +461,12 @@ export default function ProgramCoursesModuleView({ line }) {
             </>
           )}
           </section>
+
+          {decision ? (
+            <div className="mb-8 mt-10">
+              <CourseDecisionSections decision={decision} theme="dark" showCta={false} parts="details" />
+            </div>
+          ) : null}
 
           {videoSubId ? (
             <p className="text-xs text-slate-500 mt-8">

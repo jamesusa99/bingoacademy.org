@@ -92,13 +92,15 @@ function QuickFactsTable({ facts, theme }) {
 
 /**
  * Decision-page sections — crawlable HTML for SEO and pre-purchase answers.
- * @param {{ decision: object, theme?: 'light'|'dark', showCta?: boolean, className?: string }} props
+ * @param {{ decision: object, theme?: 'light'|'dark', showCta?: boolean, className?: string, parts?: 'all'|'intro'|'details' }} props
+ * parts: 'intro' = Overview + Quick facts; 'details' = syllabus/samples/faculty/results/FAQ; 'all' = everything
  */
 export default function CourseDecisionSections({
   decision,
   theme = 'light',
   showCta = true,
   className = '',
+  parts = 'all',
 }) {
   if (!decision) return null
 
@@ -106,33 +108,41 @@ export default function CourseDecisionSections({
   const wrap = isDark ? 'text-slate-200' : 'text-slate-700'
   const card = isDark ? 'bg-slate-800/60 border-slate-700' : 'card'
   const muted = isDark ? 'text-slate-400' : 'text-slate-500'
+  const showIntro = parts === 'all' || parts === 'intro'
+  const showDetails = parts === 'all' || parts === 'details'
+  const Wrapper = parts === 'details' ? 'div' : 'article'
+  const schemaProps =
+    parts === 'details' ? {} : { itemScope: true, itemType: 'https://schema.org/Course' }
 
   return (
-    <article className={`space-y-3 sm:space-y-4 ${wrap} ${className}`} itemScope itemType="https://schema.org/Course">
-      {/* Direct answer — always expanded */}
-      <section id="decision-overview" aria-labelledby="decision-overview-heading" className="mb-6 sm:mb-8">
-        <SectionHeading id="decision-overview-heading" theme={theme}>
-          Overview
-        </SectionHeading>
-        <p className="mt-3 text-sm sm:text-base leading-relaxed" itemProp="description">
-          {decision.directAnswer}
-        </p>
-      </section>
+    <Wrapper className={`space-y-3 sm:space-y-4 ${wrap} ${className}`} {...schemaProps}>
+      {showIntro ? (
+        <>
+          {/* Direct answer — always expanded */}
+          <section id="decision-overview" aria-labelledby="decision-overview-heading" className="mb-6 sm:mb-8">
+            <SectionHeading id="decision-overview-heading" theme={theme}>
+              Overview
+            </SectionHeading>
+            <p className="mt-3 text-sm sm:text-base leading-relaxed" itemProp="description">
+              {decision.directAnswer}
+            </p>
+          </section>
 
-      {/* Quick facts */}
-      <CollapsibleSection
-        id="decision-quick-facts"
-        headingId="decision-facts-heading"
-        title="Quick facts"
-        theme={theme}
-      >
-        <div className="mt-4">
-          <QuickFactsTable facts={decision.quickFacts} theme={theme} />
-        </div>
-      </CollapsibleSection>
+          {/* Quick facts */}
+          <CollapsibleSection
+            id="decision-quick-facts"
+            headingId="decision-facts-heading"
+            title="Quick facts"
+            theme={theme}
+          >
+            <div className="mt-4">
+              <QuickFactsTable facts={decision.quickFacts} theme={theme} />
+            </div>
+          </CollapsibleSection>
+        </>
+      ) : null}
 
-      {/* Outline */}
-      {decision.outline?.length ? (
+      {showDetails && decision.outline?.length ? (
         <CollapsibleSection
           id="decision-outline"
           headingId="decision-outline-heading"
@@ -169,7 +179,7 @@ export default function CourseDecisionSections({
       ) : null}
 
       {/* Samples */}
-      {decision.samples?.length ? (
+      {showDetails && decision.samples?.length ? (
         <CollapsibleSection
           id="decision-samples"
           headingId="decision-samples-heading"
@@ -213,7 +223,7 @@ export default function CourseDecisionSections({
       ) : null}
 
       {/* Faculty & methodology */}
-      {(decision.faculty?.length || decision.methodology) && (
+      {showDetails && (decision.faculty?.length || decision.methodology) && (
         <CollapsibleSection
           id="decision-faculty"
           headingId="decision-faculty-heading"
@@ -254,7 +264,7 @@ export default function CourseDecisionSections({
       )}
 
       {/* Results */}
-      {decision.results?.length ? (
+      {showDetails && decision.results?.length ? (
         <CollapsibleSection
           id="decision-results"
           headingId="decision-results-heading"
@@ -282,7 +292,7 @@ export default function CourseDecisionSections({
       ) : null}
 
       {/* FAQ */}
-      {decision.faq?.length ? (
+      {showDetails && decision.faq?.length ? (
         <CollapsibleSection
           id="decision-faq"
           headingId="decision-faq-heading"
@@ -306,7 +316,7 @@ export default function CourseDecisionSections({
       ) : null}
 
       {/* Audience-specific CTA */}
-      {showCta && decision.primaryCta ? (
+      {showDetails && showCta && decision.primaryCta ? (
         <div className={`flex flex-wrap gap-3 pt-2 ${isDark ? '' : ''}`}>
           <Link
             to={decision.primaryCta.href}
@@ -328,6 +338,6 @@ export default function CourseDecisionSections({
           ) : null}
         </div>
       ) : null}
-    </article>
+    </Wrapper>
   )
 }
