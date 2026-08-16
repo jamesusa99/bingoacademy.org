@@ -7,7 +7,7 @@ export const HOME_HERO = {
   headline: 'Empowering Future Innovators.',
   headlineAccent: 'From Code to Real-World AI.',
   subtitle:
-    'Write code in the browser — watch Cyber Tennis, vision models, and BingoClaw hardware respond in the physical world. Embodied AI, not slide decks.',
+    'Write code in the browser — watch Cyber Tennis, vision models, and Embodied Robotics respond in the physical world.',
   ctaPrimary: {
     label: 'Start Building for Free',
     to: '/try-ai',
