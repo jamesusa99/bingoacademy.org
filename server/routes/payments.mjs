@@ -23,6 +23,14 @@ import {
   syncUserNotificationsFromActivity,
 } from '../lib/userNotifications.mjs'
 import { buildStripeCheckoutSession } from '../lib/stripeCheckout.mjs'
+import { createPaidCheckoutSession } from '../lib/createCheckoutSession.mjs'
+import {
+  findPromoCodeByCode,
+  PROMO_MIN_CHECKOUT_CENTS,
+  recordPromoRedemption,
+  resolvePromoForCheckout,
+  validatePromoForQuote,
+} from '../lib/promoCodes.mjs'
 
 function siteOrigin(req) {
   return (
@@ -171,6 +179,100 @@ export function registerPaymentRoutes(app) {
     }
   })
 
+  app.post('/api/promo/validate', async (req, res) => {
+    const { code, courseSlug, purchaseType = 'course', amountCents, addonSlugs = [] } = req.body || {}
+    if (!code?.trim()) {
+      return res.status(400).json({ valid: false, error: 'Promo code is required' })
+    }
+
+    const admin = getSupabaseAdmin()
+    if (!admin) {
+      return res.status(503).json({ valid: false, error: 'Database not configured' })
+    }
+
+    try {
+      let quote
+      if (amountCents != null && Number.isFinite(Number(amountCents))) {
+        quote = {
+          amountCents: Number(amountCents),
+          currency: 'usd',
+          purchaseType,
+          returnSlug: courseSlug?.trim() || '',
+          productName: 'Preview',
+        }
+      } else if (courseSlug?.trim()) {
+        const course = await getCatalogCourseBySlug(admin, courseSlug.trim())
+        quote = await resolveCheckoutQuote(admin, {
+          courseSlug: courseSlug.trim(),
+          purchaseType,
+          course,
+          addonSlugs,
+        })
+        if (quote.error) {
+          return res.status(400).json({ valid: false, error: quote.error })
+        }
+      } else {
+        return res.status(400).json({ valid: false, error: 'courseSlug or amountCents is required' })
+      }
+
+      const promo = await findPromoCodeByCode(admin, code)
+      const result = validatePromoForQuote(promo, quote, {
+        purchaseType,
+        courseSlug: courseSlug?.trim(),
+      })
+      if (!result.ok) {
+        return res.json({ valid: false, error: result.error })
+      }
+
+      return res.json({
+        valid: true,
+        code: result.promo.code,
+        discountLabel: result.discountLabel,
+        originalAmountCents: quote.amountCents,
+        discountCents: result.discountCents,
+        finalAmountCents: result.finalAmountCents,
+        currency: quote.currency,
+        minimumCheckoutApplied: result.minimumCheckoutApplied,
+        minimumCheckoutCents: result.minimumCheckoutCents,
+      })
+    } catch (err) {
+      console.error('[promo/validate]', err)
+      return res.status(502).json({ valid: false, error: err.message || 'Validation failed' })
+    }
+  })
+
+  app.post('/api/checkout/quote', async (req, res) => {
+    const { courseSlug, purchaseType = 'course', addonSlugs = [] } = req.body || {}
+    if (!courseSlug?.trim()) {
+      return res.status(400).json({ error: 'courseSlug is required' })
+    }
+
+    const admin = getSupabaseAdmin()
+    const course = admin ? await getCatalogCourseBySlug(admin, courseSlug.trim()) : null
+    const quote = await resolveCheckoutQuote(admin, {
+      courseSlug: courseSlug.trim(),
+      purchaseType,
+      course,
+      addonSlugs,
+    })
+    if (quote.error) {
+      const status = quote.error === 'Course not found in catalog' || quote.error === 'Module not found' || quote.error === 'Bundle not found' ? 404 : 400
+      return res.status(status).json({ error: quote.error })
+    }
+
+    return res.json({
+      productName: quote.productName,
+      purchaseType: quote.purchaseType,
+      returnSlug: quote.returnSlug,
+      amountCents: quote.amountCents,
+      currency: quote.currency,
+      lineItems: quote.lineItems || [],
+      addonSlugs: quote.addonSlugs || [],
+      itemLabel: quote.itemLabel || null,
+      coverUrl: quote.coverUrl || null,
+    })
+  })
+
   app.post('/api/checkout/course', async (req, res) => {
     const auth = await verifyAuthUser(req)
     if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
@@ -180,7 +282,7 @@ export function registerPaymentRoutes(app) {
       return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
     }
 
-    const { courseSlug, purchaseType = 'course', addonSlugs = [] } = req.body || {}
+    const { courseSlug, purchaseType = 'course', addonSlugs = [], promoCode } = req.body || {}
     if (!courseSlug?.trim()) {
       return res.status(400).json({ error: 'courseSlug is required' })
     }
@@ -202,42 +304,22 @@ export function registerPaymentRoutes(app) {
 
     const origin = siteOrigin(req)
     const returnPath = req.body?.returnPath?.trim() || `/courses/detail/${quote.returnSlug}`
-    const successUrl = `${origin}${returnPath}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
-    const cancelUrl = `${origin}${returnPath}?checkout=canceled`
 
     try {
-      const session = await stripe.checkout.sessions.create(
-        buildStripeCheckoutSession({
-          customerEmail: auth.user.email,
-          lineItems: [
-            {
-              quantity: 1,
-              price_data: {
-                currency: quote.currency,
-                unit_amount: quote.amountCents,
-                product_data: {
-                  name: quote.productName,
-                  metadata: {
-                    course_slug: courseSlug.trim(),
-                    purchase_type: quote.purchaseType,
-                  },
-                },
-              },
-            },
-          ],
-          successUrl,
-          cancelUrl,
-          metadata: {
-            product_name: quote.productName,
-            course_slug: courseSlug.trim(),
-            purchase_type: quote.purchaseType,
-            addon_slugs: JSON.stringify(quote.addonSlugs || []),
-            user_id: auth.user.id,
-          },
-        })
-      )
-
-      return res.json({ url: session.url, sessionId: session.id })
+      const result = await createPaidCheckoutSession({
+        stripe,
+        admin,
+        auth,
+        quote,
+        returnPath,
+        origin,
+        promoCode,
+        purchaseContext: { courseSlug: courseSlug.trim(), purchaseType: quote.purchaseType },
+      })
+      if (result.error) {
+        return res.status(400).json({ error: result.error })
+      }
+      return res.json({ url: result.url, sessionId: result.sessionId })
     } catch (err) {
       console.error('[checkout]', err)
       return res.status(502).json({ error: err.message || 'Stripe checkout failed' })
@@ -275,37 +357,23 @@ export function registerPaymentRoutes(app) {
 
     const origin = siteOrigin(req)
     const returnPath = req.body?.returnPath || '/curriculum'
-    const successUrl = `${origin}${returnPath}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
-    const cancelUrl = `${origin}${returnPath}?checkout=canceled`
+    const promoCode = req.body?.promoCode
 
     try {
-      const session = await stripe.checkout.sessions.create(
-        buildStripeCheckoutSession({
-          customerEmail: auth.user.email,
-          lineItems: [
-            {
-              quantity: 1,
-              price_data: {
-                currency: quote.currency,
-                unit_amount: quote.amountCents,
-                product_data: {
-                  name: quote.productName || 'IOAI Masterclass',
-                  metadata: { course_slug: courseSlug, purchase_type: purchaseType },
-                },
-              },
-            },
-          ],
-          successUrl,
-          cancelUrl,
-          metadata: {
-            product_name: quote.productName,
-            course_slug: courseSlug,
-            purchase_type: purchaseType,
-            user_id: auth.user.id,
-          },
-        })
-      )
-      return res.json({ url: session.url, sessionId: session.id })
+      const result = await createPaidCheckoutSession({
+        stripe,
+        admin,
+        auth,
+        quote,
+        returnPath,
+        origin,
+        promoCode,
+        purchaseContext: { courseSlug, purchaseType: quote.purchaseType },
+      })
+      if (result.error) {
+        return res.status(400).json({ error: result.error })
+      }
+      return res.json({ url: result.url, sessionId: result.sessionId })
     } catch (err) {
       console.error('[checkout/ioai]', err)
       return res.status(502).json({ error: err.message || 'Stripe checkout failed' })
@@ -321,22 +389,64 @@ export function registerPaymentRoutes(app) {
       return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
     }
 
-    const { items } = req.body || {}
+    const { items, promoCode } = req.body || {}
     const admin = getSupabaseAdmin()
     const quote = await resolveMallCartLineItems(admin, items)
     if (quote.error) {
       return res.status(400).json({ error: quote.error })
     }
 
+    const mallQuote = {
+      amountCents: quote.totalCents,
+      currency: quote.currency,
+      productName: quote.productName,
+      purchaseType: 'mall',
+      returnSlug: 'mall',
+    }
+
+    const promoResult = await resolvePromoForCheckout(admin, promoCode, mallQuote, {
+      purchaseType: 'mall',
+      courseSlug: 'mall',
+    })
+    if (promoResult.error) {
+      return res.status(400).json({ error: promoResult.error })
+    }
+
+    const hasPromo = Boolean(promoResult.promoMeta?.promo_code_id)
+    const chargedCents = hasPromo
+      ? Math.max(PROMO_MIN_CHECKOUT_CENTS, promoResult.amountCents)
+      : promoResult.amountCents
+
     const origin = siteOrigin(req)
     const successUrl = `${origin}/mall?checkout=success&session_id={CHECKOUT_SESSION_ID}`
     const cancelUrl = `${origin}/mall?checkout=canceled`
+
+    const productName = promoResult.productNameSuffix
+      ? `${quote.productName} (${promoResult.productNameSuffix})`
+      : quote.productName
+
+    const lineItems =
+      promoResult.promoMeta?.promo_code_id != null
+        ? [
+            {
+              quantity: 1,
+              price_data: {
+                currency: quote.currency,
+                unit_amount: chargedCents,
+                product_data: {
+                  name: productName,
+                  metadata: { purchase_type: 'mall' },
+                },
+              },
+            },
+          ]
+        : quote.lineItems
 
     try {
       const session = await stripe.checkout.sessions.create(
         buildStripeCheckoutSession({
           customerEmail: auth.user.email,
-          lineItems: quote.lineItems,
+          lineItems,
           successUrl,
           cancelUrl,
           metadata: {
@@ -344,6 +454,7 @@ export function registerPaymentRoutes(app) {
             purchase_type: 'mall',
             user_id: auth.user.id,
             mall_items: JSON.stringify(quote.metaItems),
+            ...promoResult.promoMeta,
           },
         })
       )

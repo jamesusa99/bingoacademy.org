@@ -48,27 +48,41 @@ export async function fetchMyOrders() {
   return authFetch('/api/me/orders')
 }
 
-export async function startCourseCheckout({ courseSlug, purchaseType, returnPath, addonSlugs = [] }) {
+export async function fetchCheckoutQuote({ courseSlug, purchaseType, addonSlugs = [] }) {
+  const res = await fetch('/api/checkout/quote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ courseSlug, purchaseType, addonSlugs }),
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(body.error || `Request failed (${res.status})`)
+  }
+  return body
+}
+
+export async function startCourseCheckout({ courseSlug, purchaseType, returnPath, addonSlugs = [], promoCode }) {
   return authFetch('/api/checkout/course', {
     method: 'POST',
-    body: JSON.stringify({ courseSlug, purchaseType, returnPath, addonSlugs }),
+    body: JSON.stringify({ courseSlug, purchaseType, returnPath, addonSlugs, promoCode }),
   })
 }
 
-export async function startMallCheckout({ items }) {
+export async function startMallCheckout({ items, promoCode }) {
   return authFetch('/api/checkout/mall', {
     method: 'POST',
-    body: JSON.stringify({ items }),
+    body: JSON.stringify({ items, promoCode }),
   })
 }
 
-export async function startIOAIMasterclassCheckout() {
+export async function startIOAIMasterclassCheckout({ promoCode } = {}) {
   return authFetch('/api/checkout', {
     method: 'POST',
     body: JSON.stringify({
       courseSlug: 'ioai-competition-system',
       purchaseType: 'ioai_track',
       returnPath: '/curriculum',
+      promoCode,
     }),
   })
 }

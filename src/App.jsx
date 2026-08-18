@@ -98,6 +98,7 @@ export default function App() {
           <Route path="community" element={<Navigate to="/admin/community/home" replace />} />
           <Route path="community/:section" element={<Pages.AdminCommunity />} />
           <Route path="video" element={<Navigate to="/admin/curriculum/ioai" replace />} />
+          <Route path="marketing" element={<Pages.AdminMarketing />} />
           <Route path="payments" element={<Pages.AdminPayments />} />
           <Route path="users" element={<Pages.AdminUsers />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
@@ -136,6 +137,14 @@ export default function App() {
           }
         />
 
+        <Route
+          path="/checkout"
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <Pages.Checkout />
+            </Suspense>
+          }
+        />
         <Route path="/" element={<Layout><LazyOutlet /></Layout>}>
           <Route index element={<Pages.Home />} />
           <Route path="showcase" element={<Pages.Showcase />} />

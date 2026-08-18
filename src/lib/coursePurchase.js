@@ -1,47 +1,22 @@
-import { authLink } from './authRedirect'
-import { AuthRequiredError } from './checkout'
-import { startCourseCheckout } from './checkout'
+import { goToSecureCheckout } from './checkoutPath'
 
-/** Start Stripe checkout or demo unlock for a course */
+/** Open the on-site checkout review page (promo + item list), then Stripe. */
 export async function initiateCoursePurchase({
   course,
   purchaseType,
-  stripeCheckout,
   isAuthenticated,
   navigate,
-  setCheckoutLoading,
-  onDemoUnlock,
   returnPath: returnPathOverride,
 }) {
   if (!course?.id) return
 
   const returnPath = returnPathOverride || `/courses/detail/${course.id}`
 
-  if (!isAuthenticated) {
-    navigate(authLink('/login', returnPath))
-    return
-  }
-
-  if (!stripeCheckout) {
-    if (purchaseType === 'ioai_track') onDemoUnlock?.track?.()
-    else onDemoUnlock?.lesson?.(course.id)
-    return
-  }
-
-  setCheckoutLoading?.(true)
-  try {
-    const { url } = await startCourseCheckout({
-      courseSlug: course.id,
-      purchaseType,
-      returnPath,
-    })
-    if (url) window.location.href = url
-  } catch (err) {
-    if (err instanceof AuthRequiredError) {
-      navigate(authLink('/login', returnPath))
-      return
-    }
-    alert(err.message || 'Checkout failed')
-    setCheckoutLoading?.(false)
-  }
+  goToSecureCheckout({
+    navigate,
+    isAuthenticated,
+    courseSlug: course.id,
+    purchaseType,
+    returnPath,
+  })
 }

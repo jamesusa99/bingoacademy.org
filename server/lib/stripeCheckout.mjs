@@ -15,6 +15,7 @@ export function buildStripeCheckoutSession({
     cancel_url: cancelUrl,
     metadata,
     phone_number_collection: { enabled: false },
-    allow_promotion_codes: true,
+    // Promo codes are validated via Supabase (Admin → Marketing Center), not Stripe Promotion Codes.
+    allow_promotion_codes: false,
   }
 }

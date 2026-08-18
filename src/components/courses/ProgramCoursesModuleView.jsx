@@ -12,7 +12,6 @@ import { findCourseBundleForStage, useIoaiCourseBundles } from '../../hooks/useI
 import { IoaiCourseBundleCards } from '../ioai/IoaiCourseBundleModal'
 import { purchaseIoaiModule, purchaseIoaiBundle } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig } from '../../lib/checkout'
-import { purchaseCourseSlug } from '../../lib/courseAccess'
 import { useAuth } from '../../contexts/AuthContext'
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
 import CoursesHero from './CoursesHero'
@@ -31,30 +30,17 @@ const STAGE_PACKAGES_SCROLL_OFFSET = 96
 function buyStageBundleItem({
   item,
   stageId,
-  stripeCheckout,
   isAuthenticated,
   navigate,
-  setCheckoutLoading,
 }) {
   if (!item) return
-  const returnPath = `${coursePathForLineId('ioai')}?stage=${encodeURIComponent(stageId)}&buy=1#${IOAI_STAGE_PACKAGES_ANCHOR}`
+  const returnPath = `${coursePathForLineId('ioai')}?stage=${encodeURIComponent(stageId)}#${IOAI_STAGE_PACKAGES_ANCHOR}`
 
   purchaseIoaiBundle({
     bundleSlug: item.ioaiBundleSlug,
-    stripeCheckout,
     isAuthenticated,
     navigate,
-    setCheckoutLoading,
     returnPath,
-    onDemoUnlock: {
-      bundle: (slug) => {
-        purchaseCourseSlug(slug)
-        for (const moduleSlug of item.moduleSlugs || []) {
-          purchaseCourseSlug(moduleSlug)
-        }
-        window.location.reload()
-      },
-    },
   })
 }
 
@@ -86,16 +72,8 @@ function ModuleCard({ mod, lineId, hasModule, accessLoading, stripeCheckout, isA
     e.stopPropagation()
     purchaseIoaiModule({
       catalogSlug: mod.catalogSlug,
-      stripeCheckout,
       isAuthenticated,
       navigate,
-      setCheckoutLoading: setLoading,
-      onDemoUnlock: {
-        module: (slug) => {
-          purchaseCourseSlug(slug)
-          window.location.reload()
-        },
-      },
     })
   }
 
@@ -301,7 +279,6 @@ export default function ProgramCoursesModuleView({ line }) {
     buyStageBundleItem({
       item: stageBundleItem,
       stageId: stageFilter,
-      stripeCheckout,
       isAuthenticated,
       navigate,
     })
@@ -443,12 +420,8 @@ export default function ProgramCoursesModuleView({ line }) {
                       buyStageBundleItem({
                         item,
                         stageId: stageFilter,
-                        stripeCheckout,
                         isAuthenticated,
                         navigate,
-                        setCheckoutLoading: (active) => {
-                          if (!active) setBuyingSlug(null)
-                        },
                       })
                     }}
                   />

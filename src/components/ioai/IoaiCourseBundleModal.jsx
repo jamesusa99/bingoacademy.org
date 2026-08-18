@@ -30,7 +30,14 @@ function BundleDiscountTags({ item, className = '' }) {
   )
 }
 
-export default function IoaiCourseBundleModal({ item, onClose, onBuy, buying = false, owned = false, accessLoading = false }) {
+export default function IoaiCourseBundleModal({
+  item,
+  onClose,
+  onBuy,
+  buying = false,
+  owned = false,
+  accessLoading = false,
+}) {
   if (!item) return null
 
   const pendingAccess = accessLoading && !owned

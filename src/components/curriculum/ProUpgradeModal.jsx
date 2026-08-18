@@ -1,44 +1,38 @@
-import { useState } from 'react'
-import { X, Sparkles, Shield, PlayCircle, Loader2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { X, Sparkles, Shield, PlayCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { startIOAIMasterclassCheckout } from '../../lib/checkout'
 import { PRICING } from '../../lib/courseAccess'
 import CheckoutTrustMicrocopy from '../checkout/CheckoutTrustMicrocopy'
 import { useLazyAuth } from '../../contexts/LazyAuthContext'
-import { getStoredPromoCode } from '../../lib/lazyRegistration'
-import { EARLY_BIRD_PROMO } from '../../config/funnel'
+import { goToSecureCheckout } from '../../lib/checkoutPath'
+import { IOAI_FULL_BUNDLE_SLUG } from '../../lib/ioaiAccess'
 
 export default function ProUpgradeModal({ open, onClose }) {
   const { isAuthenticated } = useAuth()
   const { gateAction } = useLazyAuth()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
   if (!open) return null
 
   const price = (PRICING?.ioaiTrack?.price ?? 2990).toLocaleString()
-  const promo = getStoredPromoCode()
 
-  const runCheckout = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const { url } = await startIOAIMasterclassCheckout()
-      if (url) window.location.href = url
-      else throw new Error('No checkout URL returned')
-    } catch (err) {
-      setError(err.message || 'Checkout failed')
-      setLoading(false)
-    }
+  const goCheckout = () => {
+    onClose?.()
+    goToSecureCheckout({
+      navigate,
+      isAuthenticated: true,
+      courseSlug: IOAI_FULL_BUNDLE_SLUG,
+      purchaseType: 'ioai_track',
+      returnPath: '/curriculum',
+    })
   }
 
   const handleUnlock = () => {
     gateAction({
       title: 'Sign in to unlock IOAI Masterclass',
-      subtitle:
-        'Google one-tap sign-in — then secure Stripe checkout. Enter promo codes like BINGO2026 on the payment page.',
+      subtitle: 'Google one-tap sign-in — then review your order and apply a promo code before paying.',
       googleLabel: 'Continue with Google to checkout',
-      onAuthed: runCheckout,
+      onAuthed: goCheckout,
     })
   }
 
@@ -91,31 +85,12 @@ export default function ProUpgradeModal({ open, onClose }) {
           </p>
           <p className="text-xs text-slate-500 mb-6">One-time · lifetime access</p>
 
-          {promo ? (
-            <p className="text-xs text-amber-400/90 mb-4">
-              Promo <span className="font-mono font-bold">{promo || EARLY_BIRD_PROMO.code}</span> — enter at Stripe
-              checkout
-            </p>
-          ) : null}
-
-          {error ? (
-            <p className="text-sm text-red-400 mb-4">{error}</p>
-          ) : null}
-
           <button
             type="button"
             onClick={handleUnlock}
-            disabled={loading}
-            className="w-full btn-primary py-3.5 text-sm font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full btn-primary py-3.5 text-sm font-bold rounded-xl flex items-center justify-center gap-2"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Redirecting to Stripe…
-              </>
-            ) : (
-              'Unlock IOAI Masterclass'
-            )}
+            Unlock IOAI Masterclass
           </button>
 
           <CheckoutTrustMicrocopy variant="dark" className="mt-3" />

@@ -43,4 +43,5 @@ export const EXIT_INTENT_EXCLUDED_PREFIXES = [
   '/forgot-password',
   '/reset-password',
   '/auth/',
+  '/checkout',
 ]

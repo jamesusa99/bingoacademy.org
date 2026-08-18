@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 
 /** Core marketing — keep separate from heavy app surfaces */
+export const Checkout = lazy(() => import('../pages/Checkout'))
 export const Home = lazy(() => import('../pages/Home'))
 export const Showcase = lazy(() => import('../pages/Showcase'))
 export const ShowcaseCase = lazy(() => import('../pages/ShowcaseCase'))
@@ -97,5 +98,6 @@ export const AdminProgramCourseBundles = lazy(() => import('../pages/admin/Admin
 export const AdminMall = lazy(() => import('../pages/admin/AdminMall'))
 export const AdminCert = lazy(() => import('../pages/admin/AdminCert'))
 export const AdminCommunity = lazy(() => import('../pages/admin/AdminCommunity'))
+export const AdminMarketing = lazy(() => import('../pages/admin/AdminMarketing'))
 export const AdminPayments = lazy(() => import('../pages/admin/AdminPayments'))
 export const AdminUsers = lazy(() => import('../pages/admin/AdminUsers'))

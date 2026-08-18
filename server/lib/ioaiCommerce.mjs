@@ -358,6 +358,7 @@ export async function resolveStageComboBundle(admin, slug) {
       introHtml: dbBundle.intro_html || '',
       marketingTags: dbBundle.marketing_tags || [],
       moduleSlugs,
+      coverUrl: dbBundle.cover_url || null,
     }
   }
 

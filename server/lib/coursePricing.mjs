@@ -5,6 +5,8 @@ import {
   isBundlePurchasable,
   isModulePurchasable,
   isStageComboBundleSlug,
+  listLabMaterialsForModule,
+  parseStageComboLevelSlug,
   resolveModuleCheckoutPriceCents,
   resolveStageComboBundle,
   validateModuleAddonSlugs,
@@ -42,6 +44,53 @@ function isIoaiLessonSlug(slug) {
   return slug?.startsWith('ioai-') && slug !== IOAI_FULL_BUNDLE_SLUG
 }
 
+const IOAI_STAGE_PACKAGES_ANCHOR = 'stage-packages'
+
+function bundleProductHref(slug) {
+  if (!slug) return '/courses/ioai'
+  if (slug === IOAI_FULL_BUNDLE_SLUG) {
+    return `/courses/ioai?stage=all#${IOAI_STAGE_PACKAGES_ANCHOR}`
+  }
+  const levelSlug = parseStageComboLevelSlug(slug)
+  if (levelSlug) {
+    return `/courses/ioai?stage=${encodeURIComponent(levelSlug)}#${IOAI_STAGE_PACKAGES_ANCHOR}`
+  }
+  return `/courses/ioai#${IOAI_STAGE_PACKAGES_ANCHOR}`
+}
+
+function checkoutLineItemHref(kind, slug) {
+  if (!slug) return null
+  if (kind === 'unit') return `/courses/module/${encodeURIComponent(slug)}`
+  if (kind === 'addon') return `/labs/pack/${encodeURIComponent(slug)}`
+  if (kind === 'course') return `/courses/detail/${encodeURIComponent(slug)}`
+  if (kind === 'bundle') return bundleProductHref(slug)
+  return null
+}
+
+function checkoutLineItem({ name, amountCents, kind, slug }) {
+  return {
+    name,
+    amountCents,
+    kind,
+    slug: slug || null,
+    href: checkoutLineItemHref(kind, slug),
+  }
+}
+
+function withDisplayLines(quote, lineItems, extra = {}) {
+  if (quote?.error) return quote
+  const lines =
+    Array.isArray(lineItems) && lineItems.length
+      ? lineItems
+      : [{ name: quote.productName, amountCents: quote.amountCents, kind: 'item' }]
+  return { ...quote, lineItems: lines, ...extra }
+}
+
+function catalogRowAmountCents(row) {
+  if (row?.price_cents != null && row.price_cents > 0) return row.price_cents
+  return parsePriceStringToCents(row?.price) || 0
+}
+
 /** Resolve Stripe line item for checkout */
 export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, course, addonSlugs = [] }) {
   const slug = courseSlug?.trim()
@@ -50,13 +99,18 @@ export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, co
   if (purchaseType === 'ioai_track') {
     const bundle = admin ? await getBundleBySlug(admin, IOAI_FULL_BUNDLE_SLUG) : null
     const amountCents = bundle?.price_cents || 299000
-    return {
-      purchaseType: 'bundle',
-      returnSlug: IOAI_FULL_BUNDLE_SLUG,
-      amountCents,
-      currency: (bundle?.currency || 'usd').toLowerCase(),
-      productName: bundle?.title || 'IOAI Full Track',
-    }
+    const productName = bundle?.title || 'IOAI Full Track'
+    return withDisplayLines(
+      {
+        purchaseType: 'bundle',
+        returnSlug: IOAI_FULL_BUNDLE_SLUG,
+        amountCents,
+        currency: (bundle?.currency || 'usd').toLowerCase(),
+        productName,
+      },
+      [checkoutLineItem({ name: productName, amountCents, kind: 'bundle', slug: IOAI_FULL_BUNDLE_SLUG })],
+      { itemLabel: 'Full track', coverUrl: bundle?.cover_url || null }
+    )
   }
 
   if (purchaseType === 'bundle') {
@@ -66,25 +120,35 @@ export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, co
       if (!isStripeCheckoutAmountValid(combo.priceCents, combo.currency)) {
         return { error: stripeMinimumAmountError(combo.priceCents, combo.currency) }
       }
-      return {
-        purchaseType: 'bundle',
-        returnSlug: combo.slug,
-        amountCents: combo.priceCents,
-        currency: (combo.currency || 'usd').toLowerCase(),
-        productName: combo.title || combo.slug,
-      }
+      const productName = combo.title || combo.slug
+      return withDisplayLines(
+        {
+          purchaseType: 'bundle',
+          returnSlug: combo.slug,
+          amountCents: combo.priceCents,
+          currency: (combo.currency || 'usd').toLowerCase(),
+          productName,
+        },
+        [checkoutLineItem({ name: productName, amountCents: combo.priceCents, kind: 'bundle', slug: combo.slug })],
+        { itemLabel: 'Stage bundle', coverUrl: combo.coverUrl || combo.cover_url || null }
+      )
     }
 
     const bundle = admin ? await getBundleBySlug(admin, slug) : null
     if (!bundle) return { error: 'Bundle not found' }
     if (!isBundlePurchasable(bundle)) return { error: 'This bundle is not available for purchase' }
-    return {
-      purchaseType: 'bundle',
-      returnSlug: bundle.slug,
-      amountCents: bundle.price_cents,
-      currency: (bundle.currency || 'usd').toLowerCase(),
-      productName: bundle.title || bundle.slug,
-    }
+    const productName = bundle.title || bundle.slug
+    return withDisplayLines(
+      {
+        purchaseType: 'bundle',
+        returnSlug: bundle.slug,
+        amountCents: bundle.price_cents,
+        currency: (bundle.currency || 'usd').toLowerCase(),
+        productName,
+      },
+      [checkoutLineItem({ name: productName, amountCents: bundle.price_cents, kind: 'bundle', slug: bundle.slug })],
+      { itemLabel: 'Course bundle', coverUrl: bundle.cover_url || null }
+    )
   }
 
   if (purchaseType === 'module') {
@@ -103,14 +167,41 @@ export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, co
     }
     const addonLabel =
       validation.slugs.length > 0 ? ` (+ ${validation.slugs.length} add-on${validation.slugs.length === 1 ? '' : 's'})` : ''
-    return {
-      purchaseType: 'module',
-      returnSlug: mod.catalog_slug,
-      amountCents: totalCents,
-      currency: (mod.currency || 'usd').toLowerCase(),
-      productName: `${mod.title || mod.catalog_slug}${addonLabel}`,
-      addonSlugs: validation.slugs,
+    const lineItems = [
+      checkoutLineItem({
+        name: mod.title || mod.catalog_slug,
+        amountCents: mod.price_cents ?? 0,
+        kind: 'unit',
+        slug: mod.catalog_slug,
+      }),
+    ]
+    if (validation.slugs.length && admin) {
+      const available = await listLabMaterialsForModule(admin, mod.id)
+      const bySlug = new Map(available.map((row) => [row.slug, row]))
+      for (const addonSlug of validation.slugs) {
+        const row = bySlug.get(addonSlug)
+        lineItems.push(
+          checkoutLineItem({
+            name: row?.name || addonSlug,
+            amountCents: catalogRowAmountCents(row),
+            kind: 'addon',
+            slug: addonSlug,
+          })
+        )
+      }
     }
+    return withDisplayLines(
+      {
+        purchaseType: 'module',
+        returnSlug: mod.catalog_slug,
+        amountCents: totalCents,
+        currency: (mod.currency || 'usd').toLowerCase(),
+        productName: `${mod.title || mod.catalog_slug}${addonLabel}`,
+        addonSlugs: validation.slugs,
+      },
+      lineItems,
+      { itemLabel: 'Course unit', coverUrl: mod.cover_url || null }
+    )
   }
 
   // IOAI lesson checkout disabled — L3 modules only
@@ -130,11 +221,16 @@ export async function resolveCheckoutQuote(admin, { courseSlug, purchaseType, co
     return { error: stripeMinimumAmountError(amountCents, course.currency) }
   }
 
-  return {
-    purchaseType: 'course',
-    returnSlug: slug,
-    amountCents,
-    currency: (course.currency || 'usd').toLowerCase(),
-    productName: course.name || slug,
-  }
+  const productName = course.name || slug
+  return withDisplayLines(
+    {
+      purchaseType: 'course',
+      returnSlug: slug,
+      amountCents,
+      currency: (course.currency || 'usd').toLowerCase(),
+      productName,
+    },
+    [checkoutLineItem({ name: productName, amountCents, kind: 'course', slug })],
+    { itemLabel: 'Course', coverUrl: course.thumbnail_url || course.cover_url || null }
+  )
 }

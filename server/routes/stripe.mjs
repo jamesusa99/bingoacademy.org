@@ -1,5 +1,6 @@
 import express from 'express'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.mjs'
+import { recordPromoRedemption } from '../lib/promoCodes.mjs'
 import { upsertOrderFromStripe } from './admin.mjs'
 
 export function registerStripeWebhook(app) {
@@ -40,6 +41,21 @@ export function registerStripeWebhook(app) {
             .from('orders')
             .update({ status: 'paid', stripe_payment_intent_id: pi.id, updated_at: new Date().toISOString() })
             .eq('stripe_payment_intent_id', pi.id)
+
+          const { data: row } = await admin
+            .from('orders')
+            .select('stripe_checkout_session_id, metadata')
+            .eq('stripe_payment_intent_id', pi.id)
+            .maybeSingle()
+
+          if (row?.stripe_checkout_session_id) {
+            await recordPromoRedemption(admin, {
+              id: row.stripe_checkout_session_id,
+              payment_status: 'paid',
+              status: 'complete',
+              metadata: row.metadata || {},
+            })
+          }
         }
       }
     } catch (err) {

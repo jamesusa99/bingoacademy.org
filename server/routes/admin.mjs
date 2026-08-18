@@ -3,6 +3,7 @@ import { grantCourseEntitlements } from '../lib/courseEntitlements.mjs'
 import { notifyCheckoutEntitlements, notifyOrderPaid } from '../lib/userNotifications.mjs'
 import { notifyPurchaseAccomplishments } from '../lib/userAccomplishments.mjs'
 import { parseAddonSlugs } from '../lib/ioaiCommerce.mjs'
+import { recordPromoRedemption } from '../lib/promoCodes.mjs'
 import {
   STREAM_DEFAULT_MAX_DURATION_SECONDS,
   STREAM_CLOUDFLARE_MAX_DURATION_SECONDS,
@@ -164,13 +165,27 @@ export async function upsertOrderFromStripe(session) {
   const currency = session.currency || 'usd'
   const email = session.customer_details?.email || session.customer_email
   const userId = session.metadata?.user_id || null
-  const metadata = session.metadata || {}
+  const incomingMeta = session.metadata || {}
+
+  const { data: existing } = await admin
+    .from('orders')
+    .select('id, metadata, user_id')
+    .eq('stripe_checkout_session_id', session.id)
+    .maybeSingle()
+
+  const metadata = {
+    ...(existing?.metadata && typeof existing.metadata === 'object' ? existing.metadata : {}),
+    ...incomingMeta,
+  }
+  if (existing?.metadata?.promo_redemption_recorded) {
+    metadata.promo_redemption_recorded = existing.metadata.promo_redemption_recorded
+  }
 
   const { data: orderRow } = await admin
     .from('orders')
     .upsert(
       {
-        user_id: userId,
+        user_id: userId || existing?.user_id || null,
         stripe_checkout_session_id: session.id,
         stripe_payment_intent_id: session.payment_intent || null,
         status: session.payment_status === 'paid' ? 'paid' : 'pending',
@@ -186,42 +201,48 @@ export async function upsertOrderFromStripe(session) {
     .select('id')
     .maybeSingle()
 
+  await recordPromoRedemption(admin, { ...session, metadata })
+
   if (session.payment_status === 'paid' && userId) {
     const purchaseType = metadata.purchase_type || 'course'
     const addonSlugs = parseAddonSlugs(metadata.addon_slugs)
     const productName = metadata.product_name || session.line_items?.data?.[0]?.description
 
-    await notifyOrderPaid(admin, {
-      userId,
-      orderId: orderRow?.id,
-      productName,
-      amountCents: amount,
-      currency,
-    })
-
-    const { granted } = await grantCourseEntitlements(admin, {
-      userId,
-      purchaseType,
-      courseSlug: metadata.course_slug,
-      addonSlugs,
-      orderId: orderRow?.id ?? null,
-    })
-
-    if (granted?.length) {
-      await notifyCheckoutEntitlements(admin, {
+    try {
+      await notifyOrderPaid(admin, {
         userId,
         orderId: orderRow?.id,
         productName,
-        grantedSlugs: granted,
+        amountCents: amount,
+        currency,
       })
-    }
 
-    await notifyPurchaseAccomplishments(admin, {
-      userId,
-      orderId: orderRow?.id,
-      productName,
-      purchaseType,
-      courseSlug: metadata.course_slug,
-    })
+      const { granted } = await grantCourseEntitlements(admin, {
+        userId,
+        purchaseType,
+        courseSlug: metadata.course_slug,
+        addonSlugs,
+        orderId: orderRow?.id ?? null,
+      })
+
+      if (granted?.length) {
+        await notifyCheckoutEntitlements(admin, {
+          userId,
+          orderId: orderRow?.id,
+          productName,
+          grantedSlugs: granted,
+        })
+      }
+
+      await notifyPurchaseAccomplishments(admin, {
+        userId,
+        orderId: orderRow?.id,
+        productName,
+        purchaseType,
+        courseSlug: metadata.course_slug,
+      })
+    } catch (err) {
+      console.error('[orders] post-payment side effects', err)
+    }
   }
 }
