@@ -185,6 +185,7 @@ export const COURSES_PORTAL = {
   moduleNotFound: 'Course unit not found.',
   moduleLessonCount: (n) => `${n} lesson${n === 1 ? '' : 's'}`,
   moduleUnlocked: 'Unlocked',
+  checkingAccess: 'Checking access…',
   moduleLessonsHeading: 'Lessons in this unit',
   moduleLabsHeading: 'Labs & material kits',
   moduleLabsDesc: 'Optional add-ons — select any items to include at checkout. Not selected by default.',

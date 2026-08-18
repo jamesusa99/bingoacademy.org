@@ -30,8 +30,10 @@ function BundleDiscountTags({ item, className = '' }) {
   )
 }
 
-export default function IoaiCourseBundleModal({ item, onClose, onBuy, buying = false, owned = false }) {
+export default function IoaiCourseBundleModal({ item, onClose, onBuy, buying = false, owned = false, accessLoading = false }) {
   if (!item) return null
+
+  const pendingAccess = accessLoading && !owned
 
   const compare =
     item.compareAtCents != null ? formatIoaiPrice(item.compareAtCents, item.currency) : null
@@ -110,6 +112,10 @@ export default function IoaiCourseBundleModal({ item, onClose, onBuy, buying = f
                   {COURSES_PORTAL.continueLearning}
                 </Link>
               </>
+            ) : pendingAccess ? (
+              <span className="flex-1 min-w-[140px] inline-flex items-center justify-center text-sm font-semibold text-slate-500 bg-slate-100 px-4 py-2.5 rounded-xl">
+                {COURSES_PORTAL.checkingAccess}
+              </span>
             ) : (
               <button
                 type="button"
@@ -137,6 +143,7 @@ export function IoaiCourseBundleCard({
   onBuy,
   buying = false,
   owned = false,
+  accessLoading = false,
   theme = 'light',
 }) {
   const compare =
@@ -144,6 +151,7 @@ export function IoaiCourseBundleCard({
   const price = formatIoaiPrice(item.priceCents, item.currency)
   const isDark = theme === 'dark'
   const hasCover = Boolean(item.coverUrl?.trim())
+  const pendingAccess = accessLoading && !owned
 
   return (
     <article
@@ -226,6 +234,16 @@ export function IoaiCourseBundleCard({
             >
               {item.isFullTrack ? COURSES_PORTAL.trackOwned : COURSES_PORTAL.moduleUnlocked}
             </Link>
+          ) : pendingAccess ? (
+            <span
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg ${
+                isDark
+                  ? 'text-slate-400 border border-slate-600/60'
+                  : 'text-slate-500 border border-slate-200'
+              }`}
+            >
+              {COURSES_PORTAL.checkingAccess}
+            </span>
           ) : (
             <button
               type="button"
@@ -253,6 +271,7 @@ export function IoaiCourseBundleCards({
   onBuy,
   buyingSlug = null,
   isItemOwned,
+  accessLoading = false,
 }) {
   const [selected, setSelected] = useState(null)
 
@@ -269,6 +288,7 @@ export function IoaiCourseBundleCards({
           onBuy={(item) => onBuy?.(item)}
           buying={buyingSlug === selected.ioaiBundleSlug}
           owned={selectedOwned}
+          accessLoading={accessLoading && !selectedOwned}
         />
       ) : null}
       <div className={gridClass}>
@@ -281,6 +301,7 @@ export function IoaiCourseBundleCards({
             onBuy={onBuy}
             buying={buyingSlug === item.ioaiBundleSlug}
             owned={Boolean(isItemOwned?.(item))}
+            accessLoading={accessLoading}
           />
         ))}
       </div>

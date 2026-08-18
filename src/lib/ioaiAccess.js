@@ -1,7 +1,46 @@
-import { getPurchasedSlugs, hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from './courseAccess'
+import { getPurchasedSlugs, hasFullIOAITrack, IOAI_FULL_TRACK_SLUG, savePurchasedSlugs } from './courseAccess'
 import { buildModuleCatalogSlug, resolveLessonCatalogSlug, inferModuleCatalogSlugFromLessonSlug } from './ioaiStore'
 
 export const IOAI_FULL_BUNDLE_SLUG = IOAI_FULL_TRACK_SLUG
+
+/** Hydrate IOAI access from localStorage (instant UI while server syncs). */
+export function readLocalIoaiAccessState() {
+  const enrolledSlugs = getPurchasedSlugs()
+  const hasFullTrack = hasFullIOAITrack(enrolledSlugs)
+  const moduleSlugs = enrolledSlugs.filter(
+    (slug) =>
+      slug.startsWith('ioai-') &&
+      slug !== IOAI_FULL_TRACK_SLUG &&
+      slug !== 'ioai-track' &&
+      !slug.includes('competition-system')
+  )
+  return { enrolledSlugs, hasFullTrack, moduleSlugs, lessonSlugs: [] }
+}
+
+export function mergeIoaiAccessState(local, remote = {}) {
+  const enrolledSlugs = [
+    ...new Set([
+      ...(local?.enrolledSlugs || []),
+      ...(remote.enrolledSlugs || remote.slugs || []),
+    ]),
+  ]
+  const hasFullTrack = Boolean(remote.hasFullTrack || hasFullIOAITrack(enrolledSlugs))
+  const moduleSlugs = remote.moduleSlugs?.length
+    ? remote.moduleSlugs
+    : enrolledSlugs.filter(
+        (slug) =>
+          slug.startsWith('ioai-') &&
+          slug !== IOAI_FULL_TRACK_SLUG &&
+          slug !== 'ioai-track' &&
+          !slug.includes('competition-system')
+      )
+  return {
+    enrolledSlugs,
+    hasFullTrack,
+    moduleSlugs,
+    lessonSlugs: remote.lessonSlugs || [],
+  }
+}
 
 function registerLessonModuleKeys(map, lesson, moduleCatalogSlug) {
   const primary = resolveLessonCatalogSlug(lesson)

@@ -7,8 +7,9 @@ import {
   purchaseLesson,
   savePurchasedSlugs,
 } from '../lib/courseAccess'
-import { fetchMyEnrollments, fetchPaymentsConfig } from '../lib/checkout'
-import { fetchMyIoaiAccess } from '../lib/ioaiStore'
+import { fetchPaymentsConfig } from '../lib/checkout'
+import { fetchMyEnrollmentsCached, fetchMyIoaiAccessCached, invalidateEnrollmentAccessCache } from '../lib/enrollmentAccessCache'
+import { mergeIoaiAccessState, readLocalIoaiAccessState } from '../lib/ioaiAccess'
 import { useAuth } from '../contexts/AuthContext'
 
 function mergeSlugs(local, remote) {
@@ -17,14 +18,16 @@ function mergeSlugs(local, remote) {
 
 /** Shared enrollments + Stripe config for course list and detail pages */
 export function usePurchasedCourses() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const localSnapshot = readLocalIoaiAccessState()
   const [version, setVersion] = useState(0)
-  const [remoteSlugs, setRemoteSlugs] = useState([])
-  const [ioaiModuleSlugs, setIoaiModuleSlugs] = useState([])
+  const [remoteSlugs, setRemoteSlugs] = useState(localSnapshot.enrolledSlugs)
+  const [ioaiModuleSlugs, setIoaiModuleSlugs] = useState(localSnapshot.moduleSlugs)
   const [ioaiLessonSlugs, setIoaiLessonSlugs] = useState([])
-  const [ioaiHasFullTrack, setIoaiHasFullTrack] = useState(false)
+  const [ioaiHasFullTrack, setIoaiHasFullTrack] = useState(localSnapshot.hasFullTrack)
   const [stripeCheckout, setStripeCheckout] = useState(false)
   const [checkoutSlug, setCheckoutSlug] = useState(null)
+  const [syncedOnce, setSyncedOnce] = useState(false)
 
   useEffect(() => {
     fetchPaymentsConfig()
@@ -32,34 +35,47 @@ export function usePurchasedCourses() {
       .catch(() => setStripeCheckout(false))
   }, [])
 
-  const loadEnrollments = useCallback(async () => {
+  const loadEnrollments = useCallback(async ({ force = false } = {}) => {
+    if (authLoading) return
+
     if (!isAuthenticated) {
       setRemoteSlugs([])
       setIoaiModuleSlugs([])
       setIoaiLessonSlugs([])
       setIoaiHasFullTrack(false)
+      setSyncedOnce(true)
       return
     }
+
+    const cached = readLocalIoaiAccessState()
+    setRemoteSlugs(cached.enrolledSlugs)
+    setIoaiModuleSlugs(cached.moduleSlugs)
+    setIoaiHasFullTrack(cached.hasFullTrack)
+
     try {
+      if (force) invalidateEnrollmentAccessCache()
       const [{ slugs }, ioai] = await Promise.all([
-        fetchMyEnrollments(),
-        fetchMyIoaiAccess().catch(() => ({ lessonSlugs: [], moduleSlugs: [] })),
+        fetchMyEnrollmentsCached({ force }),
+        fetchMyIoaiAccessCached({ force }).catch(() => ({ lessonSlugs: [], moduleSlugs: [] })),
       ])
-      setRemoteSlugs(slugs || [])
-      setIoaiModuleSlugs(ioai.moduleSlugs || [])
-      setIoaiLessonSlugs(ioai.lessonSlugs || [])
-      setIoaiHasFullTrack(Boolean(ioai.hasFullTrack))
-      if (slugs?.length) {
-        savePurchasedSlugs(mergeSlugs(getPurchasedSlugs(), slugs))
+      const merged = mergeIoaiAccessState(cached, ioai)
+      const enrollmentSlugs = mergeSlugs(slugs || [], merged.enrolledSlugs)
+      setRemoteSlugs(enrollmentSlugs)
+      setIoaiModuleSlugs(merged.moduleSlugs)
+      setIoaiLessonSlugs(merged.lessonSlugs || ioai.lessonSlugs || [])
+      setIoaiHasFullTrack(merged.hasFullTrack)
+      if (enrollmentSlugs.length) {
+        savePurchasedSlugs(enrollmentSlugs)
       }
     } catch {
-      setRemoteSlugs([])
-      setIoaiModuleSlugs([])
+      setRemoteSlugs(cached.enrolledSlugs)
+      setIoaiModuleSlugs(cached.moduleSlugs)
+      setIoaiHasFullTrack(cached.hasFullTrack)
       setIoaiLessonSlugs([])
-      setIoaiHasFullTrack(false)
     }
+    setSyncedOnce(true)
     setVersion((v) => v + 1)
-  }, [isAuthenticated])
+  }, [authLoading, isAuthenticated])
 
   useEffect(() => {
     loadEnrollments()
@@ -86,7 +102,7 @@ export function usePurchasedCourses() {
   )
 
   const refresh = useCallback(() => {
-    loadEnrollments()
+    loadEnrollments({ force: true })
   }, [loadEnrollments])
 
   const unlockLesson = useCallback(
@@ -102,6 +118,8 @@ export function usePurchasedCourses() {
     refresh()
   }, [refresh])
 
+  const loading = authLoading || (isAuthenticated && !syncedOnce)
+
   return {
     isAuthenticated,
     purchased,
@@ -112,6 +130,7 @@ export function usePurchasedCourses() {
     unlockLesson,
     unlockTrack,
     refresh,
+    loading,
     stripeCheckout,
     checkoutSlug,
     setCheckoutSlug,

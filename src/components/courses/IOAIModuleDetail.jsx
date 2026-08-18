@@ -63,7 +63,7 @@ export default function IOAIModuleDetail({
     if (checkout !== 'success' || !sessionId) return
 
     confirmCheckoutSession(sessionId)
-      .then(() => reloadAccess())
+      .then(() => reloadAccess({ force: true }))
       .catch(() => {})
       .finally(() => {
         setSearchParams(

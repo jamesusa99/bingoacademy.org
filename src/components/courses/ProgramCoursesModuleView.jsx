@@ -71,9 +71,10 @@ function lineBadgeLabel(lineId) {
   return pl.name
 }
 
-function ModuleCard({ mod, lineId, hasModule, stripeCheckout, isAuthenticated, navigate }) {
+function ModuleCard({ mod, lineId, hasModule, accessLoading, stripeCheckout, isAuthenticated, navigate }) {
   const [loading, setLoading] = useState(false)
   const owned = hasModule(mod.catalogSlug)
+  const pendingAccess = accessLoading && !owned
   const comingSoon = isIoaiModuleComingSoon(mod)
   const canPurchase = isIoaiModulePurchasable(mod)
   const price = formatIoaiPrice(mod.priceCents ?? mod.totalPriceCents, mod.currency)
@@ -147,6 +148,10 @@ function ModuleCard({ mod, lineId, hasModule, stripeCheckout, isAuthenticated, n
             >
               {COURSES_PORTAL.moduleUnlocked}
             </Link>
+          ) : pendingAccess ? (
+            <span className="text-xs font-semibold text-slate-400 px-3 py-1.5 rounded-lg border border-slate-600/60">
+              {COURSES_PORTAL.checkingAccess}
+            </span>
           ) : comingSoon || !canPurchase ? (
             <span className="text-xs font-semibold text-amber-300/90 px-3 py-1.5 rounded-lg border border-amber-500/30">
               {COURSES_PORTAL.comingSoonBadge}
@@ -179,6 +184,7 @@ export default function ProgramCoursesModuleView({ line }) {
   const { bundles: courseBundles, loading: bundlesLoading } = useIoaiCourseBundles()
   const ioaiAccess = useIOAIAccess()
   const purchase = usePurchasedCourses()
+  const accessLoading = lineId === 'ioai' ? ioaiAccess.loading : purchase.loading
   const [stripeCheckout, setStripeCheckout] = useState(false)
   const [buyingSlug, setBuyingSlug] = useState(null)
   const stageParam = searchParams.get('stage')
@@ -429,6 +435,7 @@ export default function ProgramCoursesModuleView({ line }) {
                     items={[stageBundleItem]}
                     theme="dark"
                     gridClass="contents"
+                    accessLoading={accessLoading}
                     buyingSlug={buyingSlug}
                     isItemOwned={isBundleOwned}
                     onBuy={(item) => {
@@ -452,6 +459,7 @@ export default function ProgramCoursesModuleView({ line }) {
                     mod={mod}
                     lineId={lineId}
                     hasModule={hasModule}
+                    accessLoading={accessLoading}
                     stripeCheckout={stripeCheckout}
                     isAuthenticated={isAuthenticated}
                     navigate={navigate}

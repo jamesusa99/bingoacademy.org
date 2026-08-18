@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { fetchMyEnrollments } from '../lib/checkout'
-import { getPurchasedSlugs, hasFullIOAITrack, savePurchasedSlugs } from '../lib/courseAccess'
-import { hasIoaiModuleAccess } from '../lib/ioaiAccess'
-import { fetchMyIoaiAccess, fetchIoaiStore } from '../lib/ioaiStore'
+import { savePurchasedSlugs } from '../lib/courseAccess'
+import { fetchMyIoaiAccessCached, invalidateEnrollmentAccessCache } from '../lib/enrollmentAccessCache'
+import {
+  hasIoaiModuleAccess,
+  mergeIoaiAccessState,
+  readLocalIoaiAccessState,
+} from '../lib/ioaiAccess'
+import { fetchIoaiStore } from '../lib/ioaiStore'
 
 export function useIOAIStore() {
   const [levels, setLevels] = useState([])
@@ -35,50 +39,53 @@ export function useIOAIStore() {
 }
 
 export function useIOAIAccess() {
-  const { isAuthenticated } = useAuth()
-  const [moduleSlugs, setModuleSlugs] = useState([])
-  const [enrolledSlugs, setEnrolledSlugs] = useState([])
-  const [hasFullTrack, setHasFullTrack] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const localSnapshot = readLocalIoaiAccessState()
+  const [moduleSlugs, setModuleSlugs] = useState(localSnapshot.moduleSlugs)
+  const [enrolledSlugs, setEnrolledSlugs] = useState(localSnapshot.enrolledSlugs)
+  const [hasFullTrack, setHasFullTrack] = useState(localSnapshot.hasFullTrack)
+  const [syncedOnce, setSyncedOnce] = useState(false)
 
-  const reload = useCallback(async () => {
-    if (!isAuthenticated) {
-      setModuleSlugs([])
-      setEnrolledSlugs([])
-      setHasFullTrack(false)
-      return
-    }
-    setLoading(true)
-    try {
-      const [data, enrollments] = await Promise.all([
-        fetchMyIoaiAccess().catch(() => ({})),
-        fetchMyEnrollments().catch(() => ({ slugs: [] })),
-      ])
-      const enrolledSlugs = [
-        ...new Set([
-          ...getPurchasedSlugs(),
-          ...(data.enrolledSlugs || data.slugs || []),
-          ...(enrollments.slugs || []),
-        ]),
-      ]
-      if (enrollments.slugs?.length) {
-        savePurchasedSlugs(enrolledSlugs)
+  const applyAccessState = useCallback((next) => {
+    setModuleSlugs(next.moduleSlugs)
+    setEnrolledSlugs(next.enrolledSlugs)
+    setHasFullTrack(next.hasFullTrack)
+  }, [])
+
+  const reload = useCallback(
+    async ({ force = false } = {}) => {
+      if (authLoading) return
+
+      if (!isAuthenticated) {
+        applyAccessState({
+          moduleSlugs: [],
+          enrolledSlugs: [],
+          hasFullTrack: false,
+          lessonSlugs: [],
+        })
+        setSyncedOnce(true)
+        return
       }
-      const trackOwned = Boolean(data.hasFullTrack || hasFullIOAITrack(enrolledSlugs))
-      const moduleSlugs = data.moduleSlugs?.length
-        ? data.moduleSlugs
-        : enrolledSlugs.filter((slug) => slug.startsWith('ioai-') && !slug.includes('competition-system'))
-      setModuleSlugs(moduleSlugs)
-      setEnrolledSlugs(enrolledSlugs)
-      setHasFullTrack(trackOwned)
-    } catch {
-      setModuleSlugs([])
-      setEnrolledSlugs([])
-      setHasFullTrack(false)
-    } finally {
-      setLoading(false)
-    }
-  }, [isAuthenticated])
+
+      const cached = readLocalIoaiAccessState()
+      applyAccessState(cached)
+
+      try {
+        if (force) invalidateEnrollmentAccessCache()
+        const data = await fetchMyIoaiAccessCached({ force })
+        const merged = mergeIoaiAccessState(cached, data)
+        applyAccessState(merged)
+        if (merged.enrolledSlugs.length) {
+          savePurchasedSlugs(merged.enrolledSlugs)
+        }
+      } catch {
+        applyAccessState(cached)
+      } finally {
+        setSyncedOnce(true)
+      }
+    },
+    [applyAccessState, authLoading, isAuthenticated]
+  )
 
   useEffect(() => {
     reload()
@@ -90,6 +97,8 @@ export function useIOAIAccess() {
       hasIoaiModuleAccess(catalogSlug, { moduleSlugs, enrolledSlugs, hasFullTrack }),
     [moduleSlugs, enrolledSlugs, hasFullTrack]
   )
+
+  const loading = authLoading || (isAuthenticated && !syncedOnce)
 
   return {
     moduleSlugs,
