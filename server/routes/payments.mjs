@@ -192,10 +192,11 @@ export function registerPaymentRoutes(app) {
 
     try {
       let quote
+      const currency = (req.body?.currency || 'usd').toLowerCase()
       if (amountCents != null && Number.isFinite(Number(amountCents))) {
         quote = {
           amountCents: Number(amountCents),
-          currency: 'usd',
+          currency,
           purchaseType,
           returnSlug: courseSlug?.trim() || '',
           productName: 'Preview',
@@ -209,7 +210,7 @@ export function registerPaymentRoutes(app) {
           addonSlugs,
         })
         if (quote.error) {
-          return res.status(400).json({ valid: false, error: quote.error })
+          return res.status(200).json({ valid: false, error: quote.error })
         }
       } else {
         return res.status(400).json({ valid: false, error: 'courseSlug or amountCents is required' })
@@ -234,6 +235,7 @@ export function registerPaymentRoutes(app) {
         currency: quote.currency,
         minimumCheckoutApplied: result.minimumCheckoutApplied,
         minimumCheckoutCents: result.minimumCheckoutCents,
+        minimumCheckoutNotice: result.minimumCheckoutNotice,
       })
     } catch (err) {
       console.error('[promo/validate]', err)
@@ -413,8 +415,11 @@ export function registerPaymentRoutes(app) {
     }
 
     const hasPromo = Boolean(promoResult.promoMeta?.promo_code_id)
+    const promoMinCents = hasPromo
+      ? parseInt(promoResult.promoMeta?.promo_minimum_checkout_cents, 10) || PROMO_MIN_CHECKOUT_CENTS
+      : null
     const chargedCents = hasPromo
-      ? Math.max(PROMO_MIN_CHECKOUT_CENTS, promoResult.amountCents)
+      ? Math.max(promoMinCents, promoResult.amountCents)
       : promoResult.amountCents
 
     const origin = siteOrigin(req)

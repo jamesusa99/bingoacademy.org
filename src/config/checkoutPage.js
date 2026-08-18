@@ -14,8 +14,7 @@ export const CHECKOUT_PAGE = {
   promoLink: 'Use a gift card, voucher, or promo code',
   promoHide: 'Hide promo code',
   promoPlaceholder: 'Enter Code',
-  promoMinCheckoutRule: 'Promo discounts cannot reduce your total below $1.00.',
-  promoMinCheckoutApplied: 'Total adjusted to the $1.00 minimum after discount.',
+  promoMinCheckoutApplied: 'Minimum charge for this promo code: $1.00',
   placeOrder: 'Place your order',
   placingOrder: 'Continuing to payment…',
   legal:

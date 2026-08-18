@@ -18,8 +18,11 @@ export async function createPaidCheckoutSession({
   }
 
   const hasPromo = Boolean(promoResult.promoMeta?.promo_code_id)
+  const promoMinCents = hasPromo
+    ? parseInt(promoResult.promoMeta?.promo_minimum_checkout_cents, 10) || PROMO_MIN_CHECKOUT_CENTS
+    : null
   const amountCents = hasPromo
-    ? Math.max(PROMO_MIN_CHECKOUT_CENTS, promoResult.amountCents)
+    ? Math.max(promoMinCents, promoResult.amountCents)
     : promoResult.amountCents
   const productName = promoResult.productNameSuffix
     ? `${quote.productName} (${promoResult.productNameSuffix})`

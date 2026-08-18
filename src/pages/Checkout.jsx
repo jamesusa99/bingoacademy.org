@@ -134,7 +134,13 @@ export default function Checkout() {
     if (!quote || autoApplied || !promo.code.trim() || promo.applied || promo.loading) return
     setAutoApplied(true)
     setShowPromo(true)
-    promo.apply({ courseSlug, purchaseType, addonSlugs })
+    promo.apply({
+      courseSlug,
+      purchaseType,
+      addonSlugs,
+      amountCents: quote.amountCents,
+      currency: quote.currency || 'usd',
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote])
 
@@ -212,7 +218,9 @@ export default function Checkout() {
         </div>
       </div>
         {promo.applied?.minimumCheckoutApplied ? (
-          <p className="text-[11px] text-amber-700 mt-2">{CHECKOUT_PAGE.promoMinCheckoutApplied}</p>
+          <p className="text-[11px] text-sky-700 mt-2">
+            {promo.applied.minimumCheckoutNotice || CHECKOUT_PAGE.promoMinCheckoutApplied}
+          </p>
         ) : null}
         <p className="text-[11px] text-slate-500 mt-3">{CHECKOUT_TRUST.microcopy}</p>
     </aside>
@@ -350,13 +358,17 @@ export default function Checkout() {
                       theme="light"
                       compact
                       placeholder={CHECKOUT_PAGE.promoPlaceholder}
-                      minCheckoutRule={{
-                        hint: CHECKOUT_PAGE.promoMinCheckoutRule,
-                        applied: CHECKOUT_PAGE.promoMinCheckoutApplied,
-                      }}
                       code={promo.code}
                       onCodeChange={promo.setCode}
-                      onApply={() => promo.apply({ courseSlug, purchaseType, addonSlugs })}
+                      onApply={() =>
+                        promo.apply({
+                          courseSlug,
+                          purchaseType,
+                          addonSlugs,
+                          amountCents: quote?.amountCents,
+                          currency: quote?.currency || 'usd',
+                        })
+                      }
                       onClear={promo.clear}
                       applied={promo.applied}
                       loading={promo.loading}

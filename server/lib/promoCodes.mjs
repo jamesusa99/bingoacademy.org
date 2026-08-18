@@ -56,9 +56,16 @@ export function formatPromoDiscountLabel(row) {
   return `${row.discount_percent ?? 0}% off`
 }
 
-function applyPromoMinimumCheckout(amountCents, discountCents) {
+export function formatMinimumCheckoutNotice(cents, currency = 'usd') {
+  const amount = (cents / 100).toFixed(2)
+  const cur = String(currency || 'usd').toLowerCase()
+  if (cur === 'usd') return `Minimum charge for this promo code: $${amount}`
+  return `Minimum charge for this promo code: ${cur.toUpperCase()} ${amount}`
+}
+
+function applyPromoMinimumCheckout(amountCents, discountCents, minCheckoutCents = PROMO_MIN_CHECKOUT_CENTS) {
   const rawFinal = amountCents - discountCents
-  if (rawFinal >= PROMO_MIN_CHECKOUT_CENTS) {
+  if (rawFinal >= minCheckoutCents) {
     return {
       finalAmountCents: rawFinal,
       discountCents,
@@ -66,8 +73,8 @@ function applyPromoMinimumCheckout(amountCents, discountCents) {
     }
   }
   return {
-    finalAmountCents: PROMO_MIN_CHECKOUT_CENTS,
-    discountCents: Math.max(0, amountCents - PROMO_MIN_CHECKOUT_CENTS),
+    finalAmountCents: minCheckoutCents,
+    discountCents: Math.max(0, amountCents - minCheckoutCents),
     minimumCheckoutApplied: true,
   }
 }
@@ -124,9 +131,9 @@ export function validatePromoForQuote(promo, quote, { purchaseType, courseSlug }
   }
 
   const amountCents = quote.amountCents
-  const minPurchaseCents = promo.min_purchase_cents ?? DEFAULT_MIN_PURCHASE_CENTS
-  if (amountCents < minPurchaseCents) {
-    const min = (minPurchaseCents / 100).toFixed(2)
+  const minCheckoutCents = promo.min_purchase_cents ?? DEFAULT_MIN_PURCHASE_CENTS
+  if (amountCents < minCheckoutCents) {
+    const min = (minCheckoutCents / 100).toFixed(2)
     return { ok: false, error: `Minimum purchase of ${currency.toUpperCase()} ${min} required for this code` }
   }
 
@@ -135,7 +142,7 @@ export function validatePromoForQuote(promo, quote, { purchaseType, courseSlug }
     return { ok: false, error: 'This promo code does not apply a discount to this order' }
   }
 
-  const checkout = applyPromoMinimumCheckout(amountCents, discountCents)
+  const checkout = applyPromoMinimumCheckout(amountCents, discountCents, minCheckoutCents)
 
   return {
     ok: true,
@@ -144,7 +151,10 @@ export function validatePromoForQuote(promo, quote, { purchaseType, courseSlug }
     finalAmountCents: checkout.finalAmountCents,
     discountLabel: formatPromoDiscountLabel(promo),
     minimumCheckoutApplied: checkout.minimumCheckoutApplied,
-    minimumCheckoutCents: PROMO_MIN_CHECKOUT_CENTS,
+    minimumCheckoutCents: minCheckoutCents,
+    minimumCheckoutNotice: checkout.minimumCheckoutApplied
+      ? formatMinimumCheckoutNotice(minCheckoutCents, currency)
+      : null,
   }
 }
 
@@ -162,7 +172,14 @@ export async function resolvePromoForCheckout(admin, promoCode, quote, context =
     return { error: result.error }
   }
 
-  const { promo: row, discountCents, finalAmountCents, discountLabel, minimumCheckoutApplied } = result
+  const {
+    promo: row,
+    discountCents,
+    finalAmountCents,
+    discountLabel,
+    minimumCheckoutApplied,
+    minimumCheckoutCents,
+  } = result
   const suffix = `${row.code} · ${discountLabel}`
 
   return {
@@ -174,6 +191,7 @@ export async function resolvePromoForCheckout(admin, promoCode, quote, context =
       promo_discount_cents: String(discountCents),
       promo_original_amount_cents: String(quote.amountCents),
       promo_discount_label: discountLabel,
+      promo_minimum_checkout_cents: String(minimumCheckoutCents ?? PROMO_MIN_CHECKOUT_CENTS),
       ...(minimumCheckoutApplied ? { promo_minimum_checkout_applied: 'true' } : {}),
     },
   }

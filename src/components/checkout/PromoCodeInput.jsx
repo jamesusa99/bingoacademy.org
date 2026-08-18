@@ -74,15 +74,17 @@ export default function PromoCodeInput({
             {COURSES_PORTAL.promoCodeApplied(applied.code, applied.discountLabel)}
           </p>
           {applied.minimumCheckoutApplied ? (
-            <p className={`text-xs mt-1 ${isDark ? 'text-amber-300/90' : 'text-amber-700'}`}>
-              {minCheckoutRule?.applied || COURSES_PORTAL.promoCodeMinCheckoutApplied}
+            <p className={`text-xs mt-1 ${isDark ? 'text-sky-300/90' : 'text-sky-700'}`}>
+              {applied.minimumCheckoutNotice ||
+                minCheckoutRule?.applied ||
+                COURSES_PORTAL.promoCodeMinCheckoutApplied}
             </p>
           ) : null}
         </>
       ) : (
-        (minCheckoutRule?.hint || !compact) && (
+        !compact && (
           <p className={`text-[11px] mt-1.5 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-            {minCheckoutRule?.hint || COURSES_PORTAL.promoCodeHint}
+            {COURSES_PORTAL.promoCodeHint}
           </p>
         )
       )}

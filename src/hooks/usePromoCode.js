@@ -26,7 +26,7 @@ export function usePromoCode() {
   }, [])
 
   const apply = useCallback(
-    async ({ courseSlug, purchaseType, amountCents, addonSlugs }) => {
+    async ({ courseSlug, purchaseType, amountCents, currency, addonSlugs }) => {
       const trimmed = code.trim().toUpperCase()
       if (!trimmed) {
         setError('Enter a promo code')
@@ -40,6 +40,7 @@ export function usePromoCode() {
           courseSlug,
           purchaseType,
           amountCents,
+          currency,
           addonSlugs,
         })
         if (!result.valid) {
