@@ -1,12 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getStoredPromoCode, storePromoCode } from '../lib/lazyRegistration'
+import { getStoredPromoState, storePromoCode } from '../lib/lazyRegistration'
 import { validatePromoCode } from '../lib/promoCode'
 
-export function usePromoCode() {
-  const [code, setCodeState] = useState(() => getStoredPromoCode())
+export function usePromoCode(checkoutKey = '') {
+  const [code, setCodeState] = useState('')
   const [applied, setApplied] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const stored = getStoredPromoState()
+    if (stored.checkoutKey && checkoutKey && stored.checkoutKey !== checkoutKey) {
+      storePromoCode('')
+      setCodeState('')
+      setApplied(null)
+      setError(null)
+      return
+    }
+    setCodeState(stored.code || '')
+    setApplied(null)
+    setError(null)
+  }, [checkoutKey])
 
   const setCode = useCallback((next) => {
     const value = String(next || '').toUpperCase()
@@ -49,7 +63,7 @@ export function usePromoCode() {
           setError(result.error || 'Invalid promo code')
           return null
         }
-        storePromoCode(trimmed)
+        storePromoCode(trimmed, checkoutKey)
         setCodeState(trimmed)
         setApplied(result)
         return result
@@ -61,15 +75,8 @@ export function usePromoCode() {
         setLoading(false)
       }
     },
-    [code]
+    [code, checkoutKey]
   )
-
-  useEffect(() => {
-    const stored = getStoredPromoCode()
-    if (stored && stored !== code) {
-      setCodeState(stored)
-    }
-  }, [code])
 
   return { code, setCode, apply, applied, loading, error, clear }
 }

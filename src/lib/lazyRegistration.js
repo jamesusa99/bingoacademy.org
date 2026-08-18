@@ -18,20 +18,50 @@ export function consumePendingAuthAction() {
   }
 }
 
-export function storePromoCode(code) {
+export function storePromoCode(code, checkoutKey = null) {
   try {
-    sessionStorage.setItem(PROMO_CODE_STORAGE_KEY, code)
+    if (!code?.trim()) {
+      sessionStorage.removeItem(PROMO_CODE_STORAGE_KEY)
+      return
+    }
+    sessionStorage.setItem(
+      PROMO_CODE_STORAGE_KEY,
+      JSON.stringify({
+        code: String(code).trim().toUpperCase(),
+        checkoutKey: checkoutKey || null,
+      })
+    )
   } catch {
     /* ignore */
   }
 }
 
-export function getStoredPromoCode() {
+export function getStoredPromoState() {
   try {
-    return sessionStorage.getItem(PROMO_CODE_STORAGE_KEY) || ''
+    const raw = sessionStorage.getItem(PROMO_CODE_STORAGE_KEY)
+    if (!raw) return { code: '', checkoutKey: null }
+    try {
+      const parsed = JSON.parse(raw)
+      if (parsed && typeof parsed === 'object' && parsed.code) {
+        return {
+          code: String(parsed.code).trim().toUpperCase(),
+          checkoutKey: parsed.checkoutKey || null,
+        }
+      }
+    } catch {
+      /* legacy: plain string */
+    }
+    return { code: String(raw).trim().toUpperCase(), checkoutKey: null }
   } catch {
-    return ''
+    return { code: '', checkoutKey: null }
   }
+}
+
+export function getStoredPromoCode(checkoutKey) {
+  const state = getStoredPromoState()
+  if (!state.code) return ''
+  if (checkoutKey && state.checkoutKey && state.checkoutKey !== checkoutKey) return ''
+  return state.code
 }
 
 export function downloadTextFile(filename, content) {

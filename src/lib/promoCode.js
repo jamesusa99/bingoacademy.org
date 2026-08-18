@@ -1,5 +1,10 @@
 import { getStoredPromoCode } from './lazyRegistration'
 
+export function buildCheckoutPromoKey({ courseSlug, purchaseType, addonSlugs = [] }) {
+  const addons = [...addonSlugs].filter(Boolean).sort().join(',')
+  return `${courseSlug || ''}|${purchaseType || ''}|${addons}`
+}
+
 export async function validatePromoCode({ code, courseSlug, purchaseType, amountCents, currency, addonSlugs }) {
   const res = await fetch('/api/payments/promo/validate', {
     method: 'POST',

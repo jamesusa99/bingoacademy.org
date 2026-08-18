@@ -11,6 +11,8 @@ import { confirmCheckoutSession, fetchCheckoutQuote, fetchPaymentsConfig, startC
 import { checkoutLineItemHref } from '../lib/checkoutLineItemHref'
 import { purchaseCourseSlug } from '../lib/courseAccess'
 import { invalidateEnrollmentAccessCache } from '../lib/enrollmentAccessCache'
+import { getStoredPromoState } from '../lib/lazyRegistration'
+import { buildCheckoutPromoKey } from '../lib/promoCode'
 import PageMeta from '../components/PageMeta'
 import PromoCodeInput from '../components/checkout/PromoCodeInput'
 
@@ -44,11 +46,15 @@ export default function Checkout() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
-  const promo = usePromoCode()
   const { courseSlug, purchaseType, addonSlugs, returnPath } = useMemo(
     () => parseCheckoutSearch(searchParams),
     [searchParams]
   )
+  const checkoutKey = useMemo(
+    () => buildCheckoutPromoKey({ courseSlug, purchaseType, addonSlugs }),
+    [courseSlug, purchaseType, addonSlugs]
+  )
+  const promo = usePromoCode(checkoutKey)
 
   const [quote, setQuote] = useState(null)
   const [quoteError, setQuoteError] = useState(null)
@@ -56,7 +62,7 @@ export default function Checkout() {
   const [stripeCheckout, setStripeCheckout] = useState(false)
   const [placing, setPlacing] = useState(false)
   const [placeError, setPlaceError] = useState(null)
-  const [showPromo, setShowPromo] = useState(() => Boolean(promo.code))
+  const [showPromo, setShowPromo] = useState(false)
   const [autoApplied, setAutoApplied] = useState(false)
 
   const paid = searchParams.get('paid') === '1' || searchParams.get('checkout') === 'success'
@@ -76,6 +82,7 @@ export default function Checkout() {
     setConfirmError(null)
     confirmCheckoutSession(paidSessionId)
       .then(() => {
+        promo.clear()
         invalidateEnrollmentAccessCache()
         if (!cancelled) navigate(returnPath || '/courses', { replace: true })
       })
@@ -131,7 +138,17 @@ export default function Checkout() {
   }, [courseSlug, purchaseType, addonKey, paid, paidSessionId])
 
   useEffect(() => {
-    if (!quote || autoApplied || !promo.code.trim() || promo.applied || promo.loading) return
+    setAutoApplied(false)
+    setShowPromo(false)
+  }, [checkoutKey])
+
+  useEffect(() => {
+    if (quoteLoading || !quote || autoApplied || !promo.code.trim() || promo.applied || promo.loading) return
+    const stored = getStoredPromoState()
+    if (!stored.checkoutKey || stored.checkoutKey !== checkoutKey) {
+      if (promo.code.trim()) setShowPromo(true)
+      return
+    }
     setAutoApplied(true)
     setShowPromo(true)
     promo.apply({
@@ -142,7 +159,7 @@ export default function Checkout() {
       currency: quote.currency || 'usd',
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quote])
+  }, [quote, quoteLoading, checkoutKey])
 
   if (!authLoading && !isAuthenticated && (courseSlug || (paid && paidSessionId))) {
     return <Navigate to={authLink('/login', checkoutPath)} replace />
