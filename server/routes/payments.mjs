@@ -179,7 +179,7 @@ export function registerPaymentRoutes(app) {
     }
   })
 
-  app.post('/api/promo/validate', async (req, res) => {
+  async function handlePromoValidate(req, res) {
     const { code, courseSlug, purchaseType = 'course', amountCents, addonSlugs = [] } = req.body || {}
     if (!code?.trim()) {
       return res.status(400).json({ valid: false, error: 'Promo code is required' })
@@ -241,7 +241,11 @@ export function registerPaymentRoutes(app) {
       console.error('[promo/validate]', err)
       return res.status(502).json({ valid: false, error: err.message || 'Validation failed' })
     }
-  })
+  }
+
+  app.post('/api/promo/validate', handlePromoValidate)
+  app.post('/api/checkout/promo/validate', handlePromoValidate)
+  app.post('/api/payments/promo/validate', handlePromoValidate)
 
   app.post('/api/checkout/quote', async (req, res) => {
     const { courseSlug, purchaseType = 'course', addonSlugs = [] } = req.body || {}

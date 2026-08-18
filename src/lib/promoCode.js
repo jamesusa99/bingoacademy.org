@@ -1,7 +1,7 @@
 import { getStoredPromoCode } from './lazyRegistration'
 
 export async function validatePromoCode({ code, courseSlug, purchaseType, amountCents, currency, addonSlugs }) {
-  const res = await fetch('/api/promo/validate', {
+  const res = await fetch('/api/payments/promo/validate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
