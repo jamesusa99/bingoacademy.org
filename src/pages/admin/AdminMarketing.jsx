@@ -5,8 +5,11 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminAlert from '../../components/admin/AdminAlert'
 import AdminField from '../../components/admin/AdminField'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
+import { scrollToAnchor } from '../../lib/scrollToAnchor'
 
 const DEFAULT_MIN_PURCHASE_CENTS = 100
+const PROMO_LIST_ANCHOR = 'promo-code-list'
+const PROMO_FORM_ANCHOR = 'promo-code-form'
 
 function liveStatusLabel(live, p) {
   const key = `liveStatus_${live}`
@@ -224,7 +227,7 @@ export default function AdminMarketing() {
       internal_notes: row.internal_notes || '',
       sort_order: String(row.sort_order ?? 0),
     })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    scrollToAnchor(PROMO_FORM_ANCHOR, { behavior: 'smooth' })
   }
 
   const resetForm = () => {
@@ -248,7 +251,8 @@ export default function AdminMarketing() {
         await adminInsert('promo_codes', payload)
       }
       resetForm()
-      fetchItems()
+      await fetchItems()
+      scrollToAnchor(PROMO_LIST_ANCHOR, { behavior: 'smooth' })
     } catch (err) {
       setError(err.message)
     }
@@ -284,6 +288,12 @@ export default function AdminMarketing() {
       internal_notes: row.internal_notes || '',
       sort_order: String(row.sort_order ?? 0),
     })
+    scrollToAnchor(PROMO_FORM_ANCHOR, { behavior: 'smooth' })
+  }
+
+  const startNew = () => {
+    resetForm()
+    scrollToAnchor(PROMO_FORM_ANCHOR, { behavior: 'smooth' })
   }
 
   return (
@@ -305,7 +315,76 @@ export default function AdminMarketing() {
         ))}
       </div>
 
-      <div className="card p-6 mb-6">
+      <div id={PROMO_LIST_ANCHOR} className="card overflow-hidden scroll-mt-24 mb-6">
+        <div className="p-4 border-b font-semibold text-bingo-dark flex flex-wrap items-center justify-between gap-3">
+          <span>{p('listTitle')}</span>
+          <button type="button" onClick={startNew} className="btn-primary px-4 py-1.5 rounded-xl text-sm">
+            {p('addPromo')}
+          </button>
+        </div>
+        {loading ? (
+          <p className="p-8 text-center text-slate-500 text-sm">{c.loading}</p>
+        ) : items.length === 0 ? (
+          <p className="p-8 text-center text-slate-500 text-sm">{p('emptyList')}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-left text-slate-600">
+                <tr>
+                  <th className="p-3">{p('colCode')}</th>
+                  <th className="p-3">{p('colName')}</th>
+                  <th className="p-3">{p('colDiscount')}</th>
+                  <th className="p-3">{p('colValidity')}</th>
+                  <th className="p-3">{p('colScope')}</th>
+                  <th className="p-3">{p('colUsage')}</th>
+                  <th className="p-3">{p('colStatus')}</th>
+                  <th className="p-3">{c.actions}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((row) => {
+                  const live = effectiveStatus(row)
+                  return (
+                    <tr key={row.id} className="border-t border-slate-100">
+                      <td className="p-3 font-mono font-semibold text-primary">{row.code}</td>
+                      <td className="p-3">{row.name}</td>
+                      <td className="p-3">{formatDiscount(row, p)}</td>
+                      <td className="p-3 text-xs text-slate-600">
+                        {row.starts_at ? new Date(row.starts_at).toLocaleString() : '—'}
+                        <br />
+                        {row.ends_at ? new Date(row.ends_at).toLocaleString() : '—'}
+                      </td>
+                      <td className="p-3 text-xs">{row.applies_to}</td>
+                      <td className="p-3 text-xs">
+                        {row.redemption_count ?? 0}
+                        {row.max_redemptions != null ? ` / ${row.max_redemptions}` : ''}
+                      </td>
+                      <td className="p-3">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusBadgeClass(live)}`}>
+                          {liveStatusLabel(live, p)}
+                        </span>
+                      </td>
+                      <td className="p-3 whitespace-nowrap">
+                        <button type="button" onClick={() => startEdit(row)} className="text-primary mr-2">
+                          {c.edit}
+                        </button>
+                        <button type="button" onClick={() => duplicate(row)} className="text-slate-600 mr-2">
+                          {p('duplicate')}
+                        </button>
+                        <button type="button" onClick={() => del(row.id)} className="text-red-600">
+                          {c.delete}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div id={PROMO_FORM_ANCHOR} className="card p-6 scroll-mt-24">
         <h2 className="font-semibold text-bingo-dark mb-1">
           {editing ? p('editPromo') : p('addPromo')}
         </h2>
@@ -482,70 +561,6 @@ export default function AdminMarketing() {
             </button>
           ) : null}
         </div>
-      </div>
-
-      <div className="card overflow-hidden">
-        <div className="p-4 border-b font-semibold text-bingo-dark">{p('listTitle')}</div>
-        {loading ? (
-          <p className="p-8 text-center text-slate-500 text-sm">{c.loading}</p>
-        ) : items.length === 0 ? (
-          <p className="p-8 text-center text-slate-500 text-sm">{p('emptyList')}</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-slate-600">
-                <tr>
-                  <th className="p-3">{p('colCode')}</th>
-                  <th className="p-3">{p('colName')}</th>
-                  <th className="p-3">{p('colDiscount')}</th>
-                  <th className="p-3">{p('colValidity')}</th>
-                  <th className="p-3">{p('colScope')}</th>
-                  <th className="p-3">{p('colUsage')}</th>
-                  <th className="p-3">{p('colStatus')}</th>
-                  <th className="p-3">{c.actions}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((row) => {
-                  const live = effectiveStatus(row)
-                  return (
-                    <tr key={row.id} className="border-t border-slate-100">
-                      <td className="p-3 font-mono font-semibold text-primary">{row.code}</td>
-                      <td className="p-3">{row.name}</td>
-                      <td className="p-3">{formatDiscount(row, p)}</td>
-                      <td className="p-3 text-xs text-slate-600">
-                        {row.starts_at ? new Date(row.starts_at).toLocaleString() : '—'}
-                        <br />
-                        {row.ends_at ? new Date(row.ends_at).toLocaleString() : '—'}
-                      </td>
-                      <td className="p-3 text-xs">{row.applies_to}</td>
-                      <td className="p-3 text-xs">
-                        {row.redemption_count ?? 0}
-                        {row.max_redemptions != null ? ` / ${row.max_redemptions}` : ''}
-                      </td>
-                      <td className="p-3">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusBadgeClass(live)}`}>
-                          {liveStatusLabel(live, p)}
-                        </span>
-                      </td>
-                      <td className="p-3 whitespace-nowrap">
-                        <button type="button" onClick={() => startEdit(row)} className="text-primary mr-2">
-                          {c.edit}
-                        </button>
-                        <button type="button" onClick={() => duplicate(row)} className="text-slate-600 mr-2">
-                          {p('duplicate')}
-                        </button>
-                        <button type="button" onClick={() => del(row.id)} className="text-red-600">
-                          {c.delete}
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   )
