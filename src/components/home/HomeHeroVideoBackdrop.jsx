@@ -6,24 +6,26 @@ function isHlsSource(src) {
   return src.includes('.m3u8') || src.includes('cloudflarestream.com')
 }
 
-function CodePanel() {
+function NotebookCodePanel() {
   return (
     <div className="relative h-full flex flex-col justify-center p-6 sm:p-8 lg:p-10">
       <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-500/80 mb-3">
-        Browser · Live code
+        Jupyter · Python
       </p>
       <div className="font-mono text-[10px] sm:text-xs leading-relaxed text-cyan-300/95 space-y-0.5 max-w-xs mx-auto lg:mx-0 lg:ml-auto lg:mr-6">
-        <p className="text-emerald-400/90"># BingoClaw — pick &amp; place</p>
+        <p className="text-emerald-400/90"># Train a simple classifier</p>
         <p>
-          <span className="text-violet-300">arm</span>.<span className="text-amber-200">move_to</span>(
-          <span className="text-cyan-300">x=0.42</span>, <span className="text-cyan-300">y=0.18</span>)
+          <span className="text-violet-300">model</span> = <span className="text-amber-200">nn.Sequential</span>(...)
         </p>
         <p>
-          <span className="text-violet-300">gripper</span>.<span className="text-amber-200">close</span>()
+          <span className="text-violet-300">loss</span> = <span className="text-amber-200">criterion</span>(
+          <span className="text-cyan-300">pred</span>, <span className="text-cyan-300">y</span>)
         </p>
         <p>
-          <span className="text-violet-300">vision</span>.<span className="text-amber-200">detect</span>(
-          <span className="text-slate-400">&quot;target&quot;</span>)
+          <span className="text-violet-300">loss</span>.<span className="text-amber-200">backward</span>()
+        </p>
+        <p>
+          <span className="text-violet-300">optimizer</span>.<span className="text-amber-200">step</span>()
         </p>
         <p className="text-slate-500 pt-1">
           <span className="hero-code-cursor inline-block w-2 h-3.5 bg-cyan-400/80 align-middle ml-0.5" />
@@ -31,70 +33,72 @@ function CodePanel() {
       </div>
       <div className="mt-4 flex items-center gap-2 text-[9px] text-emerald-400/80 font-mono max-w-xs mx-auto lg:mx-0 lg:ml-auto lg:mr-6">
         <span className="hero-sync-pulse w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-        streaming to hardware…
+        epoch 12 · val_acc 0.91
       </div>
     </div>
   )
 }
 
-function PhysicalPanel() {
+function MetricsPanel() {
   return (
     <div className="relative h-full overflow-hidden flex flex-col items-center justify-center p-6 sm:p-8">
-      <p className="absolute top-6 sm:top-8 left-6 sm:left-8 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-fuchsia-400/80">
-        Physical world · BingoClaw
+      <p className="absolute top-6 sm:top-8 left-6 sm:left-8 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-violet-400/80">
+        Model training · Evaluation
       </p>
 
       <div
         className="absolute inset-0 opacity-30"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(244,114,182,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(244,114,182,0.12) 1px, transparent 1px)',
+            'linear-gradient(rgba(129,140,248,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(129,140,248,0.12) 1px, transparent 1px)',
           backgroundSize: '28px 28px',
         }}
       />
 
-      <div className="relative w-full max-w-[220px] sm:max-w-[260px] aspect-square">
-        {/* Arm base */}
-        <div className="absolute bottom-[18%] left-1/2 -translate-x-1/2 w-20 h-3 rounded-full bg-slate-700/90 border border-slate-600 shadow-lg" />
-
-        {/* Rotating arm */}
-        <div className="hero-arm-pivot absolute bottom-[22%] left-1/2 origin-bottom">
-          <div className="relative -translate-x-1/2">
-            <div className="w-2.5 h-16 sm:h-20 rounded-full bg-gradient-to-t from-slate-600 to-cyan-500/80 shadow-[0_0_20px_rgba(34,211,238,0.4)]" />
-            <div className="hero-arm-forearm absolute top-0 left-1/2 origin-top -translate-x-1/2">
-              <div className="w-2 h-12 sm:h-14 rounded-full bg-gradient-to-b from-cyan-500/70 to-violet-500/70" />
-              <div className="hero-claw absolute -top-1 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3">
-                <span className="block w-1.5 h-5 sm:h-6 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.8)]" />
-                <span className="block w-1.5 h-5 sm:h-6 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.8)]" />
+      <div className="relative w-full max-w-[240px] sm:max-w-[280px]">
+        <div className="rounded-xl border border-cyan-500/20 bg-slate-900/60 p-4 backdrop-blur-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Training loss</p>
+          <div className="flex items-end gap-1 h-16 mb-4">
+            {[72, 58, 48, 40, 34, 28, 24, 20, 18, 16].map((h, i) => (
+              <div
+                key={i}
+                className="flex-1 rounded-t bg-gradient-to-t from-cyan-600/80 to-cyan-400/90 hero-metric-bar"
+                style={{ height: `${h}%`, animationDelay: `${i * 0.08}s` }}
+              />
+            ))}
+          </div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Confusion matrix</p>
+          <div className="grid grid-cols-3 gap-1">
+            {['0.82', '0.06', '0.04', '0.05', '0.88', '0.07', '0.03', '0.05', '0.91'].map((v, i) => (
+              <div
+                key={i}
+                className="aspect-square rounded bg-violet-500/20 border border-violet-400/20 flex items-center justify-center text-[9px] font-mono text-violet-200/90"
+              >
+                {v}
               </div>
-            </div>
+            ))}
           </div>
         </div>
-
-        {/* Target object + trail */}
-        <div className="hero-fallback-ball absolute top-[32%] right-[22%] w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-sm bg-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.9)] rotate-12" />
-        <div className="absolute top-[28%] right-[18%] w-16 h-16 rounded-full border border-dashed border-cyan-400/30 hero-target-ring" />
       </div>
 
       <p className="absolute bottom-6 sm:bottom-8 text-[9px] sm:text-[10px] font-bold tracking-widest text-cyan-400/60 uppercase">
-        Embodied AI · Precision response
+        Reproducible ML experiments
       </p>
     </div>
   )
 }
 
-function EmbodiedAiFallback() {
+function MlLabFallback() {
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#050810]" aria-hidden>
       <div className="absolute inset-0 grid lg:grid-cols-2">
         <div className="relative border-b lg:border-b-0 lg:border-r border-cyan-500/15 bg-gradient-to-br from-slate-950 via-[#0a1628] to-slate-950">
-          <CodePanel />
+          <NotebookCodePanel />
         </div>
         <div className="relative bg-gradient-to-bl from-[#0f172a] via-violet-950/50 to-slate-950 min-h-[200px] lg:min-h-0">
-          <PhysicalPanel />
+          <MetricsPanel />
         </div>
       </div>
-      {/* Center sync beam — desktop only */}
       <div className="hidden lg:block absolute top-0 bottom-0 left-1/2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-cyan-400/50 to-transparent" />
       <div className="hidden lg:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-cyan-400/40 bg-cyan-500/10 hero-sync-pulse" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/65 to-[#0f172a]/25" />
@@ -168,7 +172,7 @@ export default function HomeHeroVideoBackdrop({ videoUrl = '', posterUrl = '' })
   }, [hasVideo, videoUrl])
 
   if (!hasVideo) {
-    return <EmbodiedAiFallback />
+    return <MlLabFallback />
   }
 
   return (
@@ -196,9 +200,6 @@ export default function HomeHeroVideoBackdrop({ videoUrl = '', posterUrl = '' })
         playsInline
         preload="auto"
       />
-      {/* Split-screen vignette — reinforces code ↔ physical world even with uploaded B-roll */}
-      <div className="absolute inset-0 hidden lg:block bg-gradient-to-r from-[#0f172a]/55 via-transparent to-[#0f172a]/55" />
-      <div className="absolute inset-0 lg:bg-[linear-gradient(90deg,transparent_calc(50%-1px),rgba(34,211,238,0.12)_50%,transparent_calc(50%+1px))]" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/72 to-[#0f172a]/35" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#0f172a]/88 via-[#0f172a]/25 to-[#0f172a]/55" />
     </div>

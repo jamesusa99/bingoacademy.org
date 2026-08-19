@@ -9,6 +9,7 @@ import RouteFallback from './components/RouteFallback'
 import ScrollToTop from './components/ScrollToTop'
 import useAnalyticsPageView from './hooks/useAnalyticsPageView'
 import * as Pages from './routes/lazyPages'
+import { CurriculumLegacyRedirect } from './routes/legacyRedirects'
 
 function HashRedirect() {
   const navigate = useNavigate()
@@ -154,6 +155,7 @@ export default function App() {
           <Route path="showcase/materials" element={<Pages.ShowcaseMaterials />} />
           <Route path="showcase/venture/:id" element={<Pages.ShowcaseCase />} />
           <Route path="showcase/award/:id" element={<Pages.ShowcaseCase />} />
+          <Route path="assessment/ioai" element={<Pages.AIAssessment />} />
           <Route path="assessment" element={<Pages.AIAssessment />} />
           <Route
             path="courses/module/:moduleSlug"
@@ -168,6 +170,22 @@ export default function App() {
           <Route path="courses/:lineSlug/:subSlug" element={<Pages.Courses />} />
           <Route path="courses/:lineSlug" element={<Pages.Courses />} />
           <Route path="courses" element={<Pages.Courses />} />
+          <Route
+            path="ioai/sample-lab"
+            element={
+              <ProductLineGate lineId="ioai">
+                <Pages.IoaiSampleLabPage />
+              </ProductLineGate>
+            }
+          />
+          <Route
+            path="ioai/curriculum"
+            element={
+              <ProductLineGate lineId="ioai">
+                <Pages.Curriculum />
+              </ProductLineGate>
+            }
+          />
           <Route
             path="ioai"
             element={
@@ -200,7 +218,7 @@ export default function App() {
               </ProductLineGate>
             }
           />
-          <Route path="curriculum" element={<Pages.Curriculum />} />
+          <Route path="curriculum" element={<CurriculumLegacyRedirect />} />
           <Route path="labs" element={<Pages.ProductLabs />} />
           <Route path="labs/pack/:slug" element={<Pages.LabPackDetail />} />
           <Route path="labs/pack/:slug/experiments/:experimentSlug" element={<Pages.LabExperimentPage />} />
@@ -229,6 +247,7 @@ export default function App() {
           <Route path="lab/prompt-wizard" element={<Navigate to="/exploration/prompt-wizard" replace />} />
           <Route path="lab/finger-tetris" element={<Navigate to="/exploration/finger-tetris" replace />} />
           <Route path="pricing" element={<Navigate to="/cert" replace />} />
+          <Route path="programs/ioai" element={<Navigate to="/courses/ioai" replace />} />
           <Route path="programs/:slug" element={<Pages.ProgramPage />} />
           <Route path="compare" element={<Pages.Compare />} />
           <Route path="community" element={<Pages.Community />} />
@@ -259,9 +278,9 @@ export default function App() {
           <Route path="register" element={<Pages.Register />} />
           <Route path="forgot-password" element={<Pages.ForgotPassword />} />
           <Route path="reset-password" element={<Pages.ResetPassword />} />
-          <Route path="research" element={<Navigate to="/programs/ioai" replace />} />
-          <Route path="events" element={<Navigate to="/programs/ioai" replace />} />
-          <Route path="career" element={<Navigate to="/programs/ioai" replace />} />
+          <Route path="research" element={<Navigate to="/courses/ioai" replace />} />
+          <Route path="events" element={<Navigate to="/courses/ioai" replace />} />
+          <Route path="career" element={<Navigate to="/community" replace />} />
           <Route path="charity" element={<Pages.NotFound status={410} />} />
           <Route path="tools" element={<Navigate to="/mall" replace />} />
           <Route path="tools/detail/:id" element={<Navigate to="/mall" replace />} />

@@ -1,22 +1,15 @@
-/** Homepage golden hero — copy, CTAs, and optional background video (admin-configurable). */
+/** Homepage golden hero — IOAI-oriented training for ages 12–18 */
 
 export const HOME_HERO_VIDEO_KEY = 'home_hero_video'
 
 export const HOME_HERO = {
-  eyebrow: 'Bingo AI Academy',
-  headline: 'Empowering Future Innovators.',
-  headlineAccent: 'From Code to Real-World AI.',
-  subtitle:
-    'Write code in the browser — watch Cyber Tennis, vision models, and Embodied Robotics respond in the physical world.',
-  ctaPrimary: {
-    label: 'Start Building for Free',
-    to: '/try-ai',
-  },
-  ctaSecondary: {
-    label: 'Explore IOAI Curriculum',
-    to: '/curriculum?line=ioai',
-  },
-  ctaHint: 'No sign-up · Browser lab · Code that moves the real world',
+  eyebrow: 'IOAI-Oriented AI Olympiad Training',
+  headlineLines: ['Understand AI. Build Real Models.', 'Prepare for IOAI.'],
+  /** Full headline for SEO / structured data */
+  headline: 'Understand AI. Build Real Models. Prepare for IOAI.',
+  subtitle: 'Structured theory + Python + Jupyter labs + projects',
+  disclaimer:
+    'Bingo Academy is an independent education provider and is not affiliated with or endorsed by IOAI or its organizers.',
 }
 
 export function defaultHomeHeroVideo() {

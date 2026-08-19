@@ -31,10 +31,7 @@ export const mainNavGroups = [
   ],
 ]
 
-export const authNav = [
-  { path: '/login', label: 'Login' },
-  { path: '/register', label: 'Register' },
-]
+export const authNav = [{ path: '/login', label: 'Log In' }]
 
 /** Flat list for mobile scroll (programs expanded) */
 export const mainNav = [

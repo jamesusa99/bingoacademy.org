@@ -512,7 +512,7 @@ export default function Events() {
       {tab === 'ai-academy' && (
         <div className="space-y-6">
           <div className="card p-5 bg-primary/5 border-primary/20">
-            <h2 className="font-bold text-bingo-dark mb-1">🎓 Bingo AI Academy — Competition Bootcamps</h2>
+            <h2 className="font-bold text-bingo-dark mb-1">🎓 Bingo Academy — Competition Bootcamps</h2>
             <p className="text-slate-600 text-sm">Every major competition on our platform has a matched Bingo bootcamp. Training is competition-specific, taught by former competition coaches, and dramatically improves award rates.</p>
           </div>
 

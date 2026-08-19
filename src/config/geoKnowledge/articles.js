@@ -446,7 +446,7 @@ export function getClusterArticles(cluster) {
 
 export function getAllGuidePaths() {
   const paths = [{ path: '/guides', changefreq: 'weekly', priority: '0.8' }]
-  for (const cluster of ['parents', 'ioai', 'k12']) {
+  for (const cluster of ['parents', 'ioai']) {
     paths.push({ path: `/guides/${cluster}`, changefreq: 'weekly', priority: '0.75' })
     for (const article of getClusterArticles(cluster)) {
       paths.push({

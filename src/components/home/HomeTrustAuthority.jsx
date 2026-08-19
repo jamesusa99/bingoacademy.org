@@ -1,5 +1,7 @@
+/** @deprecated Phase-1 homepage — replaced by HomeInstructorsSection, methodology link in How Learning Works, and HomeStudentWorkSection. */
 import { Link } from 'react-router-dom'
-import { ArrowRight, CheckCircle2, Quote } from 'lucide-react'
+import { CheckCircle2, Quote } from 'lucide-react'
+import HomePrimaryCtaPair from './HomePrimaryCtaPair'
 import {
   HOME_TRUST_AUTHORITY,
   HOME_PROOF_OF_WORK,
@@ -147,12 +149,11 @@ function TrustBadgesRow() {
   )
 }
 
-export default function HomeTrustAuthority({ showIoaiLink = true }) {
-  const { credentials, proofTitle, proofSubtitle, showcaseCta, ioaiCta, outcomesCta, outcomesHref } =
-    HOME_TRUST_AUTHORITY
+export default function HomeTrustAuthority() {
+  const { credentials, proofTitle, proofSubtitle } = HOME_TRUST_AUTHORITY
 
   return (
-    <section className="w-full border-b border-slate-200 bg-gradient-to-b from-white via-slate-50/80 to-white">
+    <section id="how-it-works" className="scroll-mt-24 w-full border-b border-slate-200 bg-gradient-to-b from-white via-slate-50/80 to-white">
       <div className="page-content py-12 sm:py-16 lg:py-20">
         {/* Academic authority */}
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-start mb-10">
@@ -175,7 +176,6 @@ export default function HomeTrustAuthority({ showIoaiLink = true }) {
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
               >
                 {HOME_TRUST_AUTHORITY.verifyCta}
-                <ArrowRight className="w-4 h-4" aria-hidden />
               </Link>
             ) : null}
           </div>
@@ -205,41 +205,12 @@ export default function HomeTrustAuthority({ showIoaiLink = true }) {
         {/* Proof of work */}
         <div className="rounded-2xl border border-slate-200 bg-bingo-dark text-white overflow-hidden">
           <div className="px-6 sm:px-8 pt-8 pb-6 border-b border-white/10">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-bold tracking-[0.2em] text-cyan-400 uppercase mb-2">
-                  Proof of Work
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold">{proofTitle}</h3>
-                <p className="text-sm text-slate-400 mt-2 max-w-2xl">{proofSubtitle}</p>
-              </div>
-              <div className="flex flex-wrap gap-3 shrink-0">
-                <Link
-                  to="/showcase"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-300 hover:text-cyan-200 transition"
-                >
-                  {showcaseCta}
-                  <ArrowRight className="w-4 h-4" aria-hidden />
-                </Link>
-                {showIoaiLink ? (
-                  <Link
-                    to="/courses/ioai"
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-300 hover:text-amber-200 transition"
-                  >
-                    {ioaiCta}
-                    <ArrowRight className="w-4 h-4" aria-hidden />
-                  </Link>
-                ) : null}
-                {outcomesHref ? (
-                  <Link
-                    to={outcomesHref}
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-300 hover:text-emerald-200 transition"
-                  >
-                    {outcomesCta}
-                    <ArrowRight className="w-4 h-4" aria-hidden />
-                  </Link>
-                ) : null}
-              </div>
+            <div>
+              <p className="text-[10px] font-bold tracking-[0.2em] text-cyan-400 uppercase mb-2">
+                Proof of Work
+              </p>
+              <h3 className="text-xl sm:text-2xl font-bold">{proofTitle}</h3>
+              <p className="text-sm text-slate-400 mt-2 max-w-2xl">{proofSubtitle}</p>
             </div>
           </div>
 
@@ -272,13 +243,14 @@ export default function HomeTrustAuthority({ showIoaiLink = true }) {
                   ))}
                 </ul>
                 <span className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400 mt-4 group-hover:underline">
-                  See outcomes
-                  <ArrowRight className="w-3.5 h-3.5" aria-hidden />
+                  Read case study
                 </span>
               </Link>
             ))}
           </div>
         </div>
+
+        <HomePrimaryCtaPair className="mt-10" />
       </div>
     </section>
   )

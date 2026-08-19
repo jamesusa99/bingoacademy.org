@@ -8,7 +8,6 @@ import {
   coursesPathForProgram,
   PAGE_SEO,
   PROGRAM_SLUG_TO_LINE,
-  programSlugFromLine,
   lineFromProgramSlug,
 } from '../../config/programs'
 import { getProductLine } from '../../config/products'
@@ -40,7 +39,7 @@ function LearningPath({ steps }) {
 
 export default function ProgramPage() {
   const { slug } = useParams()
-  const { isLineVisible, defaultLineId, visiblePrograms } = useProductLineVisibility()
+  const { isLineVisible, visiblePrograms } = useProductLineVisibility()
   const { courses } = useCourseCatalog()
   const showCompare = visiblePrograms.length > 1
 
@@ -48,9 +47,13 @@ export default function ProgramPage() {
     return <NotFound status={404} />
   }
 
+  if (slug === 'ioai') {
+    return <Navigate to="/courses/ioai" replace />
+  }
+
   const lineId = lineFromProgramSlug(slug)
   if (!isLineVisible(lineId)) {
-    return <Navigate to={`/programs/${programSlugFromLine(defaultLineId)}`} replace />
+    return <Navigate to="/courses/ioai" replace />
   }
 
   const program = getProgram(slug)

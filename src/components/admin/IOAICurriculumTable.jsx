@@ -460,7 +460,7 @@ export function ProgramModuleEditor({
     if (productLine === 'ioai') {
       return `/courses/module/${encodeURIComponent(catalogSlug)}`
     }
-    return config.frontendPath || `/curriculum?line=${productLine}`
+    return config.frontendPath || (productLine === 'ioai' ? '/ioai/curriculum' : `/curriculum?line=${productLine}`)
   }, [catalogSlug, productLine])
 
   return (

@@ -1,3 +1,4 @@
+/** @deprecated Phase-1 homepage — login/register live in Layout header. Not mounted on Home.jsx. */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, UserPlus, GraduationCap, Gift, User } from 'lucide-react'

@@ -535,7 +535,7 @@ export default function Profile() {
       const timer = window.setTimeout(() => scrollToProfileSection('settings'), 80)
       return () => window.clearTimeout(timer)
     }
-    if (hash === 'orders' || hash === 'notifications' || hash === 'certificates' || hash === 'achievements') {
+    if (hash === 'orders' || hash === 'notifications' || hash === 'certificates' || hash === 'achievements' || hash === 'progress' || hash === 'support') {
       const timer = window.setTimeout(() => scrollToProfileSection(hash), 80)
       return () => window.clearTimeout(timer)
     }
@@ -569,7 +569,7 @@ export default function Profile() {
 
   return (
     <div className="page-content w-full py-6 sm:py-8">
-      <PageMeta title="My Profile | BingoAcademy" noindex />
+      <PageMeta title="My Profile | Bingo Academy" noindex />
       {shareModal && <ShareModal title={shareModal} onClose={() => setShareModal(null)} />}
 
       {/* ── Top bar ─────────────────────────────────── */}
@@ -670,7 +670,7 @@ export default function Profile() {
       </section>
 
       {/* ── Data overview + share entry ─────────────────────────────── */}
-      <section className="mb-8">
+      <section id="progress" className="mb-8 scroll-mt-28">
         <h2 className="section-title mb-4">Overview</h2>
         {overviewLoading ? (
           <p className="text-sm text-slate-500 mb-3">Loading overview…</p>
@@ -742,14 +742,15 @@ export default function Profile() {
       />
 
       {/* ── Bottom quick area ──────────────────────────────────────── */}
-      <section className="border-t border-slate-200 pt-6">
+      <section id="support" className="border-t border-slate-200 pt-6 scroll-mt-28">
         <div className="flex flex-wrap gap-4 justify-between items-center">
           <div className="flex flex-wrap gap-4 text-sm">
-            <Link to="/" className="text-slate-600 hover:text-primary">Home</Link>
-            <Link to="/profile#help" className="text-slate-600 hover:text-primary">Help</Link>
-            <a href="tel:400-xxx-xxxx" className="text-slate-600 hover:text-primary">Contact us</a>
+            <Link to="/profile/study" className="text-slate-600 hover:text-primary">Study Center</Link>
+            <Link to="/profile#notifications" className="text-slate-600 hover:text-primary">Notifications</Link>
+            <Link to="/safety-and-privacy" className="text-slate-600 hover:text-primary">Help & safety</Link>
+            <a href="mailto:support@bingoacademy.org" className="text-slate-600 hover:text-primary">Contact support</a>
           </div>
-          <p className="text-xs text-slate-400">Bingo AI Academy · Profile</p>
+          <p className="text-xs text-slate-400">Bingo Academy · Profile</p>
         </div>
       </section>
     </div>

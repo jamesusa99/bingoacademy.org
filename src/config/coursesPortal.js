@@ -26,7 +26,7 @@ export const COURSES_PORTAL = {
     'This unit is not available for purchase yet. Browse the overview and lessons below to see what is included.',
   viewDetails: 'View details',
   materialsMall: 'Materials store',
-  certTitle: 'Bingo AI Academy Certification',
+  certTitle: 'Bingo Academy Certification',
   certDesc: 'Earn capability certificates after courses and Lab tasks — verifiable on the official site.',
   certCta: 'Certification center →',
   notFound: 'Course not found',

@@ -7,7 +7,7 @@ const SECTIONS = [
   {
     title: 'Overview',
     body:
-      'Bingo AI Academy provides AI education for students, families, and schools. We collect only the data needed to deliver courses, process payments, and support learners — and we design our products with children’s privacy in mind.',
+      'Bingo Academy provides AI education for students, families, and schools. We collect only the data needed to deliver courses, process payments, and support learners — and we design our products with children’s privacy in mind.',
   },
   {
     title: 'COPPA — Children’s Online Privacy (U.S.)',
@@ -47,7 +47,7 @@ export default function Privacy() {
     <div className="w-full">
       <PageMeta
         title="Privacy Policy · COPPA & GDPR"
-        description="How Bingo AI Academy protects student privacy — COPPA-aware practices and GDPR-ready data handling for K-12 AI education."
+        description="How Bingo Academy protects student privacy — COPPA-aware practices and GDPR-ready data handling for K-12 AI education."
       />
 
       <PageContent className="py-10 sm:py-14 max-w-3xl">
@@ -87,6 +87,17 @@ export default function Privacy() {
               ) : null}
             </section>
           ))}
+
+          <section id="terms-of-use">
+            <h2 className="text-lg font-bold text-bingo-dark mb-2">Terms of use</h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Digital course purchases grant access to the modules described at checkout. Content is for personal
+              educational use by the purchasing student or household. Do not redistribute course videos, notebooks, or
+              assessment materials. Refunds follow the policy shown during checkout. Bingo Academy may update course
+              content, rubrics, or platform features to improve learning quality — enrolled students retain access to
+              purchased modules under the access terms shown at purchase.
+            </p>
+          </section>
 
           <p className="text-sm text-slate-600">
             Email{' '}

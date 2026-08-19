@@ -1,6 +1,7 @@
 /** Server SEO for trust & credibility pages */
 
 import { ABOUT_ORG } from '../../../src/config/trust/about.js'
+import { ABOUT_PAGE_META, ABOUT_PAGE_HERO } from '../../../src/config/aboutPage.js'
 import { getInstructor, getAllInstructorPaths, INSTRUCTORS_HUB } from '../../../src/config/trust/instructors.js'
 import { METHODOLOGY } from '../../../src/config/trust/methodology.js'
 import { OUTCOMES_HUB, getAllOutcomesPaths } from '../../../src/config/trust/outcomes.js'
@@ -26,10 +27,10 @@ export function trustSeoForPath(pathname) {
 
   if (parsed.about) {
     return {
-      title: `About ${ABOUT_ORG.displayName} | ${SITE_BRAND}`,
-      description: `${ABOUT_ORG.legalName}. ${ABOUT_ORG.mission}`,
-      h1: `About ${ABOUT_ORG.displayName}`,
-      body: ABOUT_ORG.mission,
+      title: ABOUT_PAGE_META.title,
+      description: ABOUT_PAGE_META.description,
+      h1: ABOUT_PAGE_HERO?.title,
+      body: ABOUT_PAGE_META.description,
       canonical: '/about',
       updatedAt: ABOUT_ORG.updatedAt,
     }

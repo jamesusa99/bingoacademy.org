@@ -37,6 +37,7 @@ export const Compare = lazy(() => import('../pages/Compare'))
 /** IOAI public surfaces */
 export const IOAILevelPage = lazy(() => import('../pages/ioai/IOAILevelPage'))
 export const IOAIModulePage = lazy(() => import('../pages/ioai/IOAIModulePage'))
+export const IoaiSampleLabPage = lazy(() => import('../pages/ioai/IoaiSampleLabPage'))
 export const IOAIPublicExperimentPage = lazy(() => import('../pages/ioai/IOAIPublicExperimentPage'))
 
 /** Labs storefront */

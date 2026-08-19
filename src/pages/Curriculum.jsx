@@ -103,7 +103,7 @@ export default function Curriculum() {
 
   return (
     <div className="curriculum-page courses-page-dark min-h-[calc(100vh-4rem)]">
-      <PageMeta title={`${config.summaryTitle} · Bingo AI Academy`} description={PAGE_SEO.courses.description} />
+      <PageMeta title={`${config.summaryTitle} · Bingo Academy`} description={PAGE_SEO.courses.description} />
 
       <div className="page-content py-8 sm:py-10 lg:py-12">
         <header className="mb-8 sm:mb-10">

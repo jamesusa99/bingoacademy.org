@@ -58,7 +58,7 @@ export default function GuidesHub() {
               lab knowledge bases
             </Link>
             ,{' '}
-            <Link to="/programs/ioai" className="text-primary hover:underline">
+            <Link to="/courses/ioai" className="text-primary hover:underline">
               program decision pages
             </Link>
             , and{' '}

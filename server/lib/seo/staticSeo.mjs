@@ -24,9 +24,9 @@ export const PAGE_SEO = {
       'Self-paced AI literacy courses, online labs, and home experiment kits for independent learners.',
   },
   ioai: {
-    title: `IOAI Competition Training — AI Olympiad Prep | ${BRAND}`,
+    title: `IOAI Competition Training for Students | ${BRAND}`,
     description:
-      'IOAI whitelist competition training — video courses, training camps, and mock assessments.',
+      'Structured AI Olympiad training for students ages 12–18 — Python, machine learning, neural networks, Jupyter labs, projects, and mock assessments.',
   },
   k12: {
     title: `K12 AI Classroom Edition — Complete School Solution | ${BRAND}`,
@@ -34,9 +34,9 @@ export const PAGE_SEO = {
       'Textbooks, classroom video courses, online/offline labs, and school kits for K12 institutions.',
   },
   courses: {
-    title: `AI Courses for Kids & Teens — IOAI, Foundations & K12 | ${BRAND}`,
+    title: `IOAI Competition Training for Students | ${BRAND}`,
     description:
-      'Browse AI video courses, training labs, and classroom programs across IOAI competition, Foundations, and K12 school editions.',
+      'Structured AI Olympiad training for students ages 12–18 — Python, machine learning, neural networks, Jupyter labs, projects, and mock assessments.',
   },
   labs: {
     title: `AI Labs & Experiment Kits — Hands-On Learning | ${BRAND}`,
@@ -53,6 +53,11 @@ export const PAGE_SEO = {
     description:
       'Structured IOAI curriculum from Python foundations through machine learning and neural networks.',
   },
+  ioaiSampleLab: {
+    title: `Free IOAI Sample Lab | Try Python for AI | ${BRAND}`,
+    description:
+      'Try a free IOAI-style coding lab in your browser — dual-pane tutorial, Python autograder, and sample notebook format. No account required.',
+  },
   cert: {
     title: `AI Certification Programs | ${BRAND}`,
     description:
@@ -63,8 +68,9 @@ export const PAGE_SEO = {
     description: `How ${BRAND} collects, uses, and protects student and family data.`,
   },
   about: {
-    title: `About ${BRAND} — Mission, Team & Contact`,
-    description: `Legal identity, mission, service areas, and contact for ${BRAND} K–12 AI education.`,
+    title: 'About Bingo Academy | K–12 AI Education',
+    description:
+      'Learn how Bingo Academy helps K–12 students understand AI fundamentals, implement models in Python, and apply them through reproducible projects, labs, and competition preparation.',
   },
   instructors: {
     title: `Core Instructors & Researchers | ${BRAND}`,
@@ -172,6 +178,13 @@ export function getStaticSeoForPath(pathname) {
     '/labs': PAGE_SEO.labs,
     '/news': PAGE_SEO.news,
     '/curriculum': PAGE_SEO.curriculum,
+    '/ioai/curriculum': PAGE_SEO.curriculum,
+    '/ioai/sample-lab': PAGE_SEO.ioaiSampleLab,
+    '/assessment/ioai': {
+      title: `Free IOAI Readiness Assessment | ${BRAND}`,
+      description:
+        'Free AI readiness assessment for students ages 12–18 — find the right IOAI starting level before enrolling.',
+    },
     '/privacy': PAGE_SEO.privacy,
     '/about': PAGE_SEO.about,
     '/instructors': PAGE_SEO.instructors,

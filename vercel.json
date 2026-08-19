@@ -8,8 +8,9 @@
     }
   },
   "redirects": [
-    { "source": "/events", "destination": "/programs/ioai", "permanent": true },
-    { "source": "/research", "destination": "/programs/ioai", "permanent": true },
+    { "source": "/events", "destination": "/courses/ioai", "permanent": true },
+    { "source": "/research", "destination": "/courses/ioai", "permanent": true },
+    { "source": "/programs/ioai", "destination": "/courses/ioai", "permanent": true },
     { "source": "/career", "destination": "/community", "permanent": true },
     { "source": "/pricing", "destination": "/cert", "permanent": true },
     { "source": "/tools", "destination": "/mall", "permanent": true },
@@ -33,8 +34,8 @@
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "video" }], "destination": "/courses/ioai/video", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "course" }], "destination": "/courses/foundations/course", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "module" }], "destination": "/courses/ioai", "permanent": true },
-    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "event" }], "destination": "/programs/ioai", "permanent": true },
-    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "events" }], "destination": "/programs/ioai", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "event" }], "destination": "/courses/ioai", "permanent": true },
+    { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "events" }], "destination": "/courses/ioai", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "exam" }], "destination": "/assessment", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "exams" }], "destination": "/assessment", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "literacy" }], "destination": "/programs/foundations", "permanent": true },
@@ -44,9 +45,6 @@
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "foundations" }], "destination": "/programs/foundations", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "lab" }], "destination": "/labs", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "material" }], "destination": "/mall", "permanent": true },
-    { "source": "/courses", "has": [{ "type": "query", "key": "line", "value": "ioai" }], "destination": "/courses/ioai", "permanent": true },
-    { "source": "/courses", "has": [{ "type": "query", "key": "line", "value": "general" }], "destination": "/courses/foundations", "permanent": true },
-    { "source": "/courses", "has": [{ "type": "query", "key": "line", "value": "k12" }], "destination": "/courses/k12", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "cert" }], "destination": "/cert", "permanent": true },
     { "source": "/courses", "has": [{ "type": "query", "key": "type", "value": "pricing" }], "destination": "/cert", "permanent": true },
     { "source": "/courses", "destination": "/courses/ioai", "permanent": true }

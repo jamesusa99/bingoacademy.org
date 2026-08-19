@@ -3,7 +3,7 @@
 export const USAAIO_PREP_LANDING = {
   path: '/usaaio-prep',
   seo: {
-    title: 'USAAIO Prep Course | AI Olympiad Training for Teens | BingoAcademy',
+    title: 'USAAIO Prep Course | AI Olympiad Training for Teens | Bingo Academy',
     keywords:
       'USAAIO prep course, AI Olympiad training for teens, USAAIO curriculum, High school AI competition prep, Machine learning course for high school, Deep learning for teens, Computer vision classes for students',
     description:

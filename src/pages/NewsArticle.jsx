@@ -85,7 +85,7 @@ export default function NewsArticle() {
   return (
     <div className="w-full">
       <PageMeta
-        title={`${article.title} | BingoAcademy News`}
+        title={`${article.title} | Bingo Academy News`}
         description={article.excerpt}
         keywords={keywords}
         ogTitle={article.title}

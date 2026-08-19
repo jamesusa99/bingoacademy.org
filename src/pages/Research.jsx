@@ -398,7 +398,7 @@ export default function Research() {
           <button onClick={() => setSection('camps')} className="px-6 py-2.5 rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition text-sm">View All Camps →</button>
           <button onClick={() => setConsultModal(true)} className="px-6 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition text-sm">Free Consultation</button>
         </div>
-        <p className="text-xs text-slate-400 mt-4">Bingo AI Academy · 10,000+ students served · 92% competition award rate</p>
+        <p className="text-xs text-slate-400 mt-4">Bingo Academy · Research & competition pathways</p>
       </section>
 
       {/* ── Stats ── */}

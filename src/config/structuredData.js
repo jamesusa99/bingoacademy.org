@@ -3,7 +3,8 @@
  * Not GEO-specific; helps crawlers understand entities and relationships.
  */
 
-import { SITE_BRAND, SITE_DEFAULT_SEO, SITE_OG, SITE_URL } from './siteConstants.js'
+import { SITE_BRAND, SITE_DEFAULT_SEO, SITE_OG, SITE_URL, SITE_LEGAL_ENTITY, SITE_LEGACY_NAME, SITE_DOMAIN } from './siteConstants.js'
+import { ORG_SAME_AS } from './trust/about.js'
 
 /** Stable entity identifiers */
 export const STRUCTURED_IDS = {
@@ -47,6 +48,8 @@ export function organizationEntity() {
     '@type': 'EducationalOrganization',
     '@id': STRUCTURED_IDS.organization,
     name: SITE_BRAND,
+    legalName: SITE_LEGAL_ENTITY,
+    alternateName: SITE_LEGACY_NAME,
     url: SITE_URL,
     logo: {
       '@type': 'ImageObject',
@@ -55,7 +58,7 @@ export function organizationEntity() {
     image: SITE_OG.image,
     description: SITE_DEFAULT_SEO.description,
     email: 'hello@bingoacademy.org',
-    sameAs: [SITE_URL],
+    sameAs: ORG_SAME_AS,
   }
 }
 
@@ -71,6 +74,45 @@ export function websiteEntity() {
 
 export function homePageGraph() {
   return buildGraph(organizationEntity(), websiteEntity())
+}
+
+/** About page — AboutPage + linked EducationalOrganization graph */
+export function aboutPageGraph() {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'AboutPage',
+        '@id': `${SITE_URL}/about#webpage`,
+        url: `${SITE_URL}/about`,
+        name: 'About Bingo Academy',
+        about: { '@id': STRUCTURED_IDS.organization },
+        isPartOf: { '@id': STRUCTURED_IDS.website },
+      },
+      {
+        '@type': 'EducationalOrganization',
+        '@id': STRUCTURED_IDS.organization,
+        name: SITE_BRAND,
+        alternateName: [SITE_DOMAIN, SITE_LEGACY_NAME],
+        legalName: SITE_LEGAL_ENTITY,
+        url: SITE_URL,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${SITE_URL}/logo.png`,
+        },
+        description:
+          'K–12 AI education focused on fundamentals, Python implementation, reproducible experiments, projects, and competition preparation.',
+        email: 'hello@bingoacademy.org',
+        founder: {
+          '@type': 'Person',
+          '@id': personId('james-chen'),
+          name: 'Dr. James Chen',
+          url: `${SITE_URL}/instructors/james-chen`,
+        },
+        sameAs: ORG_SAME_AS,
+      },
+    ],
+  }
 }
 
 export function personEntity({ slug, name, title, image, url, description }) {

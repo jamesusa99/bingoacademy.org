@@ -3,9 +3,15 @@
  * Each profile must be verifiable; external links only when published by the instructor.
  */
 
+import { INDEPENDENT_PROVIDER_DISCLAIMER } from './about.js'
+import { SITE_LEGAL_ENTITY } from '../siteConstants.js'
+
+const AFFILIATION_DISCLOSURE =
+  'Personal university or industry affiliations listed on this profile describe the instructor\'s credentials and do not imply institutional endorsement of Bingo Academy unless explicitly documented.'
+
 export const INSTRUCTORS_HUB = {
-  version: '2026.1',
-  updatedAt: '2026-03-01',
+  version: '2026.2',
+  updatedAt: '2026-08-19',
   title: 'Core instructors & curriculum researchers',
   excerpt:
     'Named faculty who design, teach, or peer-review Bingo Academy courses — with education history, research areas, and published responsibilities.',
@@ -13,109 +19,149 @@ export const INSTRUCTORS_HUB = {
 
 export const CORE_INSTRUCTORS = [
   {
-    slug: 'jianwen-chen',
-    name: 'Jianwen Chen',
-    nameLocal: '陈建文',
+    slug: 'james-chen',
+    name: 'Dr. James Chen',
+    legalName: 'Jianwen Chen (陈建文)',
+    currentRole: 'Founder & CEO, Bingo Academy',
     title: 'Professor · University of Electronic Science and Technology of China (UESTC)',
     photo: '/mentors/jianwen-chen.jpg',
     tag: 'Computer Vision & Affective Computing',
+    bio:
+      'Professor with 20+ years in video processing and AI algorithms. Designs competition-grade vision pipelines and mentors students on reproducible experiment documentation.',
     education: [
       'Ph.D., Computer Science — research in video processing and multimodal AI',
       'Professor & doctoral supervisor, UESTC',
       'Director, Visual Intelligence Research Center, UESTC',
     ],
-    researchAreas: [
+    researchBackground: [
       'Video processing and compression',
       'Multimodal feature fusion',
       'Affective computing and visual intelligence',
+      'Competition-grade computer-vision pipelines for K–12 learners',
     ],
-    courseRoles: [
-      'IOAI computer-vision module architecture',
-      'Peer review of capstone rubrics and defence standards',
-      'Faculty advisor on embodied-AI lab sequences',
+    topicsTaught: [
+      'Computer vision fundamentals',
+      'Multimodal AI and feature fusion',
+      'OpenCV and neural network workflows',
+      'Competition notebook documentation and defence preparation',
     ],
-    publications: '200+ peer-reviewed papers; national research grants in visual intelligence',
-    profiles: [
-      { type: 'Institution', label: 'UESTC Visual Intelligence Research Center', href: 'https://www.uestc.edu.cn/', external: true },
+    coursesAuthored: [
+      { label: 'IOAI Competition Training — computer-vision modules', href: '/courses/ioai' },
+      { label: 'K-12 School Edition — vision & perception sequences', href: '/courses/k12' },
+      { label: 'AI Exploration Lab — browser vision experiments', href: '/exploration' },
     ],
     reviewedGuides: [
       { label: 'Mock assessment rubric', href: '/guides/ioai/mock-assessment-rubric' },
       { label: 'Sample notebook & report', href: '/guides/ioai/sample-notebook-report' },
+      { label: 'IOAI syllabus ↔ module mapping', href: '/guides/ioai/syllabus-module-mapping' },
     ],
-    bio:
-      'Over 20 years in video processing and AI algorithms. Designs competition-grade vision pipelines and mentors students on reproducible experiment documentation.',
+    selectedPublications: [
+      '200+ peer-reviewed papers in video processing and visual intelligence',
+      'National research grants — Visual Intelligence Research Center, UESTC',
+    ],
+    scholarlyProfiles: [
+      { type: 'Institution', label: 'UESTC Visual Intelligence Research Center', href: 'https://www.uestc.edu.cn/', external: true },
+    ],
+    disclosure: `${INDEPENDENT_PROVIDER_DISCLAIMER} ${AFFILIATION_DISCLOSURE}`,
   },
   {
-    slug: 'feng-xu',
-    name: 'Feng Xu',
-    nameLocal: '徐峰',
-    title: 'AI Scientist · Beijing Academy of Artificial Intelligence (BAAI)',
+    slug: 'michelle-xu',
+    name: 'Dr. Michelle Xu',
+    legalName: 'Michelle Xu',
+    currentRole: 'Co-Founder, Bingo Academy',
+    title: 'Co-Founder · AI Scientist',
     photo: '/mentors/feng-xu.jpg',
-    tag: 'Computer Vision & Multimodal AI',
+    tag: 'Pedagogy & Computer Vision',
+    bio:
+      'AI scientist focused on pedagogy, learning science, and age-appropriate AI lab design. Brings industry-grade perception research into structured K–12 pathways.',
     education: [
       'Ph.D., Tsinghua University',
       'Postdoctoral fellow, University of Pennsylvania',
       'Former researcher, Samsung Research America & Thomson',
     ],
-    researchAreas: [
+    researchBackground: [
       'Computer vision and multimodal intelligence',
+      'Learning science and age-appropriate lab scaffolding',
       'Industrial deployment of perception models',
       'Patent portfolio in mobile vision systems',
     ],
-    courseRoles: [
-      'IOAI Engineer stage — CNN workflows and deployment',
-      'Browser lab stack (TensorFlow.js, pose models)',
-      'Competition notebook quality standards',
+    topicsTaught: [
+      'K–12 AI pedagogy and learning progressions',
+      'Computer vision and multimodal AI',
+      'Browser and Jupyter lab design',
+      'Teacher training and classroom implementation',
     ],
-    publications: '50+ international patents; Samsung innovation awards',
-    profiles: [
-      { type: 'Institution', label: 'Beijing Academy of Artificial Intelligence', href: 'https://www.baai.ac.cn/', external: true },
+    coursesAuthored: [
+      { label: 'K-12 School Edition — classroom curriculum & teacher guides', href: '/courses/k12' },
+      { label: 'AI General Course — foundations pathway', href: '/courses/foundations' },
+      { label: 'AI Exploration Lab — guided browser experiments', href: '/exploration' },
     ],
     reviewedGuides: [
-      { label: 'IOAI syllabus ↔ module mapping', href: '/guides/ioai/syllabus-module-mapping' },
       { label: 'Spot prompt-only courses', href: '/guides/parents/spot-prompt-only-courses' },
+      { label: 'K–12 curriculum map', href: '/guides/k12/curriculum-map' },
+      { label: 'K–12 standards alignment', href: '/guides/k12/standards-alignment' },
     ],
-    bio:
-      'BAAI researcher and Beijing High-Level Overseas Talent. Brings industry-grade vision pipelines into age-appropriate browser and Jupyter labs.',
+    selectedPublications: [
+      '50+ international patents in mobile vision systems',
+      'Samsung innovation awards — industrial perception research',
+    ],
+    scholarlyProfiles: [
+      { type: 'Institution', label: 'Beijing Academy of Artificial Intelligence', href: 'https://www.baai.ac.cn/', external: true },
+    ],
+    disclosure: `${INDEPENDENT_PROVIDER_DISCLAIMER} ${AFFILIATION_DISCLOSURE}`,
   },
   {
     slug: 'shannon-wang',
-    name: 'Shannon Wang',
-    nameLocal: '王爽',
-    title: 'Ph.D. · Co-Founder & AI Scientist',
+    name: 'Dr. Shannon Wang',
+    legalName: 'Shannon Wang (王爽)',
+    currentRole: 'Co-Founder, Bingo Academy',
+    title: 'Co-Founder · AI Scientist',
     photo: '/mentors/shuang-wang.jpg',
     tag: 'LLMs & Deep Learning',
+    bio:
+      'Specialises in LLMs, multimodal intelligence, and deep learning. Leads curriculum architecture, VUA pedagogical framework, and US-facing program operations.',
     education: [
       'Ph.D., University of Missouri, USA',
       'Co-founder, Lava Education & ScholarOne LLC (USA)',
     ],
-    researchAreas: [
+    researchBackground: [
       'Large language models and multimodal fusion',
       'Deep learning for sensor networks',
       'US patent holder — AI sensor network systems',
+      'International competition mentorship and assessment design',
     ],
-    courseRoles: [
-      'Vision–Understanding–Action (VUA) pedagogical framework',
-      'LLM safety modules and teacher training',
-      'International competition mentorship',
+    topicsTaught: [
+      'Large language models and prompt engineering',
+      'Deep learning fundamentals',
+      'Vision–Understanding–Action (VUA) pedagogy',
+      'Competition-style problem solving and mock assessments',
     ],
-    publications: 'US patent holder; international competition mentor',
-    profiles: [
-      { type: 'Institution', label: 'ScholarOne LLC', href: 'https://www.bingoacademy.org/about', external: false },
+    coursesAuthored: [
+      { label: 'IOAI Competition Training — Builder & Engineer stages', href: '/courses/ioai' },
+      { label: 'USAAIO Prep pathway', href: '/usaaio-prep' },
+      { label: 'Teaching methodology (VUA framework)', href: '/methodology' },
     ],
     reviewedGuides: [
       { label: 'Annual IOAI rule changes', href: '/guides/ioai/annual-rule-changes' },
-      { label: 'K–12 curriculum map', href: '/guides/k12/curriculum-map' },
-      { label: 'Teaching methodology', href: '/methodology' },
+      { label: 'IOAI competition map & qualification flow', href: '/guides/ioai/competition-map' },
+      { label: 'K–12 sample semester plan', href: '/guides/k12/sample-semester-plan' },
     ],
-    bio:
-      'Specialises in LLMs, multimodal intelligence, and deep learning. Leads curriculum architecture and US-facing program operations.',
+    selectedPublications: [
+      'US patent — AI sensor network systems',
+      'International competition mentorship and curriculum architecture',
+    ],
+    scholarlyProfiles: [
+      { type: 'Institution', label: SITE_LEGAL_ENTITY, href: '/about', external: false },
+    ],
+    disclosure: `${INDEPENDENT_PROVIDER_DISCLAIMER} ${AFFILIATION_DISCLOSURE}`,
   },
 ]
 
 const INSTRUCTOR_SLUG_ALIASES = {
+  'jianwen-chen': 'james-chen',
+  'feng-xu': 'michelle-xu',
   'shuang-wang': 'shannon-wang',
-  'wenyi-wang': 'jianwen-chen',
+  'wenyi-wang': 'james-chen',
 }
 
 export function getInstructor(slug) {

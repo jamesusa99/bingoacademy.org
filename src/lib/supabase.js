@@ -8,7 +8,7 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
 
 const stubWriteError = {
   message:
-    '[BingoAcademy] Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local, then restart npm run dev.',
+    '[Bingo Academy] Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local, then restart npm run dev.',
 }
 
 /** Resolves like Supabase queries so existing `.then()` chains keep working without env vars. */
@@ -54,7 +54,7 @@ function createStubQuery() {
   return query
 }
 
-const authNotConfigured = { message: '[BingoAcademy] Supabase auth is not configured.' }
+const authNotConfigured = { message: '[Bingo Academy] Supabase auth is not configured.' }
 
 const stubAuth = {
   signInWithPassword: async () => ({
@@ -100,6 +100,6 @@ export const supabase = isSupabaseConfigured
 
 if (!isSupabaseConfigured && import.meta.env.PROD) {
   console.warn(
-    '[BingoAcademy] VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are not set. CMS data will use fallbacks; admin writes are disabled until env vars are configured.'
+    '[Bingo Academy] VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are not set. CMS data will use fallbacks; admin writes are disabled until env vars are configured.'
   )
 }

@@ -2,14 +2,15 @@
  * Teaching methodology — research-inspired, not institutional endorsement
  */
 
+import { INDEPENDENT_PROVIDER_DISCLAIMER } from './about.js'
+
 export const METHODOLOGY = {
   version: '2026.1',
   updatedAt: '2026-03-01',
   title: 'Teaching methodology & research basis',
   excerpt:
     'How Bingo Academy designs projects, assesses learning, and maps to IOAI and school standards — with cited public research and clear separation of third-party vs. proprietary methods.',
-  disclaimer:
-    'Bingo Academy is an independent education provider. References to university lab traditions describe pedagogical inspiration from published research — not formal affiliation, endorsement, or partnership unless explicitly stated on this page.',
+  disclaimer: `${INDEPENDENT_PROVIDER_DISCLAIMER} References to university lab traditions describe pedagogical inspiration from published research — not formal affiliation, endorsement, or partnership unless explicitly stated on this page.`,
   framework: {
     title: 'Vision–Understanding–Action (VUA)',
     body:

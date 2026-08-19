@@ -55,7 +55,7 @@ export default function ProfileCertificatesSection({ certificates, loading, erro
                     <p className="text-xs text-emerald-700 font-medium mt-1">Level: {cert.level_label}</p>
                   ) : null}
                   <p className="text-xs text-slate-400 mt-2">
-                    Issued {formatAccomplishmentDate(cert.issued_at)} · {cert.issuer || 'Bingo AI Academy'}
+                    Issued {formatAccomplishmentDate(cert.issued_at)} · {cert.issuer || 'Bingo Academy'}
                   </p>
                   {cert.verify_code ? (
                     <p className="text-xs text-slate-500 mt-1 font-mono">Verify: {cert.verify_code}</p>

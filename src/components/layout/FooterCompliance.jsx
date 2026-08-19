@@ -28,7 +28,7 @@ export default function FooterCompliance() {
         </Link>
       </p>
       <p className="text-center text-xs text-slate-600">
-        © {new Date().getFullYear()} {LEGAL_COMPLIANCE.siteName} · Courses · Labs · Materials · Certification
+        © {new Date().getFullYear()} {LEGAL_COMPLIANCE.siteName} · IOAI-oriented training · Ages 12–18
       </p>
     </div>
   )

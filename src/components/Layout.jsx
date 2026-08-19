@@ -1,37 +1,31 @@
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { mainNav, authNav } from '../config/nav'
-import { programPath } from '../config/programs'
+import { ArrowRight, Menu } from 'lucide-react'
+import { HOME_PRIMARY_CTAS } from '../config/homeCtas'
+import {
+  GUEST_DESKTOP_NAV,
+  guestNavTo,
+  isGuestNavActive,
+} from '../config/guestNav'
+import { GUEST_FOOTER_NAV, guestFooterTo } from '../config/guestFooter'
+import {
+  STUDENT_NAV,
+  STUDENT_FOOTER_NAV,
+  studentNavTo,
+  isStudentNavActive,
+} from '../config/studentNav'
 import { useAuth } from '../contexts/AuthContext'
-import { ProductLineVisibilityProvider, useProductLineVisibility } from '../contexts/ProductLineVisibilityContext'
+import { ProductLineVisibilityProvider } from '../contexts/ProductLineVisibilityContext'
 import { authLink } from '../lib/authRedirect'
-import NavDropdown from './NavDropdown'
 import LazyChatWidget from './LazyChatWidget'
 import FooterCompliance from './layout/FooterCompliance'
-import { LABS_STOREFRONT_VISIBLE, isLabsNavPath } from '../config/labsStorefront'
+import MobileNavMenu from './layout/MobileNavMenu'
+import MobileFixedAssessmentCta from './layout/MobileFixedAssessmentCta'
 import { SITE_BRAND } from '../config/siteSeo'
 
 function navLinkClass(active) {
   if (active) return 'bg-cyan-500 text-white'
   return 'text-slate-300 hover:text-white hover:bg-white/10'
-}
-
-function isNavActive(loc, path) {
-  if (path === '/profile') {
-    if (loc.pathname.startsWith('/profile/study')) return false
-    return loc.pathname === '/profile' || loc.pathname.startsWith('/profile/')
-  }
-  if (path === '/profile/study') return loc.pathname.startsWith('/profile/study')
-  if (path === '/curriculum') return loc.pathname === '/curriculum'
-  if (path === '/labs') {
-    return loc.pathname === '/labs' || loc.pathname === '/lab' || loc.pathname.startsWith('/labs/')
-  }
-  if (path === '/exploration') {
-    return loc.pathname === '/exploration' || loc.pathname.startsWith('/exploration/')
-  }
-  if (path === '/courses') return loc.pathname.startsWith('/courses')
-  if (path === '/about') return loc.pathname === '/about' || loc.pathname.startsWith('/about/')
-  return loc.pathname === path
 }
 
 export default function Layout({ children }) {
@@ -45,174 +39,135 @@ export default function Layout({ children }) {
 function LayoutShell({ children }) {
   const loc = useLocation()
   const { isAuthenticated, loading: authLoading, signOut } = useAuth()
-  const { visiblePrograms } = useProductLineVisibility()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), [])
+
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [loc.pathname, loc.hash])
+
   const showGuestNav = !authLoading && !isAuthenticated
-  const showProgramsNav = visiblePrograms.length > 1
-  const visibleProgramPaths = new Set(visiblePrograms.map((p) => programPath(p.slug)))
-  const mobileNavItems = mainNav.filter((item) => {
-    if (!LABS_STOREFRONT_VISIBLE && isLabsNavPath(item.path)) return false
-    if (item.path.startsWith('/programs/')) {
-      if (!showProgramsNav) return false
-      return visibleProgramPaths.has(item.path)
-    }
-    return true
-  })
+  const showStudentNav = !authLoading && isAuthenticated
+  const { assessment } = HOME_PRIMARY_CTAS
 
-  const headerAuthLinks = isAuthenticated
-    ? [
-        { path: '/profile/study', label: 'Study Center' },
-        { path: '/profile', label: 'Profile' },
-      ]
-    : authNav
+  const logoTo = showStudentNav ? '/profile/study' : '/'
 
-  const desktopItems = [
-    { type: 'link', path: '/', label: 'Home' },
-    ...(showProgramsNav ? [{ type: 'programs', label: 'Programs' }] : []),
-    { type: 'link', path: '/courses', label: 'Courses' },
-    ...(LABS_STOREFRONT_VISIBLE ? [{ type: 'link', path: '/labs', label: 'Labs' }] : []),
-    { type: 'link', path: '/exploration', label: 'AI Exploration' },
-    { type: 'sep' },
-    { type: 'link', path: '/showcase', label: 'Achievements' },
-    { type: 'link', path: '/cert', label: 'Certification' },
-    { type: 'link', path: '/community', label: 'Community' },
-    { type: 'link', path: '/about', label: 'About' },
-    { type: 'sep' },
-    { type: 'link', path: '/mall', label: 'AI Mall' },
-  ]
+  const assessmentButtonClass =
+    'inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold bg-cyan-500 text-slate-900 hover:bg-cyan-400 transition-colors whitespace-nowrap'
+
+  const mobileHeaderAssessmentClass =
+    'inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-cyan-500 text-slate-900 hover:bg-cyan-400 transition-colors whitespace-nowrap min-h-[36px]'
+
+  const desktopNavItems = showStudentNav ? STUDENT_NAV : GUEST_DESKTOP_NAV
+  const mobileMenuItems = desktopNavItems
+
+  const renderDesktopNavLink = (item) => {
+    const active = showStudentNav ? isStudentNavActive(loc, item) : isGuestNavActive(loc, item)
+    const to = showStudentNav ? studentNavTo(item) : guestNavTo(item)
+
+    return (
+      <Link key={item.label} to={to} className={`px-2.5 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${navLinkClass(active)}`}>
+        {item.label}
+      </Link>
+    )
+  }
+
+  const mainPaddingClass = showGuestNav
+    ? 'pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] lg:pb-0'
+    : 'pb-[calc(1rem+env(safe-area-inset-bottom,0px))] lg:pb-0'
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col ${showGuestNav ? 'has-mobile-assessment-cta' : ''}`}>
       <header className="sticky top-0 z-50 bg-bingo-dark text-white shadow-lg border-b border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b] pt-[env(safe-area-inset-top)]">
         <div className="w-full px-4 sm:px-6">
           <div className="flex items-center gap-2 lg:gap-4 min-h-14">
-            <Link to="/" className="shrink-0 flex items-center" aria-label={`${SITE_BRAND} home`}>
+            <Link to={logoTo} className="shrink-0 flex items-center mr-auto lg:mr-0" aria-label={`${SITE_BRAND} home`}>
               <img
                 src="/logo.png"
                 alt={SITE_BRAND}
-                className="h-9 sm:h-10 w-auto max-w-[148px] sm:max-w-none"
+                className="h-9 sm:h-10 w-auto max-w-[132px] sm:max-w-none"
                 width={895}
                 height={209}
               />
             </Link>
+
             <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 min-w-0" aria-label="Main">
-              {desktopItems.map((item, i) => {
-                if (item.type === 'sep') {
-                  return <span key={`sep-${i}`} className="w-0.5 h-5 bg-cyan-400/80 shrink-0 rounded-full" aria-hidden />
-                }
-                if (item.type === 'programs') {
-                  return <NavDropdown key="programs" label={item.label} />
-                }
-                const active = isNavActive(loc, item.path)
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`px-2 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${navLinkClass(active)}`}
-                  >
-                    {item.label}
-                  </Link>
-                )
-              })}
+              {desktopNavItems.map((item) => renderDesktopNavLink(item))}
             </nav>
-            <div className="hidden lg:flex items-center gap-2 shrink-0">
+
+            <div className="hidden lg:flex items-center gap-2 shrink-0 ml-auto">
               {showGuestNav ? (
                 <>
                   <Link
                     to={authLink('/login', loc.pathname)}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-cyan-500 text-slate-900 hover:bg-cyan-400 transition-colors whitespace-nowrap"
+                    className="px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors text-slate-300 hover:text-white hover:bg-white/10"
                   >
-                    Log in
+                    Log In
                   </Link>
-                  <Link
-                    to={authLink('/register', loc.pathname)}
-                    className="px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors text-slate-300 hover:text-white hover:bg-white/10 border border-white/20"
-                  >
-                    Register
+                  <Link to={assessment.to} className={assessmentButtonClass}>
+                    {assessment.navLabel}
+                    <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden />
                   </Link>
                 </>
               ) : authLoading ? (
                 <span className="text-xs text-slate-500 px-2">…</span>
               ) : (
-                <>
-                  {headerAuthLinks.map(({ path, label }) => (
-                    <Link
-                      key={path}
-                      to={path}
-                      className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${navLinkClass(isNavActive(loc, path))}`}
-                    >
-                      {label}
-                    </Link>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => signOut()}
-                    className="px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/10 whitespace-nowrap"
-                  >
-                    Sign out
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-          <nav className="lg:hidden nav-scroll-mobile pb-2" aria-label="Mobile navigation">
-            {mobileNavItems
-              .filter(({ path }) => path !== '/profile')
-              .map(({ path, label }) => (
-              <Link
-                key={path + label}
-                to={path}
-                className={`px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center ${
-                  isNavActive(loc, path) ? 'bg-cyan-500 text-white' : 'bg-white/10 text-slate-200'
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
-            {showGuestNav ? (
-              <>
-                <Link
-                  to={authLink('/login', loc.pathname)}
-                  className="px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center font-semibold bg-cyan-500 text-slate-900"
-                >
-                  Log in
-                </Link>
-                <Link
-                  to={authLink('/register', loc.pathname)}
-                  className="px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center bg-white/10 text-slate-200"
-                >
-                  Register
-                </Link>
-              </>
-            ) : authLoading ? null : (
-              <>
-                {headerAuthLinks.map(({ path, label }) => (
-                  <Link
-                    key={path}
-                    to={path}
-                    className={`px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center ${
-                      isNavActive(loc, path) ? 'bg-cyan-500 text-white' : 'bg-white/10 text-slate-200'
-                    }`}
-                  >
-                    {label}
-                  </Link>
-                ))}
                 <button
                   type="button"
                   onClick={() => signOut()}
-                  className="px-3 py-2 text-xs sm:text-sm rounded-lg whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center bg-white/10 text-slate-300"
+                  className="px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/10 whitespace-nowrap"
                 >
-                  Sign out
+                  Sign Out
                 </button>
-              </>
-            )}
-          </nav>
+              )}
+            </div>
+
+            <div className="flex lg:hidden items-center gap-1.5 shrink-0">
+              {showGuestNav ? (
+                <>
+                  <Link
+                    to={authLink('/login', loc.pathname)}
+                    className="px-2 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 whitespace-nowrap min-h-[36px] inline-flex items-center"
+                  >
+                    Log In
+                  </Link>
+                  <Link to={assessment.to} className={mobileHeaderAssessmentClass}>
+                    {assessment.mobileHeaderLabel}
+                  </Link>
+                </>
+              ) : authLoading ? (
+                <span className="text-xs text-slate-500 px-1">…</span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="p-2 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                aria-label="Open menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                <Menu className="w-5 h-5" aria-hidden />
+              </button>
+            </div>
+          </div>
         </div>
       </header>
-      <main className="flex-1 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">{children}</main>
+
+      <MobileNavMenu
+        open={mobileMenuOpen}
+        onClose={closeMobileMenu}
+        items={mobileMenuItems}
+        variant={showStudentNav ? 'student' : 'guest'}
+        onSignOut={showStudentNav ? signOut : undefined}
+      />
+
+      <main className={`flex-1 ${mainPaddingClass}`}>{children}</main>
+
+      {showGuestNav ? <MobileFixedAssessmentCta /> : null}
+
       <footer className="bg-bingo-dark text-slate-400 text-sm py-8 border-t border-cyan-500/20 bg-gradient-to-r from-[#0f172a] to-[#1e293b] pb-[max(2rem,env(safe-area-inset-bottom))]">
         <div className="w-full px-4 sm:px-6 lg:px-8 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-between lg:gap-6">
           <div className="col-span-2 sm:col-span-3 lg:col-auto">
-            <Link to="/" className="inline-block">
+            <Link to={logoTo} className="inline-block">
               <img
                 src="/logo.png"
                 alt={SITE_BRAND}
@@ -221,51 +176,41 @@ function LayoutShell({ children }) {
                 height={209}
               />
             </Link>
-            <p className="mt-2 text-slate-500">K-12 AI Education</p>
+            <p className="mt-2 text-slate-500">
+              {showStudentNav ? 'Student workspace' : 'IOAI-oriented training · Ages 12–18'}
+            </p>
           </div>
-          <div className="col-span-1">
-            <div className="text-white font-medium mb-2">Explore</div>
-              <Link to="/courses" className="block hover:text-white py-0.5">Courses</Link>
-              {LABS_STOREFRONT_VISIBLE ? (
-                <Link to="/labs" className="block hover:text-white py-0.5">Labs & kits</Link>
-              ) : null}
-              <Link to="/exploration" className="block hover:text-white py-0.5">AI Exploration (free games)</Link>
-              {visiblePrograms.length > 1 ? (
-                <Link to="/compare" className="block hover:text-white py-0.5">Compare Programs</Link>
-              ) : null}
-              <Link to="/showcase" className="block hover:text-white py-0.5">Achievements</Link>
-              <Link to="/news" className="block hover:text-white py-0.5">News</Link>
-              <Link to="/guides" className="block hover:text-white py-0.5">Knowledge guides</Link>
-              <Link to="/cert" className="block hover:text-white py-0.5">Certification</Link>
-              <Link to="/mall" className="block hover:text-white py-0.5">AI Mall</Link>
-            </div>
-          <div className="col-span-1">
-            <div className="text-white font-medium mb-2">For US Families</div>
-              <Link to="/ai-classes-for-kids" className="block hover:text-white">AI Classes for Kids</Link>
-              <Link to="/usaaio-prep" className="block hover:text-white">USAAIO Prep</Link>
-            </div>
-            {showProgramsNav ? (
-            <div className="col-span-1">
-              <div className="text-white font-medium mb-2">Programs</div>
-              {visiblePrograms.map((p) => (
-                <Link key={p.slug} to={programPath(p.slug)} className="block hover:text-white">
-                  {p.title}
+          {showStudentNav ? (
+            <div className="col-span-2 sm:col-span-1">
+              <div className="text-white font-medium mb-2">Learning</div>
+              {STUDENT_FOOTER_NAV.map((item) => (
+                <Link key={item.label} to={studentNavTo(item)} className="block hover:text-white py-0.5">
+                  {item.label}
                 </Link>
               ))}
             </div>
-            ) : null}
-            <div className="col-span-1">
-              <div className="text-white font-medium mb-2">Company</div>
-              <Link to="/about" className="block hover:text-white py-0.5">About</Link>
-              <Link to="/instructors" className="block hover:text-white py-0.5">Instructors</Link>
-              <Link to="/methodology" className="block hover:text-white py-0.5">Methodology</Link>
-              <Link to="/outcomes" className="block hover:text-white py-0.5">Outcomes</Link>
-              <Link to="/safety-and-privacy" className="block hover:text-white py-0.5">Safety & privacy</Link>
+          ) : (
+            <div className="col-span-2 sm:col-span-2 lg:col-span-1">
+              <div className="text-white font-medium mb-2">Explore</div>
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-x-4 gap-y-0.5">
+                {GUEST_FOOTER_NAV.map((item) =>
+                  item.external ? (
+                    <a
+                      key={item.label}
+                      href={guestFooterTo(item)}
+                      className="block hover:text-white py-0.5"
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link key={item.label} to={guestFooterTo(item)} className="block hover:text-white py-0.5">
+                      {item.label}
+                    </Link>
+                  )
+                )}
+              </div>
             </div>
-            <div className="col-span-1">
-              <div className="text-white font-medium mb-2">Legal</div>
-              <Link to="/privacy" className="block hover:text-white py-0.5">Privacy Policy</Link>
-            </div>
+          )}
         </div>
         <FooterCompliance />
       </footer>

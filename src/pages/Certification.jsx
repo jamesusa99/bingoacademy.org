@@ -283,7 +283,7 @@ export default function Certification() {
               <div className="flex-1 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/30 p-5 text-center">
                 <p className="text-xs font-bold text-amber-700 mb-3">CERTIFICATE FRONT</p>
                 <div className="space-y-1 text-xs text-slate-600">
-                  <p className="font-bold text-sm text-bingo-dark">Bingo AI Academy</p>
+                  <p className="font-bold text-sm text-bingo-dark">Bingo Academy</p>
                   <p className="text-slate-500">— AI Learning Certificate —</p>
                   <p className="mt-2">Learner Name · Certificate Level</p>
                   <p>Completion Date · Certificate Number</p>

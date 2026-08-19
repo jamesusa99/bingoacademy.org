@@ -1,5 +1,6 @@
 /** Server mirror of src/config/coursePaths.js SEO + path helpers */
 
+import { visibleCourseLineSlugs } from '../../../src/config/productLineVisibility.js'
 import { SITE_BRAND } from './constants.mjs'
 import { isProductLabSub } from './coursePathData.mjs'
 
@@ -98,11 +99,11 @@ const LINE_SEO = {
 }
 
 const HUB_SEO = {
-  title: `AI Courses for Kids & Teens — IOAI, Foundations & K12 | ${SITE_BRAND}`,
+  title: `IOAI Competition Training Courses | ${SITE_BRAND}`,
   description:
-    'Browse AI video courses, training labs, and classroom programs across IOAI competition, Foundations, and K12 school editions.',
-  h1: 'AI Courses',
-  body: 'Explore IOAI competition training, self-paced Foundations courses, and K12 classroom editions — all in one place.',
+    'IOAI-oriented competition training — structured video modules, training labs, mock assessments, and Olympiad prep courses.',
+  h1: 'IOAI Program',
+  body: 'Structured IOAI competition training for students ages 12–18.',
 }
 
 export function coursesHubSeo() {
@@ -139,14 +140,15 @@ export function coursesSeoForPathname(pathname) {
   return coursesLineSeo(parsed.lineSlug)
 }
 
-export function courseSitemapPaths() {
-  const paths = COURSE_LINE_SLUGS.map((slug) => ({
+export function courseSitemapPaths(visibility) {
+  const lineSlugs = visibleCourseLineSlugs(visibility)
+  const paths = lineSlugs.map((slug) => ({
     path: courseLinePath(slug),
     changefreq: 'weekly',
     priority: slug === 'ioai' ? '0.9' : '0.8',
   }))
 
-  for (const lineSlug of COURSE_LINE_SLUGS) {
+  for (const lineSlug of lineSlugs) {
     const lineId = lineIdFromCourseSlug(lineSlug)
     for (const sub of PRODUCT_SUBCATEGORIES[lineId] || []) {
       if (isProductLabSub(lineId, sub.id)) continue

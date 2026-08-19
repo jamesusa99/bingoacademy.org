@@ -5,8 +5,8 @@
  *
  * | Old URL                    | Final URL                        | Status | Sitemap | Canonical | Index |
  * |----------------------------|----------------------------------|--------|---------|-----------|-------|
- * | /events                    | /programs/ioai                   | 301    | no      | final     | no    |
- * | /research                  | /programs/ioai                   | 301    | no      | final     | no    |
+ * | /events                    | /courses/ioai                    | 301    | no      | final     | no    |
+ * | /research                  | /courses/ioai                    | 301    | no      | final     | no    |
  * | /career                    | /community                       | 301    | no      | final     | no    |
  * | /pricing                   | /cert                            | 301    | no      | final     | no    |
  * | /tools, /tools/detail/*    | /mall                            | 301    | no      | final     | no    |
@@ -19,13 +19,15 @@
  * | /courses?type=video        | /courses/ioai/video              | 301    | no      | final     | no    |
  * | /courses?type=course       | /courses/foundations/course      | 301    | no      | final     | no    |
  * | /courses?type=module       | /courses/ioai                    | 301    | no      | final     | no    |
- * | /courses?type=event(s)     | /programs/ioai                   | 301    | no      | final     | no    |
+ * | /courses?type=event(s)     | /courses/ioai                    | 301    | no      | final     | no    |
  * | /courses?type=exam         | /assessment                      | 301    | no      | final     | no    |
  * | /courses?type=literacy     | /programs/foundations            | 301    | no      | final     | no    |
  * | /courses?type=cert         | /cert                            | 301    | no      | final     | no    |
  * | /courses (bare)            | /courses/ioai                    | 301    | no      | final     | no    |
  * | /courses?type=* (unknown)  | /courses/ioai                    | 301    | no      | final     | no    |
- * | /programs/ioai             | (self)                           | 200    | yes     | self      | yes   |
+ * | /programs/ioai             | /courses/ioai                    | 301    | no      | final     | no    |
+ * | /curriculum                | /ioai/curriculum                 | 301    | no      | final     | no    |
+ * | /curriculum?line=ioai      | /ioai/curriculum                 | 301    | no      | final     | no    |
  * | /programs/foundations      | (self)                           | 200    | yes     | self      | yes   |
  * | /programs/k12              | (self)                           | 200    | yes     | self      | yes   |
  * | /courses?line=*            | /courses/:lineSlug               | 301    | no      | final     | no    |
@@ -42,9 +44,26 @@
 export const SITE_BRAND = 'Bingo Academy'
 
 /** Permanent pathname redirects — 301 */
+/** Query keys preserved when normalizing legacy /courses?line=ioai&… URLs */
+export const COURSE_REDIRECT_PRESERVE_PARAMS = ['stage', 'buy', 'page', 'sort', 'category', 'level', 'price']
+
+/** Query keys preserved when canonicalizing /curriculum → /ioai/curriculum */
+export const CURRICULUM_REDIRECT_PRESERVE_PARAMS = ['checkout', 'session_id', 'module', 'lesson']
+
+export function appendPreservedQuery(basePath, searchParams, preserveKeys = COURSE_REDIRECT_PRESERVE_PARAMS) {
+  const next = new URLSearchParams()
+  for (const key of preserveKeys) {
+    const val = searchParams.get(key)
+    if (val != null && val !== '') next.set(key, val)
+  }
+  const q = next.toString()
+  return q ? `${basePath}?${q}` : basePath
+}
+
 export const PERMANENT_REDIRECTS = {
-  '/events': '/programs/ioai',
-  '/research': '/programs/ioai',
+  '/events': '/courses/ioai',
+  '/research': '/courses/ioai',
+  '/programs/ioai': '/courses/ioai',
   '/career': '/community',
   '/pricing': '/cert',
   '/tools': '/mall',
@@ -78,8 +97,8 @@ export const COURSES_TYPE_TO_PATH = {
   video: '/courses/ioai/video',
   course: '/courses/foundations/course',
   module: '/courses/ioai',
-  event: '/programs/ioai',
-  events: '/programs/ioai',
+  event: '/courses/ioai',
+  events: '/courses/ioai',
   exam: '/assessment',
   exams: '/assessment',
   literacy: '/programs/foundations',
@@ -102,6 +121,7 @@ export const COURSES_TYPE_TO_PATH = {
 export const SITEMAP_EXCLUDED_PATHS = new Set([
   ...Object.keys(PERMANENT_REDIRECTS),
   ...GONE_PATHS,
+  '/curriculum',
   '/login',
   '/register',
   '/profile',

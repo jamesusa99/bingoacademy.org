@@ -1,4 +1,4 @@
-/** Bingo AI Academy · Three product lines */
+/** Bingo Academy · Three product lines */
 export const PRODUCT_LINES = [
   {
     id: 'ioai',
@@ -9,7 +9,7 @@ export const PRODUCT_LINES = [
     gradient: 'from-amber-500/15 to-orange-50',
     border: 'border-amber-200/60',
     icon: '🏆',
-    to: '/programs/ioai',
+    to: '/courses/ioai',
     subcategories: [
       { id: 'video', name: 'AI Video Courses', icon: '🎬', desc: 'Competition-focused video lessons with progress tracking' },
       { id: 'online-lab', name: 'Training Lab', icon: '🏕️', desc: 'Intensive competition training labs with mock assessments' },

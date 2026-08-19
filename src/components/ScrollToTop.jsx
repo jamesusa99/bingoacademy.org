@@ -1,7 +1,14 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { IOAI_STAGE_PACKAGES_ANCHOR } from '../config/ioaiStagePackages'
+import { HOME_SECTION_IDS } from '../config/homePage'
 import { scrollToAnchor } from '../lib/scrollToAnchor'
+
+const HOME_SCROLL_ANCHORS = new Set([
+  IOAI_STAGE_PACKAGES_ANCHOR,
+  HOME_SECTION_IDS.howItWorks,
+  HOME_SECTION_IDS.tuition,
+])
 
 /**
  * SPA routes reuse the same document scroll position. Reset to top on pathname change
@@ -15,8 +22,12 @@ export default function ScrollToTop() {
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
 
-    if (hash === `#${IOAI_STAGE_PACKAGES_ANCHOR}`) {
-      scrollToAnchor(IOAI_STAGE_PACKAGES_ANCHOR, { behavior: 'auto', maxRetries: 96 })
+    if (hash) {
+      const anchorId = hash.slice(1)
+      if (HOME_SCROLL_ANCHORS.has(anchorId)) {
+        scrollToAnchor(anchorId, { behavior: 'auto', maxRetries: 96 })
+        return
+      }
     }
   }, [pathname, hash])
 

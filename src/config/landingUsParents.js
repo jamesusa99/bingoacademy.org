@@ -3,12 +3,12 @@
 export const US_PARENTS_LANDING = {
   path: '/ai-classes-for-kids',
   seo: {
-    title: 'AI Classes for Kids | Free Trial | BingoAcademy',
+    title: 'AI Classes for Kids | Free Trial | Bingo Academy',
     keywords:
       'AI Classes for Kids, AI Course for Kids, Artificial Intelligence for Children, AI Camp, AI Learning, STEM Education, AI Coding, AI for Teens',
     description:
-      'Learn AI through fun, hands-on projects designed for kids ages 13–18. Book a free AI class today and help your child build future-ready skills with BingoAcademy.',
-    ogTitle: 'AI Classes for Kids — Free Trial | BingoAcademy',
+      'Learn AI through fun, hands-on projects designed for kids ages 13–18. Book a free AI class today and help your child build future-ready skills with Bingo Academy.',
+    ogTitle: 'AI Classes for Kids — Free Trial | Bingo Academy',
     ogDescription:
       'Project-based AI classes for teens. No coding experience required. Book a free trial class today.',
   },
@@ -22,9 +22,9 @@ export const US_PARENTS_LANDING = {
     imageAlt: 'American teens learning AI in a live online class',
   },
   whyParents: {
-    title: 'Why Parents Choose BingoAcademy',
+    title: 'Why Parents Choose Bingo Academy',
     body:
-      'Every year, thousands of students learn how to use AI tools. Very few learn how AI actually works. At BingoAcademy, students go beyond prompts and chatbots — they learn the mathematics, programming, and machine learning concepts behind modern Artificial Intelligence.',
+      'Every year, thousands of students learn how to use AI tools. Very few learn how AI actually works. At Bingo Academy, students go beyond prompts and chatbots — they learn the mathematics, programming, and machine learning concepts behind modern Artificial Intelligence.',
     cards: [
       {
         icon: '🎯',

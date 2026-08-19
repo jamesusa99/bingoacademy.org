@@ -25,7 +25,7 @@ export default function LabSessionLayout({
           ) : null}
           <div className="min-w-0">
             <p className="text-sm font-bold text-white truncate">
-              BingoAcademy IOAI Lab
+              Bingo Academy IOAI Lab
               {labTitle ? (
                 <>
                   <span className="text-slate-600 font-normal mx-2">·</span>

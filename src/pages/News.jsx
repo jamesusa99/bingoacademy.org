@@ -37,7 +37,7 @@ export default function News() {
   return (
     <div className="w-full">
       <PageMeta
-        title="AI Education News & Insights | BingoAcademy"
+        title="AI Education News & Insights | Bingo Academy"
         description="Latest articles on AI classes for kids, USAAIO prep, machine learning for high school, AI classroom activities, and IOAI competition training."
         keywords={`${SITE_DEFAULT_SEO.keywords}, AI teaching resources, USAAIO prep course`}
       />

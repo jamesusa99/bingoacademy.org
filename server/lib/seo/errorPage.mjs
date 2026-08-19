@@ -18,7 +18,7 @@ const HELPFUL_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/courses/ioai', label: 'AI Courses' },
   { href: '/labs', label: 'AI Labs' },
-  { href: '/programs/ioai', label: 'IOAI Training' },
+  { href: '/courses/ioai', label: 'IOAI Training' },
   { href: '/news', label: 'News & Insights' },
 ]
 

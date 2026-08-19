@@ -68,7 +68,7 @@ export default function PageMeta({
     upsertMeta('property', 'og:image', ogImg)
     upsertMeta('property', 'og:url', ogU)
     upsertMeta('property', 'og:type', ogTy)
-    upsertMeta('property', 'og:site_name', SITE_BRAND)
+    upsertMeta('property', 'og:site_name', SITE_OG.siteName)
 
     upsertMeta('name', 'twitter:card', SITE_TWITTER.card)
     upsertMeta('name', 'twitter:title', ogT)

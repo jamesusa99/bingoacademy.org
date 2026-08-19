@@ -359,7 +359,7 @@ export default function CourseDetail({ studyCenter: studyCenterProp = false }) {
   return (
     <PageContent className={`py-6 sm:py-8 ${pageWidthDefault} mx-auto`}>
       <PageMeta
-        title={item ? `${item.name} | AI Course | BingoAcademy` : 'Course | BingoAcademy'}
+        title={item ? `${item.name} | AI Course | Bingo Academy` : 'Course | Bingo Academy'}
         description={
           catalogDecision?.directAnswer?.slice(0, 160) || item?.desc || item?.description
         }

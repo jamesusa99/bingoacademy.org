@@ -79,7 +79,7 @@ export default function Login() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
-      <PageMeta title="Login | BingoAcademy" noindex />
+      <PageMeta title="Login | Bingo Academy" noindex />
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Login</h1>
       <p className="text-slate-600 mb-6">
         Sign in with email or Google to access courses, your profile, and saved progress.

@@ -4,24 +4,29 @@ const GREETING =
   "Hi! I'm Bingo AI Assistant. Ask about our IOAI Competition Training."
 
 const FALLBACK =
-  'Thanks for your message. Explore IOAI courses at /courses/ioai, free labs at /exploration, or book a free assessment at /assessment.'
+  'Thanks for your message. Explore IOAI training at /courses/ioai, sample work at /showcase/works, or take the free readiness assessment at /assessment/ioai.'
 
 const QUICK_REPLIES = {
   course:
     'Our focus is IOAI Competition Training — video courses, training labs, mock assessments, and Olympiad prep. Visit /courses/ioai',
-  ioai: 'IOAI Competition Training includes video courses, Jupyter labs, and competition prep. See /courses/ioai or /usaaio-prep',
-  cert: 'Bingo AI Certification validates course completion. Visit the Certification page for tiers and application.',
-  mall: 'AI Mall offers IOAI training materials and lab kits. Visit /mall?tab=ioai',
+  ioai: 'IOAI Competition Training includes video courses, Jupyter labs, and competition prep. See /courses/ioai or take the free assessment at /assessment/ioai',
+  assessment:
+    'The free readiness assessment recommends a starting stage. Begin at /assessment/ioai',
   school:
-    'We are currently focused on IOAI Competition Training for students and families. For school partnerships, email us via the contact form on /profile.',
+    'We are currently focused on IOAI Competition Training for students ages 12–18. Email support@bingoacademy.org for questions.',
   foundations:
-    'Foundations of AI and K12 Classroom programs are coming later. Today we specialize in IOAI Competition Training — see /courses/ioai',
+    'Bingo Academy is focused on IOAI-oriented training for students and families. See /courses/ioai or /assessment/ioai to get started.',
+  cert: 'Course completion and sample work are documented in Study Center. Explore the program at /courses/ioai',
+  mall: 'IOAI stage bundles are available on the program page. See /courses/ioai#stage-packages or the homepage tuition section.',
 }
 
 function getReply(text) {
   const lower = text.toLowerCase()
   if (lower.includes('ioai') || lower.includes('competition') || lower.includes('olympiad')) {
     return QUICK_REPLIES.ioai
+  }
+  if (lower.includes('assessment') || lower.includes('placement') || lower.includes('readiness')) {
+    return QUICK_REPLIES.assessment
   }
   if (
     lower.includes('k12') ||

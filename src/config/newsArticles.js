@@ -18,7 +18,7 @@ export const NEWS_ARTICLES_FALLBACK = [
     authorSlug: 'shannon-wang',
     category: 'parents',
     keywords: ['AI classes for kids', 'AI course for teens', 'STEM Education'],
-    body: `Parents searching for **AI classes for kids** often find programs that only teach how to use chatbots. BingoAcademy takes a different approach: students learn artificial intelligence for children through hands-on projects — building models, writing Python, and exploring computer vision in the browser.
+    body: `Parents searching for **AI classes for kids** often find programs that only teach how to use chatbots. Bingo Academy takes a different approach: students learn artificial intelligence for children through hands-on projects — building models, writing Python, and exploring computer vision in the browser.
 
 Our **AI course for teens** (grades 7–12) integrates mathematics, programming, and machine learning so learners understand *why* AI works. Free browser labs like AI Cyber Tennis let families try before enrolling.
 
@@ -32,7 +32,7 @@ Our **AI course for teens** (grades 7–12) integrates mathematics, programming,
     date: '2026-03-10',
     category: 'competition',
     keywords: ['USAAIO prep course', 'AI Olympiad training for teens', 'High school AI competition prep'],
-    body: `The **USAAIO prep course** pathway at BingoAcademy aligns with the mathematical and algorithmic rigor of the United States Artificial Intelligence Olympiad. Students progress from Python foundations through linear algebra, machine learning, and **AI Olympiad training for teens** with competition-style problem sets.
+    body: `The **USAAIO prep course** pathway at Bingo Academy aligns with the mathematical and algorithmic rigor of the United States Artificial Intelligence Olympiad. Students progress from Python foundations through linear algebra, machine learning, and **AI Olympiad training for teens** with competition-style problem sets.
 
 Outstanding performers may continue toward IAIO and **IOAI** international stages. Our **USAAIO curriculum** mirrors university-level CS while remaining accessible to motivated 7th–12th graders.
 
@@ -46,7 +46,7 @@ Book a free AI competition assessment to see if your child is ready for **high s
     date: '2026-03-05',
     category: 'curriculum',
     keywords: ['Machine learning course for high school', 'Deep learning for teens', 'AP Computer Science A advanced alternatives'],
-    body: `A serious **machine learning course for high school** covers more than importing libraries. BingoAcademy students learn **deep learning for teens** fundamentals: tensors, loss functions, and **computer vision classes for students** built from scratch in Jupyter.
+    body: `A serious **machine learning course for high school** covers more than importing libraries. Bingo Academy students learn **deep learning for teens** fundamentals: tensors, loss functions, and **computer vision classes for students** built from scratch in Jupyter.
 
 This **project-based AI learning for teens** approach produces portfolio artifacts — GitHub repos, lab reports, and competition submissions — that strengthen **computer science extracurriculars high school** profiles for top universities.`,
   },
@@ -84,7 +84,7 @@ Unlike generic **AI coding classes**, each cohort follows the Vision–Understan
     keywords: ['How to prepare for USAAIO', 'USAAIO curriculum', 'AI math competition prep'],
     body: `**How to prepare for USAAIO** starts with strong Python and **math for AI** foundations. Month 1–2: lists, NumPy, and basic ML. Month 3–4: **AI math competition prep** with linear algebra drills. Month 5+: timed mock exams and **USAAIO curriculum** review.
 
-BingoAcademy’s free assessment maps your child to the right starting module.`,
+Bingo Academy’s free assessment maps your child to the right starting module.`,
   },
   {
     slug: 'best-ai-coding-classes-7-12',
@@ -96,7 +96,7 @@ BingoAcademy’s free assessment maps your child to the right starting module.`,
     keywords: ['Best AI coding classes for 7-12 graders', 'Advanced coding programs for gifted students', 'Elite STEM courses for high school'],
     body: `The **best AI coding classes for 7–12 graders** combine accessibility with depth. Beginners need zero-setup browser labs; advanced learners need **research-level AI projects for teens** and **Ivy league STEM prep programs** alignment.
 
-BingoAcademy serves both with a single progression: Exploration Lab → IOAI Masterclass → **USAAIO prep course**.`,
+Bingo Academy serves both with a single progression: Exploration Lab → IOAI Masterclass → **USAAIO prep course**.`,
   },
   {
     slug: 'ioai-competition-training-update',
@@ -106,7 +106,7 @@ BingoAcademy serves both with a single progression: Exploration Lab → IOAI Mas
     date: '2026-01-22',
     category: 'competition',
     keywords: ['IOAI', 'AI Competitions', 'International Olympiad in Artificial Intelligence'],
-    body: `BingoAcademy released updated **IOAI** training modules covering selection-round lab reports, defence presentations, and reproducible Jupyter pipelines. Students preparing for the International Olympiad in Artificial Intelligence (IOAI) now have dedicated mock defence rubrics and mentor feedback loops.`,
+    body: `Bingo Academy released updated **IOAI** training modules covering selection-round lab reports, defence presentations, and reproducible Jupyter pipelines. Students preparing for the International Olympiad in Artificial Intelligence (IOAI) now have dedicated mock defence rubrics and mentor feedback loops.`,
   },
 ]
 

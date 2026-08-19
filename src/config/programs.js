@@ -1,5 +1,5 @@
 import { PRODUCT_LINES } from './products'
-import { SITE_BRAND, ORG_JSON_LD } from './siteSeo'
+import { SITE_BRAND, ORG_JSON_LD, SITE_DEFAULT_SEO } from './siteSeo'
 import { isProductLabSub, labsPath } from './productLabs'
 import { courseLinePath } from './coursePaths'
 
@@ -135,12 +135,7 @@ export const COMPARISON_ROWS = [
 ]
 
 export const PAGE_SEO = {
-  home: {
-    title: `AI Courses for Kids & Teens | K-12 AI Education Platform | ${SITE_BRAND}`,
-    description: `Discover AI courses, competitions and hands-on learning programs for K-12 students. ${SITE_BRAND} helps children and teens learn artificial intelligence through projects, creativity and innovation.`,
-    keywords:
-      'AI Education, AI Courses, AI for Kids, K12 AI Education, AI Curriculum, Artificial Intelligence for Students, AI Competitions, AI Literacy, STEM Education, AI Learning, IOAI, AI classes for kids, AI course for teens',
-  },
+  home: SITE_DEFAULT_SEO,
   compare: {
     title: `Compare AI Programs — Foundations, IOAI & K12 | ${SITE_BRAND}`,
     description: `See which ${SITE_BRAND} program fits your goal: self-study, competition training, or school deployment.`,
@@ -156,9 +151,9 @@ export const PAGE_SEO = {
       'Self-paced AI literacy courses, online labs, and home experiment kits for independent learners.',
   },
   ioai: {
-    title: `IOAI Competition Training — AI Olympiad Prep | ${SITE_BRAND}`,
+    title: `IOAI Competition Training for Students | ${SITE_BRAND}`,
     description:
-      'IOAI whitelist competition training — video courses, training camps, and mock assessments.',
+      'Structured AI Olympiad training for students ages 12–18 — Python, machine learning, neural networks, Jupyter labs, projects, and mock assessments.',
   },
   k12: {
     title: `K12 AI Classroom Edition — Complete School Solution | ${SITE_BRAND}`,
@@ -166,9 +161,9 @@ export const PAGE_SEO = {
       'Textbooks, classroom video courses, online/offline labs, and school kits for K12 institutions.',
   },
   courses: {
-    title: `AI Courses for Kids & Teens — IOAI, Foundations & K12 | ${SITE_BRAND}`,
+    title: `IOAI Competition Training for Students | ${SITE_BRAND}`,
     description:
-      'Browse AI video courses, training labs, and classroom programs across IOAI competition, Foundations, and K12 school editions.',
+      'Structured AI Olympiad training for students ages 12–18 — Python, machine learning, neural networks, Jupyter labs, projects, and mock assessments.',
   },
   lab: {
     title: `AI Labs & Experiment Kits — Hands-On Learning | ${SITE_BRAND}`,

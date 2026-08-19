@@ -16,7 +16,7 @@ export const HOME_TESTIMONIALS = [
 ]
 
 export const HOME_BANNER_SLIDES = [
-  { id: 'brand', gradient: 'from-primary/30 via-cyan-50 to-sky-100', icon: '🎓', eyebrow: 'Bingo AI Academy', title: 'AI Courses + IOAI Competition Training', subtitle: 'IOAI whitelist training, hands-on labs, and competition-ready outcomes for students and teams.', ctaLabel: 'Explore Courses', href: '/courses', secondaryLabel: 'View Achievements', secondaryHref: '/showcase' },
+  { id: 'brand', gradient: 'from-primary/30 via-cyan-50 to-sky-100', icon: '🎓', eyebrow: 'Bingo Academy', title: 'AI Courses + IOAI Competition Training', subtitle: 'IOAI whitelist training, hands-on labs, and competition-ready outcomes for students and teams.', ctaLabel: 'Explore Courses', href: '/courses', secondaryLabel: 'View Achievements', secondaryHref: '/showcase' },
   { id: 'ioai', gradient: 'from-amber-500/20 via-orange-50 to-amber-50', icon: '🏆', eyebrow: 'Authoritative Competitions', title: 'IOAI Whitelist Competition Training', subtitle: 'Video lessons, training camps, and sprint coaching for whitelist-format AI innovation competitions.', ctaLabel: 'IOAI Training', href: '/courses/ioai', secondaryLabel: 'Certification', secondaryHref: '/cert' },
 ]
 
@@ -103,7 +103,7 @@ export { FORUM_THREADS } from './ioaiForumNews.js'
 export const CHARITY_REPORTS = [
   { type: 'Trending', text: 'Ministry pushes K-12 AI education, literacy and ethics', report_date: '2025-02' },
   { type: 'Industry', text: 'Youth AI prestigious competitions expand, STEM literacy boosts admissions', report_date: '2025-02' },
-  { type: 'Honor', text: 'Bingo AI Academy named "Annual AI Education Innovation Institution"', report_date: '2025-01' },
+  { type: 'Honor', text: 'Bingo Academy named "Annual AI Education Innovation Institution"', report_date: '2025-01' },
   { type: 'Trending', text: 'Multiple regions add AI literacy to comprehensive evaluation', report_date: '2025-01' },
   { type: 'Honor', text: 'Bingo students win first prize in National Youth AI Challenge', report_date: '2025-01' },
   { type: 'Industry', text: 'Industry-education policy support, enterprise-institution AI training partnerships', report_date: '2024-12' },

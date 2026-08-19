@@ -1,4 +1,4 @@
-import { SITE_TWITTER, SITE_BRAND } from './constants.mjs'
+import { SITE_TWITTER, SITE_OG } from './constants.mjs'
 import { escapeHtml } from './bodyContent.mjs'
 
 const SEO_META_PATTERN =
@@ -24,7 +24,7 @@ function buildHeadBlock(seo) {
   lines.push(`<meta property="og:image" content="${escapeHtml(seo.ogImage)}" />`)
   lines.push(`<meta property="og:url" content="${escapeHtml(seo.ogUrl)}" />`)
   lines.push(`<meta property="og:type" content="${escapeHtml(seo.ogType || 'website')}" />`)
-  lines.push(`<meta property="og:site_name" content="${escapeHtml(SITE_BRAND)}" />`)
+  lines.push(`<meta property="og:site_name" content="${escapeHtml(SITE_OG.siteName)}" />`)
 
   lines.push(`<meta name="twitter:card" content="${SITE_TWITTER.card}" />`)
   lines.push(`<meta name="twitter:title" content="${escapeHtml(seo.ogTitle)}" />`)

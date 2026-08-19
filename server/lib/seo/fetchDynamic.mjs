@@ -7,7 +7,7 @@ const FALLBACK_NEWS = [
     title: "AI Classes for Kids: A Parent's Guide to Choosing the Right Program",
     excerpt:
       'What to look for in AI classes for kids — project-based learning, real Python, and pathways to competitions like IOAI and USAAIO.',
-    body: `Parents searching for AI classes for kids often find programs that only teach how to use chatbots. BingoAcademy takes a different approach: students learn artificial intelligence for children through hands-on projects — building models, writing Python, and exploring computer vision in the browser.`,
+    body: `Parents searching for AI classes for kids often find programs that only teach how to use chatbots. Bingo Academy takes a different approach: students learn artificial intelligence for children through hands-on projects — building models, writing Python, and exploring computer vision in the browser.`,
     date: '2026-03-15',
     updatedAt: '2026-03-15',
     authorSlug: 'shannon-wang',
@@ -19,7 +19,7 @@ const FALLBACK_NEWS = [
     title: 'USAAIO Prep Course: What Families Need to Know',
     excerpt:
       'How high school students prepare for the United States Artificial Intelligence Olympiad with structured curriculum and mock exams.',
-    body: `The USAAIO prep course pathway at BingoAcademy aligns with the mathematical and algorithmic rigor of the United States Artificial Intelligence Olympiad.`,
+    body: `The USAAIO prep course pathway at Bingo Academy aligns with the mathematical and algorithmic rigor of the United States Artificial Intelligence Olympiad.`,
     date: '2026-03-10',
     keywords: ['USAAIO prep course', 'AI Olympiad training for teens'],
     og_image: null,

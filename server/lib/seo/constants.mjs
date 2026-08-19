@@ -14,16 +14,18 @@ export {
 export const SITE_URL = 'https://www.bingoacademy.org'
 
 export const SITE_DEFAULT_SEO = {
-  title: `AI Courses for Kids & Teens | K-12 AI Education Platform | ${SITE_BRAND}`,
-  description: `Discover AI courses, competitions and hands-on learning programs for K-12 students. ${SITE_BRAND} helps children and teens learn artificial intelligence through projects, creativity and innovation.`,
+  title: `IOAI Competition Training for Students | ${SITE_BRAND}`,
+  description:
+    'Structured AI Olympiad training for students ages 12–18, covering Python, machine learning, neural networks, Jupyter labs, projects, and mock assessments.',
   keywords:
-    'AI Education, AI Courses, AI for Kids, K12 AI Education, AI Curriculum, Artificial Intelligence for Students, AI Competitions, AI Literacy, STEM Education, AI Learning, IOAI, AI classes for kids, AI course for teens, AI summer camp, AI coding classes',
+    'IOAI, AI Olympiad training, IOAI competition prep, AI for teens, Python machine learning, neural networks, Jupyter labs, mock assessments, Bingo Academy',
 }
 
 export const SITE_OG = {
-  title: `${SITE_BRAND} — AI Education for the Next Generation`,
+  title: `IOAI Competition Training for Students | ${SITE_BRAND}`,
+  siteName: SITE_BRAND,
   description:
-    'AI courses, competitions and K-12 artificial intelligence programs for students and schools.',
+    'Structured AI Olympiad training for students ages 12–18 — Python, machine learning, neural networks, Jupyter labs, projects, and mock assessments.',
   image: `${SITE_URL}/images/og-cover.jpg`,
   type: 'website',
 }

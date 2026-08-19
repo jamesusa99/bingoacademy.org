@@ -69,7 +69,7 @@ export function productLineSectionTitle(count) {
 
 export function heroPathsSubtitle(programs) {
   const n = programs?.length ?? 0
-  if (n === 0) return 'Explore courses, labs, and certification.'
+  if (n === 0) return 'Explore IOAI-oriented training and assessment.'
   if (n === 1) {
     const p = programs[0]
     return p.audience || `Explore ${p.shortTitle || p.title}.`
@@ -80,4 +80,45 @@ export function heroPathsSubtitle(programs) {
     return `${a} or ${b} — pick your path.`
   }
   return 'Three clear paths — IOAI competition training, self-study literacy or K12 classroom delivery.'
+}
+
+/** Course URL slug → product line id */
+const COURSE_SLUG_TO_LINE = {
+  ioai: 'ioai',
+  foundations: 'general',
+  k12: 'k12',
+}
+
+/** Guide clusters promoted during phase 1 (excludes k12 school deployment guides) */
+export const PHASE1_GUIDE_CLUSTERS = ['parents', 'ioai']
+
+/** Routes excluded from phase-1 sitemap and internal promotion */
+export const PHASE1_HIDDEN_ROUTE_PREFIXES = [
+  '/programs/foundations',
+  '/programs/k12',
+  '/courses/foundations',
+  '/courses/k12',
+  '/mall',
+  '/community',
+  '/cert',
+  '/compare',
+  '/career',
+]
+
+export function isPhase1HiddenRoute(path) {
+  if (!path || typeof path !== 'string') return false
+  const normalized = path.split('?')[0].split('#')[0]
+  return PHASE1_HIDDEN_ROUTE_PREFIXES.some(
+    (prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`)
+  )
+}
+
+export function visibleCourseLineSlugs(visibility = DEFAULT_PRODUCT_LINE_VISIBILITY) {
+  return Object.entries(COURSE_SLUG_TO_LINE)
+    .filter(([, lineId]) => visibility[lineId])
+    .map(([slug]) => slug)
+}
+
+export function visibleGuideClusters() {
+  return [...PHASE1_GUIDE_CLUSTERS]
 }

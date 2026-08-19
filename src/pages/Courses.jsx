@@ -216,17 +216,6 @@ export default function Courses() {
           hasSecondaryFilters={hasSecondaryFilters}
         />
         <ProgramCoursesModuleView line={line} />
-        <PageContent className="py-8">
-          <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h3 className="font-semibold text-bingo-dark">{COURSES_PORTAL.certTitle}</h3>
-              <p className="text-sm text-slate-600 mt-1">{COURSES_PORTAL.certDesc}</p>
-            </div>
-            <Link to="/cert" className="btn-primary px-5 py-2.5 text-sm min-h-[44px] inline-flex items-center">
-              {COURSES_PORTAL.certCta}
-            </Link>
-          </section>
-        </PageContent>
       </>
     )
   }
@@ -245,17 +234,6 @@ export default function Courses() {
         ) : (
           <CourseListView line={line} subId={subId} courses={courses} curriculumSummary={curriculumSummary} />
         )}
-        <PageContent className="py-8">
-          <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h3 className="font-semibold text-bingo-dark">{COURSES_PORTAL.certTitle}</h3>
-              <p className="text-sm text-slate-600 mt-1">{COURSES_PORTAL.certDesc}</p>
-            </div>
-            <Link to="/cert" className="btn-primary px-5 py-2.5 text-sm min-h-[44px] inline-flex items-center">
-              {COURSES_PORTAL.certCta}
-            </Link>
-          </section>
-        </PageContent>
       </div>
     )
   }
@@ -446,16 +424,6 @@ export default function Courses() {
               ))}
             </div>
           )}
-        </section>
-
-        <section className="card p-6 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h3 className="font-semibold text-bingo-dark">{COURSES_PORTAL.certTitle}</h3>
-            <p className="text-sm text-slate-600 mt-1">{COURSES_PORTAL.certDesc}</p>
-          </div>
-          <Link to="/cert" className="btn-primary px-5 py-2.5 text-sm min-h-[44px] inline-flex items-center">
-            {COURSES_PORTAL.certCta}
-          </Link>
         </section>
       </PageContent>
     </div>

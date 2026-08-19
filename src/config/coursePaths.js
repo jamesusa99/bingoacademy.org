@@ -1,5 +1,6 @@
 import { getProductLine, subcategoryLabel } from './products'
 import { isProductLabSub } from './productLabs'
+import { visibleCourseLineSlugs } from './productLineVisibility'
 import { SITE_BRAND } from './siteSeo'
 import { LINE_TO_PROGRAM_SLUG, PROGRAM_SLUG_TO_LINE } from './programs'
 
@@ -42,8 +43,8 @@ export const COURSES_TYPE_TO_PATH = {
   video: '/courses/ioai/video',
   course: '/courses/foundations/course',
   module: '/courses/ioai',
-  event: '/programs/ioai',
-  events: '/programs/ioai',
+  event: '/courses/ioai',
+  events: '/courses/ioai',
   exam: '/assessment',
   exams: '/assessment',
   literacy: '/programs/foundations',
@@ -62,6 +63,18 @@ export const COURSES_TYPE_TO_PATH = {
   assessment: '/assessment',
 }
 
+const COURSE_REDIRECT_PRESERVE = ['stage', 'buy', 'page', 'sort', 'category', 'level', 'price']
+
+export function appendPreservedSearchParams(basePath, searchParams, keys = COURSE_REDIRECT_PRESERVE) {
+  const next = new URLSearchParams()
+  for (const key of keys) {
+    const val = searchParams.get(key)
+    if (val != null && val !== '') next.set(key, val)
+  }
+  const q = next.toString()
+  return q ? `${basePath}?${q}` : basePath
+}
+
 /** Client redirect for legacy /courses query params */
 export function resolveCoursesLegacyRedirect(searchParams) {
   const type = searchParams.get('type')?.trim()
@@ -72,8 +85,10 @@ export function resolveCoursesLegacyRedirect(searchParams) {
   if (searchParams.has('line') || searchParams.has('sub')) {
     const line = searchParams.get('line')?.trim()
     const sub = searchParams.get('sub')?.trim() || ''
-    if (line === 'ioai' && sub === 'module') return '/courses/ioai'
-    return coursePathFromSearchParams(searchParams)
+    if (line === 'ioai' && sub === 'module') return appendPreservedSearchParams('/courses/ioai', searchParams)
+    const base = coursePathFromSearchParams(searchParams)
+    if (sub && line && isProductLabSub(line, sub)) return base
+    return appendPreservedSearchParams(base, searchParams)
   }
   return null
 }
@@ -101,11 +116,11 @@ export function courseLineHasSecondaryFilters(searchParams) {
 
 const LINE_SEO = {
   ioai: {
-    title: `IOAI Competition Training Courses | ${SITE_BRAND}`,
+    title: `IOAI Competition Training for Students | ${SITE_BRAND}`,
     description:
-      'IOAI whitelist competition training — structured video modules, training labs, mock assessments, and Olympiad prep courses.',
+      'Structured AI Olympiad training for students ages 12–18 — Python, machine learning, neural networks, Jupyter labs, projects, and mock assessments.',
     h1: 'IOAI Competition Training',
-    body: 'Video courses and intensive training camps aligned to IOAI whitelist formats — from first concepts to mock assessments.',
+    body: 'Structured video modules, training labs, projects, and mock assessments — from Python foundations to Olympiad preparation.',
   },
   foundations: {
     title: `Foundations of AI Courses | ${SITE_BRAND}`,
@@ -124,11 +139,11 @@ const LINE_SEO = {
 }
 
 const HUB_SEO = {
-  title: `AI Courses for Kids & Teens — IOAI, Foundations & K12 | ${SITE_BRAND}`,
+  title: `IOAI Competition Training for Students | ${SITE_BRAND}`,
   description:
-    'Browse AI video courses, training labs, and classroom programs across IOAI competition, Foundations, and K12 school editions.',
-  h1: 'AI Courses',
-  body: 'Explore IOAI competition training, self-paced Foundations courses, and K12 classroom editions — all in one place.',
+    'Structured AI Olympiad training for students ages 12–18 — Python, machine learning, neural networks, Jupyter labs, projects, and mock assessments.',
+  h1: 'IOAI Competition Training',
+  body: 'Structured video modules, training labs, projects, and mock assessments — from Python foundations to Olympiad preparation.',
 }
 
 export function coursesHubSeo() {
@@ -164,14 +179,15 @@ export function coursesSeoForRoute({ hub, lineSlug, subSlug }) {
 }
 
 /** Sitemap: line + non-lab subcategory paths */
-export function courseSitemapPaths() {
-  const paths = COURSE_LINE_SLUGS.map((slug) => ({
+export function courseSitemapPaths(visibility) {
+  const lineSlugs = visibleCourseLineSlugs(visibility)
+  const paths = lineSlugs.map((slug) => ({
     path: courseLinePath(slug),
     changefreq: 'weekly',
     priority: slug === 'ioai' ? '0.9' : '0.8',
   }))
 
-  for (const lineSlug of COURSE_LINE_SLUGS) {
+  for (const lineSlug of lineSlugs) {
     const lineId = lineIdFromCourseSlug(lineSlug)
     const line = getProductLine(lineId)
     for (const sub of line.subcategories) {

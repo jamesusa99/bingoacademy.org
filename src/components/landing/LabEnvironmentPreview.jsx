@@ -16,7 +16,7 @@ export default function LabEnvironmentPreview() {
       <div className="flex items-center justify-between gap-3 px-4 h-11 border-b border-slate-800 bg-slate-900">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-[11px] font-bold text-white truncate">
-            BingoAcademy IOAI Lab
+            Bingo Academy IOAI Lab
             <span className="text-slate-600 font-normal mx-1.5">·</span>
             <span className="text-cyan-400">Lab 1: Python for AI</span>
           </span>

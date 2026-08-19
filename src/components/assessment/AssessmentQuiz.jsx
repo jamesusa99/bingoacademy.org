@@ -91,7 +91,7 @@ function Results({ score, total, result, paper, onBack }) {
           {result.courses.map((c, i) => (
             <Link
               key={i}
-              to="/courses"
+              to="/courses/ioai"
               className="flex items-center gap-3 p-3 rounded-xl bg-white/70 hover:bg-white border border-slate-100 hover:border-primary/20 transition"
             >
               <span className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">
@@ -102,8 +102,8 @@ function Results({ score, total, result, paper, onBack }) {
             </Link>
           ))}
         </div>
-        <Link to="/courses" className="btn-primary w-full py-3 text-sm font-medium rounded-xl">
-          View all courses →
+        <Link to="/courses/ioai" className="btn-primary w-full py-3 text-sm font-medium rounded-xl">
+          View IOAI program →
         </Link>
       </section>
 
@@ -119,7 +119,7 @@ function Results({ score, total, result, paper, onBack }) {
         >
           Try another assessment
         </button>
-        <Link to="/courses" className="btn-primary px-5 py-2.5 text-sm font-medium rounded-xl">
+        <Link to="/courses/ioai" className="btn-primary px-5 py-2.5 text-sm font-medium rounded-xl">
           {ASSESSMENT_PORTAL.coursesEnroll}
         </Link>
         <Link

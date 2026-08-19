@@ -1,7 +1,7 @@
 /** Footer compliance badges and privacy policy copy for K-12 / overseas procurement. */
 
 export const LEGAL_COMPLIANCE = {
-  siteName: 'Bingo AI Academy',
+  siteName: 'Bingo Academy',
   contactEmail: 'privacy@bingoacademy.org',
   badges: [
     {

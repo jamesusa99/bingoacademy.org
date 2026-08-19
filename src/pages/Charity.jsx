@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 const REPORT_ITEMS_FALLBACK = [
   { type: 'Trending', text: 'Ministry pushes K-12 AI education, literacy and ethics', date: '2025-02' },
   { type: 'Industry', text: 'Youth AI prestigious competitions expand, STEM literacy boosts admissions', date: '2025-02' },
-  { type: 'Honor', text: 'Bingo AI Academy named "Annual AI Education Innovation Institution"', date: '2025-01' },
+  { type: 'Honor', text: 'Bingo Academy named "Annual AI Education Innovation Institution"', date: '2025-01' },
   { type: 'Trending', text: 'Multiple regions add AI literacy to comprehensive evaluation', date: '2025-01' },
   { type: 'Honor', text: 'Bingo students win first prize in National Youth AI Challenge', date: '2025-01' },
   { type: 'Industry', text: 'Industry-education policy support, enterprise-institution AI training partnerships', date: '2024-12' },

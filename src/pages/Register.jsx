@@ -86,7 +86,7 @@ export default function Register() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
-      <PageMeta title="Register | BingoAcademy" noindex />
+      <PageMeta title="Register | Bingo Academy" noindex />
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Register</h1>
       <p className="text-slate-600 mb-8">
         Create an account with email or Google to save progress, enroll in courses, and join the community.

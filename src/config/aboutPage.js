@@ -1,19 +1,105 @@
-/** Marketing + narrative content for /about — honest stats; TBD where unverified */
+/** Marketing + narrative content for /about — stats from organizationFacts.js */
+
+import {
+  ORGANIZATION_FACTS,
+  organizationCtaBody,
+  organizationImpactHeadline,
+  organizationStatsFootnote,
+  organizationStatsItems,
+} from './organizationFacts.js'
+import { INDEPENDENT_PROVIDER_DISCLAIMER } from './trust/about.js'
+
+export const ABOUT_PAGE_META = {
+  title: 'About Bingo Academy | K–12 AI Education',
+  description:
+    'Learn how Bingo Academy helps K–12 students understand AI fundamentals, implement models in Python, and apply them through reproducible projects, labs, and competition preparation.',
+}
 
 export const ABOUT_PAGE_HERO = {
-  eyebrow: 'AI Education for the Next Generation',
-  title: 'We teach kids to build AI, not just use it.',
+  eyebrow: 'K–12 AI Education',
+  title: 'We teach students to understand and build AI—not just use it.',
   subtitle:
-    'BingoAcademy.org helps K-12 students learn artificial intelligence by building real projects, winning real competitions, and solving real problems.',
-  primaryCta: { label: 'Get Started for Free', href: '/courses' },
-  secondaryCta: { label: 'See Our Story', href: '#our-story' },
+    'Bingo Academy helps K–12 students learn the principles behind machine learning, implement models in Python, and explain their results through reproducible labs, real projects, and competition-style problem solving.',
+  primaryCta: { label: 'Try a Free AI Lab', href: '/exploration' },
+  secondaryCta: { label: 'Find Your Learning Path', href: '#learning-paths' },
   image: {
     src: '/images/about-hero.png',
-    alt: 'Student training a neural network in a Jupyter notebook with PyTorch on a laptop',
+    alt: 'Student studying at a desk while using the Bingo Academy platform to train a machine learning classification model in a Jupyter notebook',
   },
   floatCards: [
-    { label: 'Student Project', title: 'Chatbot for Elderly Care', tag: 'Won 1st', tagClass: 'bg-emerald-100 text-emerald-700' },
+    { label: 'Student Project', title: 'Chatbot for Elderly Care', tag: 'Capstone', tagClass: 'bg-emerald-100 text-emerald-700' },
     { label: 'Lab Activity', title: 'Image Classifier in 30 min', tag: 'Live Lab', tagClass: 'bg-cyan-100 text-cyan-800' },
+  ],
+}
+
+export const ABOUT_LEARNING = {
+  eyebrow: 'Curriculum',
+  title: 'What students actually learn',
+  intro:
+    'Students move from concepts to code to documented results — not prompt-only demos. Every pathway builds the same core competencies with age-appropriate scaffolding.',
+  items: [
+    {
+      title: 'Machine learning principles',
+      body: 'Loss functions, training vs. inference, bias-variance tradeoffs, and when a model is appropriate — explained in plain language before any library calls.',
+    },
+    {
+      title: 'Python implementation',
+      body: 'Students write real code in Jupyter notebooks: data loading, model training, evaluation loops, and reproducible experiment cells.',
+    },
+    {
+      title: 'Reproducible labs',
+      body: 'Fixed seeds, documented train/validation splits, checkpoint rubrics, and README-style lab reports — the same structure competition and research workflows expect.',
+    },
+    {
+      title: 'Projects & portfolios',
+      body: 'Capstone work in computer vision, NLP, and applied ML — with error analysis, limitations sections, and defence-ready documentation.',
+    },
+    {
+      title: 'Competition-style problem solving',
+      body: 'Timed written rounds, mock assessments, and structured defence practice aligned to publicly available IOAI task formats — preparation, not outcome guarantees.',
+    },
+  ],
+}
+
+export const ABOUT_EVIDENCE = {
+  eyebrow: 'Evidence',
+  title: 'Evidence & outcomes',
+  intro:
+    'We publish cohort metrics with sample sizes and methods — not vanity counters. Explore anonymized outcomes, assessment rubrics, and verifiable credentials.',
+  footnote: organizationStatsFootnote(),
+  links: [
+    { label: 'Outcomes & case studies', href: '/outcomes', desc: 'Cohort metrics with sample sizes and measurement methods' },
+    { label: 'First-party evidence hub', href: '/guides/evidence', desc: 'Citable primary sources and rubrics' },
+    { label: 'Certification verification', href: '/cert', desc: 'Verify learner credentials online' },
+  ],
+}
+
+export const ABOUT_SAFETY = {
+  eyebrow: 'Safety',
+  title: 'Child safety & data use',
+  intro:
+    'K–12 products require clear data boundaries. We document what we collect from learners, what we never use student content for, and how schools can configure generative features.',
+  highlights: [
+    'Parent/guardian consent flows for under-13 accounts',
+    'Student notebook and forum content is not used to train public AI models',
+    'School deployments can disable generative AI features entirely',
+  ],
+  href: '/safety-and-privacy',
+  cta: 'Read safety & privacy details →',
+}
+
+export const ABOUT_INSTRUCTORS = {
+  eyebrow: 'Faculty',
+  title: 'Instructors & academic review',
+  intro:
+    'Named instructors design courses, publish responsibilities on public profiles, and peer-review guides against competition rubrics and K–12 standards.',
+  profilesHref: '/instructors',
+  profilesCta: 'View full instructor profiles →',
+  reviewLinks: [
+    { label: 'Teaching methodology', href: '/methodology' },
+    { label: 'IOAI syllabus ↔ module mapping', href: '/guides/ioai/syllabus-module-mapping' },
+    { label: 'Mock assessment rubric', href: '/guides/ioai/mock-assessment-rubric' },
+    { label: 'K–12 standards alignment', href: '/guides/k12/standards-alignment' },
   ],
 }
 
@@ -21,12 +107,12 @@ export const ABOUT_WHY_EXIST = {
   eyebrow: 'Why We Exist',
   title: 'Three problems we can\'t ignore.',
   intro:
-    'AI is reshaping every industry. But K-12 education is missing the train. We built BingoAcademy.org to fix that.',
+    'AI is reshaping every industry. But K-12 education is missing the train. We built Bingo Academy to fix that.',
   pains: [
     {
       icon: '📚',
       title: 'Resource Gap',
-      body: 'Most schools can\'t teach AI — no trained teachers, no curriculum, no tools. Students graduate having never written a line of code.',
+      body: 'Many schools still lack classroom-ready AI curriculum and labs — no trained teachers, no structured pathways, and limited hands-on tools.',
       accent: 'cyan',
     },
     {
@@ -38,7 +124,7 @@ export const ABOUT_WHY_EXIST = {
     {
       icon: '⚡',
       title: 'Application Gap',
-      body: '95% of students forget what they learn in 30 days. AI isn\'t a test subject — it\'s a tool. We teach kids to ship real projects, not pass exams.',
+      body: 'Students retain concepts better when they apply and explain them. We teach kids to build, document, and defend real AI work — not memorize for exams.',
       accent: 'amber',
     },
   ],
@@ -49,12 +135,12 @@ export const ABOUT_STORY = {
   eyebrow: 'Our Story',
   title: 'From a simple idea to a global mission.',
   intro:
-    'We started with one question: "Why aren\'t more kids learning AI?" What began in 2022 is now reaching students on four continents.',
+    `We started with one question: "Why aren't more kids learning AI?" What began in ${ORGANIZATION_FACTS.brandLaunchYear} is now reaching students on four continents.`,
   timeline: [
     {
       when: '2022 · Spring',
       title: 'The Spark',
-      body: 'Our team gathered in Chengdu to ask a simple question: "Why is K-12 AI education still missing from most schools?" The answer led to BingoAcademy.org.',
+      body: 'Our team gathered in Chengdu to ask a simple question: "Why is K-12 AI education still missing from most schools?" The answer led to Bingo Academy.',
       dot: 'primary',
     },
     {
@@ -66,12 +152,12 @@ export const ABOUT_STORY = {
     {
       when: '2025 · Summer',
       title: 'First Cohort',
-      body: 'Our IOAI training program launched. The first batch of high school students joined — many went on to win regional competitions.',
+      body: 'Our IOAI training program launched. The first cohort of high school students completed competition-style projects and assessments.',
       dot: 'primary',
     },
     {
       when: 'Today · 2026',
-      title: '20,000+ students · 1,000+ schools · 4 countries',
+      title: organizationImpactHeadline(),
       body: 'From a single idea to a global community. We\'re just getting started.',
       highlight: true,
     },
@@ -79,9 +165,10 @@ export const ABOUT_STORY = {
 }
 
 export const ABOUT_PRODUCTS = {
-  eyebrow: 'What We Teach',
-  title: 'Four ways to learn AI.',
-  intro: 'Whether you\'re a curious beginner, a competition student, or a school — we have a path for you.',
+  id: 'learning-paths',
+  eyebrow: 'Learning Paths',
+  title: 'Choose your learning path.',
+  intro: 'Family programs serve ages 13–18. School curriculum supports grades 4–12. Each path links to a detailed program page.',
   items: [
     {
       icon: '🎬',
@@ -96,7 +183,7 @@ export const ABOUT_PRODUCTS = {
       icon: '🏆',
       tag: 'Competition',
       title: 'IOAI Training',
-      body: 'Win AI olympiads. Specialized training for the International Olympiad in AI and similar competitions.',
+      body: 'Prepare for AI olympiads. Specialized training for the International Olympiad in AI and similar competitions.',
       audience: 'For: High schoolers · Coaches',
       href: '/courses/ioai',
       accent: 'amber',
@@ -124,14 +211,15 @@ export const ABOUT_PRODUCTS = {
 
 export const ABOUT_METHODOLOGY = {
   eyebrow: 'How We Teach',
-  title: 'Project-based. Competition-driven.',
-  intro: 'Forget lectures. Every student builds, ships, and competes.',
+  headline: 'From first principles to working models.',
+  tagline: 'Concept-first. Code-based. Evidence-driven.',
+  flow: 'Understand → Implement → Experiment → Evaluate → Explain',
   steps: [
-    { n: 1, title: 'Spark', body: 'Real-world problems spark curiosity.' },
-    { n: 2, title: 'Explore', body: 'Guided experiments unlock concepts.' },
-    { n: 3, title: 'Build', body: 'Students ship real AI projects.' },
-    { n: 4, title: 'Compete', body: 'They enter IOAI and global competitions.' },
-    { n: 5, title: 'Reflect', body: 'We debrief, document, and share.' },
+    { n: 1, title: 'Understand', body: 'Learn the mathematical and conceptual foundations.' },
+    { n: 2, title: 'Implement', body: 'Translate algorithms into working Python code.' },
+    { n: 3, title: 'Experiment', body: 'Train models, change variables, and reproduce results.' },
+    { n: 4, title: 'Evaluate', body: 'Analyze metrics, errors, limitations, and model behavior.' },
+    { n: 5, title: 'Explain', body: 'Document findings, defend decisions, and apply the work to projects or competitions.' },
   ],
   methodologyHref: '/methodology',
 }
@@ -140,24 +228,21 @@ export const ABOUT_STATS = {
   eyebrow: 'By the Numbers',
   title: 'Real impact, real numbers.',
   intro: 'No fluff. Here\'s where we are today.',
-  footnote: 'Numbers reflect verified data as of 2026. Updated quarterly.',
-  items: [
-    { value: '20,000+', label: 'Students' },
-    { value: '4', label: 'Countries' },
-    { value: '1,000+', label: 'Schools' },
-  ],
+  footnote: organizationStatsFootnote(),
+  items: organizationStatsItems(),
 }
 
 export const ABOUT_TEAM = {
-  eyebrow: 'Meet the Team',
-  title: 'The humans behind the mission.',
-  intro: 'A global team of educators, engineers, and parents on a shared mission.',
+  eyebrow: 'Faculty',
+  title: 'Core instructors',
+  intro: 'Founding faculty who design curriculum and review assessment rubrics.',
   members: [
     {
       name: 'Dr. James Chen',
       role: 'Founder & CEO',
       bio: 'Professor · 20+ years AI research, curriculum design, and competition-grade vision pipelines for K–12 learners.',
       initials: 'JC',
+      slug: 'james-chen',
       ring: 'ring-cyan-200 group-hover:ring-primary',
     },
     {
@@ -165,6 +250,7 @@ export const ABOUT_TEAM = {
       role: 'Co-Founder',
       bio: 'AI scientist · Pedagogy, learning science, and age-appropriate AI lab design.',
       initials: 'MX',
+      slug: 'michelle-xu',
       ring: 'ring-emerald-200 group-hover:ring-emerald-500',
     },
     {
@@ -172,6 +258,7 @@ export const ABOUT_TEAM = {
       role: 'Co-Founder',
       bio: 'LLM & deep learning · Co-founder of ScholarOne LLC (USA). International competition mentorship.',
       initials: 'SW',
+      slug: 'shannon-wang',
       ring: 'ring-violet-200 group-hover:ring-violet-500',
     },
   ],
@@ -180,16 +267,64 @@ export const ABOUT_TEAM = {
 }
 
 export const ABOUT_PARTNERS = {
-  eyebrow: 'Trusted By & Backed By',
-  title: 'Working with the best.',
-  intro: 'We\'re proud to partner with leading institutions in AI education.',
+  eyebrow: 'References & Relationships',
+  title: 'Curriculum references and institutional relationships.',
+  intro: 'Our programs reference public competition syllabi and documented relationships with education institutions.',
   featured: {
     name: 'IOAI',
     subtitle: 'International Olympiad in Artificial Intelligence',
     href: 'https://ioai-official.org/',
-    cta: 'Official Partner →',
+    cta: 'IOAI official site →',
   },
+  competitionReference: {
+    title: 'Competition Curriculum Reference',
+    body: 'Our competition preparation references the publicly available IOAI syllabus and task formats.',
+  },
+  disclaimer: INDEPENDENT_PROVIDER_DISCLAIMER,
   placeholders: ['Partner Logo', 'School Logo', 'Media Logo', 'More Coming'],
+}
+
+export const ABOUT_COMPETITION_DISCLAIMER = {
+  title: 'Independent competition disclaimer',
+  reference: {
+    title: 'Competition Curriculum Reference',
+    body: 'Our competition preparation references the publicly available IOAI syllabus and task formats.',
+  },
+  disclaimer: INDEPENDENT_PROVIDER_DISCLAIMER,
+  ioai: {
+    name: 'IOAI',
+    subtitle: 'International Olympiad in Artificial Intelligence',
+    href: 'https://ioai-official.org/',
+    cta: 'IOAI official site →',
+  },
+}
+
+export const ABOUT_AUDIENCE_CTA = {
+  id: 'get-started',
+  title: 'Find the right path for you',
+  intro: 'Beginner and advanced pathways are available — choose the entry point that matches your role.',
+  audiences: [
+    {
+      label: 'Families',
+      desc: 'Self-paced courses and live programs for ages 13–18. Start with a free exploration lab or book a trial.',
+      cta: 'Browse family courses',
+      href: '/courses',
+    },
+    {
+      label: 'Schools',
+      desc: 'Classroom editions for grades 4–12 with teacher guides, rubrics, and procurement-ready privacy docs.',
+      cta: 'Contact school partnerships',
+      href: 'mailto:schools@bingoacademy.org?subject=School%20partnership%20inquiry',
+      external: true,
+    },
+    {
+      label: 'Competition teams',
+      desc: 'Structured IOAI preparation with mock assessments and defence coaching — aligned to public syllabus formats.',
+      cta: 'Explore IOAI training',
+      href: '/courses/ioai',
+    },
+  ],
+  footnote: `Used by verified learners in ${ORGANIZATION_FACTS.countriesWithActiveLearners} countries · ${organizationStatsFootnote()}`,
 }
 
 export const ABOUT_TESTIMONIALS = {
@@ -204,12 +339,12 @@ export const ABOUT_TESTIMONIALS = {
 export const ABOUT_CTA = {
   id: 'get-started',
   title: 'Ready to start your AI journey?',
-  body: 'Join 20,000+ students across 1,000+ schools and 4 countries who are building the future with AI. No prior experience needed.',
+  body: organizationCtaBody(),
   primary: { label: 'Start Free Trial', href: '/courses' },
   secondary: {
     label: 'Talk to Our Team',
     href: 'mailto:hello@bingoacademy.org?subject=Talk%20to%20Team',
     external: true,
   },
-  footnote: 'No credit card required · Cancel anytime · Trusted by families in 1,000+ schools worldwide',
+  footnote: `No credit card required · Cancel anytime · Used by verified learners in ${ORGANIZATION_FACTS.countriesWithActiveLearners} countries`,
 }

@@ -10,18 +10,18 @@ export const HOME_TRUST_AUTHORITY = {
   verifyCta: 'Verify our team & evidence',
   verifyHref: '/about',
   academicLineage: {
-    title: 'Research-inspired pedagogy · Embodied AI & VUA',
+    title: 'Research-inspired pedagogy · Vision, Understanding, Action',
     body:
-      'Course architecture is informed by published work on Embodied AI and constructionist learning (e.g., Papert, Resnick). Bingo Academy is an independent provider — not affiliated with MIT Media Lab or any university unless stated on /about.',
+      'Course architecture is informed by published work on constructionist learning and applied machine learning pedagogy (e.g., Papert, Resnick). Bingo Academy is an independent provider — not affiliated with MIT Media Lab, IOAI, or any university unless stated on /about.',
     labs: [
-      { name: 'Constructionist learning traditions', focus: 'Build → reflect → iterate (inspired by public Media Lab pedagogy research)', href: '/methodology' },
-      { name: 'University AI & engineering research', focus: 'Computer vision, RL & deployable ML — cited in course guides', href: '/instructors' },
-      { name: 'IOAI competition formats', focus: 'Selection-round lab reports & reproducible pipelines', href: '/guides/ioai/competition-map' },
+      { name: 'Constructionist learning traditions', focus: 'Build → reflect → iterate (inspired by public pedagogy research)', href: '/methodology' },
+      { name: 'University AI & engineering research', focus: 'Computer vision, ML & deployable models — cited in course guides', href: '/instructors' },
+      { name: 'IOAI competition topics', focus: 'Curriculum aligned with publicly available competition topics and lab-report formats', href: '/guides/ioai/competition-map' },
     ],
     vuaSteps: [
-      { label: 'Vision', desc: 'Cameras, pose models, object detection in-browser' },
-      { label: 'Understanding', desc: 'Features, embeddings, reasoning & Python data stacks' },
-      { label: 'Action', desc: 'Actuators, robotics, competition-ready deployment' },
+      { label: 'Vision', desc: 'Data, features, and model inputs in Python notebooks' },
+      { label: 'Understanding', desc: 'Loss functions, embeddings, and evaluation metrics' },
+      { label: 'Action', desc: 'Predictions, experiments, and competition-style reports' },
     ],
   },
   credentials: [
@@ -33,8 +33,8 @@ export const HOME_TRUST_AUTHORITY = {
     },
     {
       icon: '🤖',
-      title: 'Embodied AI specialists',
-      desc: 'Vision-to-action pipelines in browser labs and Jupyter — methodology and citations at /methodology.',
+      title: 'ML & computer vision',
+      desc: 'Python notebooks, neural networks, and evaluation workflows — methodology and citations at /methodology.',
       href: '/methodology',
     },
     {
@@ -44,9 +44,9 @@ export const HOME_TRUST_AUTHORITY = {
       href: '/outcomes',
     },
   ],
-  proofTitle: 'Proof of work — IOAI training outcomes',
+  proofTitle: 'Proof of work — competition-style student projects',
   proofSubtitle:
-    'Real deliverables from competition trainees: datasets, notebooks, and defence-ready reports — not slide decks alone.',
+    'Real deliverables from IOAI-oriented trainees: datasets, notebooks, and defence-ready reports — not slide decks alone.',
   showcaseCta: 'View student showcase',
   ioaiCta: 'Explore IOAI training',
   outcomesCta: 'See published outcomes',
@@ -72,8 +72,8 @@ export const HOME_INDUSTRIAL_STACK = {
     },
     {
       id: 'cv',
-      label: 'Vision & Embodied AI',
-      items: ['OpenCV', 'MoveNet', 'MediaPipe', 'MobileNet', 'Canvas / WebGL'],
+      label: 'Vision & deep learning',
+      items: ['OpenCV', 'CNN pipelines', 'Transfer learning', 'MobileNet', 'Evaluation metrics'],
     },
     {
       id: 'infra',
@@ -91,7 +91,7 @@ export const HOME_SEED_TESTIMONIALS = {
     {
       id: 'parent-us',
       quote:
-        'My son thought AI was “magic.” After Cyber Tennis and the Python lab, he explained pose vectors at dinner. This is the first program that feels like real engineering — not Scratch with AI stickers.',
+        'My son thought AI was “magic.” After the Python lab and a neural-network project, he explained loss functions at dinner. This is the first program that feels like real engineering — not Scratch with AI stickers.',
       name: 'Sarah M.',
       role: 'Parent · Grade 9 · California, USA',
       avatar: '👩‍💼',

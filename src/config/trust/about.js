@@ -1,13 +1,39 @@
 /** Organization facts for /about — verifiable identity, not marketing slogans */
 
+import { SITE_BRAND, SITE_DOMAIN, SITE_LEGACY_NAME, SITE_LEGAL_ENTITY } from '../siteConstants.js'
+
+export const INDEPENDENT_PROVIDER_DISCLAIMER =
+  `${SITE_BRAND} is an independent education provider. References to IOAI, USAAIO, IAIO, and other competitions describe curriculum alignment or preparation focus and do not imply affiliation, endorsement, or official partnership unless explicitly documented.`
+
+export const ORG_SAME_AS = [
+  'https://www.linkedin.com/company/bingo-academy',
+  'https://www.youtube.com/@BingoAcademy',
+  'https://www.facebook.com/BingoAcademy',
+  'https://www.instagram.com/BingoAcademy',
+  'https://www.tiktok.com/@BingoAcademy',
+]
+
 export const ABOUT_ORG = {
-  version: '2026.1',
-  updatedAt: '2026-03-01',
-  displayName: 'Bingo Academy',
-  legalName: 'Bingo Academy (operating entity: ScholarOne LLC, United States)',
-  alsoKnownAs: 'Bingo AI Academy',
+  version: '2026.3',
+  updatedAt: 'August 2026',
+  displayName: SITE_BRAND,
+  website: SITE_DOMAIN,
+  legalEntity: SITE_LEGAL_ENTITY,
+  legalName: `${SITE_BRAND} (${SITE_LEGAL_ENTITY})`,
+  alsoKnownAs: SITE_LEGACY_NAME,
+  focus: 'K–12 AI fundamentals, coding, projects and competition preparation',
+  programs: {
+    family: 'Ages 13–18',
+    familyNote: 'Direct-to-family courses, live programs, and competition prep',
+    school: 'Grades 4–12',
+    schoolNote: 'Classroom editions, teacher resources, and school implementation',
+    ageClarification:
+      'Direct-to-family programs currently serve ages 13–18. School curriculum resources support grades 4–12.',
+  },
+  delivery: 'Online courses, browser labs, live instruction',
   region: {
     headquarters: 'United States',
+    activeRegions: 'United States, Singapore, and Greater China (school pilots & R&D partnerships)',
     operations: 'United States, Singapore, and Greater China (school pilots & R&D partnerships)',
     timezoneNote: 'Support hours follow US Pacific and China Standard Time',
   },
@@ -31,7 +57,11 @@ export const ABOUT_ORG = {
   },
   social: [
     { label: 'Website', href: 'https://www.bingoacademy.org', external: true },
-    // Add verified social accounts here when published — do not invent handles
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/company/bingo-academy', external: true },
+    { label: 'YouTube', href: 'https://www.youtube.com/@BingoAcademy', external: true },
+    { label: 'Facebook', href: 'https://www.facebook.com/BingoAcademy', external: true },
+    { label: 'Instagram', href: 'https://www.instagram.com/BingoAcademy', external: true },
+    { label: 'TikTok', href: 'https://www.tiktok.com/@BingoAcademy', external: true },
   ],
   verifyLinks: [
     { label: 'Core instructors', href: '/instructors' },
@@ -41,4 +71,25 @@ export const ABOUT_ORG = {
     { label: 'First-party evidence hub', href: '/guides/evidence' },
     { label: 'Certification verification', href: '/cert' },
   ],
+}
+
+/** Visible identity block for /about — shown below hero, not collapsed */
+export function aboutAtAGlanceRows(org = ABOUT_ORG) {
+  return [
+    { label: 'Organization', value: org.displayName },
+    { label: 'Legal entity', value: org.legalEntity },
+    { label: 'Website', value: org.website },
+    { label: 'Focus', value: org.focus },
+    { label: 'Family programs', value: `${org.programs.family} — ${org.programs.familyNote}` },
+    { label: 'School curriculum', value: `${org.programs.school} — ${org.programs.schoolNote}` },
+    { label: 'Delivery', value: org.delivery },
+    { label: 'Headquarters', value: org.region.headquarters },
+    { label: 'Active regions', value: org.region.activeRegions },
+    {
+      label: 'Contact',
+      value: org.contact.general,
+      href: `mailto:${org.contact.general}`,
+    },
+    { label: 'Last updated', value: org.updatedAt },
+  ]
 }

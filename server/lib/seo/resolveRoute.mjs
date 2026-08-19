@@ -11,6 +11,8 @@ import {
   GONE_PATHS,
   resolveCoursesTypeRedirect,
   coursesHasLegacyTypeParam,
+  appendPreservedQuery,
+  CURRICULUM_REDIRECT_PRESERVE_PARAMS,
 } from '../../config/urlMigrations.mjs'
 import {
   parseCoursePathname,
@@ -66,16 +68,18 @@ const KNOWN_PATH_PATTERNS = [
   /^\/showcase\/(works|awards|materials)$/,
   /^\/showcase\/(venture|award)\/[^/]+$/,
   /^\/assessment$/,
+  /^\/assessment\/ioai$/,
   /^\/courses$/,
   /^\/courses\/(ioai|foundations|k12)$/,
   /^\/courses\/(ioai|foundations|k12)\/[^/]+$/,
   /^\/courses\/module\/[^/]+$/,
   /^\/courses\/detail\/[^/]+$/,
   /^\/courses\/detail\/[^/]+\/golab$/,
+  /^\/ioai\/curriculum$/,
+  /^\/ioai\/sample-lab$/,
   /^\/ioai\/l1\/[^/]+$/,
   /^\/ioai\/l3\/[^/]+$/,
   /^\/ioai\/experiments\/[^/]+$/,
-  /^\/curriculum$/,
   /^\/labs$/,
   /^\/labs\/ioai\/training-lab\/[^/]+$/,
   /^\/labs\/pack\/[^/]+$/,
@@ -86,7 +90,7 @@ const KNOWN_PATH_PATTERNS = [
   /^\/guides\/(parents|ioai|k12)\/[^/]+$/,
   /^\/exploration$/,
   /^\/exploration\/(hide-and-seek|virtual-conductor|word-gravity|jailbreak-adventure|evolve-car|doodle-monsters|cyber-tennis|beatbox-composer|mars-lander|prompt-wizard|finger-tetris)$/,
-  /^\/programs\/(ioai|foundations|k12)$/,
+  /^\/programs\/(foundations|k12)$/,
   /^\/compare$/,
   /^\/community$/,
   /^\/community\/(home|mentors|scholars|checkin|partners|forum|camps)$/,
@@ -120,18 +124,26 @@ function resolveCoursesQueryRedirect(searchParams) {
   const sub = searchParams.get('sub')?.trim() || ''
 
   if (!VALID_PRODUCT_LINES.has(line)) {
-    return coursePathFromLineQuery('ioai', sub)
+    return appendPreservedQuery(coursePathFromLineQuery('ioai', sub), searchParams)
   }
 
   if (line === 'ioai' && sub === 'module') {
-    return '/courses/ioai'
+    return appendPreservedQuery('/courses/ioai', searchParams)
   }
 
   if (sub && isProductLabSub(line, sub)) {
     return labsPath(line, sub)
   }
 
-  return coursePathFromLineQuery(line, sub)
+  return appendPreservedQuery(coursePathFromLineQuery(line, sub), searchParams)
+}
+
+function resolveCurriculumQueryRedirect(searchParams) {
+  const line = searchParams.get('line')?.trim()
+  if (line && line !== 'ioai') {
+    return '/ioai/curriculum'
+  }
+  return appendPreservedQuery('/ioai/curriculum', searchParams, CURRICULUM_REDIRECT_PRESERVE_PARAMS)
 }
 
 function resolveCoursePathRoute(path) {
@@ -193,6 +205,15 @@ export async function resolveRoute(pathname, search = '') {
   const courseRoute = resolveCoursePathRoute(path)
   if (courseRoute) return courseRoute
 
+  // 301 — /curriculum → /ioai/curriculum
+  if (path === '/curriculum') {
+    const location = resolveCurriculumQueryRedirect(searchParams)
+    const current = `${path}${search ? (search.startsWith('?') ? search : `?${search}`) : ''}`
+    if (current !== location) {
+      return { status: 301, path, location, reason: 'curriculum-canonical' }
+    }
+  }
+
   // 301 — /courses query normalization
   if (path === '/courses') {
     const queryRedirect = resolveCoursesQueryRedirect(searchParams)
@@ -246,10 +267,13 @@ export async function resolveRoute(pathname, search = '') {
       : { status: 404, path, reason: 'experiment-not-found' }
   }
 
-  // Program pages — slug must be valid
+  // Program pages — ioai consolidated; other slugs remain for hidden lines
   const programMatch = path.match(/^\/programs\/([^/]+)$/)
   if (programMatch) {
     const slug = programMatch[1]
+    if (slug === 'ioai') {
+      return { status: 301, path, location: '/courses/ioai', reason: 'program-consolidated' }
+    }
     return VALID_PROGRAM_SLUGS.has(slug) && getProgram(slug)
       ? { status: 200, path: `/programs/${slug}` }
       : { status: 404, path, reason: 'program-not-found' }
