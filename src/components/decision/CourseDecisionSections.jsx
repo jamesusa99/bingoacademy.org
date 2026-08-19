@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { decisionFaqJsonLd, decisionPagePlainText } from '../../config/courseDecisionPages'
 
@@ -51,6 +52,45 @@ function CollapsibleSection({ id, headingId, title, theme, children }) {
   )
 }
 
+function QuickFactsButton({ open, onClick, theme }) {
+  const isDark = theme === 'dark'
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={open}
+      aria-controls="decision-quick-facts"
+      className={`ml-1.5 inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] sm:text-xs font-semibold align-baseline transition shrink-0 ${
+        open
+          ? isDark
+            ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-300'
+            : 'border-primary/40 bg-primary/10 text-primary'
+          : isDark
+            ? 'border-slate-600 bg-slate-800/80 text-slate-200 hover:border-cyan-500/50 hover:text-cyan-300'
+            : 'border-slate-300 bg-white text-slate-700 hover:border-primary/40 hover:text-primary'
+      }`}
+    >
+      Quick Facts
+      <span className={`text-[10px] leading-none transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden>
+        ▾
+      </span>
+    </button>
+  )
+}
+
+function QuickFactsPanel({ facts, theme, open }) {
+  if (!facts) return null
+  return (
+    <div
+      id="decision-quick-facts"
+      className={open ? 'mt-4' : 'sr-only'}
+      aria-hidden={!open}
+    >
+      <QuickFactsTable facts={facts} theme={theme} />
+    </div>
+  )
+}
+
 function QuickFactsTable({ facts, theme }) {
   if (!facts) return null
   const rows = Object.entries(QUICK_FACT_LABELS)
@@ -93,7 +133,7 @@ function QuickFactsTable({ facts, theme }) {
 /**
  * Decision-page sections — crawlable HTML for SEO and pre-purchase answers.
  * @param {{ decision: object, theme?: 'light'|'dark', showCta?: boolean, className?: string, parts?: 'all'|'intro'|'details' }} props
- * parts: 'intro' = Overview + Quick facts; 'details' = syllabus/samples/faculty/results/FAQ; 'all' = everything
+ * parts: 'intro' = Overview + inline Quick Facts button; 'details' = syllabus/samples/faculty/results/FAQ; 'all' = everything
  */
 export default function CourseDecisionSections({
   decision,
@@ -103,6 +143,8 @@ export default function CourseDecisionSections({
   parts = 'all',
 }) {
   if (!decision) return null
+
+  const [quickFactsOpen, setQuickFactsOpen] = useState(false)
 
   const isDark = theme === 'dark'
   const wrap = isDark ? 'text-slate-200' : 'text-slate-700'
@@ -120,25 +162,21 @@ export default function CourseDecisionSections({
         <>
           {/* Direct answer — always expanded */}
           <section id="decision-overview" aria-labelledby="decision-overview-heading" className="mb-6 sm:mb-8">
-            <SectionHeading id="decision-overview-heading" theme={theme}>
-              Overview
-            </SectionHeading>
-            <p className="mt-3 text-sm sm:text-base leading-relaxed" itemProp="description">
+            <p className="text-sm sm:text-base leading-relaxed" itemProp="description">
+              <span id="decision-overview-heading" className="font-bold">
+                Overview:
+              </span>{' '}
               {decision.directAnswer}
+              {decision.quickFacts ? (
+                <QuickFactsButton
+                  open={quickFactsOpen}
+                  onClick={() => setQuickFactsOpen((open) => !open)}
+                  theme={theme}
+                />
+              ) : null}
             </p>
+            <QuickFactsPanel facts={decision.quickFacts} theme={theme} open={quickFactsOpen} />
           </section>
-
-          {/* Quick facts */}
-          <CollapsibleSection
-            id="decision-quick-facts"
-            headingId="decision-facts-heading"
-            title="Quick facts"
-            theme={theme}
-          >
-            <div className="mt-4">
-              <QuickFactsTable facts={decision.quickFacts} theme={theme} />
-            </div>
-          </CollapsibleSection>
         </>
       ) : null}
 

@@ -14,7 +14,7 @@ import { purchaseIoaiModule, purchaseIoaiBundle } from '../../lib/ioaiPurchase'
 import { fetchPaymentsConfig } from '../../lib/checkout'
 import { useAuth } from '../../contexts/AuthContext'
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
-import CoursesHero from './CoursesHero'
+import { CoursesLineHeader } from './CoursesHero'
 import { useCoursesLineHero, buildLineHeroStats } from '../../hooks/useCoursesLineHero'
 import PageMeta from '../PageMeta'
 import { coursePathForLineId, coursesSeoForRoute, courseLineHasSecondaryFilters, courseSlugFromLineId } from '../../config/coursePaths'
@@ -346,8 +346,10 @@ export default function ProgramCoursesModuleView({ line }) {
             <span className="text-cyan-400 font-medium">{line.name}</span>
           </nav>
 
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
-            {visibleProductLines.map((pl) => (
+          <CoursesLineHeader
+            subtitle={hero.modulesSubtitle}
+            stats={heroStats}
+            tabs={visibleProductLines.map((pl) => (
               <Link
                 key={pl.id}
                 to={coursePathForLineId(pl.id)}
@@ -360,9 +362,7 @@ export default function ProgramCoursesModuleView({ line }) {
                 {pl.icon} {pl.name}
               </Link>
             ))}
-          </div>
-
-          <CoursesHero subtitle={hero.modulesSubtitle} stats={heroStats} />
+          />
 
           {decision ? (
             <div className="mb-8 mt-6">
