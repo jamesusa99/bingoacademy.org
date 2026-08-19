@@ -2,6 +2,7 @@ import { findCourseInList } from './catalogCourse'
 import { resolveBundleCoursesCoverUrl } from '../config/bundleCover'
 import { COURSES_PORTAL } from '../config/coursesPortal'
 import { hasFullIOAITrack, IOAI_FULL_TRACK_SLUG } from './courseAccess'
+import { getFreeTrialState } from './freeTrial'
 import { getAllIOAILessonIds, isIOAITrackId, getFirstIOAILessonId } from './ioaiCourseStructure'
 import { getTrackProgressStats, getContinueLessonId, getLessonProgress } from './learningProgress'
 import { findModule, flattenIoaiModules, isIoaiModulePurchasable, resolveLessonCatalogSlug } from './ioaiStore'
@@ -45,9 +46,11 @@ function collectModuleLessonIds(levels, moduleCatalogSlug) {
 /** Union of IOAI module catalog slugs the user owns. */
 export function resolveOwnedIoaiModuleSlugs({ enrollmentSlugs = [], ioaiModuleSlugs = [], catalog = [], levels = [] }) {
   const slugs = new Set(ioaiModuleSlugs || [])
+  const trialLessonId = getFreeTrialState()?.lessonId || null
 
   for (const slug of enrollmentSlugs || []) {
     if (!slug || slug === IOAI_FULL_TRACK_SLUG || slug === 'ioai-track') continue
+    if (trialLessonId && slug === trialLessonId) continue
     if (findModule(levels, slug)) {
       slugs.add(slug)
       continue
@@ -83,6 +86,7 @@ export function buildStudyCourses({
 }) {
   const items = []
   const fullTrack = hasFullIOAITrack(enrollmentSlugs)
+  const trialLessonId = getFreeTrialState()?.lessonId || null
 
   if (fullTrack) {
     const track = findCourseInList(catalog, IOAI_FULL_TRACK_SLUG)
@@ -127,13 +131,27 @@ export function buildStudyCourses({
     if (addedModuleSlugs.has(slug)) continue
     if (coveredLessons.has(slug)) continue
 
+    const isTrialLesson = trialLessonId && slug === trialLessonId
     const course = findCourseInList(catalog, slug)
-    if (!course) continue
-    if (course.line === 'ioai' && course.sub === 'module') continue
+    if (!course) {
+      if (isTrialLesson) {
+        items.push({
+          id: slug,
+          name: 'Free Trial Lesson',
+          nameEn: 'Free Trial Lesson',
+          accessType: 'lesson',
+          badge: 'Free trial',
+          hours: '',
+        })
+      }
+      continue
+    }
+    if (course.line === 'ioai' && course.sub === 'module' && !isTrialLesson) continue
 
     items.push({
       ...course,
       accessType: course.deliveryType === 'video' ? 'lesson' : 'course',
+      ...(isTrialLesson ? { badge: 'Free trial' } : {}),
     })
   }
 

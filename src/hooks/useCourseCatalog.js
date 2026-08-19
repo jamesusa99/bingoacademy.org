@@ -7,8 +7,8 @@ export function useCourseCatalog() {
   const [source, setSource] = useState('static')
   const [error, setError] = useState(null)
 
-  const reload = useCallback(async () => {
-    setLoading(true)
+  const reload = useCallback(async ({ background = false } = {}) => {
+    if (!background) setLoading(true)
     const result = await fetchCourseCatalog()
     setCourses(result.courses)
     setSource(result.source)
@@ -21,13 +21,15 @@ export function useCourseCatalog() {
   }, [reload])
 
   useEffect(() => {
+    let last = Date.now()
     const refreshIfVisible = () => {
-      if (document.visibilityState === 'visible') reload()
+      if (document.visibilityState !== 'visible') return
+      if (Date.now() - last < 30000) return
+      last = Date.now()
+      reload({ background: true })
     }
-    window.addEventListener('focus', refreshIfVisible)
     document.addEventListener('visibilitychange', refreshIfVisible)
     return () => {
-      window.removeEventListener('focus', refreshIfVisible)
       document.removeEventListener('visibilitychange', refreshIfVisible)
     }
   }, [reload])
