@@ -23,13 +23,13 @@ import {
   CAREER_JOBS,
   CERT_TIERS,
   COMMUNITY_MENTORS,
-  FORUM_THREADS,
   CHARITY_REPORTS,
   CHARITY_PROJECTS,
   HOME_TRUST_STATS,
   HOME_TESTIMONIALS,
   HOME_BANNER_SLIDES,
 } from '../../src/config/seed/siteFallbacks.js'
+import { IOAI_FORUM_THREADS } from '../../src/config/seed/ioaiForumNews.js'
 import {
   COMMUNITY_SCHOLAR_TIERS,
   COMMUNITY_SCHOLARS,
@@ -304,7 +304,8 @@ export async function runSiteSeed(admin, { force = false } = {}) {
         await clearTable(admin, 'forum_threads')
       }
       let replyCount = 0
-      for (const thread of FORUM_THREADS) {
+      for (const thread of IOAI_FORUM_THREADS) {
+        const ts = thread.publishedAt
         const { data: inserted, error } = await admin
           .from('forum_threads')
           .insert({
@@ -313,23 +314,27 @@ export async function runSiteSeed(admin, { force = false } = {}) {
             author: thread.author,
             avatar: thread.avatar,
             category: thread.category,
+            image: thread.image ?? null,
+            created_at: ts,
+            updated_at: ts,
           })
           .select('id')
           .single()
         if (error) throw new Error(`forum_threads: ${error.message}`)
         if (thread.replies?.length) {
-          const rows = thread.replies.map((r) => ({
+          const rows = thread.replies.map((r, i) => ({
             thread_id: inserted.id,
             content: r.content,
             author: r.author,
             avatar: r.avatar,
+            created_at: r.publishedAt ?? new Date(new Date(ts).getTime() + (i + 1) * 3600000).toISOString(),
           }))
           const { error: re } = await admin.from('forum_replies').insert(rows)
           if (re) throw new Error(`forum_replies: ${re.message}`)
           replyCount += rows.length
         }
       }
-      summary.forum = { threads: FORUM_THREADS.length, replies: replyCount }
+      summary.forum = { threads: IOAI_FORUM_THREADS.length, replies: replyCount }
     } else {
       summary.forum = { skipped: true, existing: n }
     }

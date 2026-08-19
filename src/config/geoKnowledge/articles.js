@@ -13,7 +13,7 @@ export const GUIDE_ARTICLES = [
     version: '2026.1',
     updatedAt: '2026-03-01',
     author: 'Bingo Academy Parent Education Team',
-    authorSlug: 'wenyi-wang',
+    authorSlug: 'jianwen-chen',
     reviewer: SHARED_REVIEWER,
     title: 'Math & Coding Readiness Before Your Child Starts AI',
     excerpt:
@@ -40,7 +40,7 @@ export const GUIDE_ARTICLES = [
     version: '2026.1',
     updatedAt: '2026-03-01',
     author: 'Bingo Academy Parent Education Team',
-    authorSlug: 'wenyi-wang',
+    authorSlug: 'jianwen-chen',
     reviewer: SHARED_REVIEWER,
     title: 'Age-Appropriate AI Projects by Grade Band',
     excerpt:
@@ -65,7 +65,7 @@ Projects should produce **artifacts**: saved notebook, labelled dataset, or 2-mi
     version: '2026.1',
     updatedAt: '2026-03-01',
     author: 'Bingo Academy Parent Education Team',
-    authorSlug: 'wenyi-wang',
+    authorSlug: 'jianwen-chen',
     reviewer: SHARED_REVIEWER,
     title: 'How to Spot “Prompt-Only” AI Courses',
     excerpt:
@@ -113,7 +113,7 @@ Bingo Academy publishes lesson objectives, knowledge points, and trial lessons o
     version: '2026.1',
     updatedAt: '2026-03-01',
     author: 'Bingo Academy Parent Education Team',
-    authorSlug: 'wenyi-wang',
+    authorSlug: 'jianwen-chen',
     reviewer: SHARED_REVIEWER,
     title: 'AI Course vs Coding Course vs Robotics — What Is the Difference?',
     excerpt:
@@ -134,7 +134,7 @@ Many camps mix labels. A course that only drags blocks without datasets is still
     version: '2026.1',
     updatedAt: '2026-03-01',
     author: 'Bingo Academy Parent Education Team',
-    authorSlug: 'wenyi-wang',
+    authorSlug: 'jianwen-chen',
     reviewer: SHARED_REVIEWER,
     title: 'How Parents Can Evaluate Project-Based Learning Outcomes',
     excerpt:
@@ -299,7 +299,7 @@ Redacted samples available on request via [/assessment](/assessment) advisors. P
     version: '2026.1',
     updatedAt: '2026-03-01',
     author: 'Bingo Academy IOAI Curriculum Team',
-    authorSlug: 'shuang-wang',
+    authorSlug: 'shannon-wang',
     reviewer: SHARED_REVIEWER,
     title: 'IOAI / USAAIO Rule Changes — 2026 Season Notes',
     excerpt:
@@ -327,7 +327,7 @@ When rules change, we update module objectives and mock exams, then bump this pa
     version: '2026.1',
     updatedAt: '2026-03-01',
     author: 'Bingo Academy K12 School Team',
-    authorSlug: 'shuang-wang',
+    authorSlug: 'shannon-wang',
     reviewer: SHARED_REVIEWER,
     title: 'K–12 AI Curriculum Map by Grade Band',
     excerpt:

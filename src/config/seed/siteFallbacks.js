@@ -93,23 +93,12 @@ export const CERT_TIERS = [
 ]
 
 export const COMMUNITY_MENTORS = [
-  { name: 'James Chen', title: 'Professor · UESTC', photo: '/mentors/jianwen-chen.jpg', tag: 'AI Research', intro: 'Over 20 years of research in video processing and AI algorithms; multimodal feature fusion for affective computing. Professor & doctoral supervisor at UESTC; Director of Visual Intelligence Research Center.', awards: '200+ papers · National research grants', type: 'faculty' },
-  { name: 'Wenyi Wang', title: 'Ph.D · Associate Professor', photo: '/mentors/wenyi-wang.jpg', tag: 'Data Mining & AI', intro: 'AI expert at UESTC. Research spans data mining, AI, and algorithm optimisation. M.Sc. and Ph.D. from University of Ottawa, Canada.', awards: 'Best-paper awards · Industry AI advisory', type: 'faculty' },
-  { name: 'Michell Xu', title: 'Ph.D · AI Scientist', photo: '/mentors/feng-xu.jpg', tag: 'Computer Vision', intro: 'Researcher at Beijing Academy of AI; Beijing High-Level Overseas Talent. Former researcher at Samsung Research America and Thomson. Postdoctoral fellow at UPenn; Ph.D. from Tsinghua University.', awards: '50+ international patents · Samsung innovation awards', type: 'faculty' },
-  { name: 'Shuang Wang', title: 'Ph.D · AI Scientist', photo: '/mentors/shuang-wang.jpg', tag: 'LLM & Deep Learning', intro: 'Co-founder of Lava Education and ScholarOne LLC (USA). US AI sensor network patent holder. Specialises in LLMs, multimodal intelligence, deep learning. Ph.D. from University of Missouri.', awards: 'US patent holder · International competition mentor', type: 'faculty' },
+  { name: 'Dr. James Chen', title: 'Founder & CEO · Professor, UESTC', photo: '/mentors/jianwen-chen.jpg', tag: 'AI Research', intro: 'Over 20 years of research in video processing and AI algorithms; multimodal feature fusion for affective computing. Professor & doctoral supervisor at UESTC; Director of Visual Intelligence Research Center.', awards: '200+ papers · National research grants', type: 'faculty' },
+  { name: 'Dr. Michelle Xu', title: 'Co-Founder · AI Scientist', photo: '/mentors/feng-xu.jpg', tag: 'Computer Vision', intro: 'Researcher at Beijing Academy of AI; Beijing High-Level Overseas Talent. Former researcher at Samsung Research America and Thomson. Postdoctoral fellow at UPenn; Ph.D. from Tsinghua University.', awards: '50+ international patents · Samsung innovation awards', type: 'faculty' },
+  { name: 'Dr. Shannon Wang', title: 'Co-Founder · AI Scientist', photo: '/mentors/shuang-wang.jpg', tag: 'LLM & Deep Learning', intro: 'Co-founder of Lava Education and ScholarOne LLC (USA). US AI sensor network patent holder. Specialises in LLMs, multimodal intelligence, deep learning. Ph.D. from University of Missouri.', awards: 'US patent holder · International competition mentor', type: 'faculty' },
 ]
 
-export const FORUM_THREADS = [
-  { title: 'Best age to start AI education?', content: 'Hi everyone! I have a 7-year-old and wondering when is the ideal time to introduce AI concepts. Would love to hear from parents who started early.', author: 'Parent_Mia', avatar: '👩', category: 'Discussion', replies: [
-    { content: 'We started at 8 with visual programming. Found it perfect — not too early, kid was ready for logical thinking.', author: 'Dad_Leo', avatar: '👨' },
-    { content: "Agree! Also check Bingo's AI Foundations course — my daughter loved the project-based approach.", author: 'Mom_Sarah', avatar: '👩' },
-  ]},
-  { title: 'Our competition journey: from zero to provincial award', content: 'Sharing our 10-month path. Started with Python basics, joined AI Innovation Camp, then competition sprint. Key: consistent practice + mentor guidance. Happy to answer questions!', author: 'Parent_David', avatar: '👨', category: 'Parent Experience', replies: [
-    { content: 'Congratulations! How many hours per week did your child dedicate?', author: 'Curious_Parent', avatar: '🙋' },
-    { content: 'About 5–7 hrs including weekend project time. Quality over quantity mattered most.', author: 'Parent_David', avatar: '👨' },
-  ]},
-  { title: 'Competition registration tips 2024', content: 'Compiled a quick guide from our experience: 1) Check prestigious competition deadlines early 2) Prepare project documentation 3) Mock defence practice helps. Add your tips below!', author: 'Coach_Lin_Fan', avatar: '🏆', category: 'Competition', replies: [] },
-]
+export { FORUM_THREADS } from './ioaiForumNews.js'
 
 export const CHARITY_REPORTS = [
   { type: 'Trending', text: 'Ministry pushes K-12 AI education, literacy and ethics', report_date: '2025-02' },

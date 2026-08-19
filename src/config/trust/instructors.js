@@ -46,34 +46,6 @@ export const CORE_INSTRUCTORS = [
       'Over 20 years in video processing and AI algorithms. Designs competition-grade vision pipelines and mentors students on reproducible experiment documentation.',
   },
   {
-    slug: 'wenyi-wang',
-    name: 'Wenyi Wang',
-    nameLocal: '王文艺',
-    title: 'Associate Professor · UESTC',
-    photo: '/mentors/wenyi-wang.jpg',
-    tag: 'Data Mining & Machine Learning',
-    education: [
-      'Ph.D., University of Ottawa, Canada',
-      'M.Sc., University of Ottawa, Canada',
-    ],
-    researchAreas: ['Data mining', 'Machine learning optimisation', 'AI systems for education analytics'],
-    courseRoles: [
-      'IOAI Builder stage — supervised learning & evaluation metrics',
-      'Assessment item design for placement tests',
-      'Data-literacy modules in Foundations program',
-    ],
-    publications: 'Best-paper awards; industry AI advisory panels',
-    profiles: [
-      { type: 'Institution', label: 'UESTC', href: 'https://www.uestc.edu.cn/', external: true },
-    ],
-    reviewedGuides: [
-      { label: 'Math & coding readiness', href: '/guides/parents/math-and-coding-readiness' },
-      { label: 'Preparation routes by background', href: '/guides/ioai/preparation-routes' },
-    ],
-    bio:
-      'UESTC AI faculty spanning data mining and algorithm optimisation. Focuses on measurable learning outcomes and error-analysis discipline in student notebooks.',
-  },
-  {
     slug: 'feng-xu',
     name: 'Feng Xu',
     nameLocal: '徐峰',
@@ -107,10 +79,10 @@ export const CORE_INSTRUCTORS = [
       'BAAI researcher and Beijing High-Level Overseas Talent. Brings industry-grade vision pipelines into age-appropriate browser and Jupyter labs.',
   },
   {
-    slug: 'shuang-wang',
-    name: 'Shuang Wang',
+    slug: 'shannon-wang',
+    name: 'Shannon Wang',
     nameLocal: '王爽',
-    title: 'Ph.D. · AI Scientist & Curriculum Co-founder',
+    title: 'Ph.D. · Co-Founder & AI Scientist',
     photo: '/mentors/shuang-wang.jpg',
     tag: 'LLMs & Deep Learning',
     education: [
@@ -141,8 +113,14 @@ export const CORE_INSTRUCTORS = [
   },
 ]
 
+const INSTRUCTOR_SLUG_ALIASES = {
+  'shuang-wang': 'shannon-wang',
+  'wenyi-wang': 'jianwen-chen',
+}
+
 export function getInstructor(slug) {
-  return CORE_INSTRUCTORS.find((i) => i.slug === slug) ?? null
+  const resolved = INSTRUCTOR_SLUG_ALIASES[slug] ?? slug
+  return CORE_INSTRUCTORS.find((i) => i.slug === resolved) ?? null
 }
 
 export function getAllInstructorPaths() {

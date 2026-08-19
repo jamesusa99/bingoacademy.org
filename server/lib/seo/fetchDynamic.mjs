@@ -10,7 +10,7 @@ const FALLBACK_NEWS = [
     body: `Parents searching for AI classes for kids often find programs that only teach how to use chatbots. BingoAcademy takes a different approach: students learn artificial intelligence for children through hands-on projects — building models, writing Python, and exploring computer vision in the browser.`,
     date: '2026-03-15',
     updatedAt: '2026-03-15',
-    authorSlug: 'shuang-wang',
+    authorSlug: 'shannon-wang',
     keywords: ['AI classes for kids', 'AI course for teens', 'STEM Education'],
     og_image: null,
   },

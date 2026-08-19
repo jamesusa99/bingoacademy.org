@@ -15,7 +15,7 @@ export const NEWS_ARTICLES_FALLBACK = [
       'What to look for in AI classes for kids — project-based learning, real Python, and pathways to competitions like IOAI and USAAIO.',
     date: '2026-03-15',
     updatedAt: '2026-03-15',
-    authorSlug: 'shuang-wang',
+    authorSlug: 'shannon-wang',
     category: 'parents',
     keywords: ['AI classes for kids', 'AI course for teens', 'STEM Education'],
     body: `Parents searching for **AI classes for kids** often find programs that only teach how to use chatbots. BingoAcademy takes a different approach: students learn artificial intelligence for children through hands-on projects — building models, writing Python, and exploring computer vision in the browser.

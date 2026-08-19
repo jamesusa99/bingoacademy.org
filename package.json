@@ -22,6 +22,8 @@
     "clear:enrollments": "node scripts/clear-user-enrollments.mjs",
     "migrate:ioai-commerce": "node scripts/migrate-ioai-commerce.mjs",
     "seed:force": "node scripts/seed-supabase.mjs -- --force",
+    "seed:forum-ioai": "node scripts/sync-ioai-forum-news.mjs",
+    "seed:community-mentors": "node scripts/sync-community-mentors.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

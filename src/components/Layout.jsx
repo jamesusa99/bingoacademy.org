@@ -30,6 +30,7 @@ function isNavActive(loc, path) {
     return loc.pathname === '/exploration' || loc.pathname.startsWith('/exploration/')
   }
   if (path === '/courses') return loc.pathname.startsWith('/courses')
+  if (path === '/about') return loc.pathname === '/about' || loc.pathname.startsWith('/about/')
   return loc.pathname === path
 }
 
@@ -74,6 +75,7 @@ function LayoutShell({ children }) {
     { type: 'link', path: '/showcase', label: 'Achievements' },
     { type: 'link', path: '/cert', label: 'Certification' },
     { type: 'link', path: '/community', label: 'Community' },
+    { type: 'link', path: '/about', label: 'About' },
     { type: 'sep' },
     { type: 'link', path: '/mall', label: 'AI Mall' },
   ]

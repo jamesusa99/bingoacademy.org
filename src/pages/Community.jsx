@@ -2,14 +2,11 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useCommunityContent } from '../hooks/useCommunityContent'
+import { forumThreadsClientFallback } from '../config/seed/ioaiForumNews'
+import { COMMUNITY_MENTORS } from '../config/seed/siteFallbacks'
 
 // ─── Certified Mentors data ────────────────────────────────────────
-const CERTIFIED_MENTORS_FALLBACK = [
-  { name: 'James Chen', title: 'Professor · UESTC', photo: '/mentors/jianwen-chen.jpg', tag: 'AI Research', intro: 'Over 20 years of research in video processing and AI algorithms; multimodal feature fusion for affective computing. Professor & doctoral supervisor at UESTC; Director of Visual Intelligence Research Center.', awards: '200+ papers · National research grants' },
-  { name: 'Wenyi Wang', title: 'Ph.D · Associate Professor', photo: '/mentors/wenyi-wang.jpg', tag: 'Data Mining & AI', intro: 'AI expert at UESTC. Research spans data mining, AI, and algorithm optimisation. M.Sc. and Ph.D. from University of Ottawa, Canada.', awards: 'Best-paper awards · Industry AI advisory' },
-  { name: 'Michell Xu', title: 'Ph.D · AI Scientist', photo: '/mentors/feng-xu.jpg', tag: 'Computer Vision', intro: 'Researcher at Beijing Academy of AI; Beijing High-Level Overseas Talent. Former researcher at Samsung Research America and Thomson. Postdoctoral fellow at UPenn; Ph.D. from Tsinghua University.', awards: '50+ international patents · Samsung innovation awards' },
-  { name: 'Shuang Wang', title: 'Ph.D · AI Scientist', photo: '/mentors/shuang-wang.jpg', tag: 'LLM & Deep Learning', intro: 'Co-founder of Lava Education and ScholarOne LLC (USA). US AI sensor network patent holder. Specialises in LLMs, multimodal intelligence, deep learning. Ph.D. from University of Missouri.', awards: 'US patent holder · International competition mentor' },
-]
+const CERTIFIED_MENTORS_FALLBACK = COMMUNITY_MENTORS.map(({ type: _type, ...mentor }) => mentor)
 
 // ─── Elite Coaches ────────────────────────────────────────────────
 const ELITE_COACHES = [
@@ -21,17 +18,20 @@ const ELITE_COACHES = [
 
 // ─── Forum: seed threads (fallback when Supabase empty) ─────────────
 const FORUM_STORAGE_KEY = 'bingo-forum-threads'
-const SAMPLE_THREADS_FALLBACK = [
-  { id: 't1', title: 'Best age to start AI education?', content: 'Hi everyone! I have a 7-year-old and wondering when is the ideal time to introduce AI concepts. Would love to hear from parents who started early.', author: 'Parent_Mia', avatar: '👩', category: 'Discussion', createdAt: Date.now() - 86400000 * 2, replies: [
-    { id: 'r1', content: 'We started at 8 with visual programming. Found it perfect — not too early, kid was ready for logical thinking.', author: 'Dad_Leo', avatar: '👨', createdAt: Date.now() - 86400000 * 1.8 },
-    { id: 'r2', content: 'Agree! Also check Bingo\'s AI Foundations course — my daughter loved the project-based approach.', author: 'Mom_Sarah', avatar: '👩', createdAt: Date.now() - 86400000 * 1.5 },
-  ]},
-  { id: 't2', title: 'Our competition journey: from zero to provincial award', content: 'Sharing our 10-month path. Started with Python basics, joined AI Innovation Camp, then competition sprint. Key: consistent practice + mentor guidance. Happy to answer questions!', author: 'Parent_David', avatar: '👨', category: 'Parent Experience', image: null, createdAt: Date.now() - 86400000 * 5, replies: [
-    { id: 'r3', content: 'Congratulations! How many hours per week did your child dedicate?', author: 'Curious_Parent', avatar: '🙋', createdAt: Date.now() - 86400000 * 4.8 },
-    { id: 'r4', content: 'About 5–7 hrs including weekend project time. Quality over quantity mattered most.', author: 'Parent_David', avatar: '👨', createdAt: Date.now() - 86400000 * 4.5 },
-  ]},
-  { id: 't3', title: 'Competition registration tips 2024', content: 'Compiled a quick guide from our experience: 1) Check prestigious competition deadlines early 2) Prepare project documentation 3) Mock defence practice helps. Add your tips below!', author: 'Coach_Lin_Fan', avatar: '🏆', category: 'Competition', createdAt: Date.now() - 86400000 * 1, replies: [] },
-]
+
+function linkifyForumText(text) {
+  if (!text) return null
+  const parts = text.split(/(https?:\/\/[^\s]+)/g)
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  )
+}
 
 function loadForumThreadsFallback() {
   try {
@@ -41,7 +41,7 @@ function loadForumThreadsFallback() {
       if (Array.isArray(parsed) && parsed.length > 0) return parsed
     }
   } catch (_) {}
-  return JSON.parse(JSON.stringify(SAMPLE_THREADS_FALLBACK))
+  return JSON.parse(JSON.stringify(forumThreadsClientFallback()))
 }
 
 function saveForumThreadsFallback(threads) {
@@ -211,7 +211,7 @@ function ForumSection() {
               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">{activeThread.category}</span>
               <h2 className="font-bold text-bingo-dark mt-2 mb-1">{activeThread.title}</h2>
               <p className="text-xs text-slate-500 mb-3">{activeThread.author} · {formatTime(activeThread.createdAt)}</p>
-              <p className="text-slate-700 text-sm whitespace-pre-wrap">{activeThread.content}</p>
+              <p className="text-slate-700 text-sm whitespace-pre-wrap">{linkifyForumText(activeThread.content)}</p>
               {activeThread.image && (
                 <img src={activeThread.image} alt="" className="mt-3 max-w-full rounded-xl border border-slate-200 max-h-64 object-contain" onError={e => e.target.style.display = 'none'} />
               )}
@@ -224,7 +224,7 @@ function ForumSection() {
               <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-lg shrink-0">{r.avatar || '💬'}</div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-slate-600 mb-1">{r.author} · {formatTime(r.createdAt)}</p>
-                {r.content && r.content !== '(Image)' && <p className="text-slate-700 text-sm whitespace-pre-wrap">{r.content}</p>}
+                {r.content && r.content !== '(Image)' && <p className="text-slate-700 text-sm whitespace-pre-wrap">{linkifyForumText(r.content)}</p>}
                 {r.image && <img src={r.image} alt="" className="mt-2 max-w-full rounded-lg border border-slate-200 max-h-48 object-contain" onError={e => e.target.style.display = 'none'} />}
               </div>
             </div>

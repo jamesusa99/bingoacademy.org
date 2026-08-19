@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import PageMeta from '../../components/PageMeta'
 import PageContent from '../../components/PageContent'
+import AboutPageContent from '../../components/about/AboutPageContent'
 import { ABOUT_ORG } from '../../config/trust/about'
-import { TrustMetaFooter, TrustPageHero, TrustVerifyNav } from '../../components/trust/TrustPageSections'
+import { TrustMetaFooter, TrustVerifyNav } from '../../components/trust/TrustPageSections'
 import { SITE_URL } from '../../config/siteSeo'
 
 export default function AboutPage() {
@@ -11,8 +12,8 @@ export default function AboutPage() {
   return (
     <div className="w-full">
       <PageMeta
-        title={`About ${org.displayName} — Mission, Team & Contact`}
-        description={`${org.legalName}. ${org.mission}`}
+        title="About Us | BingoAcademy.org — AI Education for K-12"
+        description="BingoAcademy.org helps K-12 students learn AI through real projects, global competitions, and hands-on experiments. 20,000+ students across 1,000+ schools and 4 countries."
         canonical={`${SITE_URL}/about`}
         jsonLd={{
           '@context': 'https://schema.org',
@@ -20,112 +21,85 @@ export default function AboutPage() {
           name: org.displayName,
           legalName: org.legalName,
           url: SITE_URL,
-          description: org.mission,
+          description: ABOUT_ORG.mission,
+          founder: { '@type': 'Person', name: 'Dr. James Chen' },
           email: org.contact.general,
           areaServed: org.region.operations,
+          sameAs: ['https://ioai-official.org/'],
         }}
       />
 
-      <TrustPageHero
-        eyebrow="About"
-        title={org.displayName}
-        excerpt={org.mission}
-      />
+      <AboutPageContent />
 
-      <PageContent className="py-10 sm:py-12 max-w-3xl">
-        <section className="space-y-6 text-sm text-slate-700 leading-relaxed">
-          <div>
-            <h2 className="text-lg font-bold text-bingo-dark mb-2">Legal & operating identity</h2>
-            <ul className="space-y-2">
-              <li>
-                <span className="font-semibold text-bingo-dark">Display name:</span> {org.displayName} ({org.alsoKnownAs})
-              </li>
-              <li>
-                <span className="font-semibold text-bingo-dark">Legal entity:</span> {org.legalName}
-              </li>
-              <li>
-                <span className="font-semibold text-bingo-dark">Headquarters:</span> {org.region.headquarters}
-              </li>
-              <li>
-                <span className="font-semibold text-bingo-dark">Operations:</span> {org.region.operations}
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-bold text-bingo-dark mb-2">Founded</h2>
-            <p>
-              {org.founded.year} — {org.founded.background}
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-bold text-bingo-dark mb-2">Who we serve</h2>
-            <div className="grid sm:grid-cols-3 gap-3 mt-3">
-              {org.audiences.map((a) => (
-                <div key={a.label} className="card p-4">
-                  <p className="font-semibold text-bingo-dark">{a.label}</p>
-                  <p className="text-xs text-slate-600 mt-1">{a.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-bold text-bingo-dark mb-2">Contact</h2>
-            <ul className="space-y-1">
-              <li>
-                General:{' '}
-                <a href={`mailto:${org.contact.general}`} className="text-primary hover:underline">
-                  {org.contact.general}
-                </a>
-              </li>
-              <li>
-                Privacy:{' '}
-                <a href={`mailto:${org.contact.privacy}`} className="text-primary hover:underline">
-                  {org.contact.privacy}
-                </a>
-              </li>
-              <li>
-                Schools & DPA:{' '}
-                <a href={`mailto:${org.contact.schools}`} className="text-primary hover:underline">
-                  {org.contact.schools}
-                </a>
-              </li>
-              <li>
-                Support:{' '}
-                <a href={`mailto:${org.contact.support}`} className="text-primary hover:underline">
-                  {org.contact.support}
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {org.social.length > 0 ? (
-            <div>
-              <h2 className="text-lg font-bold text-bingo-dark mb-2">Official channels</h2>
-              <ul className="space-y-1">
-                {org.social.map((s) => (
-                  <li key={s.href}>
-                    <a href={s.href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      {s.label} ↗
+      <PageContent className="max-w-6xl mx-auto py-8 sm:py-10 border-t border-slate-200">
+        <details className="group card overflow-hidden">
+          <summary className="cursor-pointer list-none flex items-center justify-between gap-3 p-4 sm:p-5 text-sm font-semibold text-bingo-dark select-none [&::-webkit-details-marker]:hidden">
+            Legal, contact & verification
+            <span className="text-slate-400 transition group-open:rotate-180" aria-hidden>
+              ▾
+            </span>
+          </summary>
+          <div className="px-4 sm:px-5 pb-5 pt-0 border-t border-slate-100 space-y-6 text-sm text-slate-700 leading-relaxed">
+            <div className="grid sm:grid-cols-2 gap-6 pt-4">
+              <div>
+                <h2 className="text-sm font-bold text-bingo-dark mb-2">Legal & operating identity</h2>
+                <ul className="space-y-1.5 text-xs sm:text-sm">
+                  <li>
+                    <span className="font-semibold text-bingo-dark">Display name:</span> {org.displayName} ({org.alsoKnownAs})
+                  </li>
+                  <li>
+                    <span className="font-semibold text-bingo-dark">Legal entity:</span> {org.legalName}
+                  </li>
+                  <li>
+                    <span className="font-semibold text-bingo-dark">Headquarters:</span> {org.region.headquarters}
+                  </li>
+                  <li>
+                    <span className="font-semibold text-bingo-dark">Operations:</span> {org.region.operations}
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-bingo-dark mb-2">Contact</h2>
+                <ul className="space-y-1 text-xs sm:text-sm">
+                  <li>
+                    General:{' '}
+                    <a href={`mailto:${org.contact.general}`} className="text-primary hover:underline">
+                      {org.contact.general}
                     </a>
                   </li>
-                ))}
-              </ul>
+                  <li>
+                    Privacy:{' '}
+                    <a href={`mailto:${org.contact.privacy}`} className="text-primary hover:underline">
+                      {org.contact.privacy}
+                    </a>
+                  </li>
+                  <li>
+                    Schools:{' '}
+                    <a href={`mailto:${org.contact.schools}`} className="text-primary hover:underline">
+                      {org.contact.schools}
+                    </a>
+                  </li>
+                  <li>
+                    Support:{' '}
+                    <a href={`mailto:${org.contact.support}`} className="text-primary hover:underline">
+                      {org.contact.support}
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
-          ) : null}
-        </section>
 
-        <TrustVerifyNav links={org.verifyLinks} title="Verify credibility claims" />
+            <TrustVerifyNav links={org.verifyLinks} title="Verify credibility claims" />
 
-        <p className="mt-8 text-sm">
-          <Link to="/instructors" className="text-primary font-semibold hover:underline">
-            Meet core instructors →
-          </Link>
-        </p>
+            <p>
+              <Link to="/instructors" className="text-primary font-semibold hover:underline text-sm">
+                Meet core instructors →
+              </Link>
+            </p>
 
-        <TrustMetaFooter version={org.version} updatedAt={org.updatedAt} />
+            <TrustMetaFooter version={org.version} updatedAt={org.updatedAt} />
+          </div>
+        </details>
       </PageContent>
     </div>
   )
