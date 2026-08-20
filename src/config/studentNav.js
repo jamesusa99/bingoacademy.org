@@ -4,7 +4,6 @@ export const STUDENT_NAV = [
   { path: '/profile/study', label: 'Study Center' },
   { path: '/ioai/curriculum', label: 'My Course' },
   { path: '/courses/ioai', label: 'Program' },
-  { path: '/profile', hash: 'progress', label: 'Progress' },
   { path: '/profile', hash: 'support', label: 'Support' },
   { path: '/profile', label: 'Profile' },
 ]
@@ -15,14 +14,11 @@ export function studentNavTo(item) {
 }
 
 export function isStudentNavActive(loc, item) {
-  if (item.hash === 'progress') {
-    return loc.pathname === '/profile' && loc.hash === '#progress'
-  }
   if (item.hash === 'support') {
     return loc.pathname === '/profile' && loc.hash === '#support'
   }
   if (item.label === 'Profile') {
-    return loc.pathname === '/profile' && !loc.hash
+    return loc.pathname === '/profile' && loc.hash !== '#support'
   }
   if (item.path === '/profile/study') {
     return loc.pathname === '/profile/study' || loc.pathname.startsWith('/profile/study/')
@@ -41,7 +37,6 @@ export const STUDENT_FOOTER_NAV = [
   { path: '/profile/study', label: 'Study Center' },
   { path: '/ioai/curriculum', label: 'My Course' },
   { path: '/courses/ioai', label: 'Program' },
-  { path: '/profile', hash: 'progress', label: 'Progress' },
   { path: '/profile', hash: 'support', label: 'Support' },
   { path: '/profile', label: 'Profile' },
 ]
