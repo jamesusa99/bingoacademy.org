@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PageMeta from '../components/PageMeta'
-import { signInWithEmail, signInWithGoogle, formatAuthError } from '../lib/auth'
+import { signInWithEmail, signInWithGoogle, signInWithFacebook, formatAuthError } from '../lib/auth'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { safeRedirectPath, authLink, storePostLoginRedirect } from '../lib/authRedirect'
-import GoogleSignInButton from '../components/auth/GoogleSignInButton'
+import SocialSignInButtons from '../components/auth/SocialSignInButtons'
 import AuthAlert from '../components/auth/AuthAlert'
 
 export default function Login() {
@@ -16,7 +16,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
 
@@ -59,17 +59,20 @@ export default function Login() {
     setError('Sign-in failed. If you just registered, confirm your email first, then try again.')
   }
 
-  const handleGoogle = async () => {
+  const startOAuth = async (signIn) => {
     setError('')
     setInfo('')
-    setGoogleLoading(true)
+    setOauthLoading(true)
     storePostLoginRedirect(redirectTo)
-    const { error: oauthError } = await signInWithGoogle()
-    setGoogleLoading(false)
+    const { error: oauthError } = await signIn()
+    setOauthLoading(false)
     if (oauthError) {
       setError(formatAuthError(oauthError))
     }
   }
+
+  const handleGoogle = () => startOAuth(signInWithGoogle)
+  const handleFacebook = () => startOAuth(signInWithFacebook)
 
   if (authLoading) {
     return (
@@ -82,7 +85,7 @@ export default function Login() {
       <PageMeta title="Login | Bingo Academy" noindex />
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Login</h1>
       <p className="text-slate-600 mb-6">
-        Sign in with email or Google to access courses, your profile, and saved progress.
+        Sign in with email, Google, or Facebook to access courses, your profile, and saved progress.
       </p>
 
       {!isSupabaseConfigured && (
@@ -91,7 +94,7 @@ export default function Login() {
           <span>
             Auth requires Supabase. Add <code className="text-xs">VITE_SUPABASE_URL</code> and{' '}
             <code className="text-xs">VITE_SUPABASE_ANON_KEY</code> to <code className="text-xs">.env.local</code>,
-            and enable Google under Authentication → Providers.
+            and enable Google and Facebook under Authentication → Providers.
           </span>
         </AuthAlert>
         </div>
@@ -108,7 +111,11 @@ export default function Login() {
         </div>
       )}
 
-      <GoogleSignInButton onClick={handleGoogle} disabled={loading || googleLoading} />
+      <SocialSignInButtons
+        onGoogle={handleGoogle}
+        onFacebook={handleFacebook}
+        disabled={loading || oauthLoading}
+      />
 
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
@@ -133,7 +140,7 @@ export default function Login() {
             placeholder="you@example.com"
             className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary"
             required
-            disabled={loading || googleLoading}
+            disabled={loading || oauthLoading}
           />
         </div>
         <div>
@@ -149,7 +156,7 @@ export default function Login() {
             placeholder="Enter password"
             className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary"
             required
-            disabled={loading || googleLoading}
+            disabled={loading || oauthLoading}
           />
           <div className="flex justify-end mt-1">
             <Link to="/forgot-password" className="text-sm text-primary hover:underline">
@@ -160,7 +167,7 @@ export default function Login() {
         <button
           type="submit"
           className="btn-primary w-full py-3 disabled:opacity-50"
-          disabled={loading || googleLoading}
+          disabled={loading || oauthLoading}
         >
           {loading ? 'Signing in…' : 'Sign in with email'}
         </button>

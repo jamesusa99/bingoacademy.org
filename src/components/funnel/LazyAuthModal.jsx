@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, CloudUpload, Sparkles } from 'lucide-react'
 import { LAZY_AUTH_COPY } from '../../config/funnel'
-import GoogleSignInButton from '../auth/GoogleSignInButton'
+import SocialSignInButtons from '../auth/SocialSignInButtons'
 import { CHECKOUT_TRUST } from '../../config/checkoutTrust'
 
 export default function LazyAuthModal({
@@ -12,6 +12,7 @@ export default function LazyAuthModal({
   googleLabel,
   onClose,
   onGoogleSignIn,
+  onFacebookSignIn,
 }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -22,12 +23,13 @@ export default function LazyAuthModal({
   const heading = title || copy.title
   const body = subtitle || copy.subtitle
   const googleText = googleLabel || copy.googleLabel
+  const facebookText = copy.facebookLabel || 'Continue with Facebook'
 
-  const handleGoogle = async () => {
+  const startOAuth = async (signIn) => {
     setLoading(true)
     setError(null)
     try {
-      await onGoogleSignIn()
+      await signIn()
     } catch (err) {
       setError(err.message || 'Sign-in failed')
       setLoading(false)
@@ -70,7 +72,13 @@ export default function LazyAuthModal({
 
           {error ? <p className="text-sm text-red-400 mb-4">{error}</p> : null}
 
-          <GoogleSignInButton onClick={handleGoogle} disabled={loading} label={googleText} />
+          <SocialSignInButtons
+            onGoogle={() => startOAuth(onGoogleSignIn)}
+            onFacebook={() => startOAuth(onFacebookSignIn)}
+            disabled={loading}
+            googleLabel={googleText}
+            facebookLabel={facebookText}
+          />
 
           <p className="text-[11px] text-slate-500 mt-4 leading-snug">{CHECKOUT_TRUST.microcopy}</p>
 

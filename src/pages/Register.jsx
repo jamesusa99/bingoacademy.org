@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PageMeta from '../components/PageMeta'
-import { signUpWithEmail, signInWithGoogle, formatAuthError } from '../lib/auth'
+import { signUpWithEmail, signInWithGoogle, signInWithFacebook, formatAuthError } from '../lib/auth'
 import { trackConversion } from '../lib/analytics'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { safeRedirectPath, authLink, storePostLoginRedirect } from '../lib/authRedirect'
-import GoogleSignInButton from '../components/auth/GoogleSignInButton'
+import SocialSignInButtons from '../components/auth/SocialSignInButtons'
 import AuthAlert from '../components/auth/AuthAlert'
 
 export default function Register() {
@@ -19,7 +19,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [agree, setAgree] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -66,17 +66,20 @@ export default function Register() {
     setTimeout(() => navigate(authLink('/login', redirectTo) + '&registered=1'), 2500)
   }
 
-  const handleGoogle = async () => {
+  const startOAuth = async (signIn) => {
     setError('')
     setSuccess('')
-    setGoogleLoading(true)
+    setOauthLoading(true)
     storePostLoginRedirect(redirectTo)
-    const { error: oauthError } = await signInWithGoogle()
-    setGoogleLoading(false)
+    const { error: oauthError } = await signIn()
+    setOauthLoading(false)
     if (oauthError) {
       setError(formatAuthError(oauthError))
     }
   }
+
+  const handleGoogle = () => startOAuth(signInWithGoogle)
+  const handleFacebook = () => startOAuth(signInWithFacebook)
 
   if (authLoading) {
     return (
@@ -89,13 +92,13 @@ export default function Register() {
       <PageMeta title="Register | Bingo Academy" noindex />
       <h1 className="text-2xl font-bold text-bingo-dark mb-2">Register</h1>
       <p className="text-slate-600 mb-8">
-        Create an account with email or Google to save progress, enroll in courses, and join the community.
+        Create an account with email, Google, or Facebook to save progress, enroll in courses, and join the community.
       </p>
 
       {!isSupabaseConfigured && (
         <div className="mb-4">
           <AuthAlert variant="info">
-            Auth requires Supabase environment variables and Google provider enabled in the Supabase dashboard.
+            Auth requires Supabase environment variables and Google/Facebook providers enabled in the Supabase dashboard.
           </AuthAlert>
         </div>
       )}
@@ -111,10 +114,12 @@ export default function Register() {
         </div>
       )}
 
-      <GoogleSignInButton
-        onClick={handleGoogle}
-        disabled={loading || googleLoading}
-        label="Sign up with Google"
+      <SocialSignInButtons
+        onGoogle={handleGoogle}
+        onFacebook={handleFacebook}
+        disabled={loading || oauthLoading}
+        googleLabel="Sign up with Google"
+        facebookLabel="Sign up with Facebook"
       />
 
       <div className="relative my-6">
@@ -140,7 +145,7 @@ export default function Register() {
             placeholder="you@example.com"
             className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary"
             required
-            disabled={loading || googleLoading}
+            disabled={loading || oauthLoading}
           />
         </div>
         <div>
@@ -157,7 +162,7 @@ export default function Register() {
             className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary"
             required
             minLength={6}
-            disabled={loading || googleLoading}
+            disabled={loading || oauthLoading}
           />
         </div>
         <div>
@@ -174,7 +179,7 @@ export default function Register() {
             className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary"
             required
             minLength={6}
-            disabled={loading || googleLoading}
+            disabled={loading || oauthLoading}
           />
         </div>
         <label className="flex items-start gap-2 text-sm text-slate-600">
@@ -183,7 +188,7 @@ export default function Register() {
             checked={agree}
             onChange={(e) => setAgree(e.target.checked)}
             className="mt-1 rounded border-slate-300 text-primary focus:ring-primary"
-            disabled={loading || googleLoading}
+            disabled={loading || oauthLoading}
           />
           <span>
             I agree to the{' '}
@@ -199,7 +204,7 @@ export default function Register() {
         <button
           type="submit"
           className="btn-primary w-full py-3 disabled:opacity-50"
-          disabled={!agree || loading || googleLoading}
+          disabled={!agree || loading || oauthLoading}
         >
           {loading ? 'Creating account…' : 'Register with email'}
         </button>

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { signInWithGoogle, formatAuthError } from '../lib/auth'
+import { signInWithGoogle, signInWithFacebook, formatAuthError } from '../lib/auth'
 import { storePostLoginRedirect } from '../lib/authRedirect'
 import { storePendingAuthAction } from '../lib/lazyRegistration'
 import { useAuth } from './AuthContext'
@@ -50,17 +50,23 @@ export function LazyAuthProvider({ children }) {
     [isAuthenticated, openLazyAuth]
   )
 
-  const handleGoogleSignIn = useCallback(async () => {
-    const returnPath = `${location.pathname}${location.search}`
-    if (modal?.pendingAction) {
-      storePendingAuthAction(modal.pendingAction)
-    }
-    storePostLoginRedirect(returnPath)
-    const { error } = await signInWithGoogle()
-    if (error) {
-      throw new Error(formatAuthError(error))
-    }
-  }, [location.pathname, location.search, modal?.pendingAction])
+  const handleOAuthSignIn = useCallback(
+    async (signIn) => {
+      const returnPath = `${location.pathname}${location.search}`
+      if (modal?.pendingAction) {
+        storePendingAuthAction(modal.pendingAction)
+      }
+      storePostLoginRedirect(returnPath)
+      const { error } = await signIn()
+      if (error) {
+        throw new Error(formatAuthError(error))
+      }
+    },
+    [location.pathname, location.search, modal?.pendingAction]
+  )
+
+  const handleGoogleSignIn = useCallback(() => handleOAuthSignIn(signInWithGoogle), [handleOAuthSignIn])
+  const handleFacebookSignIn = useCallback(() => handleOAuthSignIn(signInWithFacebook), [handleOAuthSignIn])
 
   const value = useMemo(
     () => ({ openLazyAuth, gateAction, closeLazyAuth }),
@@ -78,6 +84,7 @@ export function LazyAuthProvider({ children }) {
         googleLabel={modal?.googleLabel}
         onClose={closeLazyAuth}
         onGoogleSignIn={handleGoogleSignIn}
+        onFacebookSignIn={handleFacebookSignIn}
       />
     </LazyAuthContext.Provider>
   )

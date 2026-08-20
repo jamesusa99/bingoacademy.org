@@ -157,8 +157,8 @@ export function formatAuthError(error) {
 
   if (/provider is not enabled/i.test(msg)) {
     return (
-      'Google sign-in is not enabled for this site yet. In Supabase go to Authentication → Providers → Google, ' +
-      'turn it on, and paste a Google Cloud OAuth Client ID and secret. See .env.example for redirect URI details.'
+      'This social sign-in method is not enabled yet. In Supabase go to Authentication → Providers, ' +
+      'enable Google and/or Facebook, and paste the client ID and secret. See .env.example for redirect URI details.'
     )
   }
 
@@ -181,6 +181,19 @@ export async function signInWithGoogle() {
     options: {
       redirectTo: getAuthCallbackUrl(),
       queryParams: { access_type: 'offline', prompt: 'consent' },
+    },
+  })
+}
+
+export async function signInWithFacebook() {
+  if (!isSupabaseConfigured) {
+    return { data: { provider: null, url: null }, error: { message: NOT_CONFIGURED } }
+  }
+  return supabase.auth.signInWithOAuth({
+    provider: 'facebook',
+    options: {
+      redirectTo: getAuthCallbackUrl(),
+      scopes: 'email,public_profile',
     },
   })
 }

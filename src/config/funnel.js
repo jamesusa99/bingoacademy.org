@@ -13,18 +13,21 @@ export const EARLY_BIRD_PROMO = {
 export const LAZY_AUTH_COPY = {
   saveProgress: {
     title: 'Save your progress',
-    subtitle: 'Sign in with Google to sync lab completion across devices — takes one tap.',
+    subtitle: 'Sign in with Google or Facebook to sync lab completion across devices — takes one tap.',
     googleLabel: 'Continue with Google to save',
+    facebookLabel: 'Continue with Facebook to save',
   },
   downloadReport: {
     title: 'Download your lab report',
     subtitle: 'Create a free account to export your checkpoint report as a downloadable file.',
     googleLabel: 'Continue with Google to download',
+    facebookLabel: 'Continue with Facebook to download',
   },
   saveCode: {
     title: 'Save your code to your account',
     subtitle: 'Your notebook is saved locally. Sign in to back it up to your Bingo profile.',
     googleLabel: 'Continue with Google to save',
+    facebookLabel: 'Continue with Facebook to save',
   },
 }
 
