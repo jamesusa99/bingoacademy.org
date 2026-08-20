@@ -97,6 +97,7 @@ const KNOWN_PATH_PATTERNS = [
   /^\/cert$/,
   /^\/mall$/,
   /^\/privacy$/,
+  /^\/privacy-policy$/,
   /^\/about$/,
   /^\/instructors$/,
   /^\/instructors\/[^/]+$/,

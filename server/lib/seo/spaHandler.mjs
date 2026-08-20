@@ -113,6 +113,7 @@ export async function collectPrerenderPaths() {
     '/ioai/sample-lab',
     '/assessment/ioai',
     '/privacy',
+    '/privacy-policy',
     '/showcase',
     '/cert',
     '/mall',

@@ -1,5 +1,8 @@
 /** Footer compliance badges and privacy policy copy for K-12 / overseas procurement. */
 
+/** Meta / Facebook Login — user data deletion instructions (App settings → User data deletion) */
+export const DATA_DELETION_POLICY_URL = 'https://www.bingoacademy.org/privacy-policy#data-deletion'
+
 export const LEGAL_COMPLIANCE = {
   siteName: 'Bingo Academy',
   contactEmail: 'privacy@bingoacademy.org',

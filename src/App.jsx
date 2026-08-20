@@ -254,6 +254,7 @@ export default function App() {
           <Route path="community/:section" element={<Pages.Community />} />
           <Route path="cert" element={<Pages.Certification />} />
           <Route path="mall" element={<Pages.Mall />} />
+          <Route path="privacy-policy" element={<Pages.Privacy />} />
           <Route path="privacy" element={<Pages.Privacy />} />
           <Route path="about" element={<Pages.AboutPage />} />
           <Route path="instructors" element={<Pages.InstructorsHub />} />

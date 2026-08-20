@@ -186,6 +186,7 @@ export function getStaticSeoForPath(pathname) {
         'Free AI readiness assessment for students ages 12–18 — find the right IOAI starting level before enrolling.',
     },
     '/privacy': PAGE_SEO.privacy,
+    '/privacy-policy': PAGE_SEO.privacy,
     '/about': PAGE_SEO.about,
     '/instructors': PAGE_SEO.instructors,
     '/methodology': PAGE_SEO.methodology,
