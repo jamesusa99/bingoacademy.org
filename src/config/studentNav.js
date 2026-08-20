@@ -1,8 +1,9 @@
-/** Logged-in student navigation — learning workspace (no marketing entries) */
+/** Logged-in student navigation — learning workspace + repurchase */
 
 export const STUDENT_NAV = [
   { path: '/profile/study', label: 'Study Center' },
   { path: '/ioai/curriculum', label: 'My Course' },
+  { path: '/courses/ioai', label: 'Program' },
   { path: '/profile', hash: 'progress', label: 'Progress' },
   { path: '/profile', hash: 'support', label: 'Support' },
   { path: '/profile', label: 'Profile' },
@@ -29,6 +30,9 @@ export function isStudentNavActive(loc, item) {
   if (item.path === '/ioai/curriculum') {
     return loc.pathname === '/ioai/curriculum' || (loc.pathname === '/curriculum' && loc.search.includes('line=ioai'))
   }
+  if (item.path === '/courses/ioai') {
+    return loc.pathname === '/courses/ioai' || loc.pathname.startsWith('/courses/ioai/')
+  }
   return loc.pathname === item.path
 }
 
@@ -36,6 +40,7 @@ export function isStudentNavActive(loc, item) {
 export const STUDENT_FOOTER_NAV = [
   { path: '/profile/study', label: 'Study Center' },
   { path: '/ioai/curriculum', label: 'My Course' },
+  { path: '/courses/ioai', label: 'Program' },
   { path: '/profile', hash: 'progress', label: 'Progress' },
   { path: '/profile', hash: 'support', label: 'Support' },
   { path: '/profile', label: 'Profile' },
