@@ -3,7 +3,7 @@
 /** @typedef {{ id: string, title: string, modules: CurriculumModule[] }} CurriculumTheme */
 /** @typedef {{ id: string, title: string, emoji?: string, themes: CurriculumTheme[] }} CurriculumLevel */
 
-/** @typedef {{ levelId: string, themeId: string, moduleId: string, levelTitle: string, themeTitle: string, moduleTitle: string, levelEmoji?: string, lessons: CurriculumLesson[] }} SelectedModule */
+/** @typedef {{ levelId: string, themeId: string, moduleId: string, levelTitle: string, themeTitle: string, moduleTitle: string, levelEmoji?: string, catalogSlug?: string | null, lessons: CurriculumLesson[] }} SelectedModule */
 
 export function moduleSelectionKey(levelId, themeId, moduleId) {
   return `${levelId}:${themeId}:${moduleId}`
@@ -23,6 +23,7 @@ export function getDefaultSelectedModule(curriculum) {
     themeTitle: theme.title,
     moduleTitle: mod.title,
     levelEmoji: level.emoji,
+    catalogSlug: mod.catalogSlug || null,
     lessons: mod.lessons,
   }
 }

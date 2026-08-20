@@ -1,8 +1,12 @@
-/** Logged-in student navigation — learning workspace + repurchase */
+/** Logged-in student navigation
+ *  Study Center → enrolled / purchased courses
+ *  Curriculum   → full syllabus map & preview
+ *  Program      → IOAI program overview & purchase
+ */
 
 export const STUDENT_NAV = [
   { path: '/profile/study', label: 'Study Center' },
-  { path: '/ioai/curriculum', label: 'My Course' },
+  { path: '/ioai/curriculum', label: 'Curriculum' },
   { path: '/courses/ioai', label: 'Program' },
   { path: '/profile', hash: 'support', label: 'Support' },
   { path: '/profile', label: 'Profile' },
@@ -35,7 +39,7 @@ export function isStudentNavActive(loc, item) {
 /** Footer links for authenticated students */
 export const STUDENT_FOOTER_NAV = [
   { path: '/profile/study', label: 'Study Center' },
-  { path: '/ioai/curriculum', label: 'My Course' },
+  { path: '/ioai/curriculum', label: 'Curriculum' },
   { path: '/courses/ioai', label: 'Program' },
   { path: '/profile', hash: 'support', label: 'Support' },
   { path: '/profile', label: 'Profile' },

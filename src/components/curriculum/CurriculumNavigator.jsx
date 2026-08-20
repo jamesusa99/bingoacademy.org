@@ -130,6 +130,7 @@ export default function CurriculumNavigator({
                                     themeTitle: theme.title,
                                     moduleTitle: mod.title,
                                     levelEmoji: level.emoji,
+                                    catalogSlug: mod.catalogSlug || null,
                                     lessons: mod.lessons,
                                   })
                                 }

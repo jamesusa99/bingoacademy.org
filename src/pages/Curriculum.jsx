@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { GraduationCap, ArrowRight } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
@@ -6,7 +6,7 @@ import { PAGE_SEO } from '../config/programs'
 import { getProductLine } from '../config/products'
 import { getProgramCurriculum, isCurriculumLine } from '../config/programCurriculum'
 import { useProgramCurriculum } from '../hooks/useProgramCurriculum'
-import { useIOAIAccess } from '../hooks/useIOAIAccess'
+import { useIOAIAccess } from '../hooks/useIOAIStore'
 import { useCourseCatalog } from '../hooks/useCourseCatalog'
 import CurriculumNavigator from '../components/curriculum/CurriculumNavigator'
 import ModuleDetailsPanel from '../components/curriculum/ModuleDetailsPanel'
@@ -15,6 +15,9 @@ import LessonVideoModal from '../components/curriculum/LessonVideoModal'
 import { getDefaultSelectedModule } from '../components/curriculum/curriculumUtils'
 import { confirmCheckoutSession } from '../lib/checkout'
 import { useAuth } from '../contexts/AuthContext'
+import { getPurchasedSlugs, hasCourseAccess } from '../lib/courseAccess'
+import { buildLessonModuleMapFromTree, hasIoaiLessonAccess } from '../lib/ioaiAccess'
+import { resolveLessonCatalogSlug } from '../lib/ioaiStore'
 
 function progressKey(line) {
   return `${line}-curriculum-completed`
@@ -39,8 +42,31 @@ export default function Curriculum() {
 
   const { tree, summary, loading, error, reload } = useProgramCurriculum(productLine)
   const { courses } = useCourseCatalog()
-  const { hasAccess, refresh: refreshAccess } = useIOAIAccess()
+  const ioaiAccess = useIOAIAccess()
   const { isAuthenticated } = useAuth()
+  const { moduleSlugs, enrolledSlugs, hasFullTrack, reload: reloadIoaiAccess } = ioaiAccess
+
+  const lessonModuleMap = useMemo(() => buildLessonModuleMapFromTree(tree), [tree])
+
+  const lessonHasAccess = useCallback(
+    (lesson) => {
+      if (productLine !== 'ioai') return true
+
+      const lessonId = resolveLessonCatalogSlug(lesson)
+      const purchasedSlugs = getPurchasedSlugs()
+
+      if (hasCourseAccess(lessonId, purchasedSlugs)) return true
+      if (hasFullTrack) return true
+
+      return hasIoaiLessonAccess(lessonId, {
+        moduleSlugs,
+        enrolledSlugs,
+        lessonModuleMap,
+        trialEnabled: Boolean(lesson.trialEnabled),
+      })
+    },
+    [productLine, moduleSlugs, enrolledSlugs, hasFullTrack, lessonModuleMap]
+  )
 
   const [selectedModule, setSelectedModule] = useState(null)
   const [completedLessons, setCompletedLessons] = useState(() => loadCompletedLessons(productLine))
@@ -70,7 +96,7 @@ export default function Curriculum() {
       confirmCheckoutSession(sessionId)
         .then(() => {
           setCheckoutNotice('Payment successful — IOAI Masterclass unlocked!')
-          refreshAccess()
+          reloadIoaiAccess({ force: true })
         })
         .catch(() => setCheckoutNotice('Payment received — refreshing access…'))
         .finally(() => {
@@ -83,7 +109,7 @@ export default function Curriculum() {
       searchParams.delete('checkout')
       setSearchParams(searchParams, { replace: true })
     }
-  }, [searchParams, setSearchParams, isAuthenticated, refreshAccess, productLine])
+  }, [searchParams, setSearchParams, isAuthenticated, reloadIoaiAccess, productLine])
 
   const toggleLessonComplete = useCallback((lessonId) => {
     setCompletedLessons((prev) =>
@@ -99,7 +125,7 @@ export default function Curriculum() {
     }
   }, [])
 
-  const lineAccess = productLine === 'ioai' ? hasAccess : true
+  const lineAccess = productLine === 'ioai' ? lessonHasAccess : () => true
 
   return (
     <div className="curriculum-page courses-page-dark min-h-[calc(100vh-4rem)]">
@@ -166,7 +192,7 @@ export default function Curriculum() {
                 catalogCourses={courses}
                 completedLessons={completedLessons}
                 onToggleLessonComplete={toggleLessonComplete}
-                hasAccess={lineAccess}
+                lessonHasAccess={lineAccess}
                 onOpenLesson={handleOpenLesson}
                 onLockedLesson={() => setUpgradeOpen(true)}
               />

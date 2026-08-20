@@ -16,7 +16,7 @@ import { findCourseInList } from '../../lib/catalogCourse'
  *   catalogCourses?: object[],
  *   completedLessons?: string[],
  *   onToggleLessonComplete?: (lessonId: string) => void,
- *   hasAccess?: boolean,
+ *   lessonHasAccess?: (lesson: import('./curriculumUtils.js').CurriculumLesson) => boolean,
  *   onOpenLesson?: (lesson: import('./curriculumUtils.js').CurriculumLesson & { displayTitle?: string, cloudflareVideoId?: string | null }) => void,
  *   onLockedLesson?: () => void,
  * }} props
@@ -26,7 +26,7 @@ export default function ModuleDetailsPanel({
   catalogCourses = [],
   completedLessons = [],
   onToggleLessonComplete,
-  hasAccess = false,
+  lessonHasAccess = () => false,
   onOpenLesson,
   onLockedLesson,
 }) {
@@ -39,9 +39,11 @@ export default function ModuleDetailsPanel({
   }
 
   const moduleCompleteCount = selected.lessons.filter((l) => completedLessons.includes(l.id)).length
+  const unlockedCount = selected.lessons.filter((lesson) => lessonHasAccess(lesson)).length
+  const moduleUnlocked = unlockedCount > 0
 
   const handleCardClick = (lesson, displayTitle, videoId) => {
-    if (!hasAccess) {
+    if (!lessonHasAccess(lesson)) {
       onLockedLesson?.()
       return
     }
@@ -61,8 +63,10 @@ export default function ModuleDetailsPanel({
         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{selected.moduleTitle}</h1>
         <p className="text-sm text-slate-400 mt-2 transition-all duration-300">
           {moduleCompleteCount}/{selected.lessons.length} complete · {selected.lessons.length} video lessons & labs
-          {!hasAccess ? (
+          {!moduleUnlocked ? (
             <span className="ml-2 text-amber-400/90">· Preview locked — upgrade to watch</span>
+          ) : unlockedCount < selected.lessons.length ? (
+            <span className="ml-2 text-cyan-400/90">· {unlockedCount}/{selected.lessons.length} unlocked</span>
           ) : null}
         </p>
       </header>
@@ -75,7 +79,8 @@ export default function ModuleDetailsPanel({
             const isLab = catalog?.deliveryType === 'lab' || /lab/i.test(displayTitle)
             const completed = completedLessons.includes(lesson.id)
             const videoId = lesson.cloudflareVideoId || catalog?.cloudflareUid || null
-            const locked = !hasAccess
+            const unlocked = lessonHasAccess(lesson)
+            const locked = !unlocked
 
             return (
               <article
@@ -89,7 +94,7 @@ export default function ModuleDetailsPanel({
                       : 'border-slate-700/70 hover:border-cyan-400/50 hover:shadow-[0_0_28px_rgba(34,211,238,0.12)] hover:-translate-y-0.5 cursor-pointer',
                 ].join(' ')}
               >
-                {hasAccess ? (
+                {unlocked ? (
                   <button
                     type="button"
                     onClick={(e) => {
@@ -111,23 +116,22 @@ export default function ModuleDetailsPanel({
                       <Circle className="w-4 h-4 transition-all duration-300" aria-hidden />
                     )}
                   </button>
-                ) : (
-                  <span className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center border border-amber-500/40 bg-amber-500/10 text-amber-400 z-10">
-                    <Lock className="w-4 h-4" aria-hidden />
-                  </span>
-                )}
+                ) : null}
 
                 <button
                   type="button"
                   onClick={() => handleCardClick(lesson, displayTitle, videoId)}
-                  className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 rounded-xl pr-10"
+                  className={[
+                    'w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 rounded-xl',
+                    unlocked ? 'pr-10' : '',
+                  ].join(' ')}
                 >
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div
                       className={[
                         'w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300',
                         locked
-                          ? 'bg-amber-500/10 text-amber-400/80'
+                          ? 'bg-slate-700/40 text-slate-500'
                           : completed
                             ? 'bg-emerald-500/15 text-emerald-400'
                             : isLab
@@ -135,9 +139,7 @@ export default function ModuleDetailsPanel({
                               : 'bg-cyan-500/15 text-cyan-300 group-hover:bg-cyan-500/25',
                       ].join(' ')}
                     >
-                      {locked ? (
-                        <Lock className="w-5 h-5" aria-hidden />
-                      ) : completed ? (
+                      {completed ? (
                         <CheckCircle2 className="w-5 h-5" aria-hidden />
                       ) : isLab ? (
                         <FlaskConical className="w-5 h-5" aria-hidden />
