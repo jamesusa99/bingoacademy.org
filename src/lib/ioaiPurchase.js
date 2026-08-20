@@ -6,9 +6,10 @@ export async function purchaseIoaiModule({
   addonSlugs = [],
   isAuthenticated,
   navigate,
+  returnPath,
 }) {
   if (!catalogSlug) return
-  const returnPath = `/courses/module/${encodeURIComponent(catalogSlug)}`
+  const path = returnPath || `/courses/module/${encodeURIComponent(catalogSlug)}`
 
   goToSecureCheckout({
     navigate,
@@ -16,7 +17,7 @@ export async function purchaseIoaiModule({
     courseSlug: catalogSlug,
     purchaseType: 'module',
     addonSlugs,
-    returnPath,
+    returnPath: path,
   })
 }
 

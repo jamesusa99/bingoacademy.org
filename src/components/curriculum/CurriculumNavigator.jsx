@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { moduleSelectionKey, isModuleSelected } from './curriculumUtils'
+import { moduleSelectionKey, isModuleSelected, toSelectedModule } from './curriculumUtils'
 
 /**
  * @param {{
@@ -121,19 +121,7 @@ export default function CurriculumNavigator({
                             <li key={modKey}>
                               <button
                                 type="button"
-                                onClick={() =>
-                                  onSelectModule({
-                                    levelId: level.id,
-                                    themeId: theme.id,
-                                    moduleId: mod.id,
-                                    levelTitle: level.title,
-                                    themeTitle: theme.title,
-                                    moduleTitle: mod.title,
-                                    levelEmoji: level.emoji,
-                                    catalogSlug: mod.catalogSlug || null,
-                                    lessons: mod.lessons,
-                                  })
-                                }
+                                onClick={() => onSelectModule(toSelectedModule(level, theme, mod))}
                                 className={[
                                   'w-full text-left rounded-lg px-3 py-2.5 text-sm transition-all duration-300',
                                   active

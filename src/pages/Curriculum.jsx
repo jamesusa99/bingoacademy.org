@@ -201,7 +201,11 @@ export default function Curriculum() {
         )}
       </div>
 
-      <ProUpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
+      <ProUpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        module={selectedModule}
+      />
       <LessonVideoModal
         open={Boolean(videoLesson)}
         lesson={videoLesson}
