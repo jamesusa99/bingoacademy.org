@@ -14,6 +14,7 @@ export const Privacy = lazy(() => import('../pages/Privacy'))
 export const Certification = lazy(() => import('../pages/Certification'))
 export const Mall = lazy(() => import('../pages/Mall'))
 export const Community = lazy(() => import('../pages/Community'))
+export const IoaiReadinessAssessmentPage = lazy(() => import('../pages/ioai/IoaiReadinessAssessmentPage'))
 export const AIAssessment = lazy(() => import('../pages/AIAssessment'))
 export const NotFound = lazy(() => import('../pages/NotFound'))
 

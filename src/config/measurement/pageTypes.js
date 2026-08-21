@@ -51,7 +51,7 @@ export function resolvePageType(pathname = '/') {
   ) {
     return PAGE_TYPES.landing
   }
-  if (path === '/assessment') return PAGE_TYPES.assessment
+  if (path === '/assessment' || path.startsWith('/assessment/')) return PAGE_TYPES.assessment
   if (
     path.startsWith('/login') ||
     path.startsWith('/register') ||

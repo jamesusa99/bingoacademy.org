@@ -183,7 +183,7 @@ export function getStaticSeoForPath(pathname) {
     '/assessment/ioai': {
       title: `Free IOAI Readiness Assessment | ${BRAND}`,
       description:
-        'Free AI readiness assessment for students ages 12–18 — find the right IOAI starting level before enrolling.',
+        'An 8-minute IOAI readiness snapshot aligned with the public IOAI syllabus. Find the recommended starting stage before you enroll.',
     },
     '/privacy': PAGE_SEO.privacy,
     '/privacy-policy': PAGE_SEO.privacy,

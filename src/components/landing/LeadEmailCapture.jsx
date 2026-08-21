@@ -11,6 +11,7 @@ export default function LeadEmailCapture({
   successMessage,
   variant = 'light',
   className = '',
+  onSuccess,
 }) {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,6 +27,7 @@ export default function LeadEmailCapture({
     try {
       await submitMarketingLead({ email, source, campaign })
       setDone(true)
+      onSuccess?.()
     } catch (err) {
       setError(err.message || 'Submission failed')
     } finally {

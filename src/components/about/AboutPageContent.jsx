@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronRight, Mail, Shield } from 'lucide-react'
 import PageContent from '../PageContent'
 import { TrustDisclaimer, TrustMetaFooter, TrustVerifyNav } from '../trust/TrustPageSections'
-import { ABOUT_ORG, aboutAtAGlanceRows } from '../../config/trust/about'
+import { ABOUT_ORG, FACEBOOK_PAGE_URL, aboutAtAGlanceRows } from '../../config/trust/about'
 import {
   ABOUT_AUDIENCE_CTA,
   ABOUT_COMPETITION_DISCLAIMER,
@@ -535,6 +535,17 @@ function LegalIdentity() {
                   {org.contact.support}
                 </a>
               </li>
+              <li>
+                Facebook:{' '}
+                <a
+                  href={FACEBOOK_PAGE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  facebook.com/BingoAcademyAI
+                </a>
+              </li>
             </ul>
           </div>
           <div>
@@ -546,6 +557,23 @@ function LegalIdentity() {
               <Mail className="w-4 h-4" aria-hidden />
               {org.contact.general}
             </a>
+            <h3 className="font-bold text-bingo-dark mb-2 mt-6">Follow us</h3>
+            <ul className="flex flex-wrap gap-x-4 gap-y-2">
+              {org.social
+                .filter((s) => s.label !== 'Website')
+                .map((item) => (
+                  <li key={item.label}>
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary font-medium hover:underline"
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+            </ul>
           </div>
         </div>
 

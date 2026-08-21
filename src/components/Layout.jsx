@@ -199,6 +199,9 @@ function LayoutShell({ children }) {
                       key={item.label}
                       href={guestFooterTo(item)}
                       className="block hover:text-white py-0.5"
+                      {...(String(item.href || '').startsWith('http')
+                        ? { target: '_blank', rel: 'noopener noreferrer' }
+                        : {})}
                     >
                       {item.label}
                     </a>

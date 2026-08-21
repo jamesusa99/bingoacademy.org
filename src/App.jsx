@@ -155,7 +155,7 @@ export default function App() {
           <Route path="showcase/materials" element={<Pages.ShowcaseMaterials />} />
           <Route path="showcase/venture/:id" element={<Pages.ShowcaseCase />} />
           <Route path="showcase/award/:id" element={<Pages.ShowcaseCase />} />
-          <Route path="assessment/ioai" element={<Pages.AIAssessment />} />
+          <Route path="assessment/ioai" element={<Pages.IoaiReadinessAssessmentPage />} />
           <Route path="assessment" element={<Pages.AIAssessment />} />
           <Route
             path="courses/module/:moduleSlug"

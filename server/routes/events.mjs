@@ -6,6 +6,15 @@ const ALLOWED_EVENTS = new Set([
   'web_vital',
   'guide_view',
   'lead_submitted',
+  'ioai_assessment_view',
+  'ioai_assessment_start',
+  'ioai_question_answered',
+  'ioai_assessment_complete',
+  'ioai_result_stage',
+  'ioai_result_weak_tags',
+  'ioai_course_recommendation_click',
+  'ioai_full_track_click',
+  'ioai_report_email_submit',
 ])
 
 export function registerEventRoutes(app) {

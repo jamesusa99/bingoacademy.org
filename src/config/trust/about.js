@@ -5,10 +5,20 @@ import { SITE_BRAND, SITE_DOMAIN, SITE_LEGACY_NAME, SITE_LEGAL_ENTITY } from '..
 export const INDEPENDENT_PROVIDER_DISCLAIMER =
   `${SITE_BRAND} is an independent education provider. References to IOAI, USAAIO, IAIO, and other competitions describe curriculum alignment or preparation focus and do not imply affiliation, endorsement, or official partnership unless explicitly documented.`
 
+/** Official Facebook Page (Meta → Page → Action button target uses FACEBOOK_PAGE_LEARN_MORE_URL) */
+export const FACEBOOK_PAGE_URL = 'https://www.facebook.com/BingoAcademyAI'
+
+/**
+ * Meta Facebook Page → Action button → Learn More destination.
+ * Set in Meta Business Suite / Page settings (not rendered on-site).
+ */
+export const FACEBOOK_PAGE_LEARN_MORE_URL =
+  'https://www.bingoacademy.org/assessment/ioai?utm_source=facebook&utm_medium=organic_social&utm_campaign=ioai_page_launch&utm_content=page_cta'
+
 export const ORG_SAME_AS = [
   'https://www.linkedin.com/company/bingo-academy',
   'https://www.youtube.com/@BingoAcademy',
-  'https://www.facebook.com/BingoAcademy',
+  FACEBOOK_PAGE_URL,
   'https://www.instagram.com/BingoAcademy',
   'https://www.tiktok.com/@BingoAcademy',
 ]
@@ -59,7 +69,7 @@ export const ABOUT_ORG = {
     { label: 'Website', href: 'https://www.bingoacademy.org', external: true },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/company/bingo-academy', external: true },
     { label: 'YouTube', href: 'https://www.youtube.com/@BingoAcademy', external: true },
-    { label: 'Facebook', href: 'https://www.facebook.com/BingoAcademy', external: true },
+    { label: 'Facebook', href: FACEBOOK_PAGE_URL, external: true },
     { label: 'Instagram', href: 'https://www.instagram.com/BingoAcademy', external: true },
     { label: 'TikTok', href: 'https://www.tiktok.com/@BingoAcademy', external: true },
   ],
@@ -89,6 +99,11 @@ export function aboutAtAGlanceRows(org = ABOUT_ORG) {
       label: 'Contact',
       value: org.contact.general,
       href: `mailto:${org.contact.general}`,
+    },
+    {
+      label: 'Facebook',
+      value: 'facebook.com/BingoAcademyAI',
+      href: FACEBOOK_PAGE_URL,
     },
     { label: 'Last updated', value: org.updatedAt },
   ]
