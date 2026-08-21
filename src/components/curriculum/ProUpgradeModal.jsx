@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, Sparkles, Shield, PlayCircle, Package } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { PRICING } from '../../lib/courseAccess'
 import CheckoutTrustMicrocopy from '../checkout/CheckoutTrustMicrocopy'
 import { useLazyAuth } from '../../contexts/LazyAuthContext'
+import { fetchCheckoutQuote } from '../../lib/checkout'
 import { goToSecureCheckout } from '../../lib/checkoutPath'
 import { IOAI_FULL_BUNDLE_SLUG } from '../../lib/ioaiAccess'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
@@ -26,10 +28,37 @@ export default function ProUpgradeModal({ open, onClose, module = null }) {
   const { isAuthenticated } = useAuth()
   const { gateAction } = useLazyAuth()
   const navigate = useNavigate()
+  const [trackQuote, setTrackQuote] = useState(null)
+
+  useEffect(() => {
+    if (!open) return undefined
+    let cancelled = false
+    fetchCheckoutQuote({ courseSlug: IOAI_FULL_BUNDLE_SLUG, purchaseType: 'ioai_track' })
+      .then((quote) => {
+        if (!cancelled) setTrackQuote(quote)
+      })
+      .catch(() => {
+        if (!cancelled) setTrackQuote(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open, isAuthenticated])
 
   if (!open) return null
 
-  const trackPrice = (PRICING?.ioaiTrack?.price ?? 2990).toLocaleString()
+  const fallbackTrackPrice = (PRICING?.ioaiTrack?.price ?? 2990).toLocaleString()
+  const trackHasCredit = (trackQuote?.creditCents || 0) > 0
+  const trackPriceLabel =
+    trackQuote?.amountCents != null
+      ? formatIoaiPrice(trackQuote.amountCents, trackQuote.currency || 'usd')
+      : `$${fallbackTrackPrice}`
+  const trackCta =
+    trackHasCredit && trackQuote.amountCents <= 0
+      ? 'Unlock remaining — $0'
+      : trackHasCredit
+        ? `Upgrade from ${trackPriceLabel}`
+        : 'Unlock IOAI Masterclass'
   const moduleSlug = module?.catalogSlug || null
   const modulePriceCents = module?.priceCents
   const canBuyModule = Boolean(moduleSlug && modulePriceCents != null && modulePriceCents > 0)
@@ -171,7 +200,7 @@ export default function ProUpgradeModal({ open, onClose, module = null }) {
                 </ul>
               </div>
               <p className="text-lg font-black text-white shrink-0">
-                ${trackPrice}
+                {trackPriceLabel}
                 <span className="text-[10px] font-normal text-slate-500 ml-0.5">USD</span>
               </p>
             </div>
@@ -185,7 +214,7 @@ export default function ProUpgradeModal({ open, onClose, module = null }) {
                   : 'btn-primary',
               ].join(' ')}
             >
-              Unlock IOAI Masterclass
+              {trackCta}
             </button>
           </div>
 

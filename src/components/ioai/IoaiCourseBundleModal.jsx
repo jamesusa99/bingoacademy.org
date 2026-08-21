@@ -2,8 +2,32 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 import { COURSES_PORTAL } from '../../config/coursesPortal'
+import { useBundleUpgradeQuotes } from '../../hooks/useBundleUpgradeQuotes'
 import RichHtmlContent from '../shared/RichHtmlContent'
 import CheckoutTrustMicrocopy from '../checkout/CheckoutTrustMicrocopy'
+
+function bundleOffer(item) {
+  const currency = item.currency
+  const listPrice = formatIoaiPrice(item.priceCents, currency)
+  if (item.upgradeCreditCents > 0 && item.upgradeDueCents != null) {
+    const due = item.upgradeDueCents
+    const dueLabel = formatIoaiPrice(due, currency)
+    return {
+      price: dueLabel,
+      compare: listPrice,
+      cta: due <= 0 ? 'Unlock remaining — $0' : `Upgrade from ${dueLabel}`,
+      cardCta: due <= 0 ? 'Unlock $0' : 'Upgrade',
+      upgrade: true,
+    }
+  }
+  return {
+    price: listPrice,
+    compare: item.compareAtCents != null ? formatIoaiPrice(item.compareAtCents, currency) : null,
+    cta: `Buy now — ${listPrice}`,
+    cardCta: 'Buy now',
+    upgrade: false,
+  }
+}
 
 function BundleDiscountTags({ item, className = '' }) {
   const tags = useMemo(() => {
@@ -41,10 +65,9 @@ export default function IoaiCourseBundleModal({
   if (!item) return null
 
   const pendingAccess = accessLoading && !owned
+  const offer = bundleOffer(item)
 
-  const compare =
-    item.compareAtCents != null ? formatIoaiPrice(item.compareAtCents, item.currency) : null
-  const price = formatIoaiPrice(item.priceCents, item.currency)
+  const compare = offer.compare
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
@@ -89,8 +112,10 @@ export default function IoaiCourseBundleModal({
 
           <div className="flex items-end gap-3 mb-5">
             {compare ? <p className="text-sm text-slate-400 line-through">{compare}</p> : null}
-            <p className="text-2xl font-bold text-amber-700">{price}</p>
-            {item.listPriceCents > item.priceCents ? (
+            <p className="text-2xl font-bold text-amber-700">{offer.price}</p>
+            {offer.upgrade ? (
+              <p className="text-xs text-emerald-700 pb-1">Logged-in upgrade price</p>
+            ) : item.listPriceCents > item.priceCents ? (
               <p className="text-xs text-slate-500 pb-1">
                 List price {formatIoaiPrice(item.listPriceCents, item.currency)}
               </p>
@@ -130,7 +155,7 @@ export default function IoaiCourseBundleModal({
                 disabled={buying}
                 className="flex-1 min-w-[140px] btn-primary text-sm py-2.5 disabled:opacity-60"
               >
-                {buying ? 'Redirecting…' : `Buy now — ${price}`}
+                {buying ? 'Redirecting…' : offer.cta}
               </button>
             )}
             <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-slate-300 text-sm">
@@ -153,9 +178,9 @@ export function IoaiCourseBundleCard({
   accessLoading = false,
   theme = 'light',
 }) {
-  const compare =
-    item.compareAtCents != null ? formatIoaiPrice(item.compareAtCents, item.currency) : null
-  const price = formatIoaiPrice(item.priceCents, item.currency)
+  const offer = bundleOffer(item)
+  const compare = offer.compare
+  const price = offer.price
   const isDark = theme === 'dark'
   const hasCover = Boolean(item.coverUrl?.trim())
   const pendingAccess = accessLoading && !owned
@@ -262,7 +287,7 @@ export function IoaiCourseBundleCard({
                   : 'bg-amber-500 hover:bg-amber-400 text-white'
               }`}
             >
-              {buying ? '…' : 'Buy now'}
+              {buying ? '…' : offer.cardCta}
             </button>
           )}
         </div>
@@ -281,25 +306,29 @@ export function IoaiCourseBundleCards({
   accessLoading = false,
 }) {
   const [selected, setSelected] = useState(null)
+  const { mergedItems } = useBundleUpgradeQuotes(items)
 
-  if (!items?.length) return null
+  if (!mergedItems?.length) return null
 
-  const selectedOwned = selected ? Boolean(isItemOwned?.(selected)) : false
+  const selectedItem = selected
+    ? mergedItems.find((item) => item.id === selected.id) || selected
+    : null
+  const selectedOwned = selectedItem ? Boolean(isItemOwned?.(selectedItem)) : false
 
   return (
     <>
-      {selected ? (
+      {selectedItem ? (
         <IoaiCourseBundleModal
-          item={selected}
+          item={selectedItem}
           onClose={() => setSelected(null)}
           onBuy={(item) => onBuy?.(item)}
-          buying={buyingSlug === selected.ioaiBundleSlug}
+          buying={buyingSlug === selectedItem.ioaiBundleSlug}
           owned={selectedOwned}
           accessLoading={accessLoading && !selectedOwned}
         />
       ) : null}
       <div className={gridClass}>
-        {items.map((item) => (
+        {mergedItems.map((item) => (
           <IoaiCourseBundleCard
             key={item.id}
             item={item}

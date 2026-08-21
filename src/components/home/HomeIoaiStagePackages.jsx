@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { HOME_CURRICULUM_ROADMAP, HOME_TUITION } from '../../config/homePage'
 import { IOAI_STAGE_PACKAGES, ioaiStagePackageHref } from '../../config/ioaiStagePackages'
 import { useProductLineVisibility } from '../../contexts/ProductLineVisibilityContext'
+import { useBundleUpgradeQuotes } from '../../hooks/useBundleUpgradeQuotes'
 import { findCourseBundleForStage, useIoaiCourseBundles } from '../../hooks/useIoaiCourseBundles'
 import { formatIoaiPrice } from '../../lib/ioaiStore'
 
@@ -46,11 +47,22 @@ function DetailRow({ label, value, highlight = false }) {
   )
 }
 
-function CompleteTrackCard({ track, loading }) {
+function formatBundlePrice(bundle, quote, loading) {
+  if (quote?.creditCents > 0 && quote.amountCents != null) {
+    const due = formatIoaiPrice(quote.amountCents, bundle?.currency || quote.currency || 'usd')
+    if (quote.amountCents <= 0) return 'Upgrade $0'
+    return `Upgrade from ${due}`
+  }
+  if (bundle?.priceCents > 0) return formatIoaiPrice(bundle.priceCents, bundle.currency)
+  return loading ? '…' : null
+}
+
+function CompleteTrackCard({ track, loading, priceLabel }) {
   const { completeTrack } = HOME_TUITION
   const { detailLabels } = completeTrack
   const price =
-    track?.priceCents > 0 ? formatIoaiPrice(track.priceCents, track.currency) : loading ? '…' : 'View pricing'
+    priceLabel ||
+    (track?.priceCents > 0 ? formatIoaiPrice(track.priceCents, track.currency) : loading ? '…' : 'View pricing')
   const moduleLabel =
     track?.moduleCount > 0
       ? `${track.moduleCount} module${track.moduleCount === 1 ? '' : 's'} · ${track.lessonCount} lesson${track.lessonCount === 1 ? '' : 's'}`
@@ -90,9 +102,8 @@ function CompleteTrackCard({ track, loading }) {
   )
 }
 
-function StageEnrollmentCard({ roadmap, bundle, loading }) {
-  const price =
-    bundle?.priceCents > 0 ? formatIoaiPrice(bundle.priceCents, bundle.currency) : loading ? '…' : null
+function StageEnrollmentCard({ roadmap, bundle, loading, priceLabel }) {
+  const price = priceLabel || (bundle?.priceCents > 0 ? formatIoaiPrice(bundle.priceCents, bundle.currency) : loading ? '…' : null)
   const moduleLabel =
     bundle?.moduleCount > 0
       ? `${bundle.moduleCount} module${bundle.moduleCount === 1 ? '' : 's'}`
@@ -169,7 +180,19 @@ export default function HomeIoaiStagePackages() {
   const { isLineVisible } = useProductLineVisibility()
   const { bundles, loading } = useIoaiCourseBundles()
   const items = useMemo(() => buildTuitionItems(bundles), [bundles])
+  const quoteItems = useMemo(
+    () =>
+      (bundles || []).map((bundle) => ({
+        ioaiBundleSlug: bundle.slug,
+        isFullTrack: bundle.isFullTrack,
+        purchaseType: bundle.isFullTrack ? 'ioai_track' : 'bundle',
+      })),
+    [bundles]
+  )
+  const { quotesBySlug } = useBundleUpgradeQuotes(quoteItems)
   const fullTrack = items.find((item) => item.isFullTrack)
+  const fullTrackBundle = findCourseBundleForStage(bundles, FULL_TRACK_ID)
+  const fullTrackPrice = formatBundlePrice(fullTrackBundle, quotesBySlug[fullTrackBundle?.slug], loading)
   const { stageBased } = HOME_TUITION
   const roadmapStages = HOME_CURRICULUM_ROADMAP.stages
 
@@ -181,7 +204,7 @@ export default function HomeIoaiStagePackages() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <CompleteTrackCard track={fullTrack} loading={loading} />
+      <CompleteTrackCard track={fullTrack} loading={loading} priceLabel={fullTrackPrice || 'View pricing'} />
 
       <div className="mb-10">
         <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{stageBased.title}</h3>
@@ -201,6 +224,7 @@ export default function HomeIoaiStagePackages() {
                 roadmap={roadmap}
                 bundle={bundle}
                 loading={loading}
+                priceLabel={formatBundlePrice(bundle, quotesBySlug[bundle?.slug], loading)}
               />
             )
           })}

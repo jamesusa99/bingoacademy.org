@@ -23,7 +23,8 @@ import {
   syncUserNotificationsFromActivity,
 } from '../lib/userNotifications.mjs'
 import { buildStripeCheckoutSession } from '../lib/stripeCheckout.mjs'
-import { createPaidCheckoutSession } from '../lib/createCheckoutSession.mjs'
+import { applyBundleUpgradeCredit, optionalAuthUser } from '../lib/bundleUpgradeCredit.mjs'
+import { createPaidCheckoutSession, isZeroDueCheckoutSessionId } from '../lib/createCheckoutSession.mjs'
 import {
   findPromoCodeByCode,
   PROMO_MIN_CHECKOUT_CENTS,
@@ -43,6 +44,42 @@ function siteOrigin(req) {
 
 function enrollmentResetAllowed() {
   return process.env.ALLOW_ENROLLMENT_RESET === 'true' || process.env.NODE_ENV !== 'production'
+}
+
+function publicCheckoutQuote(quote) {
+  return {
+    productName: quote.productName,
+    purchaseType: quote.purchaseType,
+    returnSlug: quote.returnSlug,
+    amountCents: quote.amountCents,
+    listAmountCents: quote.listAmountCents ?? quote.amountCents,
+    creditCents: quote.creditCents || 0,
+    credits: quote.credits || [],
+    currency: quote.currency,
+    lineItems: quote.lineItems || [],
+    addonSlugs: quote.addonSlugs || [],
+    itemLabel: quote.itemLabel || null,
+    coverUrl: quote.coverUrl || null,
+    upgrade: Boolean(quote.upgrade),
+  }
+}
+
+async function quoteWithUpgradeCredit(admin, req, { courseSlug, purchaseType, course, addonSlugs }) {
+  const quote = await resolveCheckoutQuote(admin, {
+    courseSlug,
+    purchaseType,
+    course,
+    addonSlugs,
+  })
+  if (quote.error) return quote
+  const auth = await optionalAuthUser(verifyAuthUser, req)
+  if (!auth.ok) return quote
+  return applyBundleUpgradeCredit(admin, {
+    userId: auth.user.id,
+    quote,
+    courseSlug,
+    purchaseType,
+  })
 }
 
 export function registerPaymentRoutes(app) {
@@ -255,7 +292,7 @@ export function registerPaymentRoutes(app) {
 
     const admin = getSupabaseAdmin()
     const course = admin ? await getCatalogCourseBySlug(admin, courseSlug.trim()) : null
-    const quote = await resolveCheckoutQuote(admin, {
+    const quote = await quoteWithUpgradeCredit(admin, req, {
       courseSlug: courseSlug.trim(),
       purchaseType,
       course,
@@ -266,27 +303,38 @@ export function registerPaymentRoutes(app) {
       return res.status(status).json({ error: quote.error })
     }
 
-    return res.json({
-      productName: quote.productName,
-      purchaseType: quote.purchaseType,
-      returnSlug: quote.returnSlug,
-      amountCents: quote.amountCents,
-      currency: quote.currency,
-      lineItems: quote.lineItems || [],
-      addonSlugs: quote.addonSlugs || [],
-      itemLabel: quote.itemLabel || null,
-      coverUrl: quote.coverUrl || null,
-    })
+    return res.json(publicCheckoutQuote(quote))
+  })
+
+  app.post('/api/checkout/quotes', async (req, res) => {
+    const items = Array.isArray(req.body?.items) ? req.body.items.slice(0, 16) : []
+    if (!items.length) return res.json({ quotes: [] })
+
+    const admin = getSupabaseAdmin()
+    const quotes = []
+    for (const item of items) {
+      const courseSlug = item?.courseSlug?.trim()
+      if (!courseSlug) continue
+      const purchaseType = item.purchaseType || 'bundle'
+      const course = admin ? await getCatalogCourseBySlug(admin, courseSlug) : null
+      const quote = await quoteWithUpgradeCredit(admin, req, {
+        courseSlug,
+        purchaseType,
+        course,
+        addonSlugs: item.addonSlugs || [],
+      })
+      if (quote.error) {
+        quotes.push({ courseSlug, purchaseType, error: quote.error })
+        continue
+      }
+      quotes.push({ courseSlug, purchaseType, ...publicCheckoutQuote(quote) })
+    }
+    return res.json({ quotes })
   })
 
   app.post('/api/checkout/course', async (req, res) => {
     const auth = await verifyAuthUser(req)
     if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
-
-    const stripe = await getStripeClient()
-    if (!stripe) {
-      return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
-    }
 
     const { courseSlug, purchaseType = 'course', addonSlugs = [], promoCode } = req.body || {}
     if (!courseSlug?.trim()) {
@@ -295,11 +343,16 @@ export function registerPaymentRoutes(app) {
 
     const admin = getSupabaseAdmin()
     const course = admin ? await getCatalogCourseBySlug(admin, courseSlug.trim()) : null
-    const quote = await resolveCheckoutQuote(admin, {
+    const quote = await applyBundleUpgradeCredit(admin, {
+      userId: auth.user.id,
+      quote: await resolveCheckoutQuote(admin, {
+        courseSlug,
+        purchaseType,
+        course,
+        addonSlugs,
+      }),
       courseSlug,
       purchaseType,
-      course,
-      addonSlugs,
     })
     if (quote.error) {
       const status = quote.error.includes('Stripe') || quote.error.includes('minimum') ? 400 : quote.error === 'Course not found in catalog' || quote.error === 'Module not found' ? 404 : 400
@@ -310,6 +363,32 @@ export function registerPaymentRoutes(app) {
 
     const origin = siteOrigin(req)
     const returnPath = req.body?.returnPath?.trim() || `/courses/detail/${quote.returnSlug}`
+
+    if ((quote.amountCents || 0) <= 0) {
+      try {
+        const result = await createPaidCheckoutSession({
+          stripe: null,
+          admin,
+          auth,
+          quote,
+          returnPath,
+          origin,
+          purchaseContext: { courseSlug: courseSlug.trim(), purchaseType: quote.purchaseType },
+        })
+        if (result.error) {
+          return res.status(400).json({ error: result.error })
+        }
+        return res.json({ url: result.url, sessionId: result.sessionId, complimentary: true })
+      } catch (err) {
+        console.error('[checkout]', err)
+        return res.status(502).json({ error: err.message || 'Checkout failed' })
+      }
+    }
+
+    const stripe = await getStripeClient()
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
+    }
 
     try {
       const result = await createPaidCheckoutSession({
@@ -343,19 +422,19 @@ export function registerPaymentRoutes(app) {
     const auth = await verifyAuthUser(req)
     if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
 
-    const stripe = await getStripeClient()
-    if (!stripe) {
-      return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
-    }
-
     const courseSlug = IOAI_FULL_BUNDLE_SLUG
     const purchaseType = 'ioai_track'
     const admin = getSupabaseAdmin()
     const course = admin ? await getCatalogCourseBySlug(admin, courseSlug) : null
-    const quote = await resolveCheckoutQuote(admin, {
+    const quote = await applyBundleUpgradeCredit(admin, {
+      userId: auth.user.id,
+      quote: await resolveCheckoutQuote(admin, {
+        courseSlug,
+        purchaseType,
+        course,
+      }),
       courseSlug,
       purchaseType,
-      course,
     })
     if (quote.error) {
       return res.status(400).json({ error: quote.error })
@@ -364,6 +443,32 @@ export function registerPaymentRoutes(app) {
     const origin = siteOrigin(req)
     const returnPath = req.body?.returnPath || '/curriculum'
     const promoCode = req.body?.promoCode
+
+    if ((quote.amountCents || 0) <= 0) {
+      try {
+        const result = await createPaidCheckoutSession({
+          stripe: null,
+          admin,
+          auth,
+          quote,
+          returnPath,
+          origin,
+          purchaseContext: { courseSlug, purchaseType: quote.purchaseType },
+        })
+        if (result.error) {
+          return res.status(400).json({ error: result.error })
+        }
+        return res.json({ url: result.url, sessionId: result.sessionId, complimentary: true })
+      } catch (err) {
+        console.error('[checkout/ioai]', err)
+        return res.status(502).json({ error: err.message || 'Checkout failed' })
+      }
+    }
+
+    const stripe = await getStripeClient()
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY)' })
+    }
 
     try {
       const result = await createPaidCheckoutSession({
@@ -480,13 +585,30 @@ export function registerPaymentRoutes(app) {
     const auth = await verifyAuthUser(req)
     if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
 
-    const stripe = await getStripeClient()
-    if (!stripe) return res.status(503).json({ error: 'Stripe not configured' })
-
     const { sessionId } = req.body || {}
     if (!sessionId) return res.status(400).json({ error: 'sessionId is required' })
 
     try {
+      if (isZeroDueCheckoutSessionId(sessionId)) {
+        const admin = getSupabaseAdmin()
+        const { data: order } = await admin
+          .from('orders')
+          .select('id, user_id, status, metadata')
+          .eq('stripe_checkout_session_id', sessionId)
+          .maybeSingle()
+        if (!order) return res.status(404).json({ error: 'Order not found' })
+        if (order.user_id !== auth.user.id) {
+          return res.status(403).json({ error: 'Session does not belong to this user' })
+        }
+        if (order.status !== 'paid') {
+          return res.json({ ok: false, status: order.status })
+        }
+        const slugs = await listEnrollmentSlugs(admin, auth.user.id)
+        return res.json({ ok: true, granted: true, slugs, type: 'course', complimentary: true })
+      }
+
+      const stripe = await getStripeClient()
+      if (!stripe) return res.status(503).json({ error: 'Stripe not configured' })
       const session = await stripe.checkout.sessions.retrieve(sessionId)
       if (session.payment_status !== 'paid') {
         return res.json({ ok: false, status: session.payment_status })

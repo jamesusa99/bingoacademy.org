@@ -26,6 +26,7 @@ function kindLabel(kind) {
   if (kind === 'addon') return CHECKOUT_PAGE.kindAddon
   if (kind === 'bundle') return CHECKOUT_PAGE.kindBundle
   if (kind === 'course') return CHECKOUT_PAGE.kindCourse
+  if (kind === 'credit') return CHECKOUT_PAGE.creditKind
   return CHECKOUT_PAGE.kindItem
 }
 
@@ -144,6 +145,7 @@ export default function Checkout() {
 
   useEffect(() => {
     if (quoteLoading || !quote || autoApplied || !promo.code.trim() || promo.applied || promo.loading) return
+    if ((quote.amountCents || 0) <= 0) return
     const stored = getStoredPromoState()
     if (!stored.checkoutKey || stored.checkoutKey !== checkoutKey) {
       if (promo.code.trim()) setShowPromo(true)
@@ -168,11 +170,15 @@ export default function Checkout() {
   const lineItems = quote?.lineItems?.length
     ? quote.lineItems
     : quote
-      ? [{ name: quote.productName, amountCents: quote.amountCents, kind: 'item' }]
+      ? [{ name: quote.productName, amountCents: quote.listAmountCents ?? quote.amountCents, kind: 'item' }]
       : []
-  const subtotalCents = quote?.amountCents ?? 0
+  const credits = quote?.credits || []
+  const listCents = quote?.listAmountCents ?? quote?.amountCents ?? 0
+  const creditCents = quote?.creditCents ?? 0
+  const dueCents = quote?.amountCents ?? 0
+  const complimentary = dueCents <= 0 && Boolean(quote)
   const discountCents = promo.applied?.discountCents ?? 0
-  const totalCents = promo.applied?.finalAmountCents ?? subtotalCents
+  const totalCents = complimentary ? 0 : promo.applied?.finalAmountCents ?? dueCents
   const currency = quote?.currency || 'usd'
 
   const placeOrder = async () => {
@@ -180,7 +186,7 @@ export default function Checkout() {
     setPlacing(true)
     setPlaceError(null)
 
-    if (!stripeCheckout) {
+    if (!stripeCheckout && !complimentary) {
       purchaseCourseSlug(courseSlug)
       for (const slug of addonSlugs) purchaseCourseSlug(slug)
       navigate(returnPath || '/courses')
@@ -193,7 +199,7 @@ export default function Checkout() {
         purchaseType,
         addonSlugs,
         returnPath,
-        promoCode: promo.applied?.code || undefined,
+        promoCode: complimentary ? undefined : promo.applied?.code || undefined,
       })
       if (url) window.location.href = url
       else throw new Error('No checkout URL returned')
@@ -211,7 +217,13 @@ export default function Checkout() {
         disabled={!quote || placing || quoteLoading}
         className="w-full rounded-lg bg-[#ffd814] hover:bg-[#f7ca00] text-slate-900 font-semibold text-sm py-2.5 shadow-sm disabled:opacity-60"
       >
-        {placing ? CHECKOUT_PAGE.placingOrder : CHECKOUT_PAGE.placeOrder}
+        {placing
+          ? complimentary
+            ? CHECKOUT_PAGE.unlockingRemaining
+            : CHECKOUT_PAGE.placingOrder
+          : complimentary
+            ? CHECKOUT_PAGE.unlockRemaining
+            : CHECKOUT_PAGE.placeOrder}
       </button>
       <p className="text-[11px] text-slate-500 mt-3 leading-relaxed">{CHECKOUT_PAGE.legal}</p>
       {placeError ? <p className="text-xs text-red-600 mt-2">{placeError}</p> : null}
@@ -219,9 +231,15 @@ export default function Checkout() {
       <div className="border-t border-slate-200 mt-4 pt-3 space-y-1.5 text-sm">
         <div className="flex justify-between text-slate-700">
           <span>{CHECKOUT_PAGE.itemsLabel(lineItems.length)}</span>
-          <span>{formatMoney(subtotalCents, currency)}</span>
+          <span>{formatMoney(listCents, currency)}</span>
         </div>
-        {promo.applied ? (
+        {creditCents > 0 ? (
+          <div className="flex justify-between text-emerald-700">
+            <span>{CHECKOUT_PAGE.creditLabel}</span>
+            <span>−{formatMoney(creditCents, currency)}</span>
+          </div>
+        ) : null}
+        {promo.applied && !complimentary ? (
           <div className="flex justify-between text-emerald-700">
             <span>
               {CHECKOUT_PAGE.promoLabel} ({promo.applied.code})
@@ -234,6 +252,9 @@ export default function Checkout() {
           <span className="font-bold text-lg text-red-700">{formatMoney(totalCents, currency)}</span>
         </div>
       </div>
+        {quote?.upgrade ? (
+          <p className="text-[11px] text-emerald-800 mt-2">{CHECKOUT_PAGE.upgradeNote}</p>
+        ) : null}
         {promo.applied?.minimumCheckoutApplied ? (
           <p className="text-[11px] text-sky-700 mt-2">
             {promo.applied.minimumCheckoutNotice || CHECKOUT_PAGE.promoMinCheckoutApplied}
@@ -358,18 +379,42 @@ export default function Checkout() {
                             <p className="text-sm font-medium text-slate-900 leading-snug">{item.name}</p>
                           )}
                         </div>
-                        <p className="text-sm font-semibold shrink-0">{formatMoney(item.amountCents, currency)}</p>
+                        <p
+                          className={`text-sm font-semibold shrink-0 ${
+                            item.kind === 'credit' ? 'text-emerald-700' : ''
+                          }`}
+                        >
+                          {item.kind === 'credit'
+                            ? `−${formatMoney(item.amountCents, currency)}`
+                            : formatMoney(item.amountCents, currency)}
+                        </p>
                       </li>
                     )
                   })}
+                  {credits.map((credit, index) => (
+                    <li key={`credit-${credit.orderId || credit.slug || index}`} className="py-3 flex gap-3 last:pb-0">
+                      <div className="w-16 h-16 rounded-md bg-emerald-50 shrink-0 flex items-center justify-center text-xl">
+                        ✓
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] uppercase tracking-wide text-emerald-700">{CHECKOUT_PAGE.creditKind}</p>
+                        <p className="text-sm font-medium text-slate-900 leading-snug">{credit.name}</p>
+                      </div>
+                      <p className="text-sm font-semibold shrink-0 text-emerald-700">
+                        −{formatMoney(credit.amountCents, currency)}
+                      </p>
+                    </li>
+                  ))}
                 </ul>
                 <p className="text-xs text-slate-500 mt-3">{CHECKOUT_PAGE.digitalDelivery}</p>
               </section>
 
               <section className="bg-white border border-slate-200 rounded-lg p-5">
                 <h2 className="font-bold text-base mb-2">{CHECKOUT_PAGE.paymentHeading}</h2>
-                <p className="text-sm text-slate-700 mb-3">{CHECKOUT_PAGE.payWithStripe}</p>
-                {showPromo ? (
+                <p className="text-sm text-slate-700 mb-3">
+                  {complimentary ? CHECKOUT_PAGE.payWithCredits : CHECKOUT_PAGE.payWithStripe}
+                </p>
+                {!complimentary && showPromo ? (
                   <>
                     <PromoCodeInput
                       theme="light"
@@ -399,7 +444,7 @@ export default function Checkout() {
                       {CHECKOUT_PAGE.promoHide}
                     </button>
                   </>
-                ) : (
+                ) : !complimentary ? (
                   <button
                     type="button"
                     onClick={() => setShowPromo(true)}
@@ -407,7 +452,7 @@ export default function Checkout() {
                   >
                     {CHECKOUT_PAGE.promoLink}
                   </button>
-                )}
+                ) : null}
               </section>
 
               <div className="lg:hidden">{summaryCard}</div>

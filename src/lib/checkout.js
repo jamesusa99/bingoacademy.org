@@ -48,17 +48,36 @@ export async function fetchMyOrders() {
   return authFetch('/api/me/orders')
 }
 
-export async function fetchCheckoutQuote({ courseSlug, purchaseType, addonSlugs = [] }) {
-  const res = await fetch('/api/checkout/quote', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ courseSlug, purchaseType, addonSlugs }),
-  })
-  const body = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    throw new Error(body.error || `Request failed (${res.status})`)
+async function checkoutJson(path, body) {
+  const headers = { 'Content-Type': 'application/json' }
+  if (isSupabaseConfigured) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`
+    }
   }
-  return body
+
+  const res = await fetch(path, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  })
+  const payload = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(payload.error || `Request failed (${res.status})`)
+  }
+  return payload
+}
+
+export async function fetchCheckoutQuote({ courseSlug, purchaseType, addonSlugs = [] }) {
+  return checkoutJson('/api/checkout/quote', { courseSlug, purchaseType, addonSlugs })
+}
+
+export async function fetchCheckoutQuotes(items) {
+  const body = await checkoutJson('/api/checkout/quotes', { items })
+  return body.quotes || []
 }
 
 export async function startCourseCheckout({ courseSlug, purchaseType, returnPath, addonSlugs = [], promoCode }) {

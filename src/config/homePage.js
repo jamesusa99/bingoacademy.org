@@ -322,7 +322,7 @@ export const HOME_TUITION = {
       },
       {
         q: 'Upgrade to Complete Track',
-        a: 'Yes — contact support if your student already owns individual stages before purchasing the Complete Track.',
+        a: 'Sign in at checkout. We automatically credit what you already paid for course units included in the Complete Track. If credits cover the bundle price, remaining units unlock at $0 — no extra payment. Guests see the full list price. For school invoices or exceptions, contact support@bingoacademy.org.',
       },
     ],
   },

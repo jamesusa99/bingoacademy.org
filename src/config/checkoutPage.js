@@ -11,6 +11,13 @@ export const CHECKOUT_PAGE = {
   digitalDelivery: 'Digital access — unlocks in your Study Center after payment',
   paymentHeading: 'Payment',
   payWithStripe: 'You’ll pay securely with Stripe on the next step.',
+  payWithCredits:
+    'Your previous purchases cover this bundle. Place the order to unlock remaining units — no payment is due.',
+  creditKind: 'Credit',
+  creditLabel: 'Previous purchases',
+  upgradeNote: 'Logged-in price after crediting what you already paid for units in this bundle.',
+  unlockRemaining: 'Unlock remaining access',
+  unlockingRemaining: 'Unlocking access…',
   promoLink: 'Use a gift card, voucher, or promo code',
   promoHide: 'Hide promo code',
   promoPlaceholder: 'Enter Code',
