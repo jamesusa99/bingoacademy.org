@@ -50,7 +50,7 @@ function LayoutShell({ children }) {
   const showStudentNav = !authLoading && isAuthenticated
   const { assessment } = HOME_PRIMARY_CTAS
 
-  const logoTo = showStudentNav ? '/profile/study' : '/'
+  const logoTo = '/'
 
   const assessmentButtonClass =
     'inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold bg-cyan-500 text-slate-900 hover:bg-cyan-400 transition-colors whitespace-nowrap'
