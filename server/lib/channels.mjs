@@ -166,6 +166,25 @@ export async function recordChannelCommission(admin, { orderId, amountCents, cur
   return { recorded: true, channelId: channel.id, commissionId: data?.id, commissionCents }
 }
 
+export function isPersonalOwnedChannel(channel) {
+  if (!channel) return false
+  if (channel.kind === 'personal') return true
+  return String(channel.slug || '').toLowerCase().startsWith('user-')
+}
+
+export function isInstitutionalChannel(channel) {
+  if (!channel || isPersonalOwnedChannel(channel)) return false
+  return channel.kind === 'partner' || channel.kind === 'official'
+}
+
+/** One account, one commission mode: partner/official membership upgrades off personal. */
+export function commissionMembershipsForAccount(memberships) {
+  const list = memberships || []
+  const institutional = list.filter((row) => isInstitutionalChannel(row.channel))
+  if (institutional.length) return institutional
+  return list.filter((row) => isPersonalOwnedChannel(row.channel))
+}
+
 export async function listMembershipsForUser(admin, userId) {
   if (!admin || !userId) return []
   const { data, error } = await admin
@@ -173,6 +192,7 @@ export async function listMembershipsForUser(admin, userId) {
     .select('id, member_role, channel_id, sales_channels (*)')
     .eq('user_id', userId)
   if (error) throw new Error(error.message)
+  const kindRank = (kind) => (kind === 'official' ? 0 : kind === 'partner' ? 1 : 2)
   return (data || [])
     .map((row) => ({
       membershipId: row.id,
@@ -180,6 +200,11 @@ export async function listMembershipsForUser(admin, userId) {
       channel: row.sales_channels,
     }))
     .filter((row) => row.channel)
+    .sort((a, b) => {
+      const rank = kindRank(a.channel.kind) - kindRank(b.channel.kind)
+      if (rank !== 0) return rank
+      return String(a.channel.name || '').localeCompare(String(b.channel.name || ''))
+    })
 }
 
 export async function assertChannelMember(admin, userId, channelId) {
@@ -447,4 +472,219 @@ export function publicChannel(channel) {
     notes: channel.notes,
     createdAt: channel.created_at,
   }
+}
+
+export const PERSONAL_CHANNEL_POLICY_KEY = 'personal_channel_policy'
+
+export const FALLBACK_PERSONAL_CHANNEL_POLICY = {
+  commissionPercent: 10,
+  holdDays: 7,
+  minPayoutDollars: 100,
+}
+
+export function normalizePersonalChannelPolicy(raw) {
+  const percent = Number(raw?.commissionPercent ?? raw?.commission_percent)
+  const holdDays = Number(raw?.holdDays ?? raw?.hold_days)
+  const minPayoutDollars = Number(raw?.minPayoutDollars ?? raw?.min_payout_dollars)
+  return {
+    commissionPercent: Number.isFinite(percent) ? Math.min(100, Math.max(0, percent)) : FALLBACK_PERSONAL_CHANNEL_POLICY.commissionPercent,
+    holdDays: Number.isFinite(holdDays)
+      ? Math.min(365, Math.max(0, Math.round(holdDays)))
+      : FALLBACK_PERSONAL_CHANNEL_POLICY.holdDays,
+    minPayoutDollars: Number.isFinite(minPayoutDollars)
+      ? Math.max(0, minPayoutDollars)
+      : FALLBACK_PERSONAL_CHANNEL_POLICY.minPayoutDollars,
+  }
+}
+
+export function personalPolicyToChannelFields(policy) {
+  const normalized = normalizePersonalChannelPolicy(policy)
+  return {
+    commission_bps: Math.round(normalized.commissionPercent * 100),
+    hold_days: normalized.holdDays,
+    min_payout_cents: Math.round(normalized.minPayoutDollars * 100),
+  }
+}
+
+export async function loadPersonalChannelPolicy(admin) {
+  if (!admin) return normalizePersonalChannelPolicy(null)
+  const { data } = await admin
+    .from('platform_settings')
+    .select('value')
+    .eq('key', PERSONAL_CHANNEL_POLICY_KEY)
+    .maybeSingle()
+  return normalizePersonalChannelPolicy(data?.value)
+}
+
+export async function savePersonalChannelPolicy(admin, raw, { applyToExisting = true } = {}) {
+  const policy = normalizePersonalChannelPolicy(raw)
+  const { error } = await admin.from('platform_settings').upsert(
+    {
+      key: PERSONAL_CHANNEL_POLICY_KEY,
+      value: policy,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'key' }
+  )
+  if (error) throw new Error(error.message)
+
+  let updated = 0
+  if (applyToExisting) {
+    const fields = {
+      ...personalPolicyToChannelFields(policy),
+      updated_at: new Date().toISOString(),
+    }
+    const personal = await admin.from('sales_channels').update(fields).eq('kind', 'personal').select('id')
+    if (personal.error) throw new Error(personal.error.message)
+    updated += personal.data?.length || 0
+
+    const fallback = await admin
+      .from('sales_channels')
+      .update(fields)
+      .eq('kind', 'partner')
+      .like('slug', 'user-%')
+      .select('id')
+    if (!fallback.error) updated += fallback.data?.length || 0
+  }
+
+  return { policy, updated }
+}
+
+export function personalChannelSlug(userId) {
+  return slugifyChannel(`user-${userId}`)
+}
+
+/**
+ * Short shareable code derived from the account UUID.
+ * UUID is unique; we start with 8 hex chars (U + 8 = 9 chars) and lengthen on collision
+ * so two users never share a code. The durable unique key is still slug user-{uuid}.
+ */
+export async function allocateUniquePersonalCode(admin, userId) {
+  const hex = String(userId || '').replace(/-/g, '').replace(/[^A-F0-9]/gi, '').toUpperCase()
+  const slug = personalChannelSlug(userId)
+  const lengths = [8, 10, 12, 16, 32].filter((n) => n <= hex.length || n === 8)
+  for (const n of lengths) {
+    const stem = (hex.slice(0, n) || hex || Date.now().toString(16)).padEnd(Math.min(n, 8), '0')
+    const code = normalizeChannelCode(`U${stem}`)
+    const { data } = await admin.from('sales_channels').select('id, slug').ilike('code', code).maybeSingle()
+    if (!data) return code
+    if (data.slug === slug) return code
+  }
+  return normalizeChannelCode(`U${(hex.slice(0, 8) || 'USER')}${Date.now().toString(36).toUpperCase()}`)
+}
+
+async function pausePersonalChannel(admin, userId) {
+  const slug = personalChannelSlug(userId)
+  const { data } = await admin.from('sales_channels').select('id, status').ilike('slug', slug).maybeSingle()
+  if (!data || data.status === 'paused') return
+  await admin
+    .from('sales_channels')
+    .update({ status: 'paused', updated_at: new Date().toISOString() })
+    .eq('id', data.id)
+}
+
+async function activateExistingPersonalChannel(admin, channel) {
+  const policy = await loadPersonalChannelPolicy(admin)
+  const { error } = await admin
+    .from('sales_channels')
+    .update({
+      status: 'active',
+      ...personalPolicyToChannelFields(policy),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', channel.id)
+  if (error) return { error: error.message, status: 400 }
+  return { error: null }
+}
+
+export async function syncAccountChannelMode(admin, user) {
+  if (!admin || !user?.id) {
+    return { error: 'Sign in required', status: 401 }
+  }
+
+  const existing = await listMembershipsForUser(admin, user.id)
+  if (existing.some((row) => isInstitutionalChannel(row.channel))) {
+    await pausePersonalChannel(admin, user.id)
+    const memberships = commissionMembershipsForAccount(await listMembershipsForUser(admin, user.id))
+    return { memberships, created: false, mode: 'partner' }
+  }
+
+  return ensurePersonalChannelRecord(admin, user)
+}
+
+export async function ensurePersonalChannel(admin, user) {
+  return syncAccountChannelMode(admin, user)
+}
+
+async function ensurePersonalChannelRecord(admin, user) {
+  const slug = personalChannelSlug(user.id)
+  const { data: bySlug } = await admin.from('sales_channels').select('*').ilike('slug', slug).maybeSingle()
+  if (bySlug) {
+    if (bySlug.status !== 'active') {
+      const activated = await activateExistingPersonalChannel(admin, bySlug)
+      if (activated.error) return activated
+    }
+    await admin.from('channel_members').upsert(
+      { channel_id: bySlug.id, user_id: user.id, member_role: 'owner' },
+      { onConflict: 'channel_id,user_id' }
+    )
+    const memberships = commissionMembershipsForAccount(await listMembershipsForUser(admin, user.id))
+    return { memberships, created: false, mode: 'personal' }
+  }
+
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', user.id)
+    .maybeSingle()
+  const display =
+    profile?.full_name?.trim() ||
+    user.user_metadata?.full_name ||
+    user.email?.split('@')[0] ||
+    'Member'
+
+  const policy = await loadPersonalChannelPolicy(admin)
+  const code = await allocateUniquePersonalCode(admin, user.id)
+  const row = {
+    name: `${display}'s channel`,
+    slug,
+    code,
+    kind: 'personal',
+    status: 'active',
+    contact_email: user.email || profile?.email || null,
+    contact_name: display,
+    ...personalPolicyToChannelFields(policy),
+    description: 'Default personal referral channel',
+  }
+
+  let inserted = await admin.from('sales_channels').insert(row).select('*').maybeSingle()
+  if (inserted.error && /kind|check/i.test(inserted.error.message || '')) {
+    inserted = await admin.from('sales_channels').insert({ ...row, kind: 'partner' }).select('*').maybeSingle()
+  }
+  if (inserted.error && /duplicate|unique/i.test(inserted.error.message || '')) {
+    const { data: raced } = await admin.from('sales_channels').select('*').ilike('slug', slug).maybeSingle()
+    if (raced) {
+      inserted = { data: raced, error: null }
+    } else {
+      const retryCode = await allocateUniquePersonalCode(admin, user.id)
+      inserted = await admin.from('sales_channels').insert({ ...row, code: retryCode }).select('*').maybeSingle()
+    }
+  }
+  if (inserted.error) {
+    return { error: inserted.error.message, status: 400 }
+  }
+
+  const { error: memberErr } = await admin.from('channel_members').upsert(
+    { channel_id: inserted.data.id, user_id: user.id, member_role: 'owner' },
+    { onConflict: 'channel_id,user_id' }
+  )
+  if (memberErr) return { error: memberErr.message, status: 400 }
+
+  const memberships = commissionMembershipsForAccount(await listMembershipsForUser(admin, user.id))
+  return { memberships, created: true, mode: 'personal' }
+}
+
+/** @deprecated use syncAccountChannelMode */
+export async function enrollPersonalChannel(admin, user) {
+  return syncAccountChannelMode(admin, user)
 }

@@ -1,7 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchAdminUser, updateAdminUser, deleteAdminUser } from '../../lib/admin/users'
 import { supabase } from '../../lib/supabase'
 import { logAdminAction } from '../../lib/admin/auth'
+import {
+  coerceProfileCountry,
+  coerceProfileLocale,
+  optionsWithCurrent,
+  PROFILE_COUNTRIES,
+  PROFILE_LANGUAGES,
+} from '../../config/profileOptions'
 import AdminAlert from './AdminAlert'
 import { useAdminCrud } from '../../hooks/useAdminCrud'
 
@@ -67,8 +74,8 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
         role: dataUser.role || 'user',
         status: dataUser.status || 'active',
         member_tier: dataUser.member_tier || 'free',
-        locale: dataUser.locale || 'en',
-        country: dataUser.country || '',
+        locale: coerceProfileLocale(dataUser.locale || 'en'),
+        country: coerceProfileCountry(dataUser.country || ''),
         school: dataUser.school || '',
         grade: dataUser.grade || '',
         parent_email: dataUser.parent_email || '',
@@ -151,6 +158,8 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
   }
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+  const languageOptions = useMemo(() => optionsWithCurrent(PROFILE_LANGUAGES, form.locale), [form.locale])
+  const countryOptions = useMemo(() => optionsWithCurrent(PROFILE_COUNTRIES, form.country), [form.country])
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={onClose}>
@@ -280,19 +289,32 @@ export default function AdminUserDetail({ userId, currentUserId, onClose, onSave
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block text-xs font-medium text-slate-600">
                     Locale
-                    <input
+                    <select
                       value={form.locale}
                       onChange={(e) => set('locale', e.target.value)}
                       className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    />
+                    >
+                      {languageOptions.map((row) => (
+                        <option key={row.value} value={row.value}>
+                          {row.label}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                   <label className="block text-xs font-medium text-slate-600">
                     Country
-                    <input
+                    <select
                       value={form.country}
                       onChange={(e) => set('country', e.target.value)}
                       className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    />
+                    >
+                      <option value="">Select country / region</option>
+                      {countryOptions.map((row) => (
+                        <option key={row.value} value={row.value}>
+                          {row.label}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-3">

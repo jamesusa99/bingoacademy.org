@@ -21,7 +21,9 @@ export default function PartnerDashboard() {
   const [withdrawing, setWithdrawing] = useState(false)
 
   useEffect(() => {
-    if (!channelId && memberships[0]?.channel?.id) setChannelId(memberships[0].channel.id)
+    const ids = memberships.map((row) => row.channel?.id).filter(Boolean)
+    if (!ids.length) return
+    if (!channelId || !ids.includes(channelId)) setChannelId(ids[0])
   }, [memberships, channelId])
 
   const load = useCallback(async () => {
@@ -91,7 +93,11 @@ export default function PartnerDashboard() {
             <div className="flex flex-wrap justify-between gap-3">
               <div>
                 <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                  {channel.kind === 'official' ? t('partner.official') : t('partner.partner')}
+                  {channel.kind === 'official'
+                    ? t('partner.official')
+                    : channel.kind === 'personal'
+                      ? t('partner.personal')
+                      : t('partner.partner')}
                 </p>
                 <h2 className="text-lg font-bold">{channel.name}</h2>
                 <p className="text-sm text-slate-600 mt-1">
@@ -101,8 +107,8 @@ export default function PartnerDashboard() {
                 </p>
               </div>
               <p className="text-xs text-slate-500 max-w-sm">
-                {t('partner.shareHint')}{' '}
-                <a href={shareUrl} className="text-primary break-all hover:underline">
+                {t('partner.shareHint')}
+                <a href={shareUrl} className="block text-primary break-all hover:underline mt-1">
                   {shareUrl}
                 </a>
               </p>

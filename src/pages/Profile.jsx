@@ -15,6 +15,7 @@ import ProfileLabPacksSection from '../components/profile/ProfileLabPacksSection
 import ProfileNotificationsSection from '../components/profile/ProfileNotificationsSection'
 import ProfileCertificatesSection from '../components/profile/ProfileCertificatesSection'
 import ProfileAchievementsSection from '../components/profile/ProfileAchievementsSection'
+import ProfileChannelSection from '../components/profile/ProfileChannelSection'
 import ProfileListCollapseToggle, { useProfileListCollapse } from '../components/profile/ProfileListCollapseToggle'
 import CourseAccessReset from '../components/CourseAccessReset'
 import { fetchMyOrders } from '../lib/checkout'
@@ -71,136 +72,6 @@ function ShareModal({ title, onClose }) {
   )
 }
 
-// ─── Earn by Sharing ─────────────────────────────
-
-function EarnBySharing() {
-  return (
-    <div className="space-y-4">
-      <div className="card p-6 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/60">
-        <h3 className="font-semibold text-bingo-dark mb-3">Earn by Sharing</h3>
-        <ul className="text-sm text-slate-700 space-y-2 mb-4">
-          <li>· Personal referral code / posters / links (generate, save, share)</li>
-          <li>· Daily & monthly earnings (received / pending)</li>
-          <li>· High-commission picks (platform-selected courses/products, one-click share)</li>
-          <li>· Promo events (double commission, referral rewards)</li>
-        </ul>
-        <div className="flex flex-wrap gap-3">
-          <button type="button" className="btn-primary">Generate poster / link</button>
-          <span className="text-xs text-amber-700 font-medium self-center">Commission doubled this month →</span>
-        </div>
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-bingo-dark mb-3">Referral order details</h3>
-        <p className="text-sm text-slate-600 mb-2">Filter: All / Pending / Settled / Void</p>
-        <p className="text-sm text-slate-600">List: product, time, referred user, amount, commission rate/amount, status, settlement time</p>
-        <Link to="/profile#orders-promo" className="text-primary text-sm mt-2 inline-block">View details →</Link>
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-bingo-dark mb-3">Commission settlement</h3>
-        <ul className="text-sm text-slate-700 space-y-1 mb-4">
-          <li>· Withdrawable balance, pending commission, settled commission</li>
-          <li>· Withdraw: min $68, T+1 arrival</li>
-          <li>· Withdrawal history: amount, request time, arrival time, status</li>
-          <li>· Settlement: 7 days after order completion; refunds deduct commission</li>
-        </ul>
-        <div className="flex gap-3">
-          <button type="button" className="btn-primary">Withdraw</button>
-          <span className="text-sm text-slate-500 self-center">Withdrawable: —</span>
-        </div>
-      </div>
-
-      <div className="card p-6 bg-slate-50">
-        <h3 className="font-semibold text-bingo-dark mb-3">Promotion rules</h3>
-        <ul className="text-sm text-slate-700 space-y-1">
-          <li>· Commission varies by product/course/role — see product pages</li>
-          <li>· Referral binding: 30 days after referred user clicks/scans</li>
-          <li>· Refunds/void orders: deduct commission</li>
-          <li>· Withdrawal: min $68, T+1, no fee</li>
-        </ul>
-      </div>
-
-      <div className="card p-6 border-amber-200/60 bg-amber-50/50">
-        <h3 className="font-semibold text-bingo-dark mb-3">Team promotion (teachers only)</h3>
-        <p className="text-sm text-slate-600 mb-2">Team list, total earnings, team commission split; stats (new members, conversions, total commission); team promo materials</p>
-        <button type="button" className="rounded-lg border border-primary text-primary px-4 py-2 text-sm">Team promotion</button>
-      </div>
-
-      <div id="promo-terms" className="card p-6 bg-slate-50/80">
-        <h3 className="font-semibold text-bingo-dark mb-4">Key concepts</h3>
-        <dl className="grid gap-3 text-sm">
-          <div><dt className="font-medium text-slate-800">Referrer</dt><dd className="text-slate-600 mt-0.5">User with promotion access (Student/Parent/Teacher/Institution)</dd></div>
-          <div><dt className="font-medium text-slate-800">Referred user</dt><dd className="text-slate-600 mt-0.5">User who enters via referrer’s QR/poster/link</dd></div>
-          <div><dt className="font-medium text-slate-800">Referral binding</dt><dd className="text-slate-600 mt-0.5">Binding when referred user clicks/scans; valid 30 days</dd></div>
-          <div><dt className="font-medium text-slate-800">Valid order</dt><dd className="text-slate-600 mt-0.5">Paid during binding period, no refund/cancel</dd></div>
-          <div><dt className="font-medium text-slate-800">Pending commission</dt><dd className="text-slate-600 mt-0.5">Commission from valid orders, not yet settled</dd></div>
-          <div><dt className="font-medium text-slate-800">Withdrawable commission</dt><dd className="text-slate-600 mt-0.5">Settled, in referrer balance</dd></div>
-          <div><dt className="font-medium text-slate-800">Settlement period</dt><dd className="text-slate-600 mt-0.5">7 days after order completion</dd></div>
-          <div><dt className="font-medium text-slate-800">Min withdrawal</dt><dd className="text-slate-600 mt-0.5">$68 (no fee)</dd></div>
-        </dl>
-      </div>
-
-      <div className="card p-6 overflow-x-auto">
-        <h3 className="font-semibold text-bingo-dark mb-4">Role & promotion rights</h3>
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="border-b border-slate-200">
-              <th className="text-left py-2 px-3 font-semibold text-slate-800">Role</th>
-              <th className="text-left py-2 px-3 font-semibold text-slate-800">Benefits</th>
-              <th className="text-left py-2 px-3 font-semibold text-slate-800">Commission</th>
-              <th className="text-left py-2 px-3 font-semibold text-slate-800">Team</th>
-            </tr>
-          </thead>
-          <tbody className="text-slate-600">
-            <tr className="border-b border-slate-100">
-              <td className="py-3 px-3 font-medium text-slate-800">Student / Parent</td>
-              <td className="py-3 px-3">Personal code / poster / link</td>
-              <td className="py-3 px-3">Platform base rate</td>
-              <td className="py-3 px-3">No</td>
-            </tr>
-            <tr className="border-b border-slate-100">
-              <td className="py-3 px-3 font-medium text-slate-800">Teacher / Institution</td>
-              <td className="py-3 px-3">Custom materials, bonus</td>
-              <td className="py-3 px-3">Base + 5%–10%</td>
-              <td className="py-3 px-3">Yes (team split)</td>
-            </tr>
-            <tr>
-              <td className="py-3 px-3 font-medium text-slate-800">Enterprise</td>
-              <td className="py-3 px-3">No promotion</td>
-              <td className="py-3 px-3">—</td>
-              <td className="py-3 px-3">—</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-bingo-dark mb-4">Promotion flow</h3>
-        <div className="space-y-2 text-sm">
-          {[
-            { title: 'Enable promotion', body: 'Login → Profile → Earn by Sharing; system auto-enables (non-Enterprise). Code/poster/link auto-generated (permanent, re-generate supported).' },
-            { title: 'Share flow', body: 'Share button on product/course/event pages: generate poster, copy link, share. Poster includes QR, product info, commission tip. Earn by Sharing: high-commission picks → one-click share.' },
-            { title: 'Referral binding', body: 'Referred user enters via link/QR → system parses referrer ID; auto-bind. Binding valid 30 days; first click wins.' },
-            { title: 'Commission & settlement', body: 'Order amount × rate. Status: Paid → Pending; after settlement period → Withdrawable; refund → deduct. Notifications via app.' },
-            { title: 'Withdrawal', body: 'Profile → Commission settlement; Withdraw (min $68) → confirm → auto review (≤10 min) → transfer.' },
-            { title: 'Team promotion', body: 'Earn by Sharing → Team → Invite members; team commission split; team stats.' },
-          ].map((item, i) => (
-            <details key={i} className="group border border-slate-200 rounded-lg overflow-hidden">
-              <summary className="px-4 py-3 bg-slate-50 font-medium text-slate-800 cursor-pointer list-none flex items-center justify-between">
-                <span>{item.title}</span>
-                <span className="group-open:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div className="px-4 py-3 text-slate-600 border-t border-slate-200">
-                <p>{item.body}</p>
-              </div>
-            </details>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ─── Main Profile ──────────────────────────────────────────────────
 
@@ -334,7 +205,6 @@ export default function Profile() {
   const location = useLocation()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false)
-  const [showEarnBySharing, setShowEarnBySharing] = useState(false)
   const [shareModal, setShareModal] = useState(null)
   const [profile, setProfile] = useState(null)
   const [profileLoading, setProfileLoading] = useState(true)
@@ -547,7 +417,7 @@ export default function Profile() {
       const timer = window.setTimeout(() => scrollToProfileSection('settings'), 80)
       return () => window.clearTimeout(timer)
     }
-    if (hash === 'orders' || hash === 'notifications' || hash === 'certificates' || hash === 'achievements' || hash === 'progress' || hash === 'support') {
+    if (hash === 'orders' || hash === 'notifications' || hash === 'certificates' || hash === 'achievements' || hash === 'progress' || hash === 'support' || hash === 'promo') {
       const timer = window.setTimeout(() => scrollToProfileSection(hash), 80)
       return () => window.clearTimeout(timer)
     }
@@ -701,24 +571,7 @@ export default function Profile() {
 
       <ProfileLabPacksSection />
 
-      {/* ── Earn by Sharing (expandable) ────────────────── */}
-      <section id="promo" className="mb-8">
-        <button
-          type="button"
-          className="w-full flex items-center justify-between card p-5 hover:shadow-md hover:border-amber-300 transition text-left"
-          onClick={() => setShowEarnBySharing(v => !v)}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">💰</span>
-            <div>
-              <div className="font-semibold text-bingo-dark">Earn by Sharing</div>
-              <div className="text-sm text-slate-500">Share & earn · Commission · Referral tracking · Double commission this month</div>
-            </div>
-          </div>
-          <span className={`text-slate-400 transition-transform ${showEarnBySharing ? 'rotate-180' : ''}`}>▼</span>
-        </button>
-        {showEarnBySharing && <div className="mt-4"><EarnBySharing /></div>}
-      </section>
+      <ProfileChannelSection />
 
       {/* ── My Orders ─────────────────────────────────────────────── */}
       <ProfileOrdersSection orders={orders} loading={ordersLoading} error={ordersError} />

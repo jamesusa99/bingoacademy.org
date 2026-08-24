@@ -99,7 +99,11 @@ export default function AdminCommissions() {
                         <span className="font-medium">
                           {row.channel.name}
                           <span className="ml-2 text-[11px] text-slate-400">
-                            {row.channel.kind === 'official' ? p('official') : p('partner')}
+                            {row.channel.kind === 'official'
+                              ? p('official')
+                              : row.channel.kind === 'personal'
+                                ? p('personal')
+                                : p('partner')}
                           </span>
                         </span>
                         <span>{money(row.commissionCents)}</span>

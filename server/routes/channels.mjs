@@ -3,22 +3,26 @@ import { verifyAuthUser } from '../lib/supabaseAuth.mjs'
 import {
   assertChannelMember,
   buildAdminCommissionDashboard,
+  commissionMembershipsForAccount,
   findChannelById,
   listMembershipsForUser,
   loadChannelCommissions,
+  loadPersonalChannelPolicy,
   normalizeChannelCode,
   publicChannel,
   requestChannelPayout,
+  savePersonalChannelPolicy,
   settlePayout,
   slugifyChannel,
   summarizeCommissions,
+  syncAccountChannelMode,
 } from '../lib/channels.mjs'
 
 function parseChannelPayload(body = {}) {
   const name = String(body.name || '').trim()
   const code = normalizeChannelCode(body.code)
   const slug = slugifyChannel(body.slug || name || code)
-  const kind = body.kind === 'official' ? 'official' : 'partner'
+  const kind = body.kind === 'official' ? 'official' : body.kind === 'personal' ? 'personal' : 'partner'
   const status = ['draft', 'active', 'paused'].includes(body.status) ? body.status : 'draft'
   const percent = Number(body.commissionPercent)
   const bpsFromPercent = Number.isFinite(percent) ? Math.round(percent * 100) : null
@@ -88,6 +92,32 @@ export function registerChannelRoutes(app, { verifyAdminUser }) {
     })
 
     return res.json({ channels: list })
+  })
+
+  app.get('/api/admin/channel-policy', async (req, res) => {
+    const auth = await verifyAdminUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+    try {
+      const policy = await loadPersonalChannelPolicy(admin)
+      return res.json({ policy })
+    } catch (err) {
+      return res.status(502).json({ error: err.message || 'Failed to load channel policy' })
+    }
+  })
+
+  app.patch('/api/admin/channel-policy', async (req, res) => {
+    const auth = await verifyAdminUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+    try {
+      const result = await savePersonalChannelPolicy(admin, req.body || {})
+      return res.json(result)
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Failed to save channel policy' })
+    }
   })
 
   app.post('/api/admin/channels', async (req, res) => {
@@ -176,6 +206,11 @@ export function registerChannelRoutes(app, { verifyAdminUser }) {
       .select('id, channel_id, user_id, member_role')
       .maybeSingle()
     if (error) return res.status(400).json({ error: error.message })
+    await syncAccountChannelMode(admin, {
+      id: profile.id,
+      email: profile.email,
+      user_metadata: { full_name: profile.full_name },
+    })
     return res.json({
       member: {
         id: data.id,
@@ -199,6 +234,16 @@ export function registerChannelRoutes(app, { verifyAdminUser }) {
       .eq('channel_id', req.params.id)
       .eq('user_id', req.params.userId)
     if (error) return res.status(400).json({ error: error.message })
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('id, email, full_name')
+      .eq('id', req.params.userId)
+      .maybeSingle()
+    await syncAccountChannelMode(admin, {
+      id: req.params.userId,
+      email: profile?.email,
+      user_metadata: { full_name: profile?.full_name },
+    })
     return res.json({ ok: true })
   })
 
@@ -248,15 +293,48 @@ export function registerChannelRoutes(app, { verifyAdminUser }) {
     if (!admin) return res.status(503).json({ error: 'Database not configured' })
 
     try {
-      const memberships = await listMembershipsForUser(admin, auth.user.id)
+      const policy = await loadPersonalChannelPolicy(admin)
+      const result = await syncAccountChannelMode(admin, auth.user)
+      const raw = result.error
+        ? await listMembershipsForUser(admin, auth.user.id)
+        : result.memberships || []
+      const memberships = result.error ? commissionMembershipsForAccount(raw) : raw
       return res.json({
+        created: Boolean(result.created),
+        mode: result.mode || (memberships.some((row) => row.channel?.kind === 'personal') ? 'personal' : 'partner'),
+        policy,
         memberships: memberships.map((row) => ({
+          role: row.role,
+          channel: publicChannel(row.channel),
+        })),
+        ...(result.error ? { personalError: result.error } : {}),
+      })
+    } catch (err) {
+      return res.status(502).json({ error: err.message })
+    }
+  })
+
+  app.post('/api/channel/enroll', async (req, res) => {
+    const auth = await verifyAuthUser(req)
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+    const admin = getSupabaseAdmin()
+    if (!admin) return res.status(503).json({ error: 'Database not configured' })
+
+    try {
+      const result = await syncAccountChannelMode(admin, auth.user)
+      if (result.error) return res.status(result.status || 400).json({ error: result.error })
+      const policy = await loadPersonalChannelPolicy(admin)
+      return res.json({
+        created: result.created,
+        mode: result.mode,
+        policy,
+        memberships: (result.memberships || []).map((row) => ({
           role: row.role,
           channel: publicChannel(row.channel),
         })),
       })
     } catch (err) {
-      return res.status(502).json({ error: err.message })
+      return res.status(502).json({ error: err.message || 'Could not create channel' })
     }
   })
 
@@ -267,7 +345,10 @@ export function registerChannelRoutes(app, { verifyAdminUser }) {
     if (!admin) return res.status(503).json({ error: 'Database not configured' })
 
     const channelId = req.query.channelId?.trim()
-    const memberships = await listMembershipsForUser(admin, auth.user.id)
+    const synced = await syncAccountChannelMode(admin, auth.user)
+    const memberships = synced.error
+      ? commissionMembershipsForAccount(await listMembershipsForUser(admin, auth.user.id))
+      : synced.memberships || []
     const membership = channelId
       ? memberships.find((row) => row.channel.id === channelId)
       : memberships[0]

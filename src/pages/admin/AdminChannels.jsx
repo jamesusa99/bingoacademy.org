@@ -7,8 +7,10 @@ import {
   addAdminChannelMember,
   createAdminChannel,
   deleteAdminChannel,
+  fetchAdminChannelPolicy,
   fetchAdminChannels,
   removeAdminChannelMember,
+  saveAdminChannelPolicy,
   updateAdminChannel,
 } from '../../lib/channelsApi'
 import { channelSharePath } from '../../lib/channelReferral'
@@ -65,6 +67,9 @@ export default function AdminChannels() {
   const [saving, setSaving] = useState(false)
   const [memberEmail, setMemberEmail] = useState('')
   const [memberRole, setMemberRole] = useState('manager')
+  const [policy, setPolicy] = useState({ commissionPercent: '10', holdDays: '7', minPayoutDollars: '100' })
+  const [policySaving, setPolicySaving] = useState(false)
+  const [kindFilter, setKindFilter] = useState('managed')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -75,6 +80,18 @@ export default function AdminChannels() {
     } catch (err) {
       setError(err.message)
       setChannels([])
+    }
+    try {
+      const policyData = await fetchAdminChannelPolicy()
+      if (policyData?.policy) {
+        setPolicy({
+          commissionPercent: String(policyData.policy.commissionPercent),
+          holdDays: String(policyData.policy.holdDays),
+          minPayoutDollars: String(policyData.policy.minPayoutDollars),
+        })
+      }
+    } catch {
+      /* keep fallback defaults until the policy API is available */
     } finally {
       setLoading(false)
     }
@@ -132,6 +149,33 @@ export default function AdminChannels() {
     }
   }
 
+  const savePolicy = async (e) => {
+    e.preventDefault()
+    setPolicySaving(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const result = await saveAdminChannelPolicy({
+        commissionPercent: Number(policy.commissionPercent),
+        holdDays: Number(policy.holdDays),
+        minPayoutDollars: Number(policy.minPayoutDollars),
+      })
+      if (result?.policy) {
+        setPolicy({
+          commissionPercent: String(result.policy.commissionPercent),
+          holdDays: String(result.policy.holdDays),
+          minPayoutDollars: String(result.policy.minPayoutDollars),
+        })
+      }
+      setSuccess(p('policySaved', { n: result.updated ?? 0 }))
+      await load()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setPolicySaving(false)
+    }
+  }
+
   const remove = async (channel) => {
     if (!window.confirm(c.confirmDelete(channel.name))) return
     try {
@@ -179,6 +223,11 @@ export default function AdminChannels() {
   }
 
   const shareUrl = editing ? `${window.location.origin}${channelSharePath(editing.code)}` : ''
+  const visibleChannels = channels.filter((channel) => {
+    if (kindFilter === 'personal') return channel.kind === 'personal' || String(channel.slug || '').startsWith('user-')
+    if (kindFilter === 'managed') return channel.kind !== 'personal' && !String(channel.slug || '').startsWith('user-')
+    return true
+  })
 
   return (
     <div>
@@ -186,17 +235,78 @@ export default function AdminChannels() {
       {error ? <AdminAlert type="error">{error}</AdminAlert> : null}
       {success ? <AdminAlert type="success">{success}</AdminAlert> : null}
 
+      <form onSubmit={savePolicy} className="card p-5 mb-6 space-y-3">
+        <div>
+          <h2 className="font-semibold text-bingo-dark">{p('policyTitle')}</h2>
+          <p className="text-sm text-slate-600 mt-1">{p('policyDesc')}</p>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <AdminField label={p('fieldRate')} required>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              className="input w-full"
+              value={policy.commissionPercent}
+              onChange={(e) => setPolicy({ ...policy, commissionPercent: e.target.value })}
+            />
+          </AdminField>
+          <AdminField label={p('fieldHoldDays')} required>
+            <input
+              type="number"
+              min="0"
+              max="365"
+              className="input w-full"
+              value={policy.holdDays}
+              onChange={(e) => setPolicy({ ...policy, holdDays: e.target.value })}
+            />
+          </AdminField>
+          <AdminField label={p('fieldMinPayout')} required>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              className="input w-full"
+              value={policy.minPayoutDollars}
+              onChange={(e) => setPolicy({ ...policy, minPayoutDollars: e.target.value })}
+            />
+          </AdminField>
+        </div>
+        <button type="submit" disabled={policySaving} className="btn-primary px-4 py-2.5 text-sm disabled:opacity-60">
+          {policySaving ? c.saving : p('policySave')}
+        </button>
+      </form>
+
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)] gap-6">
         <div className="card overflow-hidden">
-          <div className="p-4 flex items-center justify-between border-b border-slate-100">
+          <div className="p-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100">
             <h2 className="font-semibold text-bingo-dark">{p('listTitle')}</h2>
-            <button type="button" onClick={startCreate} className="text-sm font-medium text-primary hover:underline">
-              {p('addChannel')}
-            </button>
+            <div className="flex items-center gap-2">
+              {[
+                ['managed', p('filterManaged')],
+                ['personal', p('filterPersonal')],
+                ['all', p('filterAll')],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setKindFilter(id)}
+                  className={`text-xs px-2.5 py-1 rounded-full border ${
+                    kindFilter === id ? 'border-primary bg-cyan-50 text-primary' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+              <button type="button" onClick={startCreate} className="text-sm font-medium text-primary hover:underline ml-1">
+                {p('addChannel')}
+              </button>
+            </div>
           </div>
           {loading ? (
             <p className="p-6 text-sm text-slate-500">{c.loading}</p>
-          ) : channels.length === 0 ? (
+          ) : visibleChannels.length === 0 ? (
             <p className="p-6 text-sm text-slate-500">{p('empty')}</p>
           ) : (
             <table className="w-full text-sm">
@@ -210,12 +320,19 @@ export default function AdminChannels() {
                 </tr>
               </thead>
               <tbody>
-                {channels.map((channel) => (
+                {visibleChannels.map((channel) => (
                   <tr key={channel.id} className={`border-t border-slate-100 ${editingId === channel.id ? 'bg-cyan-50/60' : ''}`}>
                     <td className="p-3">
                       <p className="font-medium text-slate-900">{channel.name}</p>
                       <p className="text-[11px] text-slate-500">
-                        {p(channel.kind === 'official' ? 'kindOfficial' : 'kindPartner')} · {p(`status_${channel.status}`)}
+                        {p(
+                          channel.kind === 'official'
+                            ? 'kindOfficial'
+                            : channel.kind === 'personal'
+                              ? 'kindPersonal'
+                              : 'kindPartner'
+                        )}{' '}
+                        · {p(`status_${channel.status}`)}
                       </p>
                     </td>
                     <td className="p-3 font-mono text-xs">{channel.code}</td>
@@ -261,6 +378,7 @@ export default function AdminChannels() {
               <select className="input w-full" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
                 <option value="official">{p('kindOfficial')}</option>
                 <option value="partner">{p('kindPartner')}</option>
+                <option value="personal">{p('kindPersonal')}</option>
               </select>
             </AdminField>
             <AdminField label={c.status} required>

@@ -1,5 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  coerceProfileCountry,
+  coerceProfileLocale,
+  optionsWithCurrent,
+  PROFILE_COUNTRIES,
+  PROFILE_LANGUAGES,
+} from '../config/profileOptions'
 import { updateMyProfile } from '../lib/userProfile'
 import ProfileAvatarEditor from './profile/ProfileAvatarEditor'
 
@@ -20,8 +27,8 @@ function profileToForm(profile) {
     full_name: profile.full_name || '',
     phone: profile.phone || '',
     avatar_url: profile.avatar_url || '',
-    locale: profile.locale || 'en',
-    country: profile.country || '',
+    locale: coerceProfileLocale(profile.locale || 'en'),
+    country: coerceProfileCountry(profile.country || ''),
     school: profile.school || '',
     grade: profile.grade || '',
     parent_email: profile.parent_email || '',
@@ -39,6 +46,8 @@ export default function ProfileAccountForm({ userId, profile, userEmail, onSaved
   }, [profile])
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+  const languageOptions = useMemo(() => optionsWithCurrent(PROFILE_LANGUAGES, form.locale), [form.locale])
+  const countryOptions = useMemo(() => optionsWithCurrent(PROFILE_COUNTRIES, form.country), [form.country])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -125,19 +134,28 @@ export default function ProfileAccountForm({ userId, profile, userEmail, onSaved
             onChange={(e) => set('locale', e.target.value)}
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="en">English</option>
-            <option value="zh">Chinese</option>
+            {languageOptions.map((row) => (
+              <option key={row.value} value={row.value}>
+                {row.label}
+              </option>
+            ))}
           </select>
         </label>
 
         <label className="block text-sm font-medium text-slate-700">
           Country / region
-          <input
+          <select
             value={form.country}
             onChange={(e) => set('country', e.target.value)}
-            placeholder="United States"
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+          >
+            <option value="">Select country / region</option>
+            {countryOptions.map((row) => (
+              <option key={row.value} value={row.value}>
+                {row.label}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
 

@@ -34,6 +34,14 @@ export async function removeAdminChannelMember(channelId, userId) {
   )
 }
 
+export async function fetchAdminChannelPolicy() {
+  return adminFetch('/api/admin/channel-policy')
+}
+
+export async function saveAdminChannelPolicy(payload) {
+  return adminFetch('/api/admin/channel-policy', { method: 'PATCH', body: JSON.stringify(payload) })
+}
+
 export async function fetchAdminCommissionDashboard() {
   return adminFetch('/api/admin/commissions/dashboard')
 }
@@ -47,6 +55,10 @@ export async function settleAdminPayout(id, action, adminNotes) {
 
 export async function fetchChannelMe() {
   return authFetch('/api/channel/me')
+}
+
+export async function enrollPersonalChannel() {
+  return authFetch('/api/channel/enroll', { method: 'POST', body: JSON.stringify({}) })
 }
 
 export async function fetchChannelDashboard(channelId) {
