@@ -24,6 +24,7 @@ import {
 } from '../lib/userNotifications.mjs'
 import { buildStripeCheckoutSession } from '../lib/stripeCheckout.mjs'
 import { applyBundleUpgradeCredit, optionalAuthUser } from '../lib/bundleUpgradeCredit.mjs'
+import { channelCheckoutMeta, resolveCheckoutChannel } from '../lib/channels.mjs'
 import { createPaidCheckoutSession, isZeroDueCheckoutSessionId } from '../lib/createCheckoutSession.mjs'
 import {
   findPromoCodeByCode,
@@ -373,7 +374,12 @@ export function registerPaymentRoutes(app) {
           quote,
           returnPath,
           origin,
-          purchaseContext: { courseSlug: courseSlug.trim(), purchaseType: quote.purchaseType },
+          purchaseContext: {
+            courseSlug: courseSlug.trim(),
+            purchaseType: quote.purchaseType,
+            channelCode: req.body?.channelCode,
+            promoCode,
+          },
         })
         if (result.error) {
           return res.status(400).json({ error: result.error })
@@ -399,7 +405,12 @@ export function registerPaymentRoutes(app) {
         returnPath,
         origin,
         promoCode,
-        purchaseContext: { courseSlug: courseSlug.trim(), purchaseType: quote.purchaseType },
+        purchaseContext: {
+          courseSlug: courseSlug.trim(),
+          purchaseType: quote.purchaseType,
+          channelCode: req.body?.channelCode,
+          promoCode,
+        },
       })
       if (result.error) {
         return res.status(400).json({ error: result.error })
@@ -453,7 +464,12 @@ export function registerPaymentRoutes(app) {
           quote,
           returnPath,
           origin,
-          purchaseContext: { courseSlug, purchaseType: quote.purchaseType },
+          purchaseContext: {
+            courseSlug,
+            purchaseType: quote.purchaseType,
+            channelCode: req.body?.channelCode,
+            promoCode,
+          },
         })
         if (result.error) {
           return res.status(400).json({ error: result.error })
@@ -479,7 +495,12 @@ export function registerPaymentRoutes(app) {
         returnPath,
         origin,
         promoCode,
-        purchaseContext: { courseSlug, purchaseType: quote.purchaseType },
+        purchaseContext: {
+          courseSlug,
+          purchaseType: quote.purchaseType,
+          channelCode: req.body?.channelCode,
+          promoCode,
+        },
       })
       if (result.error) {
         return res.status(400).json({ error: result.error })
@@ -556,6 +577,12 @@ export function registerPaymentRoutes(app) {
           ]
         : quote.lineItems
 
+    const channel = await resolveCheckoutChannel(admin, {
+      channelCode: req.body?.channelCode,
+      promoCode,
+      promoId: promoResult.promoMeta?.promo_code_id,
+    })
+
     try {
       const session = await stripe.checkout.sessions.create(
         buildStripeCheckoutSession({
@@ -569,6 +596,7 @@ export function registerPaymentRoutes(app) {
             user_id: auth.user.id,
             mall_items: JSON.stringify(quote.metaItems),
             ...promoResult.promoMeta,
+            ...channelCheckoutMeta(channel),
           },
         })
       )

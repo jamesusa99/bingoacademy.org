@@ -8,14 +8,19 @@ import {
 
 const AdminLocaleContext = createContext(null)
 
-export function AdminLocaleProvider({ children }) {
-  const [locale, setLocaleState] = useState(readStoredAdminLocale)
+export function AdminLocaleProvider({
+  children,
+  defaultLocale = DEFAULT_ADMIN_LOCALE,
+  readStoredLocale = readStoredAdminLocale,
+  persistLocale = storeAdminLocale,
+}) {
+  const [locale, setLocaleState] = useState(() => readStoredLocale?.() || defaultLocale)
 
   const setLocale = useCallback((next) => {
     const loc = next === 'en' ? 'en' : 'zh'
     setLocaleState(loc)
-    storeAdminLocale(loc)
-  }, [])
+    persistLocale?.(loc)
+  }, [persistLocale])
 
   useEffect(() => {
     document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en'

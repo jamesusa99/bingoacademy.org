@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { updateMyProfile } from '../lib/userProfile'
+import ProfileAvatarEditor from './profile/ProfileAvatarEditor'
 
 const EMPTY = {
   full_name: '',
@@ -101,16 +102,20 @@ export default function ProfileAccountForm({ userId, profile, userEmail, onSaved
         />
       </label>
 
-      <label className="block text-sm font-medium text-slate-700">
-        Avatar URL
-        <input
-          type="url"
-          value={form.avatar_url}
-          onChange={(e) => set('avatar_url', e.target.value)}
-          placeholder="https://..."
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+      <div>
+        <p className="text-sm font-medium text-slate-700 mb-2">Photo</p>
+        <ProfileAvatarEditor
+          userId={userId}
+          profile={{ ...profile, avatar_url: form.avatar_url }}
+          user={{ email: userEmail }}
+          onSaved={(next) => {
+            set('avatar_url', next?.avatar_url || '')
+            onSaved?.(next)
+          }}
+          size="lg"
+          showActions
         />
-      </label>
+      </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
         <label className="block text-sm font-medium text-slate-700">

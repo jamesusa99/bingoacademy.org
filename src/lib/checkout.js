@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase'
+import { getStoredChannelCode } from './channelReferral'
 
 export class AuthRequiredError extends Error {
   constructor(message = 'Sign in required') {
@@ -83,14 +84,21 @@ export async function fetchCheckoutQuotes(items) {
 export async function startCourseCheckout({ courseSlug, purchaseType, returnPath, addonSlugs = [], promoCode }) {
   return authFetch('/api/checkout/course', {
     method: 'POST',
-    body: JSON.stringify({ courseSlug, purchaseType, returnPath, addonSlugs, promoCode }),
+    body: JSON.stringify({
+      courseSlug,
+      purchaseType,
+      returnPath,
+      addonSlugs,
+      promoCode,
+      channelCode: getStoredChannelCode() || undefined,
+    }),
   })
 }
 
 export async function startMallCheckout({ items, promoCode }) {
   return authFetch('/api/checkout/mall', {
     method: 'POST',
-    body: JSON.stringify({ items, promoCode }),
+    body: JSON.stringify({ items, promoCode, channelCode: getStoredChannelCode() || undefined }),
   })
 }
 
@@ -102,6 +110,7 @@ export async function startIOAIMasterclassCheckout({ promoCode } = {}) {
       purchaseType: 'ioai_track',
       returnPath: '/curriculum',
       promoCode,
+      channelCode: getStoredChannelCode() || undefined,
     }),
   })
 }

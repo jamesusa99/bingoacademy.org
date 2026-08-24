@@ -3,6 +3,7 @@ import { grantCourseEntitlements } from './courseEntitlements.mjs'
 import { notifyCheckoutEntitlements, notifyOrderPaid } from './userNotifications.mjs'
 import { buildStripeCheckoutSession } from './stripeCheckout.mjs'
 import { PROMO_MIN_CHECKOUT_CENTS, resolvePromoForCheckout } from './promoCodes.mjs'
+import { channelCheckoutMeta, recordChannelCommission, resolveCheckoutChannel } from './channels.mjs'
 
 export function isZeroDueCheckoutSessionId(sessionId) {
   return String(sessionId || '').startsWith('zero_')
@@ -18,6 +19,11 @@ export async function completeZeroDueCheckout({
 }) {
   const sessionId = `zero_${randomUUID()}`
   const courseSlug = purchaseContext.courseSlug?.trim() || quote.returnSlug
+  const channel = await resolveCheckoutChannel(admin, {
+    channelCode: purchaseContext.channelCode,
+    promoCode: purchaseContext.promoCode,
+    promoId: purchaseContext.promoId,
+  })
   const metadata = {
     product_name: quote.productName,
     course_slug: courseSlug,
@@ -26,6 +32,7 @@ export async function completeZeroDueCheckout({
     user_id: auth.user.id,
     upgrade_credit_cents: String(quote.creditCents || 0),
     source: 'bundle_upgrade_credit',
+    ...channelCheckoutMeta(channel),
   }
 
   const { data: orderRow, error } = await admin
@@ -74,6 +81,23 @@ export async function completeZeroDueCheckout({
     console.error('[checkout/zero-due] notifications', err)
   }
 
+  if (orderRow?.id) {
+    try {
+      await recordChannelCommission(admin, {
+        orderId: orderRow.id,
+        amountCents: 0,
+        currency: quote.currency || 'usd',
+        productName: quote.productName,
+        userId: auth.user.id,
+        metadata,
+        channelCode: purchaseContext.channelCode,
+        promoCode: purchaseContext.promoCode,
+      })
+    } catch (err) {
+      console.error('[checkout/zero-due] channel commission', err)
+    }
+  }
+
   const successUrl = `${origin}/checkout?paid=1&session_id=${encodeURIComponent(sessionId)}&return=${encodeURIComponent(returnPath || '/courses')}`
   return { url: successUrl, sessionId, complimentary: true, granted }
 }
@@ -90,13 +114,26 @@ export async function createPaidCheckoutSession({
   extraMetadata = {},
 }) {
   if ((quote.amountCents || 0) <= 0) {
-    return completeZeroDueCheckout({ admin, auth, quote, returnPath, origin, purchaseContext })
+    return completeZeroDueCheckout({
+      admin,
+      auth,
+      quote,
+      returnPath,
+      origin,
+      purchaseContext: { ...purchaseContext, promoCode: purchaseContext.promoCode || promoCode },
+    })
   }
 
   const promoResult = await resolvePromoForCheckout(admin, promoCode, quote, purchaseContext)
   if (promoResult.error) {
     return { error: promoResult.error }
   }
+
+  const channel = await resolveCheckoutChannel(admin, {
+    channelCode: purchaseContext.channelCode,
+    promoCode,
+    promoId: promoResult.promoMeta?.promo_code_id,
+  })
 
   const hasPromo = Boolean(promoResult.promoMeta?.promo_code_id)
   const promoMinCents = hasPromo
@@ -141,6 +178,7 @@ export async function createPaidCheckoutSession({
         user_id: auth.user.id,
         ...promoResult.promoMeta,
         ...(quote.creditCents ? { upgrade_credit_cents: String(quote.creditCents) } : {}),
+        ...channelCheckoutMeta(channel),
         ...extraMetadata,
       },
     })

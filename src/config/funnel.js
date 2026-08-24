@@ -3,6 +3,7 @@
 export const EXIT_INTENT_STORAGE_KEY = 'bingo-exit-intent-seen'
 export const PENDING_AUTH_ACTION_KEY = 'bingo-pending-auth-action'
 export const PROMO_CODE_STORAGE_KEY = 'bingo-promo-code'
+export const CHANNEL_CODE_STORAGE_KEY = 'bingo-channel-code'
 
 export const EARLY_BIRD_PROMO = {
   code: 'BINGO2026',
@@ -41,6 +42,7 @@ export const EXIT_INTENT_COPY = {
 /** Paths where exit-intent is suppressed */
 export const EXIT_INTENT_EXCLUDED_PREFIXES = [
   '/admin',
+  '/partners',
   '/login',
   '/register',
   '/forgot-password',

@@ -43,6 +43,8 @@ export const ADMIN_NAV_GROUPS = [
     titleKey: 'nav.group.commerce',
     items: [
       { path: '/admin/payments', labelKey: 'nav.payments', icon: '💳' },
+      { path: '/admin/channels', labelKey: 'nav.channels', icon: '🏷️' },
+      { path: '/admin/commissions', labelKey: 'nav.commissions', icon: '📈' },
     ],
   },
   {
@@ -67,6 +69,8 @@ export const ADMIN_DASHBOARD_CARDS = [
   { labelKey: 'dashboard.cards.forum', statKey: 'threads', to: '/admin/community/forum', icon: '💬', color: 'bg-green-50 border-green-200/60' },
   { labelKey: 'dashboard.cards.videos', statKey: 'videos', to: '/admin/curriculum/ioai', icon: '🎬', color: 'bg-indigo-50 border-indigo-200/60' },
   { labelKey: 'dashboard.cards.orders', statKey: 'orders', to: '/admin/payments', icon: '💳', color: 'bg-violet-50 border-violet-200/60' },
+  { labelKey: 'dashboard.cards.channels', statKey: 'channels', to: '/admin/channels', icon: '🏷️', color: 'bg-teal-50 border-teal-200/60' },
+  { labelKey: 'dashboard.cards.commissions', statKey: null, to: '/admin/commissions', icon: '📈', color: 'bg-cyan-50 border-cyan-200/60' },
   { labelKey: 'dashboard.cards.marketing', statKey: 'promoCodes', to: '/admin/marketing', icon: '📣', color: 'bg-rose-50 border-rose-200/60' },
   { labelKey: 'dashboard.cards.users', statKey: 'users', to: '/admin/users', icon: '👥', color: 'bg-slate-100 border-slate-200' },
   { labelKey: 'dashboard.cards.platform', statKey: null, to: '/admin/settings', icon: '⚙️', color: 'bg-slate-100 border-slate-200' },
@@ -81,6 +85,8 @@ export const ADMIN_DASHBOARD_QUICK_LINKS = [
   { labelKey: 'nav.certification', to: '/admin/cert', className: 'px-4 py-2 rounded-xl bg-emerald-100 text-emerald-700 text-sm font-medium' },
   { labelKey: 'nav.communityForum', to: '/admin/community/forum', className: 'px-4 py-2 rounded-xl bg-green-100 text-green-700 text-sm font-medium' },
   { labelKey: 'nav.payments', to: '/admin/payments', className: 'px-4 py-2 rounded-xl bg-violet-100 text-violet-700 text-sm font-medium' },
+  { labelKey: 'nav.channels', to: '/admin/channels', className: 'px-4 py-2 rounded-xl bg-teal-100 text-teal-800 text-sm font-medium' },
+  { labelKey: 'nav.commissions', to: '/admin/commissions', className: 'px-4 py-2 rounded-xl bg-cyan-100 text-cyan-800 text-sm font-medium' },
   { labelKey: 'nav.marketingHub', to: '/admin/marketing', className: 'px-4 py-2 rounded-xl bg-rose-100 text-rose-800 text-sm font-medium' },
   { labelKey: 'nav.userManagement', to: '/admin/users', className: 'px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-medium' },
   { labelKey: 'nav.platform', to: '/admin/settings', className: 'px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-medium' },

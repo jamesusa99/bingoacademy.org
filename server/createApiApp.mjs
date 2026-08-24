@@ -11,11 +11,13 @@ import { registerStreamRoutes } from './routes/stream.mjs'
 import { registerPaymentRoutes } from './routes/payments.mjs'
 import { registerIoaiRoutes } from './routes/ioai.mjs'
 import { registerMediaRoutes } from './routes/media.mjs'
+import { registerProfileAvatarRoutes } from './routes/profileAvatar.mjs'
 import { registerLabRoutes } from './routes/labs.mjs'
 import { registerIoaiExperimentRoutes } from './routes/ioaiExperiments.mjs'
 import { registerLeadRoutes } from './routes/leads.mjs'
 import { registerEventRoutes } from './routes/events.mjs'
 import { registerSitemapRoutes } from './routes/sitemap.mjs'
+import { registerChannelRoutes } from './routes/channels.mjs'
 
 /** Express app for /api/* (admin, webhooks). Used by local server and Vercel serverless. */
 export function createApiApp() {
@@ -33,6 +35,7 @@ export function createApiApp() {
   registerStreamTusCreateRoutes(app, { verifyAdminUser })
 
   registerMediaRoutes(app, { verifyAdminUser })
+  registerProfileAvatarRoutes(app)
 
   app.use(express.json({ limit: '1mb' }))
 
@@ -48,6 +51,7 @@ export function createApiApp() {
   registerIoaiExperimentRoutes(app, { verifyAdminUser })
   registerLeadRoutes(app)
   registerEventRoutes(app)
+  registerChannelRoutes(app, { verifyAdminUser })
 
   return app
 }

@@ -6,15 +6,16 @@ import { authLink } from '../lib/authRedirect'
 import {
   fetchMyProfile,
   profileDisplayName,
-  profileInitials,
   maskPhone,
   formatAccountId,
 } from '../lib/userProfile'
 import ProfileAccountForm from '../components/ProfileAccountForm'
+import ProfileAvatarEditor from '../components/profile/ProfileAvatarEditor'
 import ProfileLabPacksSection from '../components/profile/ProfileLabPacksSection'
 import ProfileNotificationsSection from '../components/profile/ProfileNotificationsSection'
 import ProfileCertificatesSection from '../components/profile/ProfileCertificatesSection'
 import ProfileAchievementsSection from '../components/profile/ProfileAchievementsSection'
+import ProfileListCollapseToggle, { useProfileListCollapse } from '../components/profile/ProfileListCollapseToggle'
 import CourseAccessReset from '../components/CourseAccessReset'
 import { fetchMyOrders } from '../lib/checkout'
 import {
@@ -245,6 +246,8 @@ function formatOrderDate(value) {
 }
 
 function ProfileOrdersSection({ orders, loading, error }) {
+  const { visible, collapsible, expanded, hiddenCount, toggle } = useProfileListCollapse(orders)
+
   return (
     <section id="orders" className="mb-8 scroll-mt-28">
       <h2 className="section-title mb-4">My Orders</h2>
@@ -264,18 +267,19 @@ function ProfileOrdersSection({ orders, loading, error }) {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[640px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/80">
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Date</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Product</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Amount</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {orders.map((order) => {
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/80">
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Date</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Product</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Amount</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {visible.map((order) => {
                   const statusLabel = ORDER_STATUS_LABELS[order.status] || order.status || '—'
                   const amount =
                     order.amount_cents != null
@@ -311,7 +315,15 @@ function ProfileOrdersSection({ orders, loading, error }) {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+            <ProfileListCollapseToggle
+              collapsible={collapsible}
+              expanded={expanded}
+              hiddenCount={hiddenCount}
+              onToggle={toggle}
+              itemLabel="orders"
+            />
+          </>
         )}
       </div>
     </section>
@@ -555,7 +567,6 @@ export default function Profile() {
   const displayName = profileDisplayName(profile, user)
   const displayPhone = maskPhone(profile?.phone)
   const accountId = formatAccountId(user?.id)
-  const avatarUrl = profile?.avatar_url?.trim()
   const userEmail = profile?.email || user?.email || ''
 
   const coreLinks = [
@@ -575,13 +586,7 @@ export default function Profile() {
       {/* ── Top bar ─────────────────────────────────── */}
       <section className="mb-8">
         <div className="card p-6 flex flex-wrap items-center gap-4">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="w-16 h-16 rounded-full object-cover shrink-0" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl font-semibold shrink-0">
-              {profileInitials(profile, user)}
-            </div>
-          )}
+          <ProfileAvatarEditor userId={user.id} profile={profile} user={user} onSaved={setProfile} />
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-bingo-dark">
               {profileLoading ? 'Loading…' : displayName}

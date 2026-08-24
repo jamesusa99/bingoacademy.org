@@ -29,6 +29,7 @@ export const CMS_TABLES = new Set([
   'lessons',
   'ioai_question_items',
   'promo_codes',
+  'sales_channels',
 ])
 
 export function registerCmsRoutes(app, { verifyAdminUser }) {

@@ -4,7 +4,15 @@ import Layout from './components/Layout'
 import ProductLineGate from './components/ProductLineGate'
 import AdminGuard from './components/admin/AdminGuard'
 import AdminLayout from './components/AdminLayout'
+import ChannelGuard from './components/partners/ChannelGuard'
+import PartnerLayout from './components/partners/PartnerLayout'
+import ChannelRefCapture from './components/ChannelRefCapture'
 import { AdminLocaleProvider } from './contexts/AdminLocaleContext'
+import {
+  DEFAULT_PARTNER_LOCALE,
+  readStoredPartnerLocale,
+  storePartnerLocale,
+} from './config/adminI18n'
 import RouteFallback from './components/RouteFallback'
 import ScrollToTop from './components/ScrollToTop'
 import useAnalyticsPageView from './hooks/useAnalyticsPageView'
@@ -40,6 +48,7 @@ export default function App() {
     <>
       <HashRedirect />
       <ScrollToTop />
+      <ChannelRefCapture />
       <Routes>
         <Route
           path="/labs/ioai/training-lab/:labId"
@@ -100,9 +109,42 @@ export default function App() {
           <Route path="community/:section" element={<Pages.AdminCommunity />} />
           <Route path="video" element={<Navigate to="/admin/curriculum/ioai" replace />} />
           <Route path="marketing" element={<Pages.AdminMarketing />} />
+          <Route path="channels" element={<Pages.AdminChannels />} />
+          <Route path="commissions" element={<Pages.AdminCommissions />} />
           <Route path="payments" element={<Pages.AdminPayments />} />
           <Route path="users" element={<Pages.AdminUsers />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Route>
+
+        <Route
+          path="/partners/login"
+          element={
+            <AdminLocaleProvider
+              defaultLocale={DEFAULT_PARTNER_LOCALE}
+              readStoredLocale={readStoredPartnerLocale}
+              persistLocale={storePartnerLocale}
+            >
+              <Suspense fallback={<RouteFallback />}>
+                <Pages.PartnerLogin />
+              </Suspense>
+            </AdminLocaleProvider>
+          }
+        />
+        <Route
+          path="/partners"
+          element={
+            <AdminLocaleProvider
+              defaultLocale={DEFAULT_PARTNER_LOCALE}
+              readStoredLocale={readStoredPartnerLocale}
+              persistLocale={storePartnerLocale}
+            >
+              <ChannelGuard>
+                <PartnerLayout />
+              </ChannelGuard>
+            </AdminLocaleProvider>
+          }
+        >
+          <Route index element={<Pages.PartnerDashboard />} />
         </Route>
 
         <Route

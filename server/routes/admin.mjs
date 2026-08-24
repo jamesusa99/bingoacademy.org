@@ -4,6 +4,7 @@ import { notifyCheckoutEntitlements, notifyOrderPaid } from '../lib/userNotifica
 import { notifyPurchaseAccomplishments } from '../lib/userAccomplishments.mjs'
 import { parseAddonSlugs } from '../lib/ioaiCommerce.mjs'
 import { recordPromoRedemption } from '../lib/promoCodes.mjs'
+import { recordChannelCommission } from '../lib/channels.mjs'
 import {
   STREAM_DEFAULT_MAX_DURATION_SECONDS,
   STREAM_CLOUDFLARE_MAX_DURATION_SECONDS,
@@ -241,6 +242,19 @@ export async function upsertOrderFromStripe(session) {
         purchaseType,
         courseSlug: metadata.course_slug,
       })
+
+      if (orderRow?.id) {
+        await recordChannelCommission(admin, {
+          orderId: orderRow.id,
+          amountCents: amount,
+          currency,
+          productName,
+          userId,
+          metadata,
+          channelCode: metadata.channel_code,
+          promoCode: metadata.promo_code,
+        })
+      }
     } catch (err) {
       console.error('[orders] post-payment side effects', err)
     }

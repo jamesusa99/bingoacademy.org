@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatAccomplishmentDate } from '../../lib/userAccomplishments'
+import ProfileListCollapseToggle, { useProfileListCollapse } from './ProfileListCollapseToggle'
 
 const CATEGORY_LABELS = {
   assessment: 'Assessment',
@@ -10,6 +11,7 @@ const CATEGORY_LABELS = {
 }
 
 export default function ProfileAchievementsSection({ achievements, loading, error }) {
+  const { visible, collapsible, expanded, hiddenCount, toggle } = useProfileListCollapse(achievements)
   return (
     <section id="achievements" className="mb-8 scroll-mt-28">
       <div className="mb-4">
@@ -44,7 +46,7 @@ export default function ProfileAchievementsSection({ achievements, loading, erro
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {achievements.map((item) => (
+            {visible.map((item) => (
               <div key={item.id} className="p-4 sm:p-5 flex gap-3 hover:bg-slate-50/60 transition">
                 <span className="text-2xl shrink-0">{item.icon || '🏅'}</span>
                 <div className="flex-1 min-w-0">
@@ -68,6 +70,15 @@ export default function ProfileAchievementsSection({ achievements, loading, erro
             ))}
           </div>
         )}
+        {!loading && !error && achievements.length > 0 ? (
+          <ProfileListCollapseToggle
+            collapsible={collapsible}
+            expanded={expanded}
+            hiddenCount={hiddenCount}
+            onToggle={toggle}
+            itemLabel="achievements"
+          />
+        ) : null}
       </div>
     </section>
   )

@@ -7,6 +7,7 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from '../../lib/userNotifications'
+import ProfileListCollapseToggle, { useProfileListCollapse } from './ProfileListCollapseToggle'
 
 const FILTERS = [
   { id: 'all', label: 'All' },
@@ -79,6 +80,8 @@ export default function ProfileNotificationsSection({
     if (filter === 'all') return notifications
     return notifications.filter((n) => n.category === filter)
   }, [notifications, filter])
+
+  const { visible, collapsible, expanded, hiddenCount, toggle } = useProfileListCollapse(filtered)
 
   const handleOpen = async (item) => {
     if (!userId || !isNotificationUnread(item)) return
@@ -155,13 +158,22 @@ export default function ProfileNotificationsSection({
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {filtered.map((item) => (
+            {visible.map((item) => (
               <div key={item.id} className={busyId === item.id ? 'opacity-60' : ''}>
                 <NotificationRow item={item} onOpen={handleOpen} />
               </div>
             ))}
           </div>
         )}
+        {!loading && !error && filtered.length > 0 ? (
+          <ProfileListCollapseToggle
+            collapsible={collapsible}
+            expanded={expanded}
+            hiddenCount={hiddenCount}
+            onToggle={toggle}
+            itemLabel="notifications"
+          />
+        ) : null}
       </div>
     </section>
   )

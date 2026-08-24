@@ -46,6 +46,36 @@ async function uploadToSupabase(admin, buffer, contentType, folder) {
   return data?.publicUrl || null
 }
 
+export async function uploadUserAvatar(admin, { buffer, contentType, userId }) {
+  if (!buffer?.length) return { error: 'Empty file' }
+  if (!ALLOWED_TYPES.has(contentType)) {
+    return { error: 'Only JPEG, PNG, and WebP images are allowed' }
+  }
+  if (buffer.length > MAX_BYTES) {
+    return { error: 'Image must be 3 MB or smaller' }
+  }
+  if (!userId) return { error: 'Not signed in' }
+
+  const safeUserId = String(userId).replace(/[^a-zA-Z0-9-]/g, '')
+  if (!safeUserId) return { error: 'Not signed in' }
+
+  if (admin) {
+    try {
+      const url = await uploadToSupabase(admin, buffer, contentType, `avatars/${safeUserId}`)
+      if (url) return { url }
+    } catch (err) {
+      console.warn('[mediaUpload] avatar storage failed, using local public folder:', err.message)
+    }
+  }
+
+  try {
+    const url = await uploadToLocalPublic(buffer, contentType, `avatars/${safeUserId}`)
+    return { url }
+  } catch (err) {
+    return { error: err.message || 'Failed to save photo' }
+  }
+}
+
 export async function uploadAdminImage(admin, { buffer, contentType, folder = 'modules' }) {
   if (!buffer?.length) return { error: 'Empty file' }
   if (!ALLOWED_TYPES.has(contentType)) {

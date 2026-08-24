@@ -3,7 +3,9 @@
 import { adminPagesEn, adminPagesZh } from './adminPagesI18n.js'
 
 export const ADMIN_LOCALE_STORAGE_KEY = 'bingo-admin-locale'
+export const PARTNER_LOCALE_STORAGE_KEY = 'bingo-partner-locale'
 export const DEFAULT_ADMIN_LOCALE = 'zh'
+export const DEFAULT_PARTNER_LOCALE = 'en'
 export const ADMIN_LOCALES = ['zh', 'en']
 
 const messages = {
@@ -34,6 +36,43 @@ const messages = {
       backToSite: '← 返回网站',
       redirectHint: '登录后将进入：{{target}}',
       targetAdmin: '管理后台',
+    },
+    partner: {
+      brand: '缤果学院 · 渠道中心',
+      checking: '正在验证渠道权限…',
+      unavailableTitle: '渠道中心不可用',
+      unavailableBody: '请配置 VITE_SUPABASE_URL 与 VITE_SUPABASE_ANON_KEY。',
+      deniedTitle: '无权访问渠道中心',
+      deniedBody: '当前登录：{{email}}。请运营在「渠道管理」中把此邮箱加为渠道成员。',
+      backToSite: '← 返回网站',
+      loginTitle: '渠道登录',
+      loginSubtitle: '官方或合作渠道成员使用已开通的账号登录，查看实时分成与提现。',
+      loginSubmit: '进入渠道看板',
+      redirectHint: '登录后将返回渠道看板。',
+      dashboardTitle: '渠道分成看板',
+      dashboardDesc: '按最近成交实时计算分成。达到最低提现额度后可申请打款。',
+      official: '官方渠道',
+      partner: '合作渠道',
+      code: '推广码',
+      rate: '分成比例',
+      shareHint: '把此链接发给客户，成交后自动计入本渠道：',
+      sales: '归因成交额',
+      earned: '累计分成',
+      available: '可提现',
+      pending: '待结算',
+      withdrawTitle: '申请提现',
+      withdrawHint: '可用余额需达到 {{min}}。提交后由运营审核打款。',
+      withdraw: '申请提现',
+      withdrawing: '提交中…',
+      recent: '最近成交',
+      noCommissions: '暂无分成记录。请使用推广链接或推广码带客下单。',
+      colTime: '时间',
+      colProduct: '商品',
+      colSale: '成交额',
+      colCommission: '分成',
+      colStatus: '状态',
+      payoutHistory: '提现记录',
+      noPayouts: '暂无提现申请。',
     },
     guard: {
       verifying: '正在验证管理权限…',
@@ -97,6 +136,8 @@ const messages = {
       mallProducts: '认证/教材/实验',
       payments: '支付订单',
       marketingHub: '营销中心',
+      channels: '渠道管理',
+      commissions: '实时分成看板',
       promoCodes: '推广码',
       userManagement: '用户管理',
       video: '视频 (Stream)',
@@ -123,6 +164,8 @@ const messages = {
         videos: '视频资源',
         orders: '订单',
         marketing: '营销中心',
+        channels: '渠道',
+        commissions: '分成看板',
         users: '用户',
         platform: '平台设置',
       },
@@ -238,6 +281,43 @@ const messages = {
       redirectHint: 'After sign-in you will go to: {{target}}',
       targetAdmin: 'Admin',
     },
+    partner: {
+      brand: 'Bingo Academy · Channel center',
+      checking: 'Checking channel access…',
+      unavailableTitle: 'Channel center unavailable',
+      unavailableBody: 'Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+      deniedTitle: 'No channel access',
+      deniedBody: 'Signed in as {{email}}. Ask ops to add this email under Channel management.',
+      backToSite: '← Back to site',
+      loginTitle: 'Channel sign-in',
+      loginSubtitle: 'Official or partner channel members sign in to see live commissions and request payouts.',
+      loginSubmit: 'Open channel dashboard',
+      redirectHint: 'After sign-in you will return to the channel dashboard.',
+      dashboardTitle: 'Channel commission dashboard',
+      dashboardDesc: 'Commissions update from recent attributed sales. Request a payout once you reach the minimum.',
+      official: 'Official channel',
+      partner: 'Partner channel',
+      code: 'Referral code',
+      rate: 'Split',
+      shareHint: 'Share this link — attributed checkouts credit this channel:',
+      sales: 'Attributed sales',
+      earned: 'Commission earned',
+      available: 'Available',
+      pending: 'On hold',
+      withdrawTitle: 'Request payout',
+      withdrawHint: 'Available balance must reach {{min}}. Ops will review and pay out.',
+      withdraw: 'Request payout',
+      withdrawing: 'Submitting…',
+      recent: 'Recent sales',
+      noCommissions: 'No commissions yet. Send traffic with your referral link or code.',
+      colTime: 'Time',
+      colProduct: 'Product',
+      colSale: 'Sale',
+      colCommission: 'Commission',
+      colStatus: 'Status',
+      payoutHistory: 'Payout history',
+      noPayouts: 'No payout requests yet.',
+    },
     guard: {
       verifying: 'Verifying admin access…',
       unavailableTitle: 'Admin unavailable',
@@ -300,6 +380,8 @@ const messages = {
       mallProducts: 'Certs / Materials / Labs',
       payments: 'Payments',
       marketingHub: 'Marketing Center',
+      channels: 'Channels',
+      commissions: 'Commission board',
       promoCodes: 'Promo codes',
       userManagement: 'User management',
       video: 'Video (Stream)',
@@ -326,6 +408,8 @@ const messages = {
         videos: 'Video assets',
         orders: 'Orders',
         marketing: 'Marketing Center',
+        channels: 'Channels',
+        commissions: 'Commissions',
         users: 'Users',
         platform: 'Platform',
       },
@@ -441,18 +525,34 @@ export function translateAdmin(locale, key, params) {
 }
 
 export function readStoredAdminLocale() {
+  return readStoredLocale(ADMIN_LOCALE_STORAGE_KEY, DEFAULT_ADMIN_LOCALE)
+}
+
+export function storeAdminLocale(locale) {
+  storeLocale(ADMIN_LOCALE_STORAGE_KEY, locale)
+}
+
+export function readStoredPartnerLocale() {
+  return readStoredLocale(PARTNER_LOCALE_STORAGE_KEY, DEFAULT_PARTNER_LOCALE)
+}
+
+export function storePartnerLocale(locale) {
+  storeLocale(PARTNER_LOCALE_STORAGE_KEY, locale)
+}
+
+function readStoredLocale(storageKey, fallback) {
   try {
-    const saved = localStorage.getItem(ADMIN_LOCALE_STORAGE_KEY)
+    const saved = localStorage.getItem(storageKey)
     if (ADMIN_LOCALES.includes(saved)) return saved
   } catch {
     /* ignore */
   }
-  return DEFAULT_ADMIN_LOCALE
+  return fallback
 }
 
-export function storeAdminLocale(locale) {
+function storeLocale(storageKey, locale) {
   try {
-    localStorage.setItem(ADMIN_LOCALE_STORAGE_KEY, locale)
+    localStorage.setItem(storageKey, locale)
   } catch {
     /* ignore */
   }

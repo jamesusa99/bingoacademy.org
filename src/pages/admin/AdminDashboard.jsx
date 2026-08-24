@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [c, th, sc, ct, mc, mp, cm, vid, ord, prof, promo] = await Promise.all([
+        const [c, th, sc, ct, mc, mp, cm, vid, ord, prof, promo, ch] = await Promise.all([
           supabase.from('courses_catalog').select('id', { count: 'exact', head: true }),
           supabase.from('forum_threads').select('id', { count: 'exact', head: true }),
           supabase.from('showcase_cases').select('id', { count: 'exact', head: true }),
@@ -24,6 +24,7 @@ export default function AdminDashboard() {
           supabase.from('orders').select('id', { count: 'exact', head: true }),
           supabase.from('profiles').select('id', { count: 'exact', head: true }),
           supabase.from('promo_codes').select('id', { count: 'exact', head: true }),
+          supabase.from('sales_channels').select('id', { count: 'exact', head: true }),
         ])
         setStats({
           courses: c.count ?? 0,
@@ -36,6 +37,7 @@ export default function AdminDashboard() {
           orders: ord.count ?? 0,
           users: prof.count ?? 0,
           promoCodes: promo.count ?? 0,
+          channels: ch.count ?? 0,
         })
       } catch (err) {
         console.error('Failed to fetch stats:', err)
