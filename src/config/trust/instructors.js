@@ -23,15 +23,13 @@ export const CORE_INSTRUCTORS = [
     name: 'Dr. James Chen',
     legalName: 'Jianwen Chen (陈建文)',
     currentRole: 'Founder & CEO, Bingo Academy',
-    title: 'Professor · University of Electronic Science and Technology of China (UESTC)',
+    title: 'Computer Vision & Affective Computing',
     photo: '/mentors/jianwen-chen.jpg',
     tag: 'Computer Vision & Affective Computing',
     bio:
-      'Professor with 20+ years in video processing and AI algorithms. Designs competition-grade vision pipelines and mentors students on reproducible experiment documentation.',
+      'AI researcher with 20+ years in video processing and AI algorithms. Designs competition-grade vision pipelines and mentors students on reproducible experiment documentation.',
     education: [
       'Ph.D., Computer Science — research in video processing and multimodal AI',
-      'Professor & doctoral supervisor, UESTC',
-      'Director, Visual Intelligence Research Center, UESTC',
     ],
     researchBackground: [
       'Video processing and compression',
@@ -57,11 +55,8 @@ export const CORE_INSTRUCTORS = [
     ],
     selectedPublications: [
       '200+ peer-reviewed papers in video processing and visual intelligence',
-      'National research grants — Visual Intelligence Research Center, UESTC',
     ],
-    scholarlyProfiles: [
-      { type: 'Institution', label: 'UESTC Visual Intelligence Research Center', href: 'https://www.uestc.edu.cn/', external: true },
-    ],
+    scholarlyProfiles: [],
     disclosure: `${INDEPENDENT_PROVIDER_DISCLAIMER} ${AFFILIATION_DISCLOSURE}`,
   },
   {
