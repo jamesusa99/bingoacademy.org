@@ -120,9 +120,8 @@ export default function ProfileChannelSection() {
               </li>
               <li>· Share the partner link below.</li>
               <li>
-                · Live commissions and withdrawals are at
-                <br />
-                <Link to="/partners" className="text-primary hover:underline break-all">
+                · Live commissions and withdrawals are at the channel dashboard{' '}
+                <Link to="/partners" className="text-primary hover:underline">
                   https://www.bingoacademy.org/partners
                 </Link>
               </li>
