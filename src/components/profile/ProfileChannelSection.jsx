@@ -118,7 +118,14 @@ export default function ProfileChannelSection() {
                 · Current terms: {Number(rate).toFixed(1)}% commission, {hold} day hold, ${Number(minPayout)} minimum
                 payout.
               </li>
-              <li>· Share the partner link below. Live commissions and withdrawals are at /partners.</li>
+              <li>· Share the partner link below.</li>
+              <li>
+                · Live commissions and withdrawals are at
+                <br />
+                <Link to="/partners" className="text-primary hover:underline break-all">
+                  https://www.bingoacademy.org/partners
+                </Link>
+              </li>
             </ul>
           </>
         ) : (
