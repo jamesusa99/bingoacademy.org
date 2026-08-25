@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatAccomplishmentDate } from '../../lib/userAccomplishments'
+import ProfileListCollapseToggle, { useProfileListCollapse } from './ProfileListCollapseToggle'
 
 const SOURCE_LABELS = {
   assessment: 'Assessment',
@@ -9,6 +10,7 @@ const SOURCE_LABELS = {
 }
 
 export default function ProfileCertificatesSection({ certificates, loading, error }) {
+  const { visible, collapsible, expanded, hiddenCount, toggle } = useProfileListCollapse(certificates)
   return (
     <section id="certificates" className="mb-8 scroll-mt-28">
       <div className="mb-4">
@@ -38,7 +40,7 @@ export default function ProfileCertificatesSection({ certificates, loading, erro
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {certificates.map((cert) => (
+            {visible.map((cert) => (
               <div key={cert.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200/60 flex items-center justify-center text-2xl shrink-0">
                   📜
@@ -73,6 +75,15 @@ export default function ProfileCertificatesSection({ certificates, loading, erro
             ))}
           </div>
         )}
+        {!loading && !error && certificates.length > 0 ? (
+          <ProfileListCollapseToggle
+            collapsible={collapsible}
+            expanded={expanded}
+            hiddenCount={hiddenCount}
+            onToggle={toggle}
+            itemLabel="certificates"
+          />
+        ) : null}
       </div>
     </section>
   )

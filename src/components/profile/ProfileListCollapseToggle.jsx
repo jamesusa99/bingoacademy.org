@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-export const PROFILE_LIST_PREVIEW_LIMIT = 5
+export const PROFILE_LIST_PREVIEW_LIMIT = 3
 
 export function useProfileListCollapse(items, limit = PROFILE_LIST_PREVIEW_LIMIT) {
   const [expanded, setExpanded] = useState(false)
