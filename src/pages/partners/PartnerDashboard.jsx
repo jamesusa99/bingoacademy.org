@@ -19,6 +19,7 @@ export default function PartnerDashboard() {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [withdrawing, setWithdrawing] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const ids = memberships.map((row) => row.channel?.id).filter(Boolean)
@@ -65,6 +66,21 @@ export default function PartnerDashboard() {
 
   const shareUrl = channel ? `${window.location.origin}${channelSharePath(channel.code)}` : ''
 
+  useEffect(() => {
+    setCopied(false)
+  }, [shareUrl])
+
+  const copyShareUrl = async () => {
+    if (!shareUrl) return
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+
   return (
     <div>
       <PageMeta title={t('partner.dashboardTitle')} noindex />
@@ -106,12 +122,17 @@ export default function PartnerDashboard() {
                   {t('partner.rate')}: {(channel.commissionBps / 100).toFixed(1)}%
                 </p>
               </div>
-              <p className="text-xs text-slate-500 max-w-sm">
-                {t('partner.shareHint')}
-                <a href={shareUrl} className="block text-primary break-all hover:underline mt-1">
-                  {shareUrl}
-                </a>
-              </p>
+              <div className="text-xs text-slate-500 max-w-lg">
+                <p>{t('partner.shareHint')}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <a href={shareUrl} className="text-primary break-all hover:underline">
+                    {shareUrl}
+                  </a>
+                  <button type="button" onClick={copyShareUrl} className="btn-primary px-3 py-1.5 text-xs shrink-0">
+                    {copied ? t('partner.copied') : t('partner.copyLink')}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
