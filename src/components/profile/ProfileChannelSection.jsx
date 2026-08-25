@@ -91,6 +91,17 @@ function ChannelCard({ membership }) {
   )
 }
 
+function PartnersDashboardLine() {
+  return (
+    <li className="whitespace-nowrap overflow-x-auto">
+      · Live commissions and withdrawals are at the channel dashboard{' '}
+      <Link to="/partners" className="text-primary hover:underline">
+        https://www.bingoacademy.org/partners
+      </Link>
+    </li>
+  )
+}
+
 export default function ProfileChannelSection() {
   const { memberships, policy, mode, loading, error } = useChannelMembership()
   const channel = memberships[0]?.channel
@@ -119,12 +130,7 @@ export default function ProfileChannelSection() {
                 payout.
               </li>
               <li>· Share the partner link below.</li>
-              <li>
-                · Live commissions and withdrawals are at the channel dashboard{' '}
-                <Link to="/partners" className="text-primary hover:underline">
-                  https://www.bingoacademy.org/partners
-                </Link>
-              </li>
+              <PartnersDashboardLine />
             </ul>
           </>
         ) : (
@@ -142,7 +148,7 @@ export default function ProfileChannelSection() {
                 · If ops adds this account to an institutional partner, this upgrades to a Partner channel and those
                 partner terms replace the personal policy.
               </li>
-              <li>· Live commissions and withdrawals are at /partners.</li>
+              <PartnersDashboardLine />
             </ul>
           </>
         )}
